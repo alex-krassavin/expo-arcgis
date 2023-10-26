@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "arcgis": ["../src/index"],
+      "arcgis/*": ["../src/*"]
+    }
+  }
+}
