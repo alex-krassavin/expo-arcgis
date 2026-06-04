@@ -90,6 +90,12 @@ export type TileLayerProps = LayerProps & {
   url: string;
 };
 
+/** Props for a `<MapImageLayer>` — mirror the native `ArcGISMapImageLayer` (dynamic map service). */
+export type MapImageLayerProps = LayerProps & {
+  /** URL of the dynamic map service (`.../MapServer`). */
+  url: string;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────

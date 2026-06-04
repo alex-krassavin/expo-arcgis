@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.data.ServiceFeatureTable
+import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
 import com.arcgismaps.mapping.layers.Layer
@@ -33,6 +34,13 @@ class FeatureLayerRef(appContext: AppContext, url: String) : LayerRef(appContext
 /** Operational tiled layer backed by a tiled map service URL. */
 class TiledLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: ArcGISTiledLayer = ArcGISTiledLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational map image layer backed by a dynamic map service URL. */
+class MapImageLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: ArcGISMapImageLayer = ArcGISMapImageLayer(url)
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

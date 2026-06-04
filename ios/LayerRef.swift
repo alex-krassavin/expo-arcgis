@@ -38,3 +38,10 @@ public final class TiledLayerRef: LayerRef {
     super.init(layer: ArcGISTiledLayer(url: URL(string: url)!))
   }
 }
+
+/// Operational map image layer backed by a dynamic map service URL.
+public final class MapImageLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: ArcGISMapImageLayer(url: URL(string: url)!))
+  }
+}

@@ -2,6 +2,7 @@ import {
   Graphic,
   GraphicsOverlay,
   Map,
+  MapImageLayer,
   MapSettings,
   MapView,
   type MapLoadErrorEventPayload,
@@ -34,11 +35,15 @@ const GRIFFITH: Viewpoint = { latitude: 34.1184, longitude: -118.3004, scale: 40
 // Public ArcGIS Online web map for the "Display a web map" sample.
 const WEB_MAP_ID = '41281c51f9de45edaf1c8ed44bb10e30';
 
+// Public ArcGIS dynamic map service for the "Manage operational layers" sample.
+const USA_MAP_SERVICE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer';
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
   const [viewpoint, setViewpoint] = useState<Viewpoint | undefined>(undefined);
   const [webMap, setWebMap] = useState(false);
+  const [showLayer, setShowLayer] = useState(false);
 
   return (
     <SafeAreaProvider>
@@ -50,6 +55,7 @@ export default function App() {
             initialViewpoint={webMap ? undefined : SANTA_MONICA}
             portalItem={webMap ? { itemId: WEB_MAP_ID } : undefined}
           >
+            {showLayer && <MapImageLayer url={USA_MAP_SERVICE} opacity={0.7} />}
             <MapView
               style={styles.map}
               viewpoint={viewpoint}
@@ -101,6 +107,7 @@ export default function App() {
             <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />
             <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
             <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
+            <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
           </View>
           <Text style={styles.status}>{status}</Text>
         </View>

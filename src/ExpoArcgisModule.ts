@@ -4,6 +4,7 @@ import { SharedObject } from 'expo-modules-core';
 import type {
   FeatureLayerProps,
   GraphicProps,
+  MapImageLayerProps,
   MapProps,
   SceneProps,
   TileLayerProps,
@@ -53,6 +54,7 @@ declare class ExpoArcgisModule extends NativeModule {
   SceneRef: new (props?: SceneProps) => SceneRef;
   FeatureLayerRef: new (props: FeatureLayerProps) => LayerRef;
   TiledLayerRef: new (props: TileLayerProps) => LayerRef;
+  MapImageLayerRef: new (props: MapImageLayerProps) => LayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
 }
