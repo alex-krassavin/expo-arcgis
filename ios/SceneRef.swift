@@ -21,6 +21,21 @@ public final class SceneRef: SharedObject {
            let scale = (vp["scale"] as? NSNumber)?.doubleValue {
           scene.initialViewpoint = Viewpoint(latitude: lat, longitude: lon, scale: scale)
         }
+      case "surface":
+        if let s = value as? [String: Any] {
+          scene.baseSurface = buildSurface(s)
+        }
+      case "camera":
+        if let c = value as? [String: Any], let position = c["position"] as? [String: Any] {
+          let point = scenePoint(position)
+          let camera = Camera(
+            location: point,
+            heading: (c["heading"] as? NSNumber)?.doubleValue ?? 0,
+            pitch: (c["pitch"] as? NSNumber)?.doubleValue ?? 0,
+            roll: (c["roll"] as? NSNumber)?.doubleValue ?? 0
+          )
+          scene.initialViewpoint = Viewpoint(boundingGeometry: point, camera: camera)
+        }
       default:
         break
       }
@@ -34,4 +49,30 @@ public final class SceneRef: SharedObject {
   func removeLayer(_ ref: LayerRef) {
     scene.removeOperationalLayer(ref.layer)
   }
+}
+
+/// Builds a `Point` (with optional `z` altitude) from a JS dict, defaulting to WGS84.
+func scenePoint(_ p: [String: Any]) -> Point {
+  let x = (p["x"] as? NSNumber)?.doubleValue ?? 0
+  let y = (p["y"] as? NSNumber)?.doubleValue ?? 0
+  if let z = (p["z"] as? NSNumber)?.doubleValue {
+    return Point(x: x, y: y, z: z, spatialReference: .wgs84)
+  }
+  return Point(x: x, y: y, spatialReference: .wgs84)
+}
+
+/// Builds a `Surface` (terrain) from a JS dict of tiled elevation sources + exaggeration.
+func buildSurface(_ s: [String: Any]) -> Surface {
+  let surface = Surface()
+  if let sources = s["elevationSources"] as? [[String: Any]] {
+    for src in sources {
+      if let url = src["url"] as? String, let u = URL(string: url) {
+        surface.addElevationSource(ArcGISTiledElevationSource(url: u))
+      }
+    }
+  }
+  if let exaggeration = (s["elevationExaggeration"] as? NSNumber)?.floatValue {
+    surface.elevationExaggeration = exaggeration
+  }
+  return surface
 }

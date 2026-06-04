@@ -123,6 +123,8 @@ export type SpatialReference = number;
 export type Point = {
   x: number;
   y: number;
+  /** Altitude in meters. Used by 3D scenes (camera position, elevated geometries). */
+  z?: number;
   /** Coordinate system WKID. Defaults to `4326` (WGS84). */
   spatialReference?: SpatialReference;
 };
@@ -228,12 +230,39 @@ export type TapEventPayload = {
   screenPoint: { x: number; y: number };
 };
 
+/** A 3D camera that defines a scene's viewpoint (position + orientation). */
+export type Camera = {
+  /** Camera position; `z` is the altitude in meters. */
+  position: Point;
+  /** Compass heading the camera faces, in degrees. */
+  heading?: number;
+  /** Tilt from straight down, in degrees (0 = top-down, 90 = horizon). */
+  pitch?: number;
+  /** Roll, in degrees. */
+  roll?: number;
+};
+
+/** A tiled elevation service that provides terrain height to a scene's `Surface`. */
+export type ElevationSource = { url: string };
+
+/** The ground/elevation surface (terrain) of a 3D `<Scene>`. */
+export type Surface = {
+  /** Tiled elevation sources stacked to build the terrain. */
+  elevationSources?: ElevationSource[];
+  /** Vertical exaggeration multiplier (default `1`). */
+  elevationExaggeration?: number;
+};
+
 /** Props for the `<Scene>` model component — mirror the native ArcGISScene/Scene. */
 export type SceneProps = {
   /** Basemap style. Defaults to `arcGISImagery` (3D-appropriate). */
   basemap?: BasemapStyle;
   /** Center + scale applied when the scene first loads. */
   initialViewpoint?: Viewpoint;
+  /** 3D camera for the initial view (preferred over `initialViewpoint` for scenes). */
+  camera?: Camera;
+  /** Ground elevation surface (terrain). */
+  surface?: Surface;
 };
 
 /** Props for the `<SceneView>` host component. */

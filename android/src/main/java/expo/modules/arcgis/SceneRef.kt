@@ -1,8 +1,13 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.geometry.Point
+import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISScene
+import com.arcgismaps.mapping.ArcGISTiledElevationSource
 import com.arcgismaps.mapping.Basemap
+import com.arcgismaps.mapping.Surface
 import com.arcgismaps.mapping.Viewpoint
+import com.arcgismaps.mapping.view.Camera
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -24,6 +29,19 @@ class SceneRef(appContext: AppContext) : SharedObject(appContext) {
             scene.initialViewpoint = Viewpoint(lat, lon, scale)
           }
         }
+        "surface" -> (value as? Map<*, *>)?.let { scene.baseSurface = buildSurface(it) }
+        "camera" -> (value as? Map<*, *>)?.let { c ->
+          (c["position"] as? Map<*, *>)?.let { position ->
+            val point = scenePoint(position)
+            val camera = Camera(
+              point,
+              (c["heading"] as? Number)?.toDouble() ?: 0.0,
+              (c["pitch"] as? Number)?.toDouble() ?: 0.0,
+              (c["roll"] as? Number)?.toDouble() ?: 0.0,
+            )
+            scene.initialViewpoint = Viewpoint(point, camera)
+          }
+        }
       }
     }
   }
@@ -35,4 +53,23 @@ class SceneRef(appContext: AppContext) : SharedObject(appContext) {
   fun removeLayer(ref: LayerRef) {
     scene.operationalLayers.remove(ref.layer)
   }
+}
+
+/** Builds a [Point] (with optional `z` altitude) from a JS dict, defaulting to WGS84. */
+private fun scenePoint(p: Map<*, *>): Point {
+  val x = (p["x"] as? Number)?.toDouble() ?: 0.0
+  val y = (p["y"] as? Number)?.toDouble() ?: 0.0
+  val z = (p["z"] as? Number)?.toDouble()
+  return if (z != null) Point(x, y, z, SpatialReference.wgs84())
+  else Point(x, y, SpatialReference.wgs84())
+}
+
+/** Builds a [Surface] (terrain) from a JS dict of tiled elevation sources + exaggeration. */
+private fun buildSurface(s: Map<*, *>): Surface = Surface().apply {
+  (s["elevationSources"] as? List<*>)?.forEach { src ->
+    ((src as? Map<*, *>)?.get("url") as? String)?.let {
+      elevationSources.add(ArcGISTiledElevationSource(it))
+    }
+  }
+  (s["elevationExaggeration"] as? Number)?.toFloat()?.let { elevationExaggeration = it }
 }
