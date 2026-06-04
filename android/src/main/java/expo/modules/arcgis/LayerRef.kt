@@ -25,7 +25,7 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
 
 /** Operational FeatureLayer backed by a service feature table URL. */
 class FeatureLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
-  override val layer: FeatureLayer = FeatureLayer(ServiceFeatureTable(url))
+  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(ServiceFeatureTable(url))
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

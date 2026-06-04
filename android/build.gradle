@@ -24,6 +24,12 @@ android {
   lintOptions {
     abortOnError false
   }
+
+  kotlinOptions {
+    // ArcGIS Maps SDK 300.0 is built with Kotlin 2.3.0. Allow this module to read its newer
+    // metadata even when the app's Kotlin compiler is older (Expo SDK 56 ships Kotlin 2.1.0).
+    freeCompilerArgs += ["-Xskip-metadata-version-check"]
+  }
 }
 
 dependencies {
