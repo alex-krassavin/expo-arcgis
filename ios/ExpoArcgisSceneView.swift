@@ -3,17 +3,17 @@ import Combine
 import ExpoModulesCore
 import SwiftUI
 
-/// Holds the externally-provided ArcGIS `Map` + graphics overlay and bridges events to JS.
-final class MapViewModel: ObservableObject {
-  @Published private(set) var map: Map?
+/// Holds the externally-provided ArcGIS `Scene` and bridges events to JS.
+final class SceneViewModel: ObservableObject {
+  @Published private(set) var scene: Scene?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
   var onTap: ((_ latitude: Double, _ longitude: Double, _ screenX: Double, _ screenY: Double) -> Void)?
 
-  func setMap(_ map: Map?) {
-    self.map = map
+  func setScene(_ scene: Scene?) {
+    self.scene = scene
   }
 
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
@@ -21,24 +21,24 @@ final class MapViewModel: ObservableObject {
   }
 }
 
-/// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
-struct ExpoArcgisMapContainer: View {
-  @ObservedObject var model: MapViewModel
+/// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
+struct ExpoArcgisSceneContainer: View {
+  @ObservedObject var model: SceneViewModel
 
   var body: some View {
-    if let map = model.map {
-      MapView(map: map, graphicsOverlays: model.graphicsOverlays)
+    if let scene = model.scene {
+      SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
         .onSingleTapGesture { screenPoint, mapPoint in
           guard let mapPoint else { return }
           let wgs84 = (GeometryEngine.project(mapPoint, into: .wgs84) as? Point) ?? mapPoint
           model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
         }
-        .task(id: ObjectIdentifier(map)) {
+        .task(id: ObjectIdentifier(scene)) {
           do {
-            try await map.load()
+            try await scene.load()
             model.onLoaded?()
           } catch is CancellationError {
-            // Superseded by a newer map; ignore.
+            // Superseded by a newer scene; ignore.
           } catch {
             model.onLoadError?(error.localizedDescription)
           }
@@ -47,24 +47,24 @@ struct ExpoArcgisMapContainer: View {
   }
 }
 
-/// Declarative 2D map host. Renders the `MapRef` passed as the `map` view prop.
-class ExpoArcgisMapView: ExpoView {
-  private let onMapLoaded = EventDispatcher()
-  private let onMapLoadError = EventDispatcher()
+/// Declarative 3D scene host. Renders the `SceneRef` passed as the `scene` view prop.
+class ExpoArcgisSceneView: ExpoView {
+  private let onSceneLoaded = EventDispatcher()
+  private let onSceneLoadError = EventDispatcher()
   private let onTap = EventDispatcher()
 
-  private let model = MapViewModel()
-  private var hostingController: UIHostingController<ExpoArcgisMapContainer>?
+  private let model = SceneViewModel()
+  private var hostingController: UIHostingController<ExpoArcgisSceneContainer>?
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     clipsToBounds = true
 
     model.onLoaded = { [weak self] in
-      self?.onMapLoaded(["spatialReferenceWkid": NSNull()])
+      self?.onSceneLoaded(["spatialReferenceWkid": NSNull()])
     }
     model.onLoadError = { [weak self] message in
-      self?.onMapLoadError(["message": message])
+      self?.onSceneLoadError(["message": message])
     }
     model.onTap = { [weak self] latitude, longitude, screenX, screenY in
       self?.onTap([
@@ -73,7 +73,7 @@ class ExpoArcgisMapView: ExpoView {
       ])
     }
 
-    let hostingController = UIHostingController(rootView: ExpoArcgisMapContainer(model: model))
+    let hostingController = UIHostingController(rootView: ExpoArcgisSceneContainer(model: model))
     hostingController.view.backgroundColor = .clear
     hostingController.view.frame = bounds
     hostingController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -81,12 +81,11 @@ class ExpoArcgisMapView: ExpoView {
     self.hostingController = hostingController
   }
 
-  /// Receives the native map (by reference) from the `<Map>` SharedObject.
-  func setMap(_ ref: MapRef?) {
-    model.setMap(ref?.map)
+  /// Receives the native scene (by reference) from the `<Scene>` SharedObject.
+  func setScene(_ ref: SceneRef?) {
+    model.setScene(ref?.scene)
   }
 
-  /// Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`.
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
   }

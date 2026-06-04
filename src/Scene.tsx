@@ -1,34 +1,33 @@
 import { useEffect, useRef, type PropsWithChildren } from 'react';
 
-import type { MapProps } from './ExpoArcgis.types';
-import ExpoArcgisModule, { type MapRef } from './ExpoArcgisModule';
+import type { SceneProps } from './ExpoArcgis.types';
+import ExpoArcgisModule, { type SceneRef } from './ExpoArcgisModule';
 import { GeoModelContext } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
 
 /**
- * Declarative `ArcGISMap` model. Creates a native map SharedObject once, reconciles prop changes
- * into it, and exposes it (as a geo model) to descendant views and layers.
+ * Declarative 3D scene model (mirrors `ArcGISScene` / `Scene`). Creates a native scene SharedObject
+ * once, reconciles prop changes, and exposes it (as a geo model) to descendant views and layers.
  */
-export function Map({ children, ...props }: PropsWithChildren<MapProps>) {
-  // Create the native map exactly once (creating per-render would leak native objects).
-  const ref = useRef<MapRef | undefined>(undefined);
+export function Scene({ children, ...props }: PropsWithChildren<SceneProps>) {
+  const ref = useRef<SceneRef | undefined>(undefined);
   if (!ref.current) {
-    ref.current = new ExpoArcgisModule.MapRef(props);
+    ref.current = new ExpoArcgisModule.SceneRef(props);
   }
 
   const prev = usePrevious(props);
 
   useEffect(() => {
-    const map = ref.current;
-    return () => map?.release();
+    const scene = ref.current;
+    return () => scene?.release();
   }, []);
 
   useUpdateEffect(() => {
     const diffs = getPropsDiffs(prev, props);
     if (diffs.length === 0) return;
-    const changed: Partial<MapProps> = {};
+    const changed: Partial<SceneProps> = {};
     diffs.forEach((key) => {
       (changed as Record<string, unknown>)[key] = props[key];
     });

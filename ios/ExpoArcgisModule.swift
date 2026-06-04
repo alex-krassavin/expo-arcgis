@@ -39,6 +39,26 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    // Declarative 3D scene model — a SharedObject the JS <Scene> constructs and reconciles.
+    Class(SceneRef.self) {
+      Constructor { (props: [String: Any]?) -> SceneRef in
+        let ref = SceneRef()
+        if let props {
+          ref.applyProps(props)
+        }
+        return ref
+      }
+      Function("applyProps") { (ref: SceneRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+      Function("addLayer") { (ref: SceneRef, layer: LayerRef) in
+        ref.addLayer(layer)
+      }
+      Function("removeLayer") { (ref: SceneRef, layer: LayerRef) in
+        ref.removeLayer(layer)
+      }
+    }
+
     // Operational layers — SharedObjects the JS <FeatureLayer>/<TileLayer> construct.
     Class(FeatureLayerRef.self) {
       Constructor { (props: [String: Any]) -> FeatureLayerRef in
@@ -92,8 +112,22 @@ public class ExpoArcgisModule: Module {
         view.setMap(ref)
       }
 
-      Prop("graphicsOverlay") { (view: ExpoArcgisMapView, ref: GraphicsOverlayRef?) in
-        view.setGraphicsOverlay(ref)
+      Prop("graphicsOverlays") { (view: ExpoArcgisMapView, refs: [GraphicsOverlayRef]) in
+        view.setGraphicsOverlays(refs)
+      }
+    }
+
+    // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
+    View(ExpoArcgisSceneView.self) {
+      Name("ExpoArcgisSceneView")
+      Events("onSceneLoaded", "onSceneLoadError", "onTap")
+
+      Prop("scene") { (view: ExpoArcgisSceneView, ref: SceneRef?) in
+        view.setScene(ref)
+      }
+
+      Prop("graphicsOverlays") { (view: ExpoArcgisSceneView, refs: [GraphicsOverlayRef]) in
+        view.setGraphicsOverlays(refs)
       }
     }
   }

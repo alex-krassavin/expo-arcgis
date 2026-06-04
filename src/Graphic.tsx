@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react';
 
 import type { GraphicProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicRef } from './ExpoArcgisModule';
-import { useMapView } from './MapView';
+import { useGraphicsOverlay } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
 
-/** Declarative point graphic. Draws itself on the nearest `<MapView>`'s graphics overlay. */
+/** Declarative point graphic. Draws itself on the nearest `<GraphicsOverlay>`. */
 export function Graphic(props: GraphicProps) {
-  const overlay = useMapView();
+  const overlay = useGraphicsOverlay();
   const ref = useRef<GraphicRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.GraphicRef(props);

@@ -1,5 +1,6 @@
 import {
   Graphic,
+  GraphicsOverlay,
   Map,
   MapSettings,
   MapView,
@@ -31,7 +32,9 @@ export default function App() {
               }
               onTap={(event: { nativeEvent: TapEventPayload }) => setPin(event.nativeEvent.mapPoint)}
             >
-              {pin && <Graphic point={pin} symbol={{ color: '#ff3b30', size: 14 }} />}
+              <GraphicsOverlay>
+                {pin && <Graphic point={pin} symbol={{ color: '#ff3b30', size: 14 }} />}
+              </GraphicsOverlay>
             </MapView>
           </Map>
         </MapSettings>

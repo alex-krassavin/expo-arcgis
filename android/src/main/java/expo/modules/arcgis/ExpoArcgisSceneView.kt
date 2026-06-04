@@ -7,10 +7,8 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
-import com.arcgismaps.mapping.view.MapView
+import com.arcgismaps.mapping.view.SceneView
 import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.records.Field
-import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 import kotlinx.coroutines.CoroutineScope
@@ -19,31 +17,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
-class MapLoadedEventPayload(@Field val spatialReferenceWkid: Int? = null) : Record
-class MapLoadErrorEventPayload(@Field val message: String = "") : Record
-
-class PointRecord(
-  @Field val latitude: Double = 0.0,
-  @Field val longitude: Double = 0.0,
-) : Record
-
-class ScreenPointRecord(
-  @Field val x: Double = 0.0,
-  @Field val y: Double = 0.0,
-) : Record
-
-class TapEventPayload(
-  @Field val mapPoint: PointRecord = PointRecord(),
-  @Field val screenPoint: ScreenPointRecord = ScreenPointRecord(),
-) : Record
-
-/** Declarative 2D map host. Renders the [MapRef] passed as the `map` view prop. */
-class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  private val onMapLoaded by EventDispatcher<MapLoadedEventPayload>()
-  private val onMapLoadError by EventDispatcher<MapLoadErrorEventPayload>()
+/** Declarative 3D scene host. Renders the [SceneRef] passed as the `scene` view prop. */
+class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
+  private val onSceneLoaded by EventDispatcher<MapLoadedEventPayload>()
+  private val onSceneLoadError by EventDispatcher<MapLoadErrorEventPayload>()
   private val onTap by EventDispatcher<TapEventPayload>()
 
-  private val mapView = MapView(context).also {
+  private val sceneView = SceneView(context).also {
     it.layoutParams = ViewGroup.LayoutParams(
       ViewGroup.LayoutParams.MATCH_PARENT,
       ViewGroup.LayoutParams.MATCH_PARENT
@@ -56,9 +36,8 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   private var observedLifecycle: Lifecycle? = null
 
   init {
-    // Emit tap events with the map location (projected to WGS84).
     scope.launch {
-      mapView.onSingleTapConfirmed.collect { event ->
+      sceneView.onSingleTapConfirmed.collect { event ->
         val wgs84 = event.mapPoint?.let {
           GeometryEngine.projectOrNull(it, SpatialReference.wgs84()) as? Point
         }
@@ -72,34 +51,33 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
-  /** Receives the native map (by reference) from the `<Map>` SharedObject. */
-  fun setMap(ref: MapRef?) {
-    val map = ref?.map ?: return
-    mapView.map = map
+  /** Receives the native scene (by reference) from the `<Scene>` SharedObject. */
+  fun setScene(ref: SceneRef?) {
+    val scene = ref?.scene ?: return
+    sceneView.scene = scene
 
     loadJob?.cancel()
     loadJob = scope.launch {
-      map.load()
-        .onSuccess { onMapLoaded(MapLoadedEventPayload()) }
+      scene.load()
+        .onSuccess { onSceneLoaded(MapLoadedEventPayload()) }
         .onFailure { error ->
-          onMapLoadError(MapLoadErrorEventPayload(error.message ?: "Failed to load map"))
+          onSceneLoadError(MapLoadErrorEventPayload(error.message ?: "Failed to load scene"))
         }
     }
   }
 
-  /** Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`. */
+  /** Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<SceneView>`. */
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
-    mapView.graphicsOverlays.clear()
-    mapView.graphicsOverlays.addAll(refs.map { it.overlay })
+    sceneView.graphicsOverlays.clear()
+    sceneView.graphicsOverlays.addAll(refs.map { it.overlay })
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    // The view-based MapView renders only while observing a lifecycle.
     val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
     if (lifecycle != null && lifecycle !== observedLifecycle) {
-      observedLifecycle?.removeObserver(mapView)
-      lifecycle.addObserver(mapView)
+      observedLifecycle?.removeObserver(sceneView)
+      lifecycle.addObserver(sceneView)
       observedLifecycle = lifecycle
     }
   }
@@ -107,7 +85,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     loadJob?.cancel()
-    observedLifecycle?.removeObserver(mapView)
+    observedLifecycle?.removeObserver(sceneView)
     observedLifecycle = null
   }
 }

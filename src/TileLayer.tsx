@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react';
 
 import type { TileLayerProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type LayerRef } from './ExpoArcgisModule';
-import { useMap } from './Map';
+import { useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
 
-/** Declarative operational `ArcGISTiledLayer`. Adds itself to the nearest `<Map>` and reconciles props. */
+/** Declarative operational `ArcGISTiledLayer`. Adds itself to the nearest `<Map>` / `<Scene>`. */
 export function TileLayer(props: TileLayerProps) {
-  const map = useMap();
+  const model = useGeoModel();
   const ref = useRef<LayerRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.TiledLayerRef(props);
@@ -19,9 +19,9 @@ export function TileLayer(props: TileLayerProps) {
 
   useEffect(() => {
     const layer = ref.current!;
-    map.addLayer(layer);
+    model.addLayer(layer);
     return () => {
-      map.removeLayer(layer);
+      model.removeLayer(layer);
       layer.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

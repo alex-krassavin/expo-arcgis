@@ -1,26 +1,26 @@
 import { requireNativeView } from 'expo';
 import { useMemo, useState, type PropsWithChildren, type ReactNode } from 'react';
 
-import type { MapViewProps } from './ExpoArcgis.types';
-import type { MapRef, GraphicsOverlayRef } from './ExpoArcgisModule';
+import type { SceneViewProps } from './ExpoArcgis.types';
+import type { SceneRef, GraphicsOverlayRef } from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModel, type GraphicsOverlayHost } from './contexts';
 
-type NativeMapViewProps = MapViewProps & {
-  /** The native map handle (SharedObject), passed by reference as a view prop. */
-  map: MapRef;
+type NativeSceneViewProps = SceneViewProps & {
+  /** The native scene handle (SharedObject), passed by reference as a view prop. */
+  scene: SceneRef;
   /** Graphics overlays declared as `<GraphicsOverlay>` children, passed by reference. */
   graphicsOverlays: GraphicsOverlayRef[];
   children?: ReactNode;
 };
 
-const NativeMapView = requireNativeView<NativeMapViewProps>('ExpoArcgis');
+const NativeSceneView = requireNativeView<NativeSceneViewProps>('ExpoArcgis', 'ExpoArcgisSceneView');
 
 /**
- * Declarative 2D map view. Renders the `ArcGISMap` from the nearest `<Map>` and hosts the
+ * Declarative 3D scene view. Renders the `Scene` from the nearest `<Scene>` and hosts the
  * `<GraphicsOverlay>` children declared inside it.
  */
-export function MapView({ children, ...props }: PropsWithChildren<MapViewProps>) {
-  const map = useGeoModel() as MapRef;
+export function SceneView({ children, ...props }: PropsWithChildren<SceneViewProps>) {
+  const scene = useGeoModel() as SceneRef;
 
   const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
   const host = useMemo<GraphicsOverlayHost>(
@@ -32,8 +32,8 @@ export function MapView({ children, ...props }: PropsWithChildren<MapViewProps>)
   );
 
   return (
-    <NativeMapView map={map} graphicsOverlays={overlays} {...props}>
+    <NativeSceneView scene={scene} graphicsOverlays={overlays} {...props}>
       <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
-    </NativeMapView>
+    </NativeSceneView>
   );
 }

@@ -109,3 +109,22 @@ export type TapEventPayload = {
   /** Screen location of the tap, in points. */
   screenPoint: { x: number; y: number };
 };
+
+/** Props for the `<Scene>` model component — mirror the native ArcGISScene/Scene. */
+export type SceneProps = {
+  /** Basemap style. Defaults to `arcGISImagery` (3D-appropriate). */
+  basemap?: BasemapStyle;
+  /** Center + scale applied when the scene first loads. */
+  initialViewpoint?: Viewpoint;
+};
+
+/** Props for the `<SceneView>` host component. */
+export type SceneViewProps = {
+  style?: StyleProp<ViewStyle>;
+  /** Called once the scene has finished loading successfully. */
+  onSceneLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
+  /** Called if the scene fails to load. */
+  onSceneLoadError?: (event: { nativeEvent: MapLoadErrorEventPayload }) => void;
+  /** Called when the user taps the scene. */
+  onTap?: (event: { nativeEvent: TapEventPayload }) => void;
+};
