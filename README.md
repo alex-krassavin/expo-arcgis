@@ -82,7 +82,7 @@ export function Screen() {
 ### Components
 
 - **`<MapSettings config={{ apiKey }}>`** — global ArcGIS settings; applies the API key at runtime (alternative to the config plugin).
-- **`<Map basemap initialViewpoint>`** — the map model (mirrors `ArcGISMap`). `basemap` is an `ArcGISBasemapStyle` (11 styles in v1); `initialViewpoint` is `{ latitude, longitude, scale }`.
+- **`<Map basemap initialViewpoint>`** — the map model (mirrors `ArcGISMap`). `basemap` is an `BasemapStyle` (11 styles in v1); `initialViewpoint` is `{ latitude, longitude, scale }`.
 - **`<MapView style onMapLoaded onMapLoadError>`** — the 2D view host; renders the nearest `<Map>`. `onMapLoadError` provides `e.nativeEvent.message`.
 
 You can also set the key imperatively: `import ExpoArcgis from 'expo-arcgis'; ExpoArcgis.setApiKey('KEY')`.

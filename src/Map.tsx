@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useRef, type PropsWithChildren } from 'react';
 
 import type { MapProps } from './ExpoArcgis.types';
-import ExpoArcgisModule, { type ArcGISMapRef } from './ExpoArcgisModule';
+import ExpoArcgisModule, { type MapRef } from './ExpoArcgisModule';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
 
-const MapContext = createContext<ArcGISMapRef | undefined>(undefined);
+const MapContext = createContext<MapRef | undefined>(undefined);
 
-export function useMap(): ArcGISMapRef {
+export function useMap(): MapRef {
   const map = useContext(MapContext);
   if (!map) {
     throw new Error('useMap must be used within a <Map>.');
@@ -22,9 +22,9 @@ export function useMap(): ArcGISMapRef {
  */
 export function Map({ children, ...props }: PropsWithChildren<MapProps>) {
   // Create the native map exactly once (creating per-render would leak native objects).
-  const ref = useRef<ArcGISMapRef | undefined>(undefined);
+  const ref = useRef<MapRef | undefined>(undefined);
   if (!ref.current) {
-    ref.current = new ExpoArcgisModule.ArcGISMapRef(props);
+    ref.current = new ExpoArcgisModule.MapRef(props);
   }
 
   const prev = usePrevious(props);

@@ -27,22 +27,73 @@ class ExpoArcgisModule : Module() {
     }
 
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
-    Class(ArcGISMapRef::class) {
+    Class(MapRef::class) {
       Constructor { props: Map<String, Any?>? ->
-        ArcGISMapRef(appContext).also { ref -> props?.let { ref.applyProps(it) } }
+        MapRef(appContext).also { ref -> props?.let { ref.applyProps(it) } }
       }
 
-      Function("applyProps") { ref: ArcGISMapRef, changed: Map<String, Any?> ->
+      Function("applyProps") { ref: MapRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+
+      Function("addLayer") { ref: MapRef, layer: LayerRef ->
+        ref.addLayer(layer)
+      }
+
+      Function("removeLayer") { ref: MapRef, layer: LayerRef ->
+        ref.removeLayer(layer)
+      }
+    }
+
+    // Operational layers — SharedObjects the JS <FeatureLayer>/<TileLayer> construct.
+    Class(FeatureLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        FeatureLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
       }
     }
 
-    // 2D map host — receives the map SharedObject as the `map` prop.
-    View(ExpoArcgisMapView::class) {
-      Events("onMapLoaded", "onMapLoadError")
+    Class(TiledLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        TiledLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: TiledLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
 
-      Prop("map") { view: ExpoArcgisMapView, ref: ArcGISMapRef? ->
+    // Graphics overlay (owned by a MapView) and the graphics drawn on it.
+    Class(GraphicsOverlayRef::class) {
+      Constructor { GraphicsOverlayRef(appContext) }
+      Function("addGraphic") { ref: GraphicsOverlayRef, graphic: GraphicRef ->
+        ref.addGraphic(graphic)
+      }
+      Function("removeGraphic") { ref: GraphicsOverlayRef, graphic: GraphicRef ->
+        ref.removeGraphic(graphic)
+      }
+    }
+
+    Class(GraphicRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        GraphicRef(appContext).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: GraphicRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    // 2D map host — receives the map + graphics overlay SharedObjects as props.
+    View(ExpoArcgisMapView::class) {
+      Events("onMapLoaded", "onMapLoadError", "onTap")
+
+      Prop("map") { view: ExpoArcgisMapView, ref: MapRef? ->
         view.setMap(ref)
+      }
+
+      Prop("graphicsOverlay") { view: ExpoArcgisMapView, ref: GraphicsOverlayRef? ->
+        view.setGraphicsOverlay(ref)
       }
     }
   }

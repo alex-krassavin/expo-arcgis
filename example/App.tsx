@@ -1,28 +1,45 @@
-import { Map, MapSettings, MapView } from 'expo-arcgis';
+import {
+  Graphic,
+  Map,
+  MapSettings,
+  MapView,
+  type Point,
+  type MapLoadErrorEventPayload,
+  type TapEventPayload,
+} from 'expo-arcgis';
 import { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
+  const [pin, setPin] = useState<Point | null>(null);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
-        <Map
-          basemap="arcGISTopographic"
-          initialViewpoint={{ latitude: 34.027, longitude: -118.805, scale: 72_000 }}
-        >
-          <MapView
-            style={styles.map}
-            onMapLoaded={() => setStatus('Map loaded ✅')}
-            onMapLoadError={(event) => setStatus(`Load error: ${event.nativeEvent.message}`)}
-          />
-        </Map>
-      </MapSettings>
-      <View style={styles.bar}>
-        <Text style={styles.status}>{status}</Text>
-      </View>
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
+          <Map
+            basemap="arcGISTopographic"
+            initialViewpoint={{ latitude: 34.027, longitude: -118.805, scale: 72_000 }}
+          >
+            <MapView
+              style={styles.map}
+              onMapLoaded={() => setStatus('Map loaded ✅ — tap to drop a pin')}
+              onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
+                setStatus(`Load error: ${event.nativeEvent.message}`)
+              }
+              onTap={(event: { nativeEvent: TapEventPayload }) => setPin(event.nativeEvent.mapPoint)}
+            >
+              {pin && <Graphic point={pin} symbol={{ color: '#ff3b30', size: 14 }} />}
+            </MapView>
+          </Map>
+        </MapSettings>
+        <View style={styles.bar}>
+          <Text style={styles.status}>{status}</Text>
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 

@@ -11,7 +11,7 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  * SharedObject wrapping a native [ArcGISMap]. Constructed and reconciled declaratively from the
  * JS `<Map>` component; the `<MapView>` reads [map] by reference to render it.
  */
-class ArcGISMapRef(appContext: AppContext) : SharedObject(appContext) {
+class MapRef(appContext: AppContext) : SharedObject(appContext) {
   val map = ArcGISMap()
 
   /** Generic setter dispatched by key — applies only the changed props sent from JS. */
@@ -31,6 +31,14 @@ class ArcGISMapRef(appContext: AppContext) : SharedObject(appContext) {
         }
       }
     }
+  }
+
+  fun addLayer(ref: LayerRef) {
+    map.operationalLayers.add(ref.layer)
+  }
+
+  fun removeLayer(ref: LayerRef) {
+    map.operationalLayers.remove(ref.layer)
   }
 }
 

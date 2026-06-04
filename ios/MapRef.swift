@@ -3,7 +3,7 @@ import ExpoModulesCore
 
 /// SharedObject wrapping a native ArcGIS `Map`. Constructed and reconciled declaratively from the
 /// JS `<Map>` component; the `<MapView>` reads `map` by reference to render it.
-public final class ArcGISMapRef: SharedObject {
+public final class MapRef: SharedObject {
   let map: Map = Map()
 
   /// Generic setter dispatched by key — applies only the changed props sent from JS.
@@ -25,6 +25,14 @@ public final class ArcGISMapRef: SharedObject {
         break
       }
     }
+  }
+
+  func addLayer(_ ref: LayerRef) {
+    map.operationalLayers.append(ref.layer)
+  }
+
+  func removeLayer(_ ref: LayerRef) {
+    map.operationalLayers.removeAll { $0 === ref.layer }
   }
 }
 

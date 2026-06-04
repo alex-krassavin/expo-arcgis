@@ -5,7 +5,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
  * `BasemapStyle` (Kotlin) / `Basemap.Style` (Swift).
  * @see https://developers.arcgis.com/rest/basemap-styles/
  */
-export type ArcGISBasemapStyle =
+export type BasemapStyle =
   | 'arcGISImagery'
   | 'arcGISImageryStandard'
   | 'arcGISTopographic'
@@ -19,7 +19,7 @@ export type ArcGISBasemapStyle =
   | 'arcGISOceans';
 
 /** A center point and map scale used to position the map. */
-export type ArcGISViewpoint = {
+export type Viewpoint = {
   latitude: number;
   longitude: number;
   /** Map scale denominator. Smaller = more zoomed in (~72_000 ≈ town, ~10_000_000 ≈ country). */
@@ -32,9 +32,9 @@ export type ArcGISViewpoint = {
  */
 export type MapProps = {
   /** Basemap style. Defaults to `arcGISTopographic`. */
-  basemap?: ArcGISBasemapStyle;
+  basemap?: BasemapStyle;
   /** Center + scale applied when the map first loads. */
-  initialViewpoint?: ArcGISViewpoint;
+  initialViewpoint?: Viewpoint;
 };
 
 export type MapLoadedEventPayload = {
@@ -54,4 +54,58 @@ export type MapViewProps = {
   onMapLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the map fails to load (e.g. missing or invalid API key). */
   onMapLoadError?: (event: { nativeEvent: MapLoadErrorEventPayload }) => void;
+  /** Called when the user taps the map. */
+  onTap?: (event: { nativeEvent: TapEventPayload }) => void;
+};
+
+/** Common operational-layer props (subset of ArcGIS layer properties). */
+export type LayerProps = {
+  /** Layer opacity, 0–1. */
+  opacity?: number;
+  /** Whether the layer is visible. */
+  visible?: boolean;
+};
+
+/** Props for a `<FeatureLayer>` — mirror the native `FeatureLayer`. */
+export type FeatureLayerProps = LayerProps & {
+  /** URL of the feature service / feature layer. */
+  url: string;
+};
+
+/** Props for a `<TileLayer>` — mirror the native `ArcGISTiledLayer`. */
+export type TileLayerProps = LayerProps & {
+  /** URL of the tiled map service. */
+  url: string;
+};
+
+/** A geographic point (WGS84). */
+export type Point = {
+  latitude: number;
+  longitude: number;
+};
+
+/** Minimal marker symbol for a point graphic (v1 supports points + simple markers). */
+export type SimpleMarkerSymbol = {
+  /** Fill color as a hex string (e.g. `#ff0000`). */
+  color?: string;
+  /** Marker size in points. */
+  size?: number;
+  /** Marker shape. Defaults to `circle`. */
+  style?: 'circle' | 'square' | 'cross' | 'diamond' | 'triangle' | 'x';
+};
+
+/** Props for a `<Graphic>` — a point with a marker symbol drawn on the map's graphics overlay. */
+export type GraphicProps = {
+  /** Point geometry (the only geometry supported in v1). */
+  point: Point;
+  /** Marker symbol for the point. */
+  symbol?: SimpleMarkerSymbol;
+};
+
+/** Payload for the `<MapView onTap>` event. */
+export type TapEventPayload = {
+  /** Map location of the tap (WGS84). */
+  mapPoint: Point;
+  /** Screen location of the tap, in points. */
+  screenPoint: { x: number; y: number };
 };
