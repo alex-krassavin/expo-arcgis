@@ -7,6 +7,9 @@ import SwiftUI
 final class MapViewModel: ObservableObject {
   @Published private(set) var map: Map?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
+  @Published private(set) var viewpoint: Viewpoint?
+  /// Bumped on each viewpoint change so the SwiftUI `.task(id:)` re-runs and re-animates.
+  @Published private(set) var viewpointVersion = 0
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -19,6 +22,11 @@ final class MapViewModel: ObservableObject {
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
     graphicsOverlays = overlays
   }
+
+  func setViewpoint(_ viewpoint: Viewpoint) {
+    self.viewpoint = viewpoint
+    viewpointVersion += 1
+  }
 }
 
 /// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
@@ -27,23 +35,29 @@ struct ExpoArcgisMapContainer: View {
 
   var body: some View {
     if let map = model.map {
-      MapView(map: map, graphicsOverlays: model.graphicsOverlays)
-        .onSingleTapGesture { screenPoint, mapPoint in
-          // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
-          // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
-          let wgs84 = GeometryEngine.project(mapPoint, into: .wgs84) ?? mapPoint
-          model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
-        }
-        .task(id: ObjectIdentifier(map)) {
-          do {
-            try await map.load()
-            model.onLoaded?()
-          } catch is CancellationError {
-            // Superseded by a newer map; ignore.
-          } catch {
-            model.onLoadError?(error.localizedDescription)
+      MapViewReader { proxy in
+        MapView(map: map, graphicsOverlays: model.graphicsOverlays)
+          .onSingleTapGesture { screenPoint, mapPoint in
+            // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
+            // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
+            let wgs84 = GeometryEngine.project(mapPoint, into: .wgs84) ?? mapPoint
+            model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
-        }
+          .task(id: ObjectIdentifier(map)) {
+            do {
+              try await map.load()
+              model.onLoaded?()
+            } catch is CancellationError {
+              // Superseded by a newer map; ignore.
+            } catch {
+              model.onLoadError?(error.localizedDescription)
+            }
+          }
+          .task(id: model.viewpointVersion) {
+            guard let viewpoint = model.viewpoint else { return }
+            _ = await proxy.setViewpoint(viewpoint, duration: 0.5)
+          }
+      }
     }
   }
 }
@@ -90,5 +104,15 @@ class ExpoArcgisMapView: ExpoView {
   /// Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`.
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
+  }
+
+  /// Animates the view to a runtime viewpoint sent from JS.
+  func setViewpoint(_ vp: [String: Any]?) {
+    guard let vp,
+          let lat = (vp["latitude"] as? NSNumber)?.doubleValue,
+          let lon = (vp["longitude"] as? NSNumber)?.doubleValue,
+          let scale = (vp["scale"] as? NSNumber)?.doubleValue
+    else { return }
+    model.setViewpoint(Viewpoint(latitude: lat, longitude: lon, scale: scale))
   }
 }

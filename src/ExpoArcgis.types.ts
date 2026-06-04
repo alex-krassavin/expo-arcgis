@@ -50,6 +50,8 @@ export type MapLoadErrorEventPayload = {
 /** Props for the `<MapView>` host component. */
 export type MapViewProps = {
   style?: StyleProp<ViewStyle>;
+  /** Animates the view to this viewpoint whenever the value changes (runtime camera control). */
+  viewpoint?: Viewpoint;
   /** Called once the map has finished loading successfully. */
   onMapLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the map fails to load (e.g. missing or invalid API key). */

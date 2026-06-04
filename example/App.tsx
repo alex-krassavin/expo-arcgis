@@ -6,9 +6,10 @@ import {
   MapView,
   type MapLoadErrorEventPayload,
   type TapEventPayload,
+  type Viewpoint,
 } from 'expo-arcgis';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // "Add a point, line, and polygon" tutorial geometries (Santa Monica Mountains).
@@ -26,9 +27,14 @@ const POLYGON_POINTS = [
   { x: -118.80855, y: 34.0035 },
 ];
 
+// Viewpoint presets for the "Change viewpoint" sample.
+const SANTA_MONICA: Viewpoint = { latitude: 34.027, longitude: -118.805, scale: 72_000 };
+const GRIFFITH: Viewpoint = { latitude: 34.1184, longitude: -118.3004, scale: 40_000 };
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
+  const [viewpoint, setViewpoint] = useState<Viewpoint | undefined>(undefined);
 
   return (
     <SafeAreaProvider>
@@ -40,6 +46,7 @@ export default function App() {
           >
             <MapView
               style={styles.map}
+              viewpoint={viewpoint}
               onMapLoaded={() => setStatus('Map loaded ✅ — tap to drop a pin')}
               onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                 setStatus(`Load error: ${event.nativeEvent.message}`)
@@ -84,6 +91,10 @@ export default function App() {
           </Map>
         </MapSettings>
         <View style={styles.bar}>
+          <View style={styles.buttons}>
+            <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />
+            <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
+          </View>
           <Text style={styles.status}>{status}</Text>
         </View>
       </SafeAreaView>
@@ -95,5 +106,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   bar: { padding: 12, backgroundColor: '#101418' },
+  buttons: { flexDirection: 'row', justifyContent: 'space-around', paddingBottom: 8 },
   status: { color: '#ffffff', textAlign: 'center' },
 });

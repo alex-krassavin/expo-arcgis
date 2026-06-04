@@ -111,6 +111,10 @@ class ExpoArcgisModule : Module() {
       Prop("graphicsOverlays") { view: ExpoArcgisMapView, refs: List<GraphicsOverlayRef> ->
         view.setGraphicsOverlays(refs)
       }
+
+      Prop("viewpoint") { view: ExpoArcgisMapView, vp: Map<String, Any?>? ->
+        view.setViewpoint(vp)
+      }
     }
 
     // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').

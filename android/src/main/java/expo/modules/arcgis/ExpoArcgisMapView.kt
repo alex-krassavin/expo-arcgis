@@ -7,6 +7,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.records.Field
@@ -91,6 +92,15 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
     mapView.graphicsOverlays.clear()
     mapView.graphicsOverlays.addAll(refs.map { it.overlay })
+  }
+
+  /** Animates the view to a runtime viewpoint sent from JS. */
+  fun setViewpoint(vp: Map<String, Any?>?) {
+    vp ?: return
+    val lat = (vp["latitude"] as? Number)?.toDouble() ?: return
+    val lon = (vp["longitude"] as? Number)?.toDouble() ?: return
+    val scale = (vp["scale"] as? Number)?.toDouble() ?: return
+    scope.launch { mapView.setViewpointAnimated(Viewpoint(lat, lon, scale), 0.5f) }
   }
 
   override fun onAttachedToWindow() {
