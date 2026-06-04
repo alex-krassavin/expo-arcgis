@@ -42,7 +42,7 @@ public class ExpoArcgisModule: Module {
     // Declarative 3D scene model — a SharedObject the JS <Scene> constructs and reconciles.
     Class(SceneRef.self) {
       Constructor { (props: [String: Any]?) -> SceneRef in
-        let ref = SceneRef()
+        let ref = SceneRef(portalItem: props?["portalItem"] as? [String: Any])
         if let props {
           ref.applyProps(props)
         }

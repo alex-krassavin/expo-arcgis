@@ -263,6 +263,8 @@ export type SceneProps = {
   camera?: Camera;
   /** Ground elevation surface (terrain). */
   surface?: Surface;
+  /** Load the scene from an ArcGIS web scene. Construction-only (set once; remount to change). */
+  portalItem?: PortalItem;
 };
 
 /** Props for the `<SceneView>` host component. */

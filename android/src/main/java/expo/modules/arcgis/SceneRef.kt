@@ -5,15 +5,17 @@ import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.ArcGISTiledElevationSource
 import com.arcgismaps.mapping.Basemap
+import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Surface
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.Camera
+import com.arcgismaps.portal.Portal
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
 /** SharedObject wrapping a native [ArcGISScene] (3D). Mirrors [MapRef]. */
-class SceneRef(appContext: AppContext) : SharedObject(appContext) {
-  val scene = ArcGISScene()
+class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
+  val scene: ArcGISScene = buildScene(portalItem)
 
   fun applyProps(changed: Map<String, Any?>) {
     changed.forEach { (key, value) ->
@@ -72,4 +74,12 @@ private fun buildSurface(s: Map<*, *>): Surface = Surface().apply {
     }
   }
   (s["elevationExaggeration"] as? Number)?.toFloat()?.let { elevationExaggeration = it }
+}
+
+/** Builds the scene from a portal item (web scene) when provided, otherwise an empty scene. */
+private fun buildScene(portalItem: Map<String, Any?>?): ArcGISScene {
+  portalItem ?: return ArcGISScene()
+  val itemId = portalItem["itemId"] as? String ?: return ArcGISScene()
+  val portalUrl = portalItem["portalUrl"] as? String ?: "https://www.arcgis.com"
+  return ArcGISScene(PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId))
 }

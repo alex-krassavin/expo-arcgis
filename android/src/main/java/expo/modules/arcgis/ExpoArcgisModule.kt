@@ -49,7 +49,8 @@ class ExpoArcgisModule : Module() {
     // Declarative 3D scene model — a SharedObject the JS <Scene> constructs and reconciles.
     Class(SceneRef::class) {
       Constructor { props: Map<String, Any?>? ->
-        SceneRef(appContext).also { ref -> props?.let { ref.applyProps(it) } }
+        SceneRef(appContext, props?.get("portalItem") as? Map<String, Any?>)
+          .also { ref -> props?.let { ref.applyProps(it) } }
       }
       Function("applyProps") { ref: SceneRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)

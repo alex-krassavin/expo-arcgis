@@ -40,6 +40,9 @@ const GRIFFITH: Viewpoint = { latitude: 34.1184, longitude: -118.3004, scale: 40
 // Public ArcGIS Online web map for the "Display a web map" sample.
 const WEB_MAP_ID = '41281c51f9de45edaf1c8ed44bb10e30';
 
+// Public ArcGIS Online web scene for the "Display a web scene" sample.
+const WEB_SCENE_ID = '579f97b2f3b94d4a8e48a5f140a6639b';
+
 // Public ArcGIS dynamic map service for the "Manage operational layers" sample.
 const USA_MAP_SERVICE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer';
 
@@ -73,6 +76,7 @@ export default function App() {
   const [showLayer, setShowLayer] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [mode3D, setMode3D] = useState(false);
+  const [webScene, setWebScene] = useState(false);
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -134,7 +138,13 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
           {mode3D ? (
-            <Scene basemap="arcGISImagery" camera={CAMERA} surface={ELEVATION}>
+            <Scene
+              key={webScene ? 'webscene' : 'scene'}
+              basemap={webScene ? undefined : 'arcGISImagery'}
+              camera={webScene ? undefined : CAMERA}
+              surface={webScene ? undefined : ELEVATION}
+              portalItem={webScene ? { itemId: WEB_SCENE_ID } : undefined}
+            >
               <SceneView
                 style={styles.map}
                 onSceneLoaded={() => setStatus('Scene loaded ✅ (3D terrain + camera)')}
@@ -176,11 +186,20 @@ export default function App() {
         <View style={styles.bar}>
           <View style={styles.buttons}>
             <Button title={mode3D ? '2D map' : '3D scene'} onPress={() => setMode3D((v) => !v)} />
-            <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />
-            <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
-            <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
-            <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
-            <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
+            {mode3D ? (
+              <Button
+                title={webScene ? 'Built scene' : 'Web scene'}
+                onPress={() => setWebScene((v) => !v)}
+              />
+            ) : (
+              <>
+                <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />
+                <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
+                <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
+                <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
+                <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
+              </>
+            )}
           </View>
           <Text style={styles.status}>{status}</Text>
         </View>
