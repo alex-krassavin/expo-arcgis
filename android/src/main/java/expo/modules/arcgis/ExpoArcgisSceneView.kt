@@ -7,6 +7,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.mapping.view.SceneView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
@@ -70,6 +71,23 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
     sceneView.graphicsOverlays.clear()
     sceneView.graphicsOverlays.addAll(refs.map { it.overlay })
+  }
+
+  /** Animates the view to a runtime camera sent from JS. */
+  fun setCamera(c: Map<String, Any?>?) {
+    val position = c?.get("position") as? Map<*, *> ?: return
+    val x = (position["x"] as? Number)?.toDouble() ?: 0.0
+    val y = (position["y"] as? Number)?.toDouble() ?: 0.0
+    val z = (position["z"] as? Number)?.toDouble()
+    val point = if (z != null) Point(x, y, z, SpatialReference.wgs84())
+    else Point(x, y, SpatialReference.wgs84())
+    val camera = Camera(
+      point,
+      (c["heading"] as? Number)?.toDouble() ?: 0.0,
+      (c["pitch"] as? Number)?.toDouble() ?: 0.0,
+      (c["roll"] as? Number)?.toDouble() ?: 0.0,
+    )
+    scope.launch { sceneView.setViewpointCameraAnimated(camera, 0.5f) }
   }
 
   override fun onAttachedToWindow() {

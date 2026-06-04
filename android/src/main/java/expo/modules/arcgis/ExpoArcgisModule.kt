@@ -147,6 +147,10 @@ class ExpoArcgisModule : Module() {
       Prop("graphicsOverlays") { view: ExpoArcgisSceneView, refs: List<GraphicsOverlayRef> ->
         view.setGraphicsOverlays(refs)
       }
+
+      Prop("camera") { view: ExpoArcgisSceneView, camera: Map<String, Any?>? ->
+        view.setCamera(camera)
+      }
     }
   }
 }

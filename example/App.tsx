@@ -68,6 +68,10 @@ const ELEVATION: Surface = {
   elevationExaggeration: 2.5,
 };
 
+// Runtime camera presets for the "Change camera controller" sample.
+const CAMERA_NORTH: Camera = { position: { x: -118.8, y: 33.96, z: 4000 }, heading: 0, pitch: 70, roll: 0 };
+const CAMERA_EAST: Camera = { position: { x: -118.86, y: 34.0, z: 4000 }, heading: 90, pitch: 75, roll: 0 };
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
@@ -77,6 +81,7 @@ export default function App() {
   const [showLocation, setShowLocation] = useState(false);
   const [mode3D, setMode3D] = useState(false);
   const [webScene, setWebScene] = useState(false);
+  const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -147,6 +152,7 @@ export default function App() {
             >
               <SceneView
                 style={styles.map}
+                camera={sceneCamera}
                 onSceneLoaded={() => setStatus('Scene loaded ✅ (3D terrain + camera)')}
                 onSceneLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                   setStatus(`Scene error: ${event.nativeEvent.message}`)
@@ -187,10 +193,14 @@ export default function App() {
           <View style={styles.buttons}>
             <Button title={mode3D ? '2D map' : '3D scene'} onPress={() => setMode3D((v) => !v)} />
             {mode3D ? (
-              <Button
-                title={webScene ? 'Built scene' : 'Web scene'}
-                onPress={() => setWebScene((v) => !v)}
-              />
+              <>
+                <Button
+                  title={webScene ? 'Built scene' : 'Web scene'}
+                  onPress={() => setWebScene((v) => !v)}
+                />
+                <Button title="Cam N" onPress={() => setSceneCamera(CAMERA_NORTH)} />
+                <Button title="Cam E" onPress={() => setSceneCamera(CAMERA_EAST)} />
+              </>
             ) : (
               <>
                 <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />

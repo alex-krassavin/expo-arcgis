@@ -270,6 +270,8 @@ export type SceneProps = {
 /** Props for the `<SceneView>` host component. */
 export type SceneViewProps = {
   style?: StyleProp<ViewStyle>;
+  /** Animates the view to this 3D camera whenever the value changes (runtime camera control). */
+  camera?: Camera;
   /** Called once the scene has finished loading successfully. */
   onSceneLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the scene fails to load. */

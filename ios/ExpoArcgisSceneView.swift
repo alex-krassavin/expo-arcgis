@@ -8,6 +8,9 @@ final class SceneViewModel: ObservableObject {
   // `ArcGIS.Scene` qualified to avoid collision with `SwiftUI.Scene` (this file imports SwiftUI).
   @Published private(set) var scene: ArcGIS.Scene?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
+  @Published private(set) var camera: Camera?
+  /// Bumped on each camera change so the SwiftUI `.task(id:)` re-runs and re-animates.
+  @Published private(set) var cameraVersion = 0
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -20,6 +23,11 @@ final class SceneViewModel: ObservableObject {
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
     graphicsOverlays = overlays
   }
+
+  func setCamera(_ camera: Camera) {
+    self.camera = camera
+    cameraVersion += 1
+  }
 }
 
 /// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
@@ -28,23 +36,29 @@ struct ExpoArcgisSceneContainer: View {
 
   var body: some View {
     if let scene = model.scene {
-      SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
-        .onSingleTapGesture { screenPoint, scenePoint in
-          // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
-          guard let scenePoint else { return }
-          let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
-          model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
-        }
-        .task(id: ObjectIdentifier(scene)) {
-          do {
-            try await scene.load()
-            model.onLoaded?()
-          } catch is CancellationError {
-            // Superseded by a newer scene; ignore.
-          } catch {
-            model.onLoadError?(error.localizedDescription)
+      SceneViewReader { proxy in
+        SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
+          .onSingleTapGesture { screenPoint, scenePoint in
+            // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
+            guard let scenePoint else { return }
+            let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
+            model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
-        }
+          .task(id: ObjectIdentifier(scene)) {
+            do {
+              try await scene.load()
+              model.onLoaded?()
+            } catch is CancellationError {
+              // Superseded by a newer scene; ignore.
+            } catch {
+              model.onLoadError?(error.localizedDescription)
+            }
+          }
+          .task(id: model.cameraVersion) {
+            guard let camera = model.camera else { return }
+            _ = await proxy.setViewpointCamera(camera, duration: 0.5)
+          }
+      }
     }
   }
 }
@@ -90,5 +104,18 @@ class ExpoArcgisSceneView: ExpoView {
 
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
+  }
+
+  /// Animates the view to a runtime camera sent from JS.
+  func setCamera(_ c: [String: Any]?) {
+    guard let c, let position = c["position"] as? [String: Any] else { return }
+    let point = scenePoint(position)
+    let camera = Camera(
+      location: point,
+      heading: (c["heading"] as? NSNumber)?.doubleValue ?? 0,
+      pitch: (c["pitch"] as? NSNumber)?.doubleValue ?? 0,
+      roll: (c["roll"] as? NSNumber)?.doubleValue ?? 0
+    )
+    model.setCamera(camera)
   }
 }
