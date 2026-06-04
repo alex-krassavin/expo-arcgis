@@ -7,6 +7,7 @@ import type {
   MapImageLayerProps,
   MapProps,
   Renderer,
+  SceneLayerProps,
   SceneProps,
   TileLayerProps,
 } from './ExpoArcgis.types';
@@ -57,6 +58,7 @@ declare class ExpoArcgisModule extends NativeModule {
   FeatureLayerRef: new (props: FeatureLayerProps) => LayerRef;
   TiledLayerRef: new (props: TileLayerProps) => LayerRef;
   MapImageLayerRef: new (props: MapImageLayerProps) => LayerRef;
+  SceneLayerRef: new (props: SceneLayerProps) => LayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
 }

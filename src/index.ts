@@ -17,6 +17,7 @@ export { SceneView } from './SceneView';
 export { FeatureLayer } from './FeatureLayer';
 export { TileLayer } from './TileLayer';
 export { MapImageLayer } from './MapImageLayer';
+export { SceneLayer } from './SceneLayer';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
 export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';

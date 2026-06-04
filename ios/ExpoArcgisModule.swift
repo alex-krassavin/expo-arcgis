@@ -93,6 +93,17 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    Class(SceneLayerRef.self) {
+      Constructor { (props: [String: Any]) -> SceneLayerRef in
+        let ref = SceneLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: SceneLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef.self) {
       Constructor { () -> GraphicsOverlayRef in GraphicsOverlayRef() }

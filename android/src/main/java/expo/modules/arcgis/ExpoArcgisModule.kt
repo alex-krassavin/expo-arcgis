@@ -91,6 +91,15 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    Class(SceneLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        SceneLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: SceneLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef::class) {
       Constructor { GraphicsOverlayRef(appContext) }

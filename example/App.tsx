@@ -6,6 +6,7 @@ import {
   MapSettings,
   MapView,
   Scene,
+  SceneLayer,
   SceneView,
   type Camera,
   type MapLoadErrorEventPayload,
@@ -72,6 +73,11 @@ const ELEVATION: Surface = {
 const CAMERA_NORTH: Camera = { position: { x: -118.8, y: 33.96, z: 4000 }, heading: 0, pitch: 70, roll: 0 };
 const CAMERA_EAST: Camera = { position: { x: -118.86, y: 34.0, z: 4000 }, heading: 90, pitch: 75, roll: 0 };
 
+// Public 3D scene layer (San Francisco buildings) for the "Scene layer" sample.
+const SF_BUILDINGS =
+  'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_Bldgs/SceneServer';
+const CAMERA_SF: Camera = { position: { x: -122.4, y: 37.78, z: 600 }, heading: 0, pitch: 65, roll: 0 };
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
@@ -82,6 +88,7 @@ export default function App() {
   const [mode3D, setMode3D] = useState(false);
   const [webScene, setWebScene] = useState(false);
   const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
+  const [buildings, setBuildings] = useState(false);
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -150,6 +157,7 @@ export default function App() {
               surface={webScene ? undefined : ELEVATION}
               portalItem={webScene ? { itemId: WEB_SCENE_ID } : undefined}
             >
+              {buildings && <SceneLayer url={SF_BUILDINGS} />}
               <SceneView
                 style={styles.map}
                 camera={sceneCamera}
@@ -200,6 +208,13 @@ export default function App() {
                 />
                 <Button title="Cam N" onPress={() => setSceneCamera(CAMERA_NORTH)} />
                 <Button title="Cam E" onPress={() => setSceneCamera(CAMERA_EAST)} />
+                <Button
+                  title={buildings ? 'No bldgs' : 'Buildings'}
+                  onPress={() => {
+                    setBuildings((v) => !v);
+                    setSceneCamera(CAMERA_SF);
+                  }}
+                />
               </>
             ) : (
               <>

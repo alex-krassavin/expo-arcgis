@@ -45,3 +45,10 @@ public final class MapImageLayerRef: LayerRef {
     super.init(layer: ArcGISMapImageLayer(url: URL(string: url)!))
   }
 }
+
+/// Operational 3D scene layer (3D objects / integrated mesh) backed by a scene service URL.
+public final class SceneLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: ArcGISSceneLayer(url: URL(string: url)!))
+  }
+}

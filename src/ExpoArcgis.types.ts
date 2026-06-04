@@ -109,6 +109,12 @@ export type MapImageLayerProps = LayerProps & {
   url: string;
 };
 
+/** Props for a `<SceneLayer>` — mirror the native `ArcGISSceneLayer` (3D objects / integrated mesh). */
+export type SceneLayerProps = LayerProps & {
+  /** URL of the scene service (`.../SceneServer`). */
+  url: string;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────
