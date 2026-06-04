@@ -28,11 +28,11 @@ public final class MapRef: SharedObject {
   }
 
   func addLayer(_ ref: LayerRef) {
-    map.operationalLayers.append(ref.layer)
+    map.addOperationalLayer(ref.layer)
   }
 
   func removeLayer(_ ref: LayerRef) {
-    map.operationalLayers.removeAll { $0 === ref.layer }
+    map.removeOperationalLayer(ref.layer)
   }
 }
 

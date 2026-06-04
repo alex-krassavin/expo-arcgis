@@ -5,14 +5,15 @@ import SwiftUI
 
 /// Holds the externally-provided ArcGIS `Scene` and bridges events to JS.
 final class SceneViewModel: ObservableObject {
-  @Published private(set) var scene: Scene?
+  // `ArcGIS.Scene` qualified to avoid collision with `SwiftUI.Scene` (this file imports SwiftUI).
+  @Published private(set) var scene: ArcGIS.Scene?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
   var onTap: ((_ latitude: Double, _ longitude: Double, _ screenX: Double, _ screenY: Double) -> Void)?
 
-  func setScene(_ scene: Scene?) {
+  func setScene(_ scene: ArcGIS.Scene?) {
     self.scene = scene
   }
 
@@ -28,9 +29,10 @@ struct ExpoArcgisSceneContainer: View {
   var body: some View {
     if let scene = model.scene {
       SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
-        .onSingleTapGesture { screenPoint, mapPoint in
-          guard let mapPoint else { return }
-          let wgs84 = (GeometryEngine.project(mapPoint, into: .wgs84) as? Point) ?? mapPoint
+        .onSingleTapGesture { screenPoint, scenePoint in
+          // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
+          guard let scenePoint else { return }
+          let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
           model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
         }
         .task(id: ObjectIdentifier(scene)) {

@@ -118,8 +118,9 @@ public class ExpoArcgisModule: Module {
     }
 
     // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
+    // Swift names views with `ViewName(...)` (Kotlin uses `Name(...)` inside the View block).
     View(ExpoArcgisSceneView.self) {
-      Name("ExpoArcgisSceneView")
+      ViewName("ExpoArcgisSceneView")
       Events("onSceneLoaded", "onSceneLoadError", "onTap")
 
       Prop("scene") { (view: ExpoArcgisSceneView, ref: SceneRef?) in

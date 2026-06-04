@@ -29,8 +29,9 @@ struct ExpoArcgisMapContainer: View {
     if let map = model.map {
       MapView(map: map, graphicsOverlays: model.graphicsOverlays)
         .onSingleTapGesture { screenPoint, mapPoint in
-          guard let mapPoint else { return }
-          let wgs84 = (GeometryEngine.project(mapPoint, into: .wgs84) as? Point) ?? mapPoint
+          // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
+          // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
+          let wgs84 = GeometryEngine.project(mapPoint, into: .wgs84) ?? mapPoint
           model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
         }
         .task(id: ObjectIdentifier(map)) {
