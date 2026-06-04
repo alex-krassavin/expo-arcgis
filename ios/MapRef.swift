@@ -4,7 +4,25 @@ import ExpoModulesCore
 /// SharedObject wrapping a native ArcGIS `Map`. Constructed and reconciled declaratively from the
 /// JS `<Map>` component; the `<MapView>` reads `map` by reference to render it.
 public final class MapRef: SharedObject {
-  let map: Map = Map()
+  let map: Map
+
+  /// Builds the map from a portal item (web map) when provided, otherwise an empty map.
+  init(portalItem: [String: Any]?) {
+    if let portalItem,
+       let itemId = portalItem["itemId"] as? String,
+       let id = PortalItem.ID(itemId) {
+      let portal: Portal
+      if let urlString = portalItem["portalUrl"] as? String, let url = URL(string: urlString) {
+        portal = Portal(url: url, connection: .anonymous)
+      } else {
+        portal = .arcGISOnline(connection: .anonymous)
+      }
+      map = Map(item: PortalItem(portal: portal, id: id))
+    } else {
+      map = Map()
+    }
+    super.init()
+  }
 
   /// Generic setter dispatched by key — applies only the changed props sent from JS.
   func applyProps(_ changed: [String: Any]) {

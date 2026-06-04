@@ -19,7 +19,7 @@ public class ExpoArcgisModule: Module {
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef.self) {
       Constructor { (props: [String: Any]?) -> MapRef in
-        let ref = MapRef()
+        let ref = MapRef(portalItem: props?["portalItem"] as? [String: Any])
         if let props {
           ref.applyProps(props)
         }

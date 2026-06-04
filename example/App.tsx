@@ -31,18 +31,24 @@ const POLYGON_POINTS = [
 const SANTA_MONICA: Viewpoint = { latitude: 34.027, longitude: -118.805, scale: 72_000 };
 const GRIFFITH: Viewpoint = { latitude: 34.1184, longitude: -118.3004, scale: 40_000 };
 
+// Public ArcGIS Online web map for the "Display a web map" sample.
+const WEB_MAP_ID = '41281c51f9de45edaf1c8ed44bb10e30';
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
   const [viewpoint, setViewpoint] = useState<Viewpoint | undefined>(undefined);
+  const [webMap, setWebMap] = useState(false);
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
           <Map
-            basemap="arcGISTopographic"
-            initialViewpoint={{ latitude: 34.027, longitude: -118.805, scale: 72_000 }}
+            key={webMap ? 'web' : 'base'}
+            basemap={webMap ? undefined : 'arcGISTopographic'}
+            initialViewpoint={webMap ? undefined : SANTA_MONICA}
+            portalItem={webMap ? { itemId: WEB_MAP_ID } : undefined}
           >
             <MapView
               style={styles.map}
@@ -94,6 +100,7 @@ export default function App() {
           <View style={styles.buttons}>
             <Button title="Santa Monica" onPress={() => setViewpoint(SANTA_MONICA)} />
             <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
+            <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
           </View>
           <Text style={styles.status}>{status}</Text>
         </View>

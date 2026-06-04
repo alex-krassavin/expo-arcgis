@@ -26,15 +26,25 @@ export type Viewpoint = {
   scale: number;
 };
 
+/** Reference to an ArcGIS web map / web scene stored as a portal item. */
+export type PortalItem = {
+  /** The portal item id (e.g. a web map's item id). */
+  itemId: string;
+  /** Portal URL. Defaults to `https://www.arcgis.com` (ArcGIS Online, anonymous). */
+  portalUrl?: string;
+};
+
 /**
  * Props for the `<Map>` model component — mirror the configurable properties of the
  * native `ArcGISMap`. Reconciled into the underlying SharedObject via `applyProps`.
  */
 export type MapProps = {
-  /** Basemap style. Defaults to `arcGISTopographic`. */
+  /** Basemap style. Defaults to `arcGISTopographic`. Ignored when `portalItem` is set. */
   basemap?: BasemapStyle;
   /** Center + scale applied when the map first loads. */
   initialViewpoint?: Viewpoint;
+  /** Load the map from an ArcGIS web map. Construction-only (set once; remount to change). */
+  portalItem?: PortalItem;
 };
 
 export type MapLoadedEventPayload = {
