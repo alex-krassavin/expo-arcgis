@@ -78,34 +78,115 @@ export type TileLayerProps = LayerProps & {
   url: string;
 };
 
-/** A geographic point (WGS84). */
+// ────────────────────────────────────────────────────────────────────────────
+// Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Well-known ID (WKID) of a coordinate system. `4326` = WGS84, `3857` = Web Mercator. */
+export type SpatialReference = number;
+
+/**
+ * A point geometry — `x` is longitude and `y` is latitude in a geographic spatial
+ * reference. Mirrors the native `Point(x:y:spatialReference:)`.
+ */
 export type Point = {
-  latitude: number;
-  longitude: number;
+  x: number;
+  y: number;
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
 };
 
-/** Minimal marker symbol for a point graphic (v1 supports points + simple markers). */
+/** A polyline geometry — an ordered list of vertices forming a single path. */
+export type Polyline = {
+  points: Point[];
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
+};
+
+/** A polygon geometry — an ordered list of vertices forming a single ring (auto-closed). */
+export type Polygon = {
+  points: Point[];
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
+};
+
+/**
+ * A graphic's geometry. The `type` discriminator mirrors the ArcGIS web API
+ * (`"point"` / `"polyline"` / `"polygon"`) and selects the native geometry class.
+ */
+export type Geometry =
+  | ({ type: 'point' } & Point)
+  | ({ type: 'polyline' } & Polyline)
+  | ({ type: 'polygon' } & Polygon);
+
+// ────────────────────────────────────────────────────────────────────────────
+// Symbols — mirror `SimpleMarkerSymbol` / `SimpleLineSymbol` / `SimpleFillSymbol`.
+// Colors are hex strings: `#RRGGBB` or `#RRGGBBAA` (alpha last).
+// ────────────────────────────────────────────────────────────────────────────
+
+export type SimpleMarkerSymbolStyle = 'circle' | 'cross' | 'diamond' | 'square' | 'triangle' | 'x';
+
+export type SimpleLineSymbolStyle = 'solid' | 'dash' | 'dot' | 'dash-dot' | 'dash-dot-dot' | 'none';
+
+export type SimpleFillSymbolStyle =
+  | 'solid'
+  | 'none'
+  | 'horizontal'
+  | 'vertical'
+  | 'cross'
+  | 'diagonal-cross'
+  | 'forward-diagonal'
+  | 'backward-diagonal';
+
+/** Stroke options shared by `SimpleLineSymbol` and the `outline` of marker/fill symbols. */
+export type Stroke = {
+  style?: SimpleLineSymbolStyle;
+  /** Stroke color as a hex string. */
+  color?: string;
+  /** Stroke width in points. */
+  width?: number;
+};
+
+/** A simple marker symbol for point graphics. */
 export type SimpleMarkerSymbol = {
-  /** Fill color as a hex string (e.g. `#ff0000`). */
+  type: 'simple-marker';
+  style?: SimpleMarkerSymbolStyle;
+  /** Fill color as a hex string (e.g. `#ff3b30`). */
   color?: string;
   /** Marker size in points. */
   size?: number;
-  /** Marker shape. Defaults to `circle`. */
-  style?: 'circle' | 'square' | 'cross' | 'diamond' | 'triangle' | 'x';
+  /** Optional outline stroke. */
+  outline?: Stroke;
 };
 
-/** Props for a `<Graphic>` — a point with a marker symbol drawn on the map's graphics overlay. */
+/** A simple line symbol for polyline graphics (also used as an `outline`). */
+export type SimpleLineSymbol = { type: 'simple-line' } & Stroke;
+
+/** A simple fill symbol for polygon graphics. */
+export type SimpleFillSymbol = {
+  type: 'simple-fill';
+  style?: SimpleFillSymbolStyle;
+  /** Fill color as a hex string (e.g. `#ffa50080`). */
+  color?: string;
+  /** Optional outline stroke. */
+  outline?: Stroke;
+};
+
+/** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
+export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol;
+
+/** Props for a `<Graphic>` — a `geometry` drawn with a `symbol` on the nearest graphics overlay. */
 export type GraphicProps = {
-  /** Point geometry (the only geometry supported in v1). */
-  point: Point;
-  /** Marker symbol for the point. */
-  symbol?: SimpleMarkerSymbol;
+  /** Point, polyline, or polygon geometry. */
+  geometry: Geometry;
+  /** Symbol used to draw the geometry. */
+  symbol?: Symbol;
 };
 
 /** Payload for the `<MapView onTap>` event. */
 export type TapEventPayload = {
-  /** Map location of the tap (WGS84). */
-  mapPoint: Point;
+  /** Map location of the tap, in geographic coordinates (WGS84). */
+  mapPoint: { latitude: number; longitude: number };
   /** Screen location of the tap, in points. */
   screenPoint: { x: number; y: number };
 };
