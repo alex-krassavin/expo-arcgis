@@ -1,0 +1,33 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.arcgis'
+version = '0.1.0'
+
+// ArcGIS Maps SDK for Kotlin (300.0.0) is published to Esri's Maven repository.
+// The consuming app must expose this repository as well — the config plugin adds it to
+// the app's allprojects.repositories so dependency resolution succeeds during the app build.
+repositories {
+  maven {
+    url = uri('https://esri.jfrog.io/artifactory/arcgis')
+  }
+}
+
+android {
+  namespace "expo.modules.arcgis"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // ArcGIS Maps SDK for Kotlin — core MapView/GeoView, basemaps, layers, graphics.
+  // Requires the consuming app to set minSdk >= 28 and compileSdk >= 36 (config plugin).
+  implementation 'com.esri:arcgis-maps-kotlin:300.0.0'
+}

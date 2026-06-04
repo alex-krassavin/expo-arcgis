@@ -1,0 +1,26 @@
+// Dynamic Expo config so the ArcGIS API key can come from an environment variable.
+// Provide it at prebuild/build time, e.g. `ARCGIS_API_KEY=... npx expo run:ios`.
+module.exports = {
+  expo: {
+    name: 'expo-arcgis-example',
+    slug: 'expo-arcgis-example',
+    version: '1.0.0',
+    orientation: 'portrait',
+    newArchEnabled: true,
+    ios: {
+      bundleIdentifier: 'com.example.expoarcgis',
+    },
+    android: {
+      package: 'com.example.expoarcgis',
+    },
+    plugins: [
+      [
+        'expo-arcgis',
+        {
+          // Optional — when omitted, set the key at runtime via ExpoArcgis.setApiKey().
+          apiKey: process.env.ARCGIS_API_KEY,
+        },
+      ],
+    ],
+  },
+};

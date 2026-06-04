@@ -1,0 +1,16 @@
+# Exclude all top-level hidden directories by convention
+/.*/
+
+# Dev-only sources and tooling — the compiled build/ folder is published instead
+/example
+/internal
+/src
+/plugin/src
+/__mocks__
+/__tests__
+
+# Configs not needed by consumers of the published package
+/babel.config.js
+/eslint.config.cjs
+/tsconfig.json
+/tsconfig.plugin.json
