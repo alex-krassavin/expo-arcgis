@@ -57,11 +57,24 @@ export type MapLoadErrorEventPayload = {
   message: string;
 };
 
+/** Auto-pan behavior for the device location display. */
+export type LocationDisplayAutoPanMode = 'off' | 'recenter' | 'navigation' | 'compassNavigation';
+
+/** Device-location display for a `<MapView>`. Providing it enables location (starts the GPS). */
+export type LocationDisplay = {
+  /** How the view follows the device. Defaults to `recenter`. */
+  autoPanMode?: LocationDisplayAutoPanMode;
+  /** Whether to draw the location symbol. Defaults to `true`. */
+  showLocation?: boolean;
+};
+
 /** Props for the `<MapView>` host component. */
 export type MapViewProps = {
   style?: StyleProp<ViewStyle>;
   /** Animates the view to this viewpoint whenever the value changes (runtime camera control). */
   viewpoint?: Viewpoint;
+  /** Device-location display. When set, the view shows the device's GPS location. */
+  locationDisplay?: LocationDisplay;
   /** Called once the map has finished loading successfully. */
   onMapLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the map fails to load (e.g. missing or invalid API key). */

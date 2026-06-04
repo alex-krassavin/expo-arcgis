@@ -133,6 +133,10 @@ public class ExpoArcgisModule: Module {
       Prop("viewpoint") { (view: ExpoArcgisMapView, viewpoint: [String: Any]?) in
         view.setViewpoint(viewpoint)
       }
+
+      Prop("locationDisplay") { (view: ExpoArcgisMapView, config: [String: Any]?) in
+        view.setLocationDisplay(config)
+      }
     }
 
     // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').

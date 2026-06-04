@@ -7,6 +7,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.location.LocationDisplayAutoPanMode
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
 import expo.modules.kotlin.AppContext
@@ -103,6 +104,18 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     scope.launch { mapView.setViewpointAnimated(Viewpoint(lat, lon, scale), 0.5f) }
   }
 
+  /** Enables/configures the device location display from JS (null disables it). */
+  fun setLocationDisplay(config: Map<String, Any?>?) {
+    val locationDisplay = mapView.locationDisplay
+    if (config == null) {
+      scope.launch { locationDisplay.dataSource.stop() }
+      return
+    }
+    locationDisplay.setAutoPanMode(autoPanMode(config["autoPanMode"] as? String))
+    (config["showLocation"] as? Boolean)?.let { locationDisplay.showLocation = it }
+    scope.launch { locationDisplay.dataSource.start() }
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // The view-based MapView renders only while observing a lifecycle.
@@ -120,4 +133,12 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     observedLifecycle?.removeObserver(mapView)
     observedLifecycle = null
   }
+}
+
+/** Maps the JS auto-pan union to the native [LocationDisplayAutoPanMode]. */
+private fun autoPanMode(mode: String?): LocationDisplayAutoPanMode = when (mode) {
+  "recenter" -> LocationDisplayAutoPanMode.Recenter
+  "navigation" -> LocationDisplayAutoPanMode.Navigation
+  "compassNavigation" -> LocationDisplayAutoPanMode.CompassNavigation
+  else -> LocationDisplayAutoPanMode.Off
 }

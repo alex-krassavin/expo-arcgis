@@ -19,6 +19,8 @@ module.exports = {
         {
           // Optional — when omitted, set the key at runtime via ExpoArcgis.setApiKey().
           apiKey: process.env.ARCGIS_API_KEY,
+          // Adds NSLocationWhenInUseUsageDescription (iOS) + ACCESS_FINE/COARSE_LOCATION (Android).
+          locationWhenInUseUsageDescription: 'Show your location on the map',
         },
       ],
     ],

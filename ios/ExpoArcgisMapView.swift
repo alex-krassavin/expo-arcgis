@@ -10,6 +10,8 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var viewpoint: Viewpoint?
   /// Bumped on each viewpoint change so the SwiftUI `.task(id:)` re-runs and re-animates.
   @Published private(set) var viewpointVersion = 0
+  let locationDisplay = LocationDisplay(dataSource: SystemLocationDataSource())
+  @Published private(set) var locationEnabled = false
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -27,6 +29,12 @@ final class MapViewModel: ObservableObject {
     self.viewpoint = viewpoint
     viewpointVersion += 1
   }
+
+  func setLocationDisplay(enabled: Bool, autoPanMode: LocationDisplay.AutoPanMode, showsLocation: Bool) {
+    locationDisplay.autoPanMode = autoPanMode
+    locationDisplay.showsLocation = showsLocation
+    locationEnabled = enabled
+  }
 }
 
 /// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
@@ -37,6 +45,8 @@ struct ExpoArcgisMapContainer: View {
     if let map = model.map {
       MapViewReader { proxy in
         MapView(map: map, graphicsOverlays: model.graphicsOverlays)
+          // `locationDisplay(_:)` returns `MapView`, so it must precede the SwiftUI modifiers below.
+          .locationDisplay(model.locationDisplay)
           .onSingleTapGesture { screenPoint, mapPoint in
             // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
             // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
@@ -56,6 +66,13 @@ struct ExpoArcgisMapContainer: View {
           .task(id: model.viewpointVersion) {
             guard let viewpoint = model.viewpoint else { return }
             _ = await proxy.setViewpoint(viewpoint, duration: 0.5)
+          }
+          .task(id: model.locationEnabled) {
+            if model.locationEnabled {
+              try? await model.locationDisplay.dataSource.start()
+            } else {
+              await model.locationDisplay.dataSource.stop()
+            }
           }
       }
     }
@@ -114,5 +131,28 @@ class ExpoArcgisMapView: ExpoView {
           let scale = (vp["scale"] as? NSNumber)?.doubleValue
     else { return }
     model.setViewpoint(Viewpoint(latitude: lat, longitude: lon, scale: scale))
+  }
+
+  /// Enables/configures the device location display from JS (nil disables it).
+  func setLocationDisplay(_ config: [String: Any]?) {
+    if let config {
+      model.setLocationDisplay(
+        enabled: true,
+        autoPanMode: autoPanMode(config["autoPanMode"] as? String),
+        showsLocation: config["showLocation"] as? Bool ?? true
+      )
+    } else {
+      model.setLocationDisplay(enabled: false, autoPanMode: .off, showsLocation: false)
+    }
+  }
+}
+
+/// Maps the JS auto-pan union to the native `LocationDisplay.AutoPanMode`.
+func autoPanMode(_ mode: String?) -> LocationDisplay.AutoPanMode {
+  switch mode {
+  case "recenter": return .recenter
+  case "navigation": return .navigation
+  case "compassNavigation": return .compassNavigation
+  default: return .off
   }
 }

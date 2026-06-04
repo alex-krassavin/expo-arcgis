@@ -11,7 +11,7 @@ import {
   type Viewpoint,
 } from 'expo-arcgis';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // "Add a point, line, and polygon" tutorial geometries (Santa Monica Mountains).
@@ -51,6 +51,17 @@ export default function App() {
   const [viewpoint, setViewpoint] = useState<Viewpoint | undefined>(undefined);
   const [webMap, setWebMap] = useState(false);
   const [showLayer, setShowLayer] = useState(false);
+  const [showLocation, setShowLocation] = useState(false);
+
+  async function toggleLocation() {
+    if (!showLocation && Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) return;
+    }
+    setShowLocation((v) => !v);
+  }
 
   return (
     <SafeAreaProvider>
@@ -66,6 +77,7 @@ export default function App() {
             <MapView
               style={styles.map}
               viewpoint={viewpoint}
+              locationDisplay={showLocation ? { autoPanMode: 'recenter' } : undefined}
               onMapLoaded={() => setStatus('Map loaded ✅ — tap to drop a pin')}
               onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                 setStatus(`Load error: ${event.nativeEvent.message}`)
@@ -120,6 +132,7 @@ export default function App() {
             <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
             <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
             <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
+            <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
           </View>
           <Text style={styles.status}>{status}</Text>
         </View>
