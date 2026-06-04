@@ -99,6 +99,9 @@ class ExpoArcgisModule : Module() {
       Function("removeGraphic") { ref: GraphicsOverlayRef, graphic: GraphicRef ->
         ref.removeGraphic(graphic)
       }
+      Function("setRenderer") { ref: GraphicsOverlayRef, renderer: Map<String, Any?>? ->
+        ref.setRenderer(renderer)
+      }
     }
 
     Class(GraphicRef::class) {

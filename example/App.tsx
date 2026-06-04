@@ -6,6 +6,7 @@ import {
   MapSettings,
   MapView,
   type MapLoadErrorEventPayload,
+  type Renderer,
   type TapEventPayload,
   type Viewpoint,
 } from 'expo-arcgis';
@@ -37,6 +38,12 @@ const WEB_MAP_ID = '41281c51f9de45edaf1c8ed44bb10e30';
 
 // Public ArcGIS dynamic map service for the "Manage operational layers" sample.
 const USA_MAP_SERVICE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer';
+
+// Renderer for the "Style graphics with renderer" sample (styles symbol-less graphics).
+const GREEN_RENDERER: Renderer = {
+  type: 'simple',
+  symbol: { type: 'simple-marker', style: 'diamond', color: '#34c759', size: 14 },
+};
 
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
@@ -98,6 +105,11 @@ export default function App() {
                     symbol={{ type: 'simple-marker', color: '#ff3b30', size: 14 }}
                   />
                 )}
+              </GraphicsOverlay>
+              <GraphicsOverlay renderer={GREEN_RENDERER}>
+                {/* Symbol-less graphics — drawn by the overlay's renderer */}
+                <Graphic geometry={{ type: 'point', x: -118.79, y: 34.0 }} />
+                <Graphic geometry={{ type: 'point', x: -118.83, y: 34.0 }} />
               </GraphicsOverlay>
             </MapView>
           </Map>

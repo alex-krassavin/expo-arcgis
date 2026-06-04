@@ -6,6 +6,7 @@ import type {
   GraphicProps,
   MapImageLayerProps,
   MapProps,
+  Renderer,
   SceneProps,
   TileLayerProps,
 } from './ExpoArcgis.types';
@@ -24,6 +25,7 @@ export declare class GraphicRef extends SharedObject {
 export declare class GraphicsOverlayRef extends SharedObject {
   addGraphic(graphic: GraphicRef): void;
   removeGraphic(graphic: GraphicRef): void;
+  setRenderer(renderer: Renderer | null): void;
 }
 
 /**

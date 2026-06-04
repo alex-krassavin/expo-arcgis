@@ -12,6 +12,7 @@ import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
+import com.arcgismaps.mapping.symbology.SimpleRenderer
 import com.arcgismaps.mapping.symbology.Symbol
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.mapping.view.GraphicsOverlay
@@ -28,6 +29,12 @@ class GraphicsOverlayRef(appContext: AppContext) : SharedObject(appContext) {
 
   fun removeGraphic(ref: GraphicRef) {
     overlay.graphics.remove(ref.graphic)
+  }
+
+  /** Sets a [SimpleRenderer] from the JS renderer dict, or clears it when null. */
+  fun setRenderer(r: Map<String, Any?>?) {
+    val symbolDict = r?.get("symbol") as? Map<*, *>
+    overlay.renderer = symbolDict?.let(::buildSymbol)?.let { SimpleRenderer(it) }
   }
 }
 

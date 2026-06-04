@@ -13,6 +13,15 @@ public class GraphicsOverlayRef: SharedObject {
   func removeGraphic(_ ref: GraphicRef) {
     overlay.removeGraphic(ref.graphic)
   }
+
+  /// Sets a `SimpleRenderer` from the JS renderer dict, or clears it when nil.
+  func setRenderer(_ r: [String: Any]?) {
+    if let r, let symbolDict = r["symbol"] as? [String: Any], let symbol = buildSymbol(symbolDict) {
+      overlay.renderer = SimpleRenderer(symbol: symbol)
+    } else {
+      overlay.renderer = nil
+    }
+  }
 }
 
 /// SharedObject wrapping a native `Graphic` — a point, polyline, or polygon with a simple symbol.

@@ -102,6 +102,9 @@ public class ExpoArcgisModule: Module {
       Function("removeGraphic") { (ref: GraphicsOverlayRef, graphic: GraphicRef) in
         ref.removeGraphic(graphic)
       }
+      Function("setRenderer") { (ref: GraphicsOverlayRef, renderer: [String: Any]?) in
+        ref.setRenderer(renderer)
+      }
     }
 
     Class(GraphicRef.self) {

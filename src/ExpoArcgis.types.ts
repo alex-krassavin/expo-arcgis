@@ -193,6 +193,12 @@ export type SimpleFillSymbol = {
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol;
 
+/** A renderer that draws every graphic in an overlay which sets no `symbol` of its own. */
+export type SimpleRenderer = { type: 'simple'; symbol: Symbol };
+
+/** Any renderer usable by a `<GraphicsOverlay>`. Mirrors the native `Renderer` hierarchy. */
+export type Renderer = SimpleRenderer;
+
 /** Props for a `<Graphic>` — a `geometry` drawn with a `symbol` on the nearest graphics overlay. */
 export type GraphicProps = {
   /** Point, polyline, or polygon geometry. */
