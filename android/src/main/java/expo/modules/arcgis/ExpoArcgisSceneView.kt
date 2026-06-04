@@ -7,7 +7,9 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.mapping.view.AtmosphereEffect
 import com.arcgismaps.mapping.view.Camera
+import com.arcgismaps.mapping.view.LightingMode
 import com.arcgismaps.mapping.view.SceneView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
@@ -88,6 +90,30 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
       (c["roll"] as? Number)?.toDouble() ?: 0.0,
     )
     scope.launch { sceneView.setViewpointCameraAnimated(camera, 0.5f) }
+  }
+
+  /** Sun lighting mode (shadows). */
+  fun setSunLighting(s: String?) {
+    sceneView.sunLighting = when (s) {
+      "light" -> LightingMode.Light
+      "lightAndShadows" -> LightingMode.LightAndShadows
+      else -> LightingMode.NoLight
+    }
+  }
+
+  /** Atmosphere rendering. */
+  fun setAtmosphereEffect(s: String?) {
+    sceneView.atmosphereEffect = when (s) {
+      "off" -> AtmosphereEffect.None
+      "realistic" -> AtmosphereEffect.Realistic
+      else -> AtmosphereEffect.HorizonOnly
+    }
+  }
+
+  /** Sun position, as epoch milliseconds (affects shadow direction). */
+  fun setSunTime(ms: Double?) {
+    ms ?: return
+    sceneView.sunTime = java.time.Instant.ofEpochMilli(ms.toLong())
   }
 
   override fun onAttachedToWindow() {

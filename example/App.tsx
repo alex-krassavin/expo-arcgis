@@ -78,6 +78,9 @@ const SF_BUILDINGS =
   'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_Bldgs/SceneServer';
 const CAMERA_SF: Camera = { position: { x: -122.4, y: 37.78, z: 600 }, heading: 0, pitch: 65, roll: 0 };
 
+// A fixed sun position (summer noon, Pacific) for the "Show light and shadows" sample.
+const SUN_TIME = Date.UTC(2024, 5, 21, 19, 0, 0);
+
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
   const [pin, setPin] = useState<TapEventPayload['mapPoint'] | null>(null);
@@ -89,6 +92,7 @@ export default function App() {
   const [webScene, setWebScene] = useState(false);
   const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
   const [buildings, setBuildings] = useState(false);
+  const [shadows, setShadows] = useState(false);
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -161,6 +165,9 @@ export default function App() {
               <SceneView
                 style={styles.map}
                 camera={sceneCamera}
+                sunLighting={shadows ? 'lightAndShadows' : 'off'}
+                atmosphereEffect={shadows ? 'realistic' : 'horizonOnly'}
+                sunTime={shadows ? SUN_TIME : undefined}
                 onSceneLoaded={() => setStatus('Scene loaded ✅ (3D terrain + camera)')}
                 onSceneLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                   setStatus(`Scene error: ${event.nativeEvent.message}`)
@@ -215,6 +222,7 @@ export default function App() {
                     setSceneCamera(CAMERA_SF);
                   }}
                 />
+                <Button title={shadows ? 'No shadows' : 'Shadows'} onPress={() => setShadows((v) => !v)} />
               </>
             ) : (
               <>

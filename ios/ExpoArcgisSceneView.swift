@@ -11,6 +11,9 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var camera: Camera?
   /// Bumped on each camera change so the SwiftUI `.task(id:)` re-runs and re-animates.
   @Published private(set) var cameraVersion = 0
+  @Published private(set) var sunLighting: SceneView.SunLighting = .off
+  @Published private(set) var atmosphereEffect: SceneView.AtmosphereEffect = .horizonOnly
+  @Published private(set) var sunDate = Date(timeIntervalSince1970: 1_372_683_600)
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -28,6 +31,10 @@ final class SceneViewModel: ObservableObject {
     self.camera = camera
     cameraVersion += 1
   }
+
+  func setSunLighting(_ value: SceneView.SunLighting) { sunLighting = value }
+  func setAtmosphereEffect(_ value: SceneView.AtmosphereEffect) { atmosphereEffect = value }
+  func setSunDate(_ value: Date) { sunDate = value }
 }
 
 /// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
@@ -38,6 +45,10 @@ struct ExpoArcgisSceneContainer: View {
     if let scene = model.scene {
       SceneViewReader { proxy in
         SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
+          // ArcGIS lighting modifiers return `SceneView`, so they precede the SwiftUI modifiers.
+          .sunLighting(model.sunLighting)
+          .atmosphereEffect(model.atmosphereEffect)
+          .sunDate(model.sunDate)
           .onSingleTapGesture { screenPoint, scenePoint in
             // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
             guard let scenePoint else { return }
@@ -117,5 +128,29 @@ class ExpoArcgisSceneView: ExpoView {
       roll: (c["roll"] as? NSNumber)?.doubleValue ?? 0
     )
     model.setCamera(camera)
+  }
+
+  func setSunLighting(_ s: String?) { model.setSunLighting(sunLightingMode(s)) }
+  func setAtmosphereEffect(_ s: String?) { model.setAtmosphereEffect(atmosphereEffectMode(s)) }
+  func setSunTime(_ ms: Double?) {
+    if let ms { model.setSunDate(Date(timeIntervalSince1970: ms / 1000)) }
+  }
+}
+
+/// Maps the JS sun-lighting union to the native `SceneView.SunLighting`.
+func sunLightingMode(_ s: String?) -> SceneView.SunLighting {
+  switch s {
+  case "light": return .light
+  case "lightAndShadows": return .lightAndShadows
+  default: return .off
+  }
+}
+
+/// Maps the JS atmosphere union to the native `SceneView.AtmosphereEffect`.
+func atmosphereEffectMode(_ s: String?) -> SceneView.AtmosphereEffect {
+  switch s {
+  case "off": return .off
+  case "realistic": return .realistic
+  default: return .horizonOnly
   }
 }

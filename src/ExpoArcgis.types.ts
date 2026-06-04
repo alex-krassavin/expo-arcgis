@@ -273,11 +273,23 @@ export type SceneProps = {
   portalItem?: PortalItem;
 };
 
+/** Sun lighting mode for a 3D scene view (controls shadows). */
+export type SunLighting = 'off' | 'light' | 'lightAndShadows';
+
+/** Atmosphere rendering for a 3D scene view. */
+export type AtmosphereEffect = 'off' | 'horizonOnly' | 'realistic';
+
 /** Props for the `<SceneView>` host component. */
 export type SceneViewProps = {
   style?: StyleProp<ViewStyle>;
   /** Animates the view to this 3D camera whenever the value changes (runtime camera control). */
   camera?: Camera;
+  /** Sun lighting mode (shadows). Defaults to `off`. */
+  sunLighting?: SunLighting;
+  /** Atmosphere rendering. Defaults to `horizonOnly`. */
+  atmosphereEffect?: AtmosphereEffect;
+  /** Sun position, as epoch milliseconds (affects shadow direction). */
+  sunTime?: number;
   /** Called once the scene has finished loading successfully. */
   onSceneLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the scene fails to load. */

@@ -160,6 +160,18 @@ class ExpoArcgisModule : Module() {
       Prop("camera") { view: ExpoArcgisSceneView, camera: Map<String, Any?>? ->
         view.setCamera(camera)
       }
+
+      Prop("sunLighting") { view: ExpoArcgisSceneView, value: String? ->
+        view.setSunLighting(value)
+      }
+
+      Prop("atmosphereEffect") { view: ExpoArcgisSceneView, value: String? ->
+        view.setAtmosphereEffect(value)
+      }
+
+      Prop("sunTime") { view: ExpoArcgisSceneView, value: Double? ->
+        view.setSunTime(value)
+      }
     }
   }
 }
