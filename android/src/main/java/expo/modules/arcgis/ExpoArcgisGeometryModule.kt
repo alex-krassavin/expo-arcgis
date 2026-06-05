@@ -69,5 +69,8 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("reverseGeocode") Coroutine { point: Map<String, Any?>, params: Map<String, Any?> ->
       reverseGeocode(point, params)
     }
+    AsyncFunction("suggest") Coroutine { searchText: String, params: Map<String, Any?> ->
+      suggest(searchText, params)
+    }
   }
 }

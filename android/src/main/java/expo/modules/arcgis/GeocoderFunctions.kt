@@ -5,6 +5,8 @@ import com.arcgismaps.tasks.geocode.GeocodeParameters
 import com.arcgismaps.tasks.geocode.GeocodeResult
 import com.arcgismaps.tasks.geocode.LocatorTask
 import com.arcgismaps.tasks.geocode.ReverseGeocodeParameters
+import com.arcgismaps.tasks.geocode.SuggestParameters
+import com.arcgismaps.tasks.geocode.SuggestResult
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -46,6 +48,20 @@ private fun buildReverseGeocodeParameters(params: Map<String, Any?>): ReverseGeo
     (params["maxResults"] as? Number)?.toInt()?.let { maxResults = it }
     (params["maxDistance"] as? Number)?.toDouble()?.let { maxDistance = it }
   }
+
+internal suspend fun suggest(searchText: String, params: Map<String, Any?>): List<Map<String, Any?>> =
+  locatorTask(params).suggest(searchText, buildSuggestParameters(params)).getOrThrow()
+    .map { serializeSuggestResult(it) }
+
+private fun buildSuggestParameters(params: Map<String, Any?>): SuggestParameters = SuggestParameters().apply {
+  (params["maxResults"] as? Number)?.toInt()?.let { maxResults = it }
+  (params["categories"] as? List<*>)?.filterIsInstance<String>()?.let { categories.addAll(it) }
+  ((params["preferredSearchLocation"] as? Map<*, *>)?.let { geometryFromDict(it) } as? Point)
+    ?.let { preferredSearchLocation = it }
+}
+
+internal fun serializeSuggestResult(result: SuggestResult): Map<String, Any?> =
+  mapOf("label" to result.label, "isCollection" to result.isCollection)
 
 internal fun serializeGeocodeResult(result: GeocodeResult): Map<String, Any?> = mapOf(
   "label" to result.label,

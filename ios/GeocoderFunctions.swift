@@ -59,6 +59,26 @@ private func buildReverseGeocodeParameters(_ params: [String: Any]) -> ReverseGe
   return parameters
 }
 
+func suggest(_ searchText: String, _ params: [String: Any]) async throws -> [[String: Any]] {
+  guard let locator = LocatorCache.shared.task(for: locatorURL(params)) else { return [] }
+  let results = try await locator.suggest(forSearchText: searchText, parameters: buildSuggestParameters(params))
+  return results.map(serializeSuggestResult)
+}
+
+private func buildSuggestParameters(_ params: [String: Any]) -> SuggestParameters {
+  let parameters = SuggestParameters()
+  if let maxResults = params["maxResults"] as? NSNumber { parameters.maxResults = maxResults.intValue }
+  if let categories = params["categories"] as? [String] { parameters.addCategories(categories) }
+  if let location = (params["preferredSearchLocation"] as? [String: Any]).flatMap(geometryFromDict) as? Point {
+    parameters.preferredSearchLocation = location
+  }
+  return parameters
+}
+
+func serializeSuggestResult(_ result: SuggestResult) -> [String: Any] {
+  ["label": result.label, "isCollection": result.isCollection]
+}
+
 func serializeGeocodeResult(_ result: GeocodeResult) -> [String: Any] {
   [
     "label": result.label,

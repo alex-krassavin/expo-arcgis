@@ -1,6 +1,7 @@
 import {
   coordinateFormatter,
   FeatureLayer,
+  geocoder,
   geometryEngine,
   GeometryEditor,
   Graphic,
@@ -153,6 +154,7 @@ export default function App() {
   const [editLayer, setEditLayer] = useState(false);
   const [editedId, setEditedId] = useState<number | null>(null);
   const [simulate, setSimulate] = useState(false);
+  const [geocoded, setGeocoded] = useState<Geometry | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -211,6 +213,26 @@ export default function App() {
     const results = await mapRef.current.identify(screenPoint, { tolerance: 12, maxResults: 1 });
     const feature = results.find((r) => r.features.length > 0)?.features[0];
     if (feature) setStatus(`Identified: ${String(feature.attributes.CITY_NAME ?? '—')}`);
+  }
+
+  // "Find LA" — forward geocode an address to a point (geocoder namespace).
+  async function findLA() {
+    const [result] = await geocoder.geocode('Los Angeles, CA');
+    if (result?.location) {
+      setGeocoded(result.location);
+      setStatus(`Found ${result.label} (score ${Math.round(result.score)})`);
+    } else setStatus('No geocode result');
+  }
+  // "Reverse pin" — reverse geocode the tapped pin into an address.
+  async function reversePin() {
+    if (!pin) return setStatus('Tap the map first');
+    const [result] = await geocoder.reverseGeocode({ type: 'point', x: pin.longitude, y: pin.latitude });
+    setStatus(result ? `Address: ${result.label}` : 'No address found');
+  }
+  // "Suggest" — autocomplete a partial search.
+  async function suggestPlaces() {
+    const results = await geocoder.suggest('Coffee');
+    setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
   }
 
   async function toggleLocation() {
@@ -278,6 +300,13 @@ export default function App() {
             haloWidth: 2,
           }}
         />
+        {/* Geocode result location */}
+        {geocoded && (
+          <Graphic
+            geometry={geocoded}
+            symbol={{ type: 'simple-marker', style: 'diamond', color: '#5856d6', size: 16 }}
+          />
+        )}
       </GraphicsOverlay>
       <GraphicsOverlay renderer={GREEN_RENDERER}>
         {/* Symbol-less graphics — drawn by the overlay's renderer */}
@@ -429,6 +458,9 @@ export default function App() {
                 <Button title={cluster ? 'No cluster' : 'Cluster'} onPress={() => setCluster((v) => !v)} />
                 <Button title="Big cities" onPress={bigCities} />
                 <Button title="Avg pop" onPress={avgPop} />
+                <Button title="Find LA" onPress={findLA} />
+                <Button title="Reverse pin" onPress={reversePin} />
+                <Button title="Suggest" onPress={suggestPlaces} />
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />

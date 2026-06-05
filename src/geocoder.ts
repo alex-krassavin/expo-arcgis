@@ -4,6 +4,8 @@ import type {
   GeocodeResult,
   PointGeometry,
   ReverseGeocodeParameters,
+  SuggestParameters,
+  SuggestResult,
 } from './ExpoArcgis.types';
 
 /**
@@ -20,4 +22,8 @@ export const geocoder = {
   /** Reverse-geocodes a point into nearby addresses / places. */
   reverseGeocode: (point: PointGeometry, params?: ReverseGeocodeParameters): Promise<GeocodeResult[]> =>
     Module.reverseGeocode(point, params ?? {}),
+
+  /** Returns autocomplete suggestions for a partial search (geocode a `label` to resolve it). */
+  suggest: (searchText: string, params?: SuggestParameters): Promise<SuggestResult[]> =>
+    Module.suggest(searchText, params ?? {}),
 };

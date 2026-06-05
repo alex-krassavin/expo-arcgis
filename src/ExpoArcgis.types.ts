@@ -531,6 +531,26 @@ export type ReverseGeocodeParameters = {
   locatorUrl?: string;
 };
 
+/** One autocomplete suggestion. Mirrors the native `SuggestResult`. */
+export type SuggestResult = {
+  /** Suggested text (a partial completion of the search). */
+  label: string;
+  /** True when the suggestion is a category/collection rather than a single place. */
+  isCollection: boolean;
+};
+
+/** Parameters for `geocoder.suggest`. Mirrors the native `SuggestParameters`. */
+export type SuggestParameters = {
+  /** Maximum number of suggestions to return. */
+  maxResults?: number;
+  /** Place categories to filter by. */
+  categories?: string[];
+  /** A point near which suggestions are preferred. */
+  preferredSearchLocation?: PointGeometry;
+  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  locatorUrl?: string;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────

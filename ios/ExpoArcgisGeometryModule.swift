@@ -64,5 +64,8 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("reverseGeocode") { (point: [String: Any], params: [String: Any]) in
       try await reverseGeocode(point, params)
     }
+    AsyncFunction("suggest") { (searchText: String, params: [String: Any]) in
+      try await suggest(searchText, params)
+    }
   }
 }

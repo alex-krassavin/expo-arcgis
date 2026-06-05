@@ -5,6 +5,7 @@ import type {
   GeodeticDistanceResult,
   Geometry,
   ProximityResult,
+  SuggestResult,
 } from './ExpoArcgis.types';
 
 /**
@@ -82,6 +83,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   // Geocoding — backing functions for the `geocoder` namespace (see ./geocoder).
   geocode(searchText: string, params: Record<string, unknown>): Promise<GeocodeResult[]>;
   reverseGeocode(point: Geometry, params: Record<string, unknown>): Promise<GeocodeResult[]>;
+  suggest(searchText: string, params: Record<string, unknown>): Promise<SuggestResult[]>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');
