@@ -29,6 +29,14 @@ public final class FeatureLayerRef: LayerRef {
   init(props: [String: Any]) {
     super.init(layer: FeatureLayer(featureTable: featureTable(from: props)))
   }
+
+  override func applyProps(_ changed: [String: Any]) {
+    super.applyProps(changed)
+    guard let featureLayer = layer as? FeatureLayer else { return }
+    if changed.keys.contains("renderer") {
+      featureLayer.renderer = (changed["renderer"] as? [String: Any]).flatMap(buildRenderer)
+    }
+  }
 }
 
 /// Builds a `FeatureTable` from a JS source: `{ type:"shapefile", path }` or a service URL

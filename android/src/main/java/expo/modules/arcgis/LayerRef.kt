@@ -44,7 +44,13 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
 class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
   override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(featureTable(props))
 
-  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+  override fun applyProps(changed: Map<String, Any?>) {
+    applyCommonProps(changed)
+    if (changed.containsKey("renderer")) {
+      val renderer = (changed["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
+      if (renderer != null) layer.renderer = renderer else layer.resetRenderer()
+    }
+  }
 }
 
 /** Builds a [FeatureTable] from a JS source: `{type:"shapefile",path}` or a service URL (or `url`). */

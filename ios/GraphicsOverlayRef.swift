@@ -14,13 +14,9 @@ public class GraphicsOverlayRef: SharedObject {
     overlay.removeGraphic(ref.graphic)
   }
 
-  /// Sets a `SimpleRenderer` from the JS renderer dict, or clears it when nil.
+  /// Sets a renderer (simple / unique-value / class-breaks) from the JS dict, or clears it.
   func setRenderer(_ r: [String: Any]?) {
-    if let r, let symbolDict = r["symbol"] as? [String: Any], let symbol = buildSymbol(symbolDict) {
-      overlay.renderer = SimpleRenderer(symbol: symbol)
-    } else {
-      overlay.renderer = nil
-    }
+    overlay.renderer = r.flatMap(buildRenderer)
   }
 }
 
@@ -39,6 +35,58 @@ public final class GraphicRef: SharedObject {
         break
       }
     }
+  }
+}
+
+// MARK: - Renderers
+
+/// Builds a `Renderer` (simple / unique-value / class-breaks) from a JS renderer dict.
+/// Shared by `GraphicsOverlayRef.setRenderer` and `FeatureLayerRef.applyProps`.
+func buildRenderer(_ r: [String: Any]) -> Renderer? {
+  switch r["type"] as? String {
+  case "simple":
+    return (r["symbol"] as? [String: Any]).flatMap(buildSymbol).map(SimpleRenderer.init(symbol:))
+  case "unique-value":
+    let values = (r["uniqueValues"] as? [[String: Any]] ?? []).compactMap { uv -> UniqueValue? in
+      guard let symbol = (uv["symbol"] as? [String: Any]).flatMap(buildSymbol) else { return nil }
+      return UniqueValue(
+        label: uv["label"] as? String ?? "", symbol: symbol, values: rendererValues(uv["values"])
+      )
+    }
+    return UniqueValueRenderer(
+      fieldNames: r["fields"] as? [String] ?? [],
+      uniqueValues: values,
+      defaultLabel: r["defaultLabel"] as? String ?? "",
+      defaultSymbol: (r["defaultSymbol"] as? [String: Any]).flatMap(buildSymbol)
+    )
+  case "class-breaks":
+    let breaks = (r["classBreaks"] as? [[String: Any]] ?? []).compactMap { cb -> ClassBreak? in
+      guard let symbol = (cb["symbol"] as? [String: Any]).flatMap(buildSymbol) else { return nil }
+      return ClassBreak(
+        label: cb["label"] as? String ?? "",
+        minValue: rendererNumber(cb["min"]), maxValue: rendererNumber(cb["max"]), symbol: symbol
+      )
+    }
+    let renderer = ClassBreaksRenderer(fieldName: r["field"] as? String ?? "", classBreaks: breaks)
+    renderer.defaultSymbol = (r["defaultSymbol"] as? [String: Any]).flatMap(buildSymbol)
+    return renderer
+  default:
+    return nil
+  }
+}
+
+private func rendererNumber(_ value: Any?) -> Double {
+  (value as? NSNumber)?.doubleValue ?? .nan
+}
+
+/// Converts JS unique values to ArcGIS-comparable scalars (whole numbers → `Int`, else `Double`/`String`).
+private func rendererValues(_ value: Any?) -> [any Sendable] {
+  (value as? [Any] ?? []).map { item -> any Sendable in
+    if let number = item as? NSNumber {
+      let double = number.doubleValue
+      return double == double.rounded() ? number.intValue : double
+    }
+    return String(describing: item)
   }
 }
 

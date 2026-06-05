@@ -1,6 +1,9 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.Color
+import com.arcgismaps.mapping.symbology.ClassBreak
+import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
+import com.arcgismaps.mapping.symbology.Renderer
 import com.arcgismaps.mapping.symbology.SimpleFillSymbol
 import com.arcgismaps.mapping.symbology.SimpleFillSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleLineSymbol
@@ -9,6 +12,8 @@ import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
 import com.arcgismaps.mapping.symbology.Symbol
+import com.arcgismaps.mapping.symbology.UniqueValue
+import com.arcgismaps.mapping.symbology.UniqueValueRenderer
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.mapping.view.GraphicsOverlay
 import expo.modules.kotlin.AppContext
@@ -26,12 +31,62 @@ class GraphicsOverlayRef(appContext: AppContext) : SharedObject(appContext) {
     overlay.graphics.remove(ref.graphic)
   }
 
-  /** Sets a [SimpleRenderer] from the JS renderer dict, or clears it when null. */
+  /** Sets a renderer (simple / unique-value / class-breaks) from the JS dict, or clears it. */
   fun setRenderer(r: Map<String, Any?>?) {
-    val symbolDict = r?.get("symbol") as? Map<*, *>
-    overlay.renderer = symbolDict?.let(::buildSymbol)?.let { SimpleRenderer(it) }
+    overlay.renderer = r?.let(::buildRenderer)
   }
 }
+
+// region Renderers
+
+/**
+ * Builds a [Renderer] (simple / unique-value / class-breaks) from a JS renderer dict.
+ * Shared by [GraphicsOverlayRef.setRenderer] and [FeatureLayerRef.applyProps].
+ */
+internal fun buildRenderer(r: Map<*, *>): Renderer? = when (r["type"]) {
+  "simple" -> (r["symbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { SimpleRenderer(it) }
+  "unique-value" -> {
+    val fields = (r["fields"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val values = (r["uniqueValues"] as? List<*>)?.mapNotNull { uv ->
+      (uv as? Map<*, *>)?.let {
+        val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
+        UniqueValue(it["label"] as? String ?: "", "", symbol, rendererValues(it["values"]))
+      }
+    } ?: emptyList()
+    UniqueValueRenderer(
+      fields,
+      values,
+      r["defaultLabel"] as? String ?: "",
+      (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol) ?: transparentMarker(),
+    )
+  }
+  "class-breaks" -> {
+    val breaks = (r["classBreaks"] as? List<*>)?.mapNotNull { cb ->
+      (cb as? Map<*, *>)?.let {
+        val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
+        ClassBreak(it["label"] as? String ?: "", "", num(it["min"]), num(it["max"]), symbol)
+      }
+    } ?: emptyList()
+    ClassBreaksRenderer(r["field"] as? String ?: "", breaks).apply {
+      (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { defaultSymbol = it }
+    }
+  }
+  else -> null
+}
+
+/** Converts JS unique values to comparable scalars (whole numbers → Int, else Double/String). */
+private fun rendererValues(value: Any?): List<Any> =
+  (value as? List<*>)?.mapNotNull { item ->
+    when (item) {
+      is Number -> if (item.toDouble() == kotlin.math.floor(item.toDouble())) item.toInt() else item.toDouble()
+      null -> null
+      else -> item.toString()
+    }
+  } ?: emptyList()
+
+/** Invisible marker used as a UniqueValueRenderer default when JS supplies none (Kotlin requires non-null). */
+private fun transparentMarker(): Symbol =
+  SimpleMarkerSymbol(SimpleMarkerSymbolStyle.Circle, Color.fromRgba(0, 0, 0, 0), 0f)
 
 /** SharedObject wrapping a native [Graphic] — a point, polyline, or polygon with a simple symbol. */
 class GraphicRef(appContext: AppContext) : SharedObject(appContext) {

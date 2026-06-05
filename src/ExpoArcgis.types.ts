@@ -105,6 +105,8 @@ export type FeatureLayerProps = LayerProps & {
   url?: string;
   /** Explicit feature-table source (service or local shapefile). */
   source?: FeatureTableSource;
+  /** Overrides the layer's symbology (simple / unique-value / class-breaks). */
+  renderer?: Renderer;
 };
 
 /** Props for a `<TileLayer>` — mirror the native `ArcGISTiledLayer`. */
@@ -390,11 +392,54 @@ export type SimpleFillSymbol = {
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol;
 
-/** A renderer that draws every graphic in an overlay which sets no `symbol` of its own. */
+/** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };
 
-/** Any renderer usable by a `<GraphicsOverlay>`. Mirrors the native `Renderer` hierarchy. */
-export type Renderer = SimpleRenderer;
+/** One category of a `UniqueValueRenderer` — the `symbol` for features whose field(s) equal `values`. */
+export type UniqueValueInfo = {
+  /** Field value(s) (matched in `fields` order) that select this symbol. */
+  values: (string | number)[];
+  /** Symbol drawn for matching features. */
+  symbol: Symbol;
+  /** Optional legend label. */
+  label?: string;
+};
+
+/** Draws features by matching one or more attribute fields against discrete `uniqueValues`. */
+export type UniqueValueRenderer = {
+  type: 'unique-value';
+  /** Attribute field(s) compared against each `UniqueValueInfo.values`. */
+  fields: string[];
+  uniqueValues: UniqueValueInfo[];
+  /** Symbol for features that match no category. */
+  defaultSymbol?: Symbol;
+  defaultLabel?: string;
+};
+
+/** One range of a `ClassBreaksRenderer` — the `symbol` for `min < value ≤ max`. */
+export type ClassBreak = {
+  min: number;
+  max: number;
+  symbol: Symbol;
+  label?: string;
+};
+
+/** Draws features by binning a numeric `field` into `classBreaks` (graduated symbols). */
+export type ClassBreaksRenderer = {
+  type: 'class-breaks';
+  /** Numeric attribute field used to pick a class break. */
+  field: string;
+  classBreaks: ClassBreak[];
+  /** Symbol for features outside all breaks. */
+  defaultSymbol?: Symbol;
+  defaultLabel?: string;
+};
+
+/**
+ * Any renderer usable by a `<GraphicsOverlay>` or `<FeatureLayer>`. Mirrors the native
+ * `Renderer` hierarchy (`SimpleRenderer` / `UniqueValueRenderer` / `ClassBreaksRenderer`).
+ */
+export type Renderer = SimpleRenderer | UniqueValueRenderer | ClassBreaksRenderer;
 
 /** Props for a `<Graphic>` — a `geometry` drawn with a `symbol` on the nearest graphics overlay. */
 export type GraphicProps = {
