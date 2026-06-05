@@ -120,6 +120,16 @@ declare class ExpoArcgisModule extends NativeModule {
   geMove(g: Geometry, deltaX: number, deltaY: number): Geometry | null;
   geRotate(g: Geometry, angle: number, origin: Geometry | null): Geometry | null;
   geScale(g: Geometry, factorX: number, factorY: number, origin: Geometry | null): Geometry | null;
+
+  // CoordinateFormatter — backing functions for the `coordinateFormatter` namespace.
+  cfToLatLong(p: Geometry, format: string | null, decimalPlaces: number): string | null;
+  cfFromLatLong(coordinates: string, wkid: number): Geometry | null;
+  cfToMgrs(p: Geometry, mode: string | null, precision: number, addSpaces: boolean): string | null;
+  cfFromMgrs(coordinates: string, wkid: number, mode: string | null): Geometry | null;
+  cfToUsng(p: Geometry, precision: number, addSpaces: boolean): string | null;
+  cfFromUsng(coordinates: string, wkid: number): Geometry | null;
+  cfToUtm(p: Geometry, mode: string | null, addSpaces: boolean): string | null;
+  cfFromUtm(coordinates: string, wkid: number, mode: string | null): Geometry | null;
   // Constructable native handles (SharedObjects). JS names mirror the native classes.
   MapRef: new (props?: MapProps) => MapRef;
   SceneRef: new (props?: SceneProps) => SceneRef;

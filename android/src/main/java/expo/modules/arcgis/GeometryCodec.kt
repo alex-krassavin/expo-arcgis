@@ -5,6 +5,9 @@ import com.arcgismaps.geometry.AngularUnitId
 import com.arcgismaps.geometry.AreaUnit
 import com.arcgismaps.geometry.AreaUnitId
 import com.arcgismaps.geometry.Envelope
+import com.arcgismaps.geometry.LatitudeLongitudeFormat
+import com.arcgismaps.geometry.MgrsConversionMode
+import com.arcgismaps.geometry.UtmConversionMode
 import com.arcgismaps.geometry.GeodeticCurveType
 import com.arcgismaps.geometry.Geometry
 import com.arcgismaps.geometry.GeometryOffsetType
@@ -169,4 +172,23 @@ internal fun offsetType(id: String?): GeometryOffsetType = when (id) {
   "rounded" -> GeometryOffsetType.Rounded
   "squared" -> GeometryOffsetType.Squared
   else -> GeometryOffsetType.Mitered
+}
+
+// region CoordinateFormatter notation formats
+
+internal fun latitudeLongitudeFormat(id: String?): LatitudeLongitudeFormat = when (id) {
+  "degreesDecimalMinutes" -> LatitudeLongitudeFormat.DegreesDecimalMinutes
+  "degreesMinutesSeconds" -> LatitudeLongitudeFormat.DegreesMinutesSeconds
+  else -> LatitudeLongitudeFormat.DecimalDegrees
+}
+
+internal fun utmConversionMode(id: String?): UtmConversionMode =
+  if (id == "northSouthIndicators") UtmConversionMode.NorthSouthIndicators else UtmConversionMode.LatitudeBandIndicators
+
+internal fun mgrsConversionMode(id: String?): MgrsConversionMode = when (id) {
+  "new180InZone01" -> MgrsConversionMode.New180InZone01
+  "new180InZone60" -> MgrsConversionMode.New180InZone60
+  "old180InZone01" -> MgrsConversionMode.Old180InZone01
+  "old180InZone60" -> MgrsConversionMode.Old180InZone60
+  else -> MgrsConversionMode.Automatic
 }

@@ -280,6 +280,27 @@ export type ProximityResult = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// CoordinateFormatter — notation formats for converting points to/from strings.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Latitude-longitude string format. Defaults to `decimalDegrees`. */
+export type LatitudeLongitudeFormat =
+  | 'decimalDegrees'
+  | 'degreesDecimalMinutes'
+  | 'degreesMinutesSeconds';
+
+/** UTM string format. Defaults to `latitudeBandIndicators`. */
+export type UtmConversionMode = 'latitudeBandIndicators' | 'northSouthIndicators';
+
+/** MGRS string format. Defaults to `automatic`. */
+export type MgrsConversionMode =
+  | 'automatic'
+  | 'new180InZone01'
+  | 'new180InZone60'
+  | 'old180InZone01'
+  | 'old180InZone60';
+
+// ────────────────────────────────────────────────────────────────────────────
 // Symbols — mirror `SimpleMarkerSymbol` / `SimpleLineSymbol` / `SimpleFillSymbol`.
 // Colors are hex strings: `#RRGGBB` or `#RRGGBBAA` (alpha last).
 // ────────────────────────────────────────────────────────────────────────────

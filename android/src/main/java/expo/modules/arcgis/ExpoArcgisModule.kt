@@ -65,6 +65,16 @@ class ExpoArcgisModule : Module() {
     Function("geRotate", ::geRotate)
     Function("geScale", ::geScale)
 
+    // CoordinateFormatter — point <-> notation strings, exposed as the JS `coordinateFormatter` namespace.
+    Function("cfToLatLong", ::cfToLatLong)
+    Function("cfFromLatLong", ::cfFromLatLong)
+    Function("cfToMgrs", ::cfToMgrs)
+    Function("cfFromMgrs", ::cfFromMgrs)
+    Function("cfToUsng", ::cfToUsng)
+    Function("cfFromUsng", ::cfFromUsng)
+    Function("cfToUtm", ::cfToUtm)
+    Function("cfFromUtm", ::cfFromUtm)
+
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef::class) {
       Constructor { props: Map<String, Any?>? ->

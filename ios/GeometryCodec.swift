@@ -173,3 +173,27 @@ func offsetType(_ id: String?) -> GeometryEngine.OffsetType {
   default: return .mitered
   }
 }
+
+// MARK: - CoordinateFormatter notation formats
+
+func latitudeLongitudeFormat(_ id: String?) -> CoordinateFormatter.LatitudeLongitudeFormat {
+  switch id {
+  case "degreesDecimalMinutes": return .degreesDecimalMinutes
+  case "degreesMinutesSeconds": return .degreesMinutesSeconds
+  default: return .decimalDegrees
+  }
+}
+
+func utmConversionMode(_ id: String?) -> CoordinateFormatter.UTMConversionMode {
+  id == "northSouthIndicators" ? .northSouthIndicators : .latitudeBandIndicators
+}
+
+func mgrsConversionMode(_ id: String?) -> CoordinateFormatter.MGRSConversionMode {
+  switch id {
+  case "new180InZone01": return .new180InZone01
+  case "new180InZone60": return .new180InZone60
+  case "old180InZone01": return .old180InZone01
+  case "old180InZone60": return .old180InZone60
+  default: return .automatic
+  }
+}
