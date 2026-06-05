@@ -15,6 +15,8 @@ import type {
   TileLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
+  WmsLayerProps,
+  WmtsLayerProps,
 } from './ExpoArcgis.types';
 
 /** Reference to a native operational layer (FeatureLayer / ArcGISTiledLayer), shared by reference. */
@@ -70,6 +72,8 @@ declare class ExpoArcgisModule extends NativeModule {
   Ogc3DTilesLayerRef: new (props: Ogc3DTilesLayerProps) => LayerRef;
   WebTiledLayerRef: new (props: WebTiledLayerProps) => LayerRef;
   OpenStreetMapLayerRef: new () => LayerRef;
+  WmsLayerRef: new (props: WmsLayerProps) => LayerRef;
+  WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
 }

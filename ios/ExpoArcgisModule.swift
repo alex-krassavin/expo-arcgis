@@ -166,6 +166,34 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    Class(WmsLayerRef.self) {
+      Constructor { (props: [String: Any]) -> WmsLayerRef in
+        let ref = WmsLayerRef(
+          url: props["url"] as? String ?? "",
+          layerNames: props["layerNames"] as? [String] ?? []
+        )
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: WmsLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(WmtsLayerRef.self) {
+      Constructor { (props: [String: Any]) -> WmtsLayerRef in
+        let ref = WmtsLayerRef(
+          url: props["url"] as? String ?? "",
+          layerID: props["layerId"] as? String ?? ""
+        )
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: WmtsLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef.self) {
       Constructor { () -> GraphicsOverlayRef in GraphicsOverlayRef() }

@@ -12,6 +12,8 @@ import com.arcgismaps.mapping.layers.Ogc3DTilesLayer
 import com.arcgismaps.mapping.layers.OpenStreetMapLayer
 import com.arcgismaps.mapping.layers.PointCloudLayer
 import com.arcgismaps.mapping.layers.WebTiledLayer
+import com.arcgismaps.mapping.layers.WmsLayer
+import com.arcgismaps.mapping.layers.WmtsLayer
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -97,6 +99,20 @@ class WebTiledLayerRef(appContext: AppContext, urlTemplate: String) : LayerRef(a
 /** Operational OpenStreetMap tiled layer. */
 class OpenStreetMapLayerRef(appContext: AppContext) : LayerRef(appContext) {
   override val layer: OpenStreetMapLayer = OpenStreetMapLayer()
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational WMS layer (Web Map Service) backed by a service URL + visible layer names. */
+class WmsLayerRef(appContext: AppContext, url: String, layerNames: List<String>) : LayerRef(appContext) {
+  override val layer: WmsLayer = WmsLayer(url, layerNames)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational WMTS layer (Web Map Tile Service) backed by a service URL + layer id. */
+class WmtsLayerRef(appContext: AppContext, url: String, layerId: String) : LayerRef(appContext) {
+  override val layer: WmtsLayer = WmtsLayer(url, layerId)
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

@@ -25,6 +25,8 @@ export {
   Ogc3DTilesLayer,
   WebTiledLayer,
   OpenStreetMapLayer,
+  WmsLayer,
+  WmtsLayer,
 } from './layers';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';

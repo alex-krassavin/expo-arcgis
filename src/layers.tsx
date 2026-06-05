@@ -5,6 +5,8 @@ import type {
   PointCloudLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
+  WmsLayerProps,
+  WmtsLayerProps,
 } from './ExpoArcgis.types';
 import ExpoArcgisModule from './ExpoArcgisModule';
 import { createLayerComponent } from './createLayerComponent';
@@ -37,4 +39,14 @@ export const WebTiledLayer = createLayerComponent<WebTiledLayerProps>(
 /** Declarative `OpenStreetMapLayer` (built-in OSM tiles as an operational layer). */
 export const OpenStreetMapLayer = createLayerComponent<OpenStreetMapLayerProps>(
   () => new ExpoArcgisModule.OpenStreetMapLayerRef()
+);
+
+/** Declarative WMS layer (Web Map Service: URL + visible layer names). */
+export const WmsLayer = createLayerComponent<WmsLayerProps>(
+  (props) => new ExpoArcgisModule.WmsLayerRef(props)
+);
+
+/** Declarative WMTS layer (Web Map Tile Service: URL + layer id). */
+export const WmtsLayer = createLayerComponent<WmtsLayerProps>(
+  (props) => new ExpoArcgisModule.WmtsLayerRef(props)
 );

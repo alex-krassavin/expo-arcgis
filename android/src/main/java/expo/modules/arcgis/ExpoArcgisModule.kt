@@ -152,6 +152,26 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    Class(WmsLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        val layerNames = (props["layerNames"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+        WmsLayerRef(appContext, props["url"] as String, layerNames).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: WmsLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(WmtsLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        WmtsLayerRef(appContext, props["url"] as String, props["layerId"] as String)
+          .also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: WmtsLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef::class) {
       Constructor { GraphicsOverlayRef(appContext) }

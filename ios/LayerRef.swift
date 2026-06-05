@@ -94,3 +94,17 @@ public final class OpenStreetMapLayerRef: LayerRef {
     super.init(layer: OpenStreetMapLayer())
   }
 }
+
+/// Operational WMS layer (Web Map Service) backed by a service URL + visible layer names.
+public final class WmsLayerRef: LayerRef {
+  init(url: String, layerNames: [String]) {
+    super.init(layer: WMSLayer(url: URL(string: url)!, layerNames: layerNames))
+  }
+}
+
+/// Operational WMTS layer (Web Map Tile Service) backed by a service URL + layer id.
+public final class WmtsLayerRef: LayerRef {
+  init(url: String, layerID: String) {
+    super.init(layer: WMTSLayer(url: URL(string: url)!, layerID: layerID))
+  }
+}

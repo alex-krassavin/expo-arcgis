@@ -133,6 +133,12 @@ export type WebTiledLayerProps = LayerProps & { urlTemplate: string };
 /** Props for an `<OpenStreetMapLayer>` — the built-in OSM tiles as an operational layer. */
 export type OpenStreetMapLayerProps = LayerProps;
 
+/** Props for a `<WmsLayer>` — mirror the native WMS layer (service URL + visible layer names). */
+export type WmsLayerProps = LayerProps & { url: string; layerNames: string[] };
+
+/** Props for a `<WmtsLayer>` — mirror the native WMTS layer (service URL + layer id). */
+export type WmtsLayerProps = LayerProps & { url: string; layerId: string };
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────
