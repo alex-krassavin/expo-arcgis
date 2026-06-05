@@ -26,8 +26,32 @@ public class LayerRef: SharedObject {
 
 /// Operational FeatureLayer from a feature service URL or a local shapefile.
 public final class FeatureLayerRef: LayerRef {
+  private let table: FeatureTable
+
   init(props: [String: Any]) {
-    super.init(layer: FeatureLayer(featureTable: featureTable(from: props)))
+    let table = featureTable(from: props)
+    self.table = table
+    super.init(layer: FeatureLayer(featureTable: table))
+  }
+
+  /// Returns the features matching `query` (all features when nil). Loads attributes in full.
+  func queryFeatures(_ query: [String: Any]?) async throws -> [[String: Any]] {
+    let params = buildQueryParameters(query)
+    let result: FeatureQueryResult
+    if let serviceTable = table as? ServiceFeatureTable {
+      result = try await serviceTable.queryFeatures(using: params, queryFeatureFields: .loadAll)
+    } else {
+      result = try await table.queryFeatures(using: params)
+    }
+    return result.features().map(serializeFeature)
+  }
+
+  func queryFeatureCount(_ query: [String: Any]?) async throws -> Int {
+    try await table.queryFeatureCount(using: buildQueryParameters(query))
+  }
+
+  func queryExtent(_ query: [String: Any]?) async throws -> [String: Any] {
+    dictFromGeometry(try await table.queryExtent(using: buildQueryParameters(query)))
   }
 
   override func applyProps(_ changed: [String: Any]) {

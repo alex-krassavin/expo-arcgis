@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -70,6 +71,15 @@ class ExpoArcgisModule : Module() {
       }
       Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
+      }
+      AsyncFunction("queryFeatures") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryFeatures(query)
+      }
+      AsyncFunction("queryFeatureCount") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryFeatureCount(query)
+      }
+      AsyncFunction("queryExtent") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryExtent(query)
       }
     }
 

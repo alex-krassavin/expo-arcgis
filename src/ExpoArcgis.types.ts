@@ -133,6 +133,62 @@ export type ClusterReduction = {
 /** Feature reduction applied to a `<FeatureLayer>`. Mirrors the native `FeatureReduction`. */
 export type FeatureReduction = ClusterReduction;
 
+// ────────────────────────────────────────────────────────────────────────────
+// Query — imperative attribute / spatial queries against a `<FeatureLayer>`.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Spatial relationship between the query `geometry` and a feature's geometry. */
+export type SpatialRelationship =
+  | 'intersects'
+  | 'contains'
+  | 'crosses'
+  | 'disjoint'
+  | 'envelopeIntersects'
+  | 'equals'
+  | 'overlaps'
+  | 'touches'
+  | 'within'
+  | 'relate';
+
+/** A sort clause for a query (`ascending` defaults to `true`). */
+export type OrderByField = { field: string; ascending?: boolean };
+
+/** Criteria for a feature query. Mirrors the native `QueryParameters`. */
+export type QueryParameters = {
+  /** SQL `where` clause (e.g. `POP > 1000000`). */
+  whereClause?: string;
+  /** Geometry to test against, with `spatialRelationship`. */
+  geometry?: Geometry;
+  /** Spatial relationship for `geometry`. Defaults to `intersects`. */
+  spatialRelationship?: SpatialRelationship;
+  /** Maximum number of features to return. */
+  maxFeatures?: number;
+  /** Whether to include each feature's geometry. Defaults to `true`. */
+  returnGeometry?: boolean;
+  /** Restrict the query to these object ids. */
+  objectIds?: number[];
+  /** Sort order of the results. */
+  orderBy?: OrderByField[];
+  /** Skip this many results (paging). */
+  resultOffset?: number;
+};
+
+/** A feature returned by a query — its attributes plus (optionally) its geometry. */
+export type Feature = {
+  attributes: Record<string, unknown>;
+  geometry: Geometry | null;
+};
+
+/** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
+export type FeatureLayerHandle = {
+  /** Returns the features matching `query` (all features when omitted). */
+  queryFeatures(query?: QueryParameters): Promise<Feature[]>;
+  /** Returns the number of features matching `query`. */
+  queryFeatureCount(query?: QueryParameters): Promise<number>;
+  /** Returns the combined extent (envelope) of the features matching `query`. */
+  queryExtent(query?: QueryParameters): Promise<Geometry | null>;
+};
+
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */
 export type LabelDefinition = {
   /**

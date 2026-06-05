@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.data.FeatureTable
+import com.arcgismaps.data.QueryFeatureFields
 import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
@@ -42,7 +43,25 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
 
 /** Operational FeatureLayer from a feature service URL or a local shapefile. */
 class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
-  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(featureTable(props))
+  private val table: FeatureTable = featureTable(props)
+  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(table)
+
+  /** Returns the features matching `query` (all features when null). Loads attributes in full. */
+  suspend fun queryFeatures(query: Map<String, Any?>?): List<Map<String, Any?>> {
+    val params = buildQueryParameters(query)
+    val result = if (table is ServiceFeatureTable) {
+      table.queryFeatures(params, QueryFeatureFields.LoadAll).getOrThrow()
+    } else {
+      table.queryFeatures(params).getOrThrow()
+    }
+    return result.map { serializeFeature(it) }
+  }
+
+  suspend fun queryFeatureCount(query: Map<String, Any?>?): Long =
+    table.queryFeatureCount(buildQueryParameters(query)).getOrThrow()
+
+  suspend fun queryExtent(query: Map<String, Any?>?): Map<String, Any?> =
+    dictFromGeometry(table.queryExtent(buildQueryParameters(query)).getOrThrow())
 
   override fun applyProps(changed: Map<String, Any?>) {
     applyCommonProps(changed)

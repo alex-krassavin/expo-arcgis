@@ -2,6 +2,7 @@ import { NativeModule, requireNativeModule } from 'expo';
 import { SharedObject } from 'expo-modules-core';
 
 import type {
+  Feature,
   FeatureLayerProps,
   Geometry,
   GraphicProps,
@@ -25,6 +26,13 @@ import type {
 /** Reference to a native operational layer (FeatureLayer / ArcGISTiledLayer), shared by reference. */
 export declare class LayerRef extends SharedObject {
   applyProps(changed: Record<string, unknown>): void;
+}
+
+/** Reference to a native `FeatureLayer` — a `LayerRef` plus async query methods. */
+export declare class FeatureLayerRef extends LayerRef {
+  queryFeatures(query: Record<string, unknown>): Promise<Feature[]>;
+  queryFeatureCount(query: Record<string, unknown>): Promise<number>;
+  queryExtent(query: Record<string, unknown>): Promise<Geometry | null>;
 }
 
 /** Reference to a native `Graphic` drawn on a graphics overlay. */
@@ -80,7 +88,7 @@ declare class ExpoArcgisModule extends NativeModule {
   // Constructable native handles (SharedObjects). JS names mirror the native classes.
   MapRef: new (props?: MapProps) => MapRef;
   SceneRef: new (props?: SceneProps) => SceneRef;
-  FeatureLayerRef: new (props: FeatureLayerProps) => LayerRef;
+  FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
   TiledLayerRef: new (props: TileLayerProps) => LayerRef;
   MapImageLayerRef: new (props: MapImageLayerProps) => LayerRef;
   SceneLayerRef: new (props: SceneLayerProps) => LayerRef;
