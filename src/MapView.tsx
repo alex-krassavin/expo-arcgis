@@ -49,13 +49,9 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
       []
     );
 
-    useImperativeHandle(
-      handle,
-      () => ({
-        identify: (screenPoint, options = {}) => nativeRef.current!.identify(screenPoint, options),
-      }),
-      []
-    );
+    // The native view exposes `identify` on its ref, so hand that ref over directly. (It's
+    // attached before this layout-phase handle runs, so reading it here is safe.)
+    useImperativeHandle(handle, () => nativeRef.current as MapViewHandle, []);
 
     return (
       <NativeMapView

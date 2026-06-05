@@ -6,7 +6,9 @@ import type {
   FeatureLayerProps,
   Geometry,
   GraphicProps,
+  QueryParameters,
   StatisticRecord,
+  StatisticsQueryParameters,
   IntegratedMeshLayerProps,
   KmlLayerProps,
   MapImageLayerProps,
@@ -29,12 +31,15 @@ export declare class LayerRef extends SharedObject {
   applyProps(changed: Record<string, unknown>): void;
 }
 
-/** Reference to a native `FeatureLayer` — a `LayerRef` plus async query methods. */
+/**
+ * Reference to a native `FeatureLayer` — a `LayerRef` plus the async query methods (these match
+ * `FeatureLayerHandle`, so the component just hands this ref over via `useImperativeHandle`).
+ */
 export declare class FeatureLayerRef extends LayerRef {
-  queryFeatures(query: Record<string, unknown>): Promise<Feature[]>;
-  queryFeatureCount(query: Record<string, unknown>): Promise<number>;
-  queryExtent(query: Record<string, unknown>): Promise<Geometry | null>;
-  queryStatistics(query: Record<string, unknown>): Promise<StatisticRecord[]>;
+  queryFeatures(query?: QueryParameters): Promise<Feature[]>;
+  queryFeatureCount(query?: QueryParameters): Promise<number>;
+  queryExtent(query?: QueryParameters): Promise<Geometry | null>;
+  queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
 }
 
 /** Reference to a native `Graphic` drawn on a graphics overlay. */

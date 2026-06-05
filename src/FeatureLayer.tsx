@@ -41,16 +41,9 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
       ref.current?.applyProps(changed);
     }, [props]);
 
-    useImperativeHandle(
-      handle,
-      () => ({
-        queryFeatures: (query = {}) => ref.current!.queryFeatures(query),
-        queryFeatureCount: (query = {}) => ref.current!.queryFeatureCount(query),
-        queryExtent: (query = {}) => ref.current!.queryExtent(query),
-        queryStatistics: (query) => ref.current!.queryStatistics(query),
-      }),
-      []
-    );
+    // The native ref already exposes the query methods (typed to match FeatureLayerHandle), so
+    // hand it over directly — it's created synchronously in render, so it's always set here.
+    useImperativeHandle(handle, () => ref.current!, []);
 
     return null;
   }
