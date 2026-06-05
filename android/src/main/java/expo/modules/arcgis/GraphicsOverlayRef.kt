@@ -10,10 +10,13 @@ import com.arcgismaps.mapping.symbology.ClassBreak
 import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
 import com.arcgismaps.mapping.symbology.HorizontalAlignment
 import com.arcgismaps.mapping.symbology.Renderer
+import com.arcgismaps.mapping.symbology.SceneSymbolAnchorPosition
 import com.arcgismaps.mapping.symbology.SimpleFillSymbol
 import com.arcgismaps.mapping.symbology.SimpleFillSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
+import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
+import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
@@ -170,7 +173,31 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     (s["haloWidth"] as? Number)?.toFloat()?.let { haloWidth = it }
     (s["fontFamily"] as? String)?.let { fontFamily = it }
   }
+  "simple-marker-scene" -> SimpleMarkerSceneSymbol(
+    sceneSymbolStyle(s["style"]),
+    colorOf(s["color"]) ?: Color.fromRgba(211, 211, 211, 255),
+    num(s["width"], 100.0),
+    num(s["height"], 100.0),
+    num(s["depth"], 100.0),
+    sceneSymbolAnchor(s["anchor"]),
+  )
   else -> null
+}
+
+private fun sceneSymbolStyle(value: Any?): SimpleMarkerSceneSymbolStyle = when (value) {
+  "cone" -> SimpleMarkerSceneSymbolStyle.Cone
+  "cube" -> SimpleMarkerSceneSymbolStyle.Cube
+  "cylinder" -> SimpleMarkerSceneSymbolStyle.Cylinder
+  "diamond" -> SimpleMarkerSceneSymbolStyle.Diamond
+  "tetrahedron" -> SimpleMarkerSceneSymbolStyle.Tetrahedron
+  else -> SimpleMarkerSceneSymbolStyle.Sphere
+}
+
+private fun sceneSymbolAnchor(value: Any?): SceneSymbolAnchorPosition = when (value) {
+  "center" -> SceneSymbolAnchorPosition.Center
+  "top" -> SceneSymbolAnchorPosition.Top
+  "origin" -> SceneSymbolAnchorPosition.Origin
+  else -> SceneSymbolAnchorPosition.Bottom
 }
 
 private fun horizontalAlignment(value: Any?): HorizontalAlignment = when (value) {

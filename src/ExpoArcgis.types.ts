@@ -449,8 +449,33 @@ export type TextSymbol = {
   verticalAlignment?: 'top' | 'middle' | 'bottom' | 'baseline';
 };
 
+/**
+ * A 3D marker symbol for point graphics in a `<SceneView>`. Mirrors the native
+ * `SimpleMarkerSceneSymbol` (a parametric solid: cone / cube / sphere / …).
+ */
+export type SimpleMarkerSceneSymbol = {
+  type: 'simple-marker-scene';
+  /** Solid shape. Defaults to `sphere`. */
+  style?: 'cone' | 'cube' | 'cylinder' | 'diamond' | 'sphere' | 'tetrahedron';
+  /** Fill color as a hex string. */
+  color?: string;
+  /** Size along x, in meters. Defaults to 100. */
+  width?: number;
+  /** Size along z (up), in meters. Defaults to 100. */
+  height?: number;
+  /** Size along y, in meters. Defaults to 100. */
+  depth?: number;
+  /** Which part of the solid sits on the point. Defaults to `bottom`. */
+  anchor?: 'center' | 'bottom' | 'top' | 'origin';
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
-export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol | TextSymbol;
+export type Symbol =
+  | SimpleMarkerSymbol
+  | SimpleLineSymbol
+  | SimpleFillSymbol
+  | TextSymbol
+  | SimpleMarkerSceneSymbol;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };

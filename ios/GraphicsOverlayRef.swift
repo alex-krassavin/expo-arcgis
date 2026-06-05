@@ -158,8 +158,37 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
     if let haloWidth = s["haloWidth"] as? NSNumber { textSymbol.haloWidth = haloWidth.doubleValue }
     if let fontFamily = s["fontFamily"] as? String { textSymbol.fontFamily = fontFamily }
     return textSymbol
+  case "simple-marker-scene":
+    return SimpleMarkerSceneSymbol(
+      style: sceneSymbolStyle(s["style"] as? String),
+      color: color(s["color"]) ?? .lightGray,
+      height: (s["height"] as? NSNumber)?.doubleValue ?? 100,
+      width: (s["width"] as? NSNumber)?.doubleValue ?? 100,
+      depth: (s["depth"] as? NSNumber)?.doubleValue ?? 100,
+      anchorPosition: sceneSymbolAnchor(s["anchor"] as? String)
+    )
   default:
     return nil
+  }
+}
+
+private func sceneSymbolStyle(_ value: String?) -> SimpleMarkerSceneSymbol.Style {
+  switch value {
+  case "cone": return .cone
+  case "cube": return .cube
+  case "cylinder": return .cylinder
+  case "diamond": return .diamond
+  case "tetrahedron": return .tetrahedron
+  default: return .sphere
+  }
+}
+
+private func sceneSymbolAnchor(_ value: String?) -> MarkerSceneSymbol.AnchorPosition {
+  switch value {
+  case "center": return .center
+  case "top": return .top
+  case "origin": return .origin
+  default: return .bottom
   }
 }
 

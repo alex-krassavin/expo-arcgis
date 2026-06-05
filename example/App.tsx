@@ -1,5 +1,6 @@
 import {
   coordinateFormatter,
+  FeatureLayer,
   geometryEngine,
   GeometryEditor,
   Graphic,
@@ -13,7 +14,9 @@ import {
   SceneView,
   WmsLayer,
   type Camera,
+  type FeatureReduction,
   type Geometry,
+  type LabelDefinition,
   type MapLoadErrorEventPayload,
   type Renderer,
   type Surface,
@@ -61,6 +64,30 @@ const GREEN_RENDERER: Renderer = {
   symbol: { type: 'simple-marker', style: 'diamond', color: '#34c759', size: 14 },
 };
 
+// "Styles & data visualization": a public world-cities feature layer styled by population.
+const WORLD_CITIES =
+  'https://sampleserver6.arcgisonline.com/arcgis/rest/services/SampleWorldCities/MapServer/0';
+// Class-breaks renderer — graduated circles by the POP (population) field.
+const CITIES_RENDERER: Renderer = {
+  type: 'class-breaks',
+  field: 'POP',
+  classBreaks: [
+    { min: 0, max: 1_000_000, symbol: { type: 'simple-marker', color: '#2c7fb8', size: 6 }, label: '< 1M' },
+    { min: 1_000_000, max: 5_000_000, symbol: { type: 'simple-marker', color: '#7fcdbb', size: 11 }, label: '1–5M' },
+    { min: 5_000_000, max: 50_000_000, symbol: { type: 'simple-marker', color: '#edf8b1', size: 18 }, label: '> 5M' },
+  ],
+};
+// Labels — white city names with a dark halo.
+const CITIES_LABELS: LabelDefinition[] = [
+  {
+    expression: '[CITY_NAME]',
+    // For labels the text comes from `expression`; the symbol's own `text` is ignored.
+    symbol: { type: 'text', text: '', color: '#ffffff', size: 11, haloColor: '#000000', haloWidth: 1.5 },
+  },
+];
+// Clustering (feature reduction) for the same layer.
+const CITY_CLUSTER: FeatureReduction = { type: 'cluster', radius: 60 };
+
 // "Display a scene" tutorial camera + terrain (Santa Monica Mountains, in 3D).
 const CAMERA: Camera = {
   position: { x: -118.804, y: 34.0, z: 5330 },
@@ -104,6 +131,8 @@ export default function App() {
   const [shadows, setShadows] = useState(false);
   const [buffer, setBuffer] = useState<Geometry | null>(null);
   const [draw, setDraw] = useState(false);
+  const [cities, setCities] = useState(false);
+  const [cluster, setCluster] = useState(false);
 
   // "Buffer pin" — geodesic buffer of the tapped pin + its lat/long readout (CoordinateFormatter).
   function bufferPin() {
@@ -167,6 +196,18 @@ export default function App() {
             symbol={{ type: 'simple-fill', color: '#34c75955', outline: { color: '#34c759', width: 2 } }}
           />
         )}
+        {/* Text symbol — a labeled point */}
+        <Graphic
+          geometry={{ type: 'point', x: -118.80657, y: 34.012 }}
+          symbol={{
+            type: 'text',
+            text: 'Santa Monica Mtns',
+            color: '#ffffff',
+            size: 13,
+            haloColor: '#1d3557',
+            haloWidth: 2,
+          }}
+        />
       </GraphicsOverlay>
       <GraphicsOverlay renderer={GREEN_RENDERER}>
         {/* Symbol-less graphics — drawn by the overlay's renderer */}
@@ -204,6 +245,20 @@ export default function App() {
                 }
               >
                 {graphics}
+                {/* 3D scene symbol — a sphere floating over the terrain */}
+                <GraphicsOverlay>
+                  <Graphic
+                    geometry={{ type: 'point', x: -118.80657, y: 34.00059, z: 1500 }}
+                    symbol={{
+                      type: 'simple-marker-scene',
+                      style: 'sphere',
+                      color: '#e63946',
+                      width: 400,
+                      height: 400,
+                      depth: 400,
+                    }}
+                  />
+                </GraphicsOverlay>
               </SceneView>
             </Scene>
           ) : (
@@ -215,6 +270,16 @@ export default function App() {
             >
               {showLayer && <MapImageLayer url={USA_MAP_SERVICE} opacity={0.7} />}
               {wms && <WmsLayer url={WMS_URL} layerNames={['OSM-WMS']} opacity={0.6} />}
+              {/* Styled feature layer: class-breaks by population + labels (+ clustering toggle) */}
+              {cities && (
+                <FeatureLayer
+                  url={WORLD_CITIES}
+                  renderer={CITIES_RENDERER}
+                  labelsEnabled
+                  labels={CITIES_LABELS}
+                  featureReduction={cluster ? CITY_CLUSTER : undefined}
+                />
+              )}
               <MapView
                 style={styles.map}
                 viewpoint={viewpoint}
@@ -273,6 +338,8 @@ export default function App() {
                 <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
                 <Button title="Buffer pin" onPress={bufferPin} />
                 <Button title={draw ? 'Done' : 'Draw'} onPress={() => setDraw((v) => !v)} />
+                <Button title={cities ? 'Hide cities' : 'Cities'} onPress={() => setCities((v) => !v)} />
+                <Button title={cluster ? 'No cluster' : 'Cluster'} onPress={() => setCluster((v) => !v)} />
               </>
             )}
           </View>
