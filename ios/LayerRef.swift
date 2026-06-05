@@ -45,6 +45,9 @@ public final class FeatureLayerRef: LayerRef {
         featureLayer.addLabelDefinition(buildLabelDefinition(labelDict))
       }
     }
+    if changed.keys.contains("featureReduction") {
+      featureLayer.featureReduction = (changed["featureReduction"] as? [String: Any]).flatMap(buildFeatureReduction)
+    }
   }
 }
 

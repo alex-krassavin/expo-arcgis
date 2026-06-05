@@ -57,6 +57,9 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
         (label as? Map<*, *>)?.let { layer.labelDefinitions.add(buildLabelDefinition(it)) }
       }
     }
+    if (changed.containsKey("featureReduction")) {
+      layer.featureReduction = (changed["featureReduction"] as? Map<*, *>)?.let { buildFeatureReduction(it) }
+    }
   }
 }
 

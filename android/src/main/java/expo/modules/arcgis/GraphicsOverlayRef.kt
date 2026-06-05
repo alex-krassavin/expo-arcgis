@@ -4,6 +4,8 @@ import com.arcgismaps.Color
 import com.arcgismaps.mapping.labeling.ArcadeLabelExpression
 import com.arcgismaps.mapping.labeling.LabelDefinition
 import com.arcgismaps.mapping.labeling.SimpleLabelExpression
+import com.arcgismaps.mapping.reduction.ClusteringFeatureReduction
+import com.arcgismaps.mapping.reduction.FeatureReduction
 import com.arcgismaps.mapping.symbology.ClassBreak
 import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
 import com.arcgismaps.mapping.symbology.HorizontalAlignment
@@ -103,6 +105,25 @@ internal fun buildLabelDefinition(d: Map<*, *>): LabelDefinition {
     (d["whereClause"] as? String)?.let { whereClause = it }
   }
 }
+
+// region Feature reduction
+
+/** Builds a [FeatureReduction] (currently clustering) from a JS dict. */
+internal fun buildFeatureReduction(d: Map<*, *>): FeatureReduction? = when (d["type"]) {
+  "cluster" -> {
+    val renderer = (d["renderer"] as? Map<*, *>)?.let { buildRenderer(it) } ?: defaultClusterRenderer()
+    ClusteringFeatureReduction(renderer).apply {
+      (d["radius"] as? Number)?.toDouble()?.let { radius = it }
+      (d["minSymbolSize"] as? Number)?.toDouble()?.let { minSymbolSize = it }
+      (d["maxSymbolSize"] as? Number)?.toDouble()?.let { maxSymbolSize = it }
+      (d["enabled"] as? Boolean)?.let { isEnabled = it }
+    }
+  }
+  else -> null
+}
+
+private fun defaultClusterRenderer(): Renderer =
+  SimpleRenderer(SimpleMarkerSymbol(SimpleMarkerSymbolStyle.Circle, Color.fromRgba(0, 122, 255, 255), 18f))
 
 /** Invisible marker used as a UniqueValueRenderer default when JS supplies none (Kotlin requires non-null). */
 private fun transparentMarker(): Symbol =

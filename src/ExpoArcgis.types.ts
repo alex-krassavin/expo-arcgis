@@ -111,7 +111,27 @@ export type FeatureLayerProps = LayerProps & {
   labelsEnabled?: boolean;
   /** Label rules applied to the layer's features. */
   labels?: LabelDefinition[];
+  /** Aggregates dense features into clusters (feature reduction). */
+  featureReduction?: FeatureReduction;
 };
+
+/** Clustering feature reduction — aggregates nearby features into a single symbol. */
+export type ClusterReduction = {
+  type: 'cluster';
+  /** Renderer for the cluster symbols (e.g. graduated by count). Defaults to a blue circle. */
+  renderer?: Renderer;
+  /** Cluster cell radius in points. */
+  radius?: number;
+  /** Smallest cluster symbol size in points. */
+  minSymbolSize?: number;
+  /** Largest cluster symbol size in points. */
+  maxSymbolSize?: number;
+  /** Whether reduction is active. Defaults to `true`. */
+  enabled?: boolean;
+};
+
+/** Feature reduction applied to a `<FeatureLayer>`. Mirrors the native `FeatureReduction`. */
+export type FeatureReduction = ClusterReduction;
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */
 export type LabelDefinition = {

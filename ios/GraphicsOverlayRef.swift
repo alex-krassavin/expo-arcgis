@@ -104,6 +104,28 @@ func buildLabelDefinition(_ d: [String: Any]) -> LabelDefinition {
   return definition
 }
 
+// MARK: - Feature reduction
+
+/// Builds a `FeatureReduction` (currently clustering) from a JS dict.
+func buildFeatureReduction(_ d: [String: Any]) -> FeatureReduction? {
+  switch d["type"] as? String {
+  case "cluster":
+    let renderer = (d["renderer"] as? [String: Any]).flatMap(buildRenderer) ?? defaultClusterRenderer()
+    let reduction = ClusteringFeatureReduction(renderer: renderer)
+    if let radius = d["radius"] as? NSNumber { reduction.radius = radius.doubleValue }
+    if let minSize = d["minSymbolSize"] as? NSNumber { reduction.minSymbolSize = minSize.doubleValue }
+    if let maxSize = d["maxSymbolSize"] as? NSNumber { reduction.maxSymbolSize = maxSize.doubleValue }
+    if let enabled = d["enabled"] as? Bool { reduction.isEnabled = enabled }
+    return reduction
+  default:
+    return nil
+  }
+}
+
+private func defaultClusterRenderer() -> Renderer {
+  SimpleRenderer(symbol: SimpleMarkerSymbol(style: .circle, color: .systemBlue, size: 18))
+}
+
 // MARK: - Symbols
 
 func buildSymbol(_ s: [String: Any]) -> Symbol? {
