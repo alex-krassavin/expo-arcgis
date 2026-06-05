@@ -115,6 +115,24 @@ export type SceneLayerProps = LayerProps & {
   url: string;
 };
 
+/** Props for a `<VectorTileLayer>` — mirror the native `ArcGISVectorTiledLayer`. */
+export type VectorTileLayerProps = LayerProps & { url: string };
+
+/** Props for an `<IntegratedMeshLayer>` (3D) — mirror the native `IntegratedMeshLayer`. */
+export type IntegratedMeshLayerProps = LayerProps & { url: string };
+
+/** Props for a `<PointCloudLayer>` (3D) — mirror the native `PointCloudLayer`. */
+export type PointCloudLayerProps = LayerProps & { url: string };
+
+/** Props for an `<Ogc3DTilesLayer>` (3D) — mirror the native OGC 3D Tiles layer. */
+export type Ogc3DTilesLayerProps = LayerProps & { url: string };
+
+/** Props for a `<WebTiledLayer>` — mirror `WebTiledLayer` (`{level}/{row}/{col}` URL template). */
+export type WebTiledLayerProps = LayerProps & { urlTemplate: string };
+
+/** Props for an `<OpenStreetMapLayer>` — the built-in OSM tiles as an operational layer. */
+export type OpenStreetMapLayerProps = LayerProps;
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────

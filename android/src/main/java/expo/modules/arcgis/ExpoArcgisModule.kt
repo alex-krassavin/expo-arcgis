@@ -100,6 +100,58 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    Class(VectorTiledLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        VectorTiledLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: VectorTiledLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(IntegratedMeshLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        IntegratedMeshLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: IntegratedMeshLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(PointCloudLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        PointCloudLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: PointCloudLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(Ogc3DTilesLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        Ogc3DTilesLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: Ogc3DTilesLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(WebTiledLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        WebTiledLayerRef(appContext, props["urlTemplate"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: WebTiledLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(OpenStreetMapLayerRef::class) {
+      Constructor { OpenStreetMapLayerRef(appContext) }
+      Function("applyProps") { ref: OpenStreetMapLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef::class) {
       Constructor { GraphicsOverlayRef(appContext) }

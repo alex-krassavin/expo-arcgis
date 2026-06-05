@@ -18,6 +18,14 @@ export { FeatureLayer } from './FeatureLayer';
 export { TileLayer } from './TileLayer';
 export { MapImageLayer } from './MapImageLayer';
 export { SceneLayer } from './SceneLayer';
+export {
+  VectorTileLayer,
+  IntegratedMeshLayer,
+  PointCloudLayer,
+  Ogc3DTilesLayer,
+  WebTiledLayer,
+  OpenStreetMapLayer,
+} from './layers';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
 export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';

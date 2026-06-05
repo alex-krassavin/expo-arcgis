@@ -4,12 +4,17 @@ import { SharedObject } from 'expo-modules-core';
 import type {
   FeatureLayerProps,
   GraphicProps,
+  IntegratedMeshLayerProps,
   MapImageLayerProps,
   MapProps,
+  Ogc3DTilesLayerProps,
+  PointCloudLayerProps,
   Renderer,
   SceneLayerProps,
   SceneProps,
   TileLayerProps,
+  VectorTileLayerProps,
+  WebTiledLayerProps,
 } from './ExpoArcgis.types';
 
 /** Reference to a native operational layer (FeatureLayer / ArcGISTiledLayer), shared by reference. */
@@ -59,6 +64,12 @@ declare class ExpoArcgisModule extends NativeModule {
   TiledLayerRef: new (props: TileLayerProps) => LayerRef;
   MapImageLayerRef: new (props: MapImageLayerProps) => LayerRef;
   SceneLayerRef: new (props: SceneLayerProps) => LayerRef;
+  VectorTiledLayerRef: new (props: VectorTileLayerProps) => LayerRef;
+  IntegratedMeshLayerRef: new (props: IntegratedMeshLayerProps) => LayerRef;
+  PointCloudLayerRef: new (props: PointCloudLayerProps) => LayerRef;
+  Ogc3DTilesLayerRef: new (props: Ogc3DTilesLayerProps) => LayerRef;
+  WebTiledLayerRef: new (props: WebTiledLayerProps) => LayerRef;
+  OpenStreetMapLayerRef: new () => LayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
 }

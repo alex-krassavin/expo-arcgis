@@ -4,8 +4,14 @@ import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISSceneLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
+import com.arcgismaps.mapping.layers.ArcGISVectorTiledLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
+import com.arcgismaps.mapping.layers.IntegratedMeshLayer
 import com.arcgismaps.mapping.layers.Layer
+import com.arcgismaps.mapping.layers.Ogc3DTilesLayer
+import com.arcgismaps.mapping.layers.OpenStreetMapLayer
+import com.arcgismaps.mapping.layers.PointCloudLayer
+import com.arcgismaps.mapping.layers.WebTiledLayer
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -49,6 +55,48 @@ class MapImageLayerRef(appContext: AppContext, url: String) : LayerRef(appContex
 /** Operational 3D scene layer (3D objects / integrated mesh) backed by a scene service URL. */
 class SceneLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: ArcGISSceneLayer = ArcGISSceneLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational vector tiled layer backed by a vector tile service URL. */
+class VectorTiledLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: ArcGISVectorTiledLayer = ArcGISVectorTiledLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational 3D integrated mesh layer backed by a scene service URL. */
+class IntegratedMeshLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: IntegratedMeshLayer = IntegratedMeshLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational 3D point cloud layer backed by a scene service URL. */
+class PointCloudLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: PointCloudLayer = PointCloudLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational OGC 3D Tiles layer backed by a 3D Tiles service URL. */
+class Ogc3DTilesLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Ogc3DTilesLayer = Ogc3DTilesLayer(url)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational web tiled layer backed by a `{level}/{row}/{col}` URL template. */
+class WebTiledLayerRef(appContext: AppContext, urlTemplate: String) : LayerRef(appContext) {
+  override val layer: WebTiledLayer = WebTiledLayer.create(urlTemplate)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational OpenStreetMap tiled layer. */
+class OpenStreetMapLayerRef(appContext: AppContext) : LayerRef(appContext) {
+  override val layer: OpenStreetMapLayer = OpenStreetMapLayer()
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

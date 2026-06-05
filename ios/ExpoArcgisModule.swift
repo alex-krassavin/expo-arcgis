@@ -104,6 +104,68 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    Class(VectorTiledLayerRef.self) {
+      Constructor { (props: [String: Any]) -> VectorTiledLayerRef in
+        let ref = VectorTiledLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: VectorTiledLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(IntegratedMeshLayerRef.self) {
+      Constructor { (props: [String: Any]) -> IntegratedMeshLayerRef in
+        let ref = IntegratedMeshLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: IntegratedMeshLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(PointCloudLayerRef.self) {
+      Constructor { (props: [String: Any]) -> PointCloudLayerRef in
+        let ref = PointCloudLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: PointCloudLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(Ogc3DTilesLayerRef.self) {
+      Constructor { (props: [String: Any]) -> Ogc3DTilesLayerRef in
+        let ref = Ogc3DTilesLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: Ogc3DTilesLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(WebTiledLayerRef.self) {
+      Constructor { (props: [String: Any]) -> WebTiledLayerRef in
+        let ref = WebTiledLayerRef(urlTemplate: props["urlTemplate"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: WebTiledLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(OpenStreetMapLayerRef.self) {
+      Constructor { () -> OpenStreetMapLayerRef in OpenStreetMapLayerRef() }
+      Function("applyProps") { (ref: OpenStreetMapLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef.self) {
       Constructor { () -> GraphicsOverlayRef in GraphicsOverlayRef() }

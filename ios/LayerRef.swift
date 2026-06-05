@@ -52,3 +52,45 @@ public final class SceneLayerRef: LayerRef {
     super.init(layer: ArcGISSceneLayer(url: URL(string: url)!))
   }
 }
+
+/// Operational vector tiled layer backed by a vector tile service URL.
+public final class VectorTiledLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: ArcGISVectorTiledLayer(url: URL(string: url)!))
+  }
+}
+
+/// Operational 3D integrated mesh layer backed by a scene service URL.
+public final class IntegratedMeshLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: IntegratedMeshLayer(url: URL(string: url)!))
+  }
+}
+
+/// Operational 3D point cloud layer backed by a scene service URL.
+public final class PointCloudLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: PointCloudLayer(url: URL(string: url)!))
+  }
+}
+
+/// Operational OGC 3D Tiles layer backed by a 3D Tiles service URL.
+public final class Ogc3DTilesLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: OGC3DTilesLayer(url: URL(string: url)!))
+  }
+}
+
+/// Operational web tiled layer backed by a `{level}/{row}/{col}` URL template.
+public final class WebTiledLayerRef: LayerRef {
+  init(urlTemplate: String) {
+    super.init(layer: WebTiledLayer(urlTemplate: urlTemplate))
+  }
+}
+
+/// Operational OpenStreetMap tiled layer.
+public final class OpenStreetMapLayerRef: LayerRef {
+  init() {
+    super.init(layer: OpenStreetMapLayer())
+  }
+}
