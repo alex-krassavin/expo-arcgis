@@ -54,6 +54,11 @@ public final class FeatureLayerRef: LayerRef {
     dictFromGeometry(try await table.queryExtent(using: buildQueryParameters(query)))
   }
 
+  func queryStatistics(_ query: [String: Any]) async throws -> [[String: Any]] {
+    let result = try await table.queryStatistics(using: buildStatisticsQueryParameters(query))
+    return result.statisticRecords().map(serializeStatisticRecord)
+  }
+
   override func applyProps(_ changed: [String: Any]) {
     super.applyProps(changed)
     guard let featureLayer = layer as? FeatureLayer else { return }

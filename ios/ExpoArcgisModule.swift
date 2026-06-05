@@ -78,6 +78,9 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("queryExtent") { (ref: FeatureLayerRef, query: [String: Any]?) in
         try await ref.queryExtent(query)
       }
+      AsyncFunction("queryStatistics") { (ref: FeatureLayerRef, query: [String: Any]) in
+        try await ref.queryStatistics(query)
+      }
     }
 
     Class(TiledLayerRef.self) {

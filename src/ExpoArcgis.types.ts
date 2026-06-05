@@ -179,6 +179,41 @@ export type Feature = {
   geometry: Geometry | null;
 };
 
+/** A statistic to compute over a field. Mirrors the native `StatisticType`. */
+export type StatisticType =
+  | 'count'
+  | 'sum'
+  | 'min'
+  | 'max'
+  | 'average'
+  | 'standardDeviation'
+  | 'variance';
+
+/** One computed statistic — a `type` over a `field`, optionally renamed via `outName`. */
+export type StatisticDefinition = {
+  field: string;
+  type: StatisticType;
+  /** Output column name for the statistic (defaults to a generated name). */
+  outName?: string;
+};
+
+/** Criteria for a statistics query. Mirrors the native `StatisticsQueryParameters`. */
+export type StatisticsQueryParameters = {
+  statistics: StatisticDefinition[];
+  /** SQL `where` clause limiting which features are aggregated. */
+  whereClause?: string;
+  /** Fields to group the statistics by (one record per group). */
+  groupBy?: string[];
+  /** Sort order of the records. */
+  orderBy?: OrderByField[];
+};
+
+/** One row of a statistics query — the `group` field values plus the computed `statistics`. */
+export type StatisticRecord = {
+  group: Record<string, unknown>;
+  statistics: Record<string, unknown>;
+};
+
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */
@@ -187,6 +222,8 @@ export type FeatureLayerHandle = {
   queryFeatureCount(query?: QueryParameters): Promise<number>;
   /** Returns the combined extent (envelope) of the features matching `query`. */
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
+  /** Computes aggregate statistics over the layer's features. */
+  queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

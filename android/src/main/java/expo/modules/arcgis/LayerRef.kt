@@ -63,6 +63,9 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
   suspend fun queryExtent(query: Map<String, Any?>?): Map<String, Any?> =
     dictFromGeometry(table.queryExtent(buildQueryParameters(query)).getOrThrow())
 
+  suspend fun queryStatistics(query: Map<String, Any?>): List<Map<String, Any?>> =
+    table.queryStatistics(buildStatisticsQueryParameters(query)).getOrThrow().map { serializeStatisticRecord(it) }
+
   override fun applyProps(changed: Map<String, Any?>) {
     applyCommonProps(changed)
     if (changed.containsKey("renderer")) {

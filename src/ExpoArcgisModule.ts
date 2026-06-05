@@ -6,6 +6,7 @@ import type {
   FeatureLayerProps,
   Geometry,
   GraphicProps,
+  StatisticRecord,
   IntegratedMeshLayerProps,
   KmlLayerProps,
   MapImageLayerProps,
@@ -33,6 +34,7 @@ export declare class FeatureLayerRef extends LayerRef {
   queryFeatures(query: Record<string, unknown>): Promise<Feature[]>;
   queryFeatureCount(query: Record<string, unknown>): Promise<number>;
   queryExtent(query: Record<string, unknown>): Promise<Geometry | null>;
+  queryStatistics(query: Record<string, unknown>): Promise<StatisticRecord[]>;
 }
 
 /** Reference to a native `Graphic` drawn on a graphics overlay. */

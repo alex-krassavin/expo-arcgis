@@ -47,6 +47,7 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
         queryFeatures: (query = {}) => ref.current!.queryFeatures(query),
         queryFeatureCount: (query = {}) => ref.current!.queryFeatureCount(query),
         queryExtent: (query = {}) => ref.current!.queryExtent(query),
+        queryStatistics: (query) => ref.current!.queryStatistics(query),
       }),
       []
     );

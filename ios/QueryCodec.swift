@@ -16,13 +16,15 @@ func buildQueryParameters(_ dict: [String: Any]?) -> QueryParameters {
   if let returnGeometry = dict["returnGeometry"] as? Bool { params.returnsGeometry = returnGeometry }
   if let resultOffset = dict["resultOffset"] as? NSNumber { params.resultOffset = resultOffset.intValue }
   if let objectIds = dict["objectIds"] as? [NSNumber] { params.addObjectIDs(objectIds.map(\.intValue)) }
-  if let orderBy = dict["orderBy"] as? [[String: Any]] {
-    params.addOrderByFields(orderBy.compactMap { field -> OrderBy? in
-      guard let fieldName = field["field"] as? String else { return nil }
-      return OrderBy(fieldName: fieldName, sortOrder: (field["ascending"] as? Bool ?? true) ? .ascending : .descending)
-    })
-  }
+  params.addOrderByFields(buildOrderBy(dict["orderBy"]))
   return params
+}
+
+private func buildOrderBy(_ value: Any?) -> [OrderBy] {
+  (value as? [[String: Any]] ?? []).compactMap { field -> OrderBy? in
+    guard let fieldName = field["field"] as? String else { return nil }
+    return OrderBy(fieldName: fieldName, sortOrder: (field["ascending"] as? Bool ?? true) ? .ascending : .descending)
+  }
 }
 
 private func querySpatialRelationship(_ value: String) -> SpatialRelationship {
@@ -57,4 +59,38 @@ func serializeAttributes(_ attributes: [String: any Sendable]) -> [String: Any] 
     }
   }
   return result
+}
+
+// MARK: - Statistics
+
+func buildStatisticsQueryParameters(_ dict: [String: Any]) -> StatisticsQueryParameters {
+  let definitions = (dict["statistics"] as? [[String: Any]] ?? []).compactMap { stat -> StatisticDefinition? in
+    guard let field = stat["field"] as? String else { return nil }
+    return StatisticDefinition(
+      fieldName: field,
+      statisticType: statisticType(stat["type"] as? String),
+      outputAlias: stat["outName"] as? String ?? ""
+    )
+  }
+  let params = StatisticsQueryParameters(statisticDefinitions: definitions)
+  if let whereClause = dict["whereClause"] as? String { params.whereClause = whereClause }
+  if let groupBy = dict["groupBy"] as? [String] { params.addGroupByFieldNames(groupBy) }
+  params.addOrderByFields(buildOrderBy(dict["orderBy"]))
+  return params
+}
+
+private func statisticType(_ value: String?) -> StatisticDefinition.StatisticType {
+  switch value {
+  case "count": return .count
+  case "sum": return .sum
+  case "min": return .minimum
+  case "max": return .maximum
+  case "standardDeviation": return .standardDeviation
+  case "variance": return .variance
+  default: return .average
+  }
+}
+
+func serializeStatisticRecord(_ record: StatisticRecord) -> [String: Any] {
+  ["group": serializeAttributes(record.group), "statistics": serializeAttributes(record.statistics)]
 }

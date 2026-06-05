@@ -5,6 +5,10 @@ import com.arcgismaps.data.OrderBy
 import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.SortOrder
 import com.arcgismaps.data.SpatialRelationship
+import com.arcgismaps.data.StatisticDefinition
+import com.arcgismaps.data.StatisticRecord
+import com.arcgismaps.data.StatisticType
+import com.arcgismaps.data.StatisticsQueryParameters
 
 /**
  * Builds [QueryParameters] from a JS query dict and serializes [Feature]s back to JS.
@@ -21,15 +25,17 @@ internal fun buildQueryParameters(dict: Map<*, *>?): QueryParameters {
   (dict["returnGeometry"] as? Boolean)?.let { params.returnGeometry = it }
   (dict["resultOffset"] as? Number)?.toInt()?.let { params.resultOffset = it }
   (dict["objectIds"] as? List<*>)?.mapNotNull { (it as? Number)?.toLong() }?.let { params.objectIds.addAll(it) }
-  (dict["orderBy"] as? List<*>)?.forEach { entry ->
-    (entry as? Map<*, *>)?.let {
-      val field = it["field"] as? String ?: return@forEach
-      val ascending = it["ascending"] as? Boolean ?: true
-      params.orderByFields.add(OrderBy(field, if (ascending) SortOrder.Ascending else SortOrder.Descending))
-    }
-  }
+  params.orderByFields.addAll(buildOrderBy(dict["orderBy"]))
   return params
 }
+
+private fun buildOrderBy(value: Any?): List<OrderBy> =
+  (value as? List<*>)?.mapNotNull { entry ->
+    (entry as? Map<*, *>)?.let {
+      val field = it["field"] as? String ?: return@mapNotNull null
+      OrderBy(field, if (it["ascending"] as? Boolean ?: true) SortOrder.Ascending else SortOrder.Descending)
+    }
+  } ?: emptyList()
 
 private fun querySpatialRelationship(value: String): SpatialRelationship = when (value) {
   "contains" -> SpatialRelationship.Contains
@@ -58,3 +64,32 @@ internal fun serializeAttributes(attributes: Map<String, Any?>): Map<String, Any
       else -> value.toString()
     }
   }
+
+// region Statistics
+
+internal fun buildStatisticsQueryParameters(dict: Map<*, *>): StatisticsQueryParameters {
+  val definitions = (dict["statistics"] as? List<*>)?.mapNotNull { stat ->
+    (stat as? Map<*, *>)?.let {
+      val field = it["field"] as? String ?: return@mapNotNull null
+      StatisticDefinition(field, statisticType(it["type"] as? String), it["outName"] as? String ?: "")
+    }
+  } ?: emptyList()
+  val params = StatisticsQueryParameters(definitions)
+  (dict["whereClause"] as? String)?.let { params.whereClause = it }
+  (dict["groupBy"] as? List<*>)?.filterIsInstance<String>()?.let { params.groupByFieldNames.addAll(it) }
+  params.orderByFields.addAll(buildOrderBy(dict["orderBy"]))
+  return params
+}
+
+private fun statisticType(value: String?): StatisticType = when (value) {
+  "count" -> StatisticType.Count
+  "sum" -> StatisticType.Sum
+  "min" -> StatisticType.Minimum
+  "max" -> StatisticType.Maximum
+  "standardDeviation" -> StatisticType.StandardDeviation
+  "variance" -> StatisticType.Variance
+  else -> StatisticType.Average
+}
+
+internal fun serializeStatisticRecord(record: StatisticRecord): Map<String, Any?> =
+  mapOf("group" to serializeAttributes(record.group), "statistics" to serializeAttributes(record.statistics))
