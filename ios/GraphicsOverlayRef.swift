@@ -110,8 +110,38 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
       color: color(s["color"]) ?? .red,
       outline: outline(s["outline"])
     )
+  case "text":
+    let textSymbol = TextSymbol(
+      text: s["text"] as? String ?? "",
+      color: color(s["color"]) ?? .black,
+      size: (s["size"] as? NSNumber)?.doubleValue ?? 12,
+      horizontalAlignment: horizontalAlignment(s["horizontalAlignment"] as? String),
+      verticalAlignment: verticalAlignment(s["verticalAlignment"] as? String)
+    )
+    textSymbol.haloColor = color(s["haloColor"])
+    if let haloWidth = s["haloWidth"] as? NSNumber { textSymbol.haloWidth = haloWidth.doubleValue }
+    if let fontFamily = s["fontFamily"] as? String { textSymbol.fontFamily = fontFamily }
+    return textSymbol
   default:
     return nil
+  }
+}
+
+private func horizontalAlignment(_ value: String?) -> TextSymbol.HorizontalAlignment {
+  switch value {
+  case "left": return .left
+  case "right": return .right
+  case "justify": return .justify
+  default: return .center
+  }
+}
+
+private func verticalAlignment(_ value: String?) -> TextSymbol.VerticalAlignment {
+  switch value {
+  case "top": return .top
+  case "bottom": return .bottom
+  case "baseline": return .baseline
+  default: return .middle
   }
 }
 

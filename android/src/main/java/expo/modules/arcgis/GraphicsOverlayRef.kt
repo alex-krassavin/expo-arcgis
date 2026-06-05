@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import com.arcgismaps.Color
 import com.arcgismaps.mapping.symbology.ClassBreak
 import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
+import com.arcgismaps.mapping.symbology.HorizontalAlignment
 import com.arcgismaps.mapping.symbology.Renderer
 import com.arcgismaps.mapping.symbology.SimpleFillSymbol
 import com.arcgismaps.mapping.symbology.SimpleFillSymbolStyle
@@ -12,8 +13,10 @@ import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
 import com.arcgismaps.mapping.symbology.Symbol
+import com.arcgismaps.mapping.symbology.TextSymbol
 import com.arcgismaps.mapping.symbology.UniqueValue
 import com.arcgismaps.mapping.symbology.UniqueValueRenderer
+import com.arcgismaps.mapping.symbology.VerticalAlignment
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.mapping.view.GraphicsOverlay
 import expo.modules.kotlin.AppContext
@@ -118,7 +121,32 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     colorOf(s["color"]) ?: Color.fromRgba(255, 0, 0, 255),
     outlineOf(s["outline"]),
   )
+  "text" -> TextSymbol(
+    s["text"] as? String ?: "",
+    colorOf(s["color"]) ?: Color.fromRgba(0, 0, 0, 255),
+    num(s["size"], 12.0).toFloat(),
+    horizontalAlignment(s["horizontalAlignment"]),
+    verticalAlignment(s["verticalAlignment"]),
+  ).apply {
+    colorOf(s["haloColor"])?.let { haloColor = it }
+    (s["haloWidth"] as? Number)?.toFloat()?.let { haloWidth = it }
+    (s["fontFamily"] as? String)?.let { fontFamily = it }
+  }
   else -> null
+}
+
+private fun horizontalAlignment(value: Any?): HorizontalAlignment = when (value) {
+  "left" -> HorizontalAlignment.Left
+  "right" -> HorizontalAlignment.Right
+  "justify" -> HorizontalAlignment.Justify
+  else -> HorizontalAlignment.Center
+}
+
+private fun verticalAlignment(value: Any?): VerticalAlignment = when (value) {
+  "top" -> VerticalAlignment.Top
+  "bottom" -> VerticalAlignment.Bottom
+  "baseline" -> VerticalAlignment.Baseline
+  else -> VerticalAlignment.Middle
 }
 
 private fun lineSymbol(s: Map<*, *>): SimpleLineSymbol = SimpleLineSymbol(

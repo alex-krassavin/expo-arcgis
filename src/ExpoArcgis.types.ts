@@ -389,8 +389,29 @@ export type SimpleFillSymbol = {
   outline?: Stroke;
 };
 
+/** A text symbol that draws a string at a point. Mirrors the native `TextSymbol`. */
+export type TextSymbol = {
+  type: 'text';
+  /** The text to draw. */
+  text: string;
+  /** Text color as a hex string. Defaults to black. */
+  color?: string;
+  /** Font size in points. */
+  size?: number;
+  /** Halo (outline) color as a hex string. */
+  haloColor?: string;
+  /** Halo width in points. */
+  haloWidth?: number;
+  /** Font family name. */
+  fontFamily?: string;
+  /** Horizontal anchor. Defaults to `center`. */
+  horizontalAlignment?: 'left' | 'center' | 'right' | 'justify';
+  /** Vertical anchor. Defaults to `middle`. */
+  verticalAlignment?: 'top' | 'middle' | 'bottom' | 'baseline';
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
-export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol;
+export type Symbol = SimpleMarkerSymbol | SimpleLineSymbol | SimpleFillSymbol | TextSymbol;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };
