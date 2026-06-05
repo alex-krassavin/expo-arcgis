@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -262,6 +263,10 @@ class ExpoArcgisModule : Module() {
 
       Prop("geometryEditor") { view: ExpoArcgisMapView, ref: GeometryEditorRef? ->
         view.setGeometryEditor(ref)
+      }
+
+      AsyncFunction("identify") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+        view.identify(screenPoint, options, promise)
       }
     }
 

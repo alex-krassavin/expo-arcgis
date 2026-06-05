@@ -14,16 +14,18 @@ import {
   SceneView,
   WmsLayer,
   type Camera,
+  type FeatureLayerHandle,
   type FeatureReduction,
   type Geometry,
   type LabelDefinition,
   type MapLoadErrorEventPayload,
+  type MapViewHandle,
   type Renderer,
   type Surface,
   type TapEventPayload,
   type Viewpoint,
 } from 'expo-arcgis';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -133,6 +135,8 @@ export default function App() {
   const [draw, setDraw] = useState(false);
   const [cities, setCities] = useState(false);
   const [cluster, setCluster] = useState(false);
+  const mapRef = useRef<MapViewHandle>(null);
+  const citiesRef = useRef<FeatureLayerHandle>(null);
 
   // "Buffer pin" — geodesic buffer of the tapped pin + its lat/long readout (CoordinateFormatter).
   function bufferPin() {
@@ -141,6 +145,31 @@ export default function App() {
     setBuffer(geometryEngine.geodesicBuffer(point, 500, 'meters'));
     const dms = coordinateFormatter.toLatitudeLongitude(point, 'degreesMinutesSeconds', 1);
     setStatus(`Pin ${dms ?? '—'} · 500 m buffer`);
+  }
+
+  // "Big cities" — count features matching a SQL where clause (Query.queryFeatureCount).
+  async function bigCities() {
+    if (!citiesRef.current) return setStatus('Enable “Cities” first');
+    const count = await citiesRef.current.queryFeatureCount({ whereClause: 'POP > 5000000' });
+    setStatus(`Cities over 5M people: ${count}`);
+  }
+
+  // "Avg pop" — aggregate statistic over the layer (Query.queryStatistics).
+  async function avgPop() {
+    if (!citiesRef.current) return setStatus('Enable “Cities” first');
+    const [record] = await citiesRef.current.queryStatistics({
+      statistics: [{ field: 'POP', type: 'average', outName: 'avgPop' }],
+    });
+    const avg = record?.statistics.avgPop;
+    setStatus(`Average city population: ${typeof avg === 'number' ? Math.round(avg).toLocaleString() : '—'}`);
+  }
+
+  // Identify the city under a tap (Query/Identify on the MapView ref).
+  async function identifyAt(screenPoint: { x: number; y: number }) {
+    if (!cities || !mapRef.current) return;
+    const results = await mapRef.current.identify(screenPoint, { tolerance: 12, maxResults: 1 });
+    const feature = results.find((r) => r.features.length > 0)?.features[0];
+    if (feature) setStatus(`Identified: ${String(feature.attributes.CITY_NAME ?? '—')}`);
   }
 
   async function toggleLocation() {
@@ -273,6 +302,7 @@ export default function App() {
               {/* Styled feature layer: class-breaks by population + labels (+ clustering toggle) */}
               {cities && (
                 <FeatureLayer
+                  ref={citiesRef}
                   url={WORLD_CITIES}
                   renderer={CITIES_RENDERER}
                   labelsEnabled
@@ -281,6 +311,7 @@ export default function App() {
                 />
               )}
               <MapView
+                ref={mapRef}
                 style={styles.map}
                 viewpoint={viewpoint}
                 locationDisplay={showLocation ? { autoPanMode: 'recenter' } : undefined}
@@ -288,9 +319,10 @@ export default function App() {
                 onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                   setStatus(`Load error: ${event.nativeEvent.message}`)
                 }
-                onTap={(event: { nativeEvent: TapEventPayload }) =>
-                  setPin(event.nativeEvent.mapPoint)
-                }
+                onTap={(event: { nativeEvent: TapEventPayload }) => {
+                  setPin(event.nativeEvent.mapPoint);
+                  identifyAt(event.nativeEvent.screenPoint);
+                }}
               >
                 {graphics}
                 {/* Interactive sketching — reports the drawn polygon's geodesic area */}
@@ -340,6 +372,8 @@ export default function App() {
                 <Button title={draw ? 'Done' : 'Draw'} onPress={() => setDraw((v) => !v)} />
                 <Button title={cities ? 'Hide cities' : 'Cities'} onPress={() => setCities((v) => !v)} />
                 <Button title={cluster ? 'No cluster' : 'Cluster'} onPress={() => setCluster((v) => !v)} />
+                <Button title="Big cities" onPress={bigCities} />
+                <Button title="Avg pop" onPress={avgPop} />
               </>
             )}
           </View>

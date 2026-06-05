@@ -94,3 +94,13 @@ private func statisticType(_ value: String?) -> StatisticDefinition.StatisticTyp
 func serializeStatisticRecord(_ record: StatisticRecord) -> [String: Any] {
   ["group": serializeAttributes(record.group), "statistics": serializeAttributes(record.statistics)]
 }
+
+// MARK: - Identify
+
+/// Serializes one layer's identify hits — its name and the identified features.
+func serializeIdentifyResult(_ result: IdentifyLayerResult) -> [String: Any] {
+  [
+    "layerName": result.layerContent.name,
+    "features": result.geoElements.compactMap { $0 as? Feature }.map(serializeFeature),
+  ]
+}

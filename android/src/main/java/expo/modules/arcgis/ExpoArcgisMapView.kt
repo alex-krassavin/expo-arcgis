@@ -10,7 +10,9 @@ import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.location.LocationDisplayAutoPanMode
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
+import com.arcgismaps.mapping.view.ScreenCoordinate
 import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
@@ -119,6 +121,19 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   /** Binds an interactive GeometryEditor for sketching (null clears it). */
   fun setGeometryEditor(ref: GeometryEditorRef?) {
     mapView.geometryEditor = ref?.editor
+  }
+
+  /** Identifies the features under a screen point (one result per layer with hits). */
+  fun identify(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
+    val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
+    val y = (screenPoint["y"] as? Number)?.toDouble() ?: 0.0
+    val tolerance = (options?.get("tolerance") as? Number)?.toDouble() ?: 12.0
+    val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
+    scope.launch {
+      mapView.identifyLayers(ScreenCoordinate(x, y), tolerance, false, maxResults)
+        .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it) }) }
+        .onFailure { promise.reject("IDENTIFY_ERROR", it.message ?: "Identify failed", it) }
+    }
   }
 
   override fun onAttachedToWindow() {

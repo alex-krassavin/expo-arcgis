@@ -214,6 +214,26 @@ export type StatisticRecord = {
   statistics: Record<string, unknown>;
 };
 
+/** One layer's hits from a `<MapView>` `identify` (the features under a screen point). */
+export type IdentifyResult = {
+  /** Name of the layer the features belong to. */
+  layerName: string;
+  /** Identified features in that layer. */
+  features: Feature[];
+};
+
+/** Imperative handle exposed by `<MapView>` via `ref`. */
+export type MapViewHandle = {
+  /**
+   * Identifies the features under a screen point (in points, e.g. from `onTap`'s `screenPoint`).
+   * Returns one `IdentifyResult` per layer that has hits.
+   */
+  identify(
+    screenPoint: { x: number; y: number },
+    options?: { tolerance?: number; maxResults?: number }
+  ): Promise<IdentifyResult[]>;
+};
+
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */

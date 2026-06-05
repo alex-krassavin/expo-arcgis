@@ -9,6 +9,7 @@ import com.arcgismaps.data.StatisticDefinition
 import com.arcgismaps.data.StatisticRecord
 import com.arcgismaps.data.StatisticType
 import com.arcgismaps.data.StatisticsQueryParameters
+import com.arcgismaps.mapping.view.IdentifyLayerResult
 
 /**
  * Builds [QueryParameters] from a JS query dict and serializes [Feature]s back to JS.
@@ -93,3 +94,11 @@ private fun statisticType(value: String?): StatisticType = when (value) {
 
 internal fun serializeStatisticRecord(record: StatisticRecord): Map<String, Any?> =
   mapOf("group" to serializeAttributes(record.group), "statistics" to serializeAttributes(record.statistics))
+
+// region Identify
+
+/** Serializes one layer's identify hits — its name and the identified features. */
+internal fun serializeIdentifyResult(result: IdentifyLayerResult): Map<String, Any?> = mapOf(
+  "layerName" to result.layerContent.name,
+  "features" to result.geoElements.filterIsInstance<Feature>().map { serializeFeature(it) },
+)

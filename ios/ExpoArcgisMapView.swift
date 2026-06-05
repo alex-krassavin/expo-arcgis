@@ -13,6 +13,8 @@ final class MapViewModel: ObservableObject {
   let locationDisplay = LocationDisplay(dataSource: SystemLocationDataSource())
   @Published private(set) var locationEnabled = false
   @Published private(set) var geometryEditor: GeometryEditor?
+  /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
+  var proxy: MapViewProxy?
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -60,6 +62,7 @@ struct ExpoArcgisMapContainer: View {
             let wgs84 = GeometryEngine.project(mapPoint, into: .wgs84) ?? mapPoint
             model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
+          .onAppear { model.proxy = proxy }
           .task(id: ObjectIdentifier(map)) {
             do {
               try await map.load()
@@ -156,6 +159,21 @@ class ExpoArcgisMapView: ExpoView {
   /// Binds an interactive GeometryEditor (by reference) for sketching; nil clears it.
   func setGeometryEditor(_ ref: GeometryEditorRef?) {
     model.setGeometryEditor(ref?.editor)
+  }
+
+  /// Identifies the features under a screen point (one result per layer with hits).
+  func identify(_ screenPoint: [String: Any], _ options: [String: Any]?) async throws -> [[String: Any]] {
+    guard let proxy = model.proxy else { return [] }
+    let point = CGPoint(
+      x: (screenPoint["x"] as? NSNumber)?.doubleValue ?? 0,
+      y: (screenPoint["y"] as? NSNumber)?.doubleValue ?? 0
+    )
+    let tolerance = (options?["tolerance"] as? NSNumber)?.doubleValue ?? 12
+    let maxResults = (options?["maxResults"] as? NSNumber)?.intValue ?? 1
+    let results = try await proxy.identifyLayers(
+      screenPoint: point, tolerance: tolerance, maximumResultsPerLayer: maxResults
+    )
+    return results.map(serializeIdentifyResult)
   }
 }
 

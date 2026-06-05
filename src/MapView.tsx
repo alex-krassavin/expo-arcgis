@@ -1,7 +1,16 @@
 import { requireNativeView } from 'expo';
-import { useMemo, useState, type PropsWithChildren, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type PropsWithChildren,
+  type ReactNode,
+  type Ref,
+} from 'react';
 
-import type { MapViewProps } from './ExpoArcgis.types';
+import type { MapViewHandle, MapViewProps } from './ExpoArcgis.types';
 import type { MapRef, GraphicsOverlayRef, GeometryEditorRef } from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
 
@@ -12,32 +21,52 @@ type NativeMapViewProps = MapViewProps & {
   graphicsOverlays: GraphicsOverlayRef[];
   /** Interactive geometry editor declared as a `<GeometryEditor>` child, passed by reference. */
   geometryEditor?: GeometryEditorRef | null;
+  /** Ref to the native view, whose `identify` async function is callable through it. */
+  ref?: Ref<unknown>;
   children?: ReactNode;
 };
 
 const NativeMapView = requireNativeView<NativeMapViewProps>('ExpoArcgis');
 
 /**
- * Declarative 2D map view. Renders the `ArcGISMap` from the nearest `<Map>` and hosts the
- * `<GraphicsOverlay>` children declared inside it.
+ * Declarative 2D map view. Renders the `ArcGISMap` from the nearest `<Map>`, hosts the
+ * `<GraphicsOverlay>` / `<GeometryEditor>` children, and exposes `identify` via a `ref`.
  */
-export function MapView({ children, ...props }: PropsWithChildren<MapViewProps>) {
-  const map = useGeoModel() as MapRef;
+export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>>(
+  function MapView({ children, ...props }, handle) {
+    const map = useGeoModel() as MapRef;
+    // The native view exposes an async `identify` function callable through its ref.
+    const nativeRef = useRef<any>(null);
 
-  const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
-  const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
-  const host = useMemo<GeoViewHost>(
-    () => ({
-      add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
-      remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
-      setGeometryEditor: (editor) => setGeometryEditor(editor),
-    }),
-    []
-  );
+    const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
+    const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
+    const host = useMemo<GeoViewHost>(
+      () => ({
+        add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
+        remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
+        setGeometryEditor: (editor) => setGeometryEditor(editor),
+      }),
+      []
+    );
 
-  return (
-    <NativeMapView map={map} graphicsOverlays={overlays} geometryEditor={geometryEditor} {...props}>
-      <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
-    </NativeMapView>
-  );
-}
+    useImperativeHandle(
+      handle,
+      () => ({
+        identify: (screenPoint, options = {}) => nativeRef.current!.identify(screenPoint, options),
+      }),
+      []
+    );
+
+    return (
+      <NativeMapView
+        ref={nativeRef}
+        map={map}
+        graphicsOverlays={overlays}
+        geometryEditor={geometryEditor}
+        {...props}
+      >
+        <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
+      </NativeMapView>
+    );
+  }
+);

@@ -288,6 +288,10 @@ public class ExpoArcgisModule: Module {
       Prop("geometryEditor") { (view: ExpoArcgisMapView, ref: GeometryEditorRef?) in
         view.setGeometryEditor(ref)
       }
+
+      AsyncFunction("identify") { (view: ExpoArcgisMapView, screenPoint: [String: Any], options: [String: Any]?) in
+        try await view.identify(screenPoint, options)
+      }
     }
 
     // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
