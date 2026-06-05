@@ -1,7 +1,15 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.geometry.AngularUnit
+import com.arcgismaps.geometry.AngularUnitId
+import com.arcgismaps.geometry.AreaUnit
+import com.arcgismaps.geometry.AreaUnitId
 import com.arcgismaps.geometry.Envelope
+import com.arcgismaps.geometry.GeodeticCurveType
 import com.arcgismaps.geometry.Geometry
+import com.arcgismaps.geometry.GeometryOffsetType
+import com.arcgismaps.geometry.LinearUnit
+import com.arcgismaps.geometry.LinearUnitId
 import com.arcgismaps.geometry.Multipart
 import com.arcgismaps.geometry.Multipoint
 import com.arcgismaps.geometry.MutablePart
@@ -112,4 +120,53 @@ private fun pointDict(point: Point): Map<String, Any?> {
   val dict = mutableMapOf<String, Any?>("x" to point.x, "y" to point.y)
   point.z?.let { dict["z"] = it }
   return dict
+}
+
+// region Spatial reference & units (shared with GeometryEngine)
+
+/** Builds a [SpatialReference] from a WKID (well-known coordinate-system id). */
+internal fun spatialReference(wkid: Int): SpatialReference = when (wkid) {
+  4326 -> SpatialReference.wgs84()
+  3857, 102100 -> SpatialReference.webMercator()
+  else -> SpatialReference(wkid)
+}
+
+internal fun linearUnit(id: String?): LinearUnit = LinearUnit(
+  when (id) {
+    "kilometers" -> LinearUnitId.Kilometers
+    "feet" -> LinearUnitId.Feet
+    "miles" -> LinearUnitId.Miles
+    "nauticalMiles" -> LinearUnitId.NauticalMiles
+    "yards" -> LinearUnitId.Yards
+    else -> LinearUnitId.Meters
+  },
+)
+
+internal fun areaUnit(id: String?): AreaUnit = AreaUnit(
+  when (id) {
+    "squareKilometers" -> AreaUnitId.SquareKilometers
+    "squareFeet" -> AreaUnitId.SquareFeet
+    "squareMiles" -> AreaUnitId.SquareMiles
+    "acres" -> AreaUnitId.Acres
+    "hectares" -> AreaUnitId.Hectares
+    else -> AreaUnitId.SquareMeters
+  },
+)
+
+internal fun angularUnit(id: String?): AngularUnit =
+  AngularUnit(if (id == "radians") AngularUnitId.Radians else AngularUnitId.Degrees)
+
+internal fun curveType(id: String?): GeodeticCurveType = when (id) {
+  "loxodrome" -> GeodeticCurveType.Loxodrome
+  "greatElliptic" -> GeodeticCurveType.GreatElliptic
+  "normalSection" -> GeodeticCurveType.NormalSection
+  "shapePreserving" -> GeodeticCurveType.ShapePreserving
+  else -> GeodeticCurveType.Geodesic
+}
+
+internal fun offsetType(id: String?): GeometryOffsetType = when (id) {
+  "bevelled" -> GeometryOffsetType.Bevelled
+  "rounded" -> GeometryOffsetType.Rounded
+  "squared" -> GeometryOffsetType.Squared
+  else -> GeometryOffsetType.Mitered
 }

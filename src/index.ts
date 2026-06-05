@@ -32,6 +32,7 @@ export {
 } from './layers';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
+export { geometryEngine } from './geometryEngine';
 export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';
 
 export * from './ExpoArcgis.types';

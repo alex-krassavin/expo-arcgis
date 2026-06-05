@@ -121,3 +121,55 @@ private func pointDict(_ point: Point) -> [String: Any] {
   if let z = point.z { dict["z"] = z }
   return dict
 }
+
+// MARK: - Spatial reference & units (shared with GeometryEngine)
+
+/// Builds a `SpatialReference` from a WKID (well-known coordinate-system id).
+func spatialReference(wkid: Int) -> SpatialReference {
+  switch wkid {
+  case 4326: return .wgs84
+  case 3857, 102100: return .webMercator
+  default: return WKID(wkid).flatMap { SpatialReference(wkid: $0) } ?? .wgs84
+  }
+}
+
+func linearUnit(_ id: String?) -> LinearUnit {
+  switch id {
+  case "kilometers": return .kilometers
+  case "feet": return .feet
+  case "miles": return .miles
+  default: return .meters
+  }
+}
+
+func areaUnit(_ id: String?) -> AreaUnit {
+  switch id {
+  case "squareKilometers": return .squareKilometers
+  case "squareFeet": return .squareFeet
+  case "squareMiles": return .squareMiles
+  default: return .squareMeters
+  }
+}
+
+func angularUnit(_ id: String?) -> AngularUnit {
+  id == "radians" ? .radians : .degrees
+}
+
+func curveType(_ id: String?) -> GeometryEngine.GeodeticCurveType {
+  switch id {
+  case "loxodrome": return .loxodrome
+  case "greatElliptic": return .greatElliptic
+  case "normalSection": return .normalSection
+  case "shapePreserving": return .shapePreserving
+  default: return .geodesic
+  }
+}
+
+func offsetType(_ id: String?) -> GeometryEngine.OffsetType {
+  switch id {
+  case "bevelled": return .bevelled
+  case "rounded": return .rounded
+  case "squared": return .squared
+  default: return .mitered
+  }
+}

@@ -234,6 +234,51 @@ export type Geometry =
   | ({ type: 'polygon' } & Polygon)
   | ({ type: 'envelope' } & Envelope);
 
+/** A `point` geometry — convenient alias used where an operation requires a point. */
+export type PointGeometry = { type: 'point' } & Point;
+
+// ────────────────────────────────────────────────────────────────────────────
+// GeometryEngine — units, curve types and result shapes for spatial operations.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Linear unit for geodesic length/distance/buffer operations. Defaults to `meters`. */
+export type LinearUnit = 'meters' | 'kilometers' | 'feet' | 'miles' | 'nauticalMiles' | 'yards';
+
+/** Area unit for geodesic area operations. Defaults to `squareMeters`. */
+export type AreaUnit =
+  | 'squareMeters'
+  | 'squareKilometers'
+  | 'squareFeet'
+  | 'squareMiles'
+  | 'acres'
+  | 'hectares';
+
+/** Curve type for geodesic operations. Defaults to `geodesic`. */
+export type GeodeticCurveType =
+  | 'geodesic'
+  | 'loxodrome'
+  | 'greatElliptic'
+  | 'normalSection'
+  | 'shapePreserving';
+
+/** Join style for `geometryEngine.offset`. Defaults to `mitered`. */
+export type GeometryOffsetType = 'mitered' | 'bevelled' | 'rounded' | 'squared';
+
+/** Result of `geometryEngine.geodesicDistance` — distance plus the two azimuths (degrees). */
+export type GeodeticDistanceResult = {
+  distance: number;
+  azimuth1: number;
+  azimuth2: number;
+};
+
+/** Result of `geometryEngine.nearestCoordinate` / `nearestVertex`. */
+export type ProximityResult = {
+  /** The nearest point on the geometry. */
+  coordinate: PointGeometry;
+  /** Planar distance from the query point to `coordinate`. */
+  distance: number;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Symbols — mirror `SimpleMarkerSymbol` / `SimpleLineSymbol` / `SimpleFillSymbol`.
 // Colors are hex strings: `#RRGGBB` or `#RRGGBBAA` (alpha last).
