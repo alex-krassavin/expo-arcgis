@@ -244,6 +244,11 @@ export type FeatureLayerHandle = {
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
   /** Computes aggregate statistics over the layer's features. */
   queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
+  /**
+   * Adds a feature (attributes + optional geometry) to the layer's table and pushes the edit to
+   * the feature service. Resolves to the new feature's object id (or `null` for non-service tables).
+   */
+  addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

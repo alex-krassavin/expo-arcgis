@@ -95,6 +95,13 @@ private fun statisticType(value: String?): StatisticType = when (value) {
 internal fun serializeStatisticRecord(record: StatisticRecord): Map<String, Any?> =
   mapOf("group" to serializeAttributes(record.group), "statistics" to serializeAttributes(record.statistics))
 
+// region Editing
+
+/** Applies JS attribute values onto a feature (used by add / update). */
+internal fun applyAttributes(feature: Feature, attributes: Map<String, Any?>) {
+  attributes.forEach { (key, value) -> if (value != null) feature.attributes[key] = value }
+}
+
 // region Identify
 
 /** Serializes one layer's identify hits — its name and the identified features. */

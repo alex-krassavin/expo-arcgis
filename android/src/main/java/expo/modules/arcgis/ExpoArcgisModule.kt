@@ -85,6 +85,9 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("queryStatistics") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?> ->
         ref.queryStatistics(query)
       }
+      AsyncFunction("addFeature") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?>? ->
+        ref.addFeature(attributes, geometry)
+      }
     }
 
     Class(TiledLayerRef::class) {

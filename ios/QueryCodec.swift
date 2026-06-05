@@ -95,6 +95,26 @@ func serializeStatisticRecord(_ record: StatisticRecord) -> [String: Any] {
   ["group": serializeAttributes(record.group), "statistics": serializeAttributes(record.statistics)]
 }
 
+// MARK: - Editing
+
+/// Applies JS attribute values onto a feature (used by add / update).
+func applyAttributes(_ feature: Feature, _ attributes: [String: Any]) {
+  for (key, value) in attributes {
+    feature.setAttributeValue(sendableValue(value), forKey: key)
+  }
+}
+
+private func sendableValue(_ value: Any) -> (any Sendable)? {
+  switch value {
+  case let bool as Bool: return bool
+  case let int as Int: return int
+  case let double as Double: return double
+  case let string as String: return string
+  case let number as NSNumber: return number.doubleValue
+  default: return nil
+  }
+}
+
 // MARK: - Identify
 
 /// Serializes one layer's identify hits — its name and the identified features.

@@ -59,6 +59,21 @@ public final class FeatureLayerRef: LayerRef {
     return result.statisticRecords().map(serializeStatisticRecord)
   }
 
+  /// Adds a feature, pushes the edit to the service, and returns the new object id.
+  func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?) async throws -> Int? {
+    let feature = table.makeFeature()
+    applyAttributes(feature, attributes)
+    if let geometry = geometry.flatMap(geometryFromDict) { feature.geometry = geometry }
+    try await table.add(feature)
+    return try await persistEdits()
+  }
+
+  /// Pushes pending local edits to the feature service (no-op for non-service tables).
+  private func persistEdits() async throws -> Int? {
+    guard let serviceTable = table as? ServiceFeatureTable else { return nil }
+    return try await serviceTable.applyEdits().first?.objectID
+  }
+
   override func applyProps(_ changed: [String: Any]) {
     super.applyProps(changed)
     guard let featureLayer = layer as? FeatureLayer else { return }

@@ -81,6 +81,9 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("queryStatistics") { (ref: FeatureLayerRef, query: [String: Any]) in
         try await ref.queryStatistics(query)
       }
+      AsyncFunction("addFeature") { (ref: FeatureLayerRef, attributes: [String: Any], geometry: [String: Any]?) in
+        try await ref.addFeature(attributes, geometry)
+      }
     }
 
     Class(TiledLayerRef.self) {

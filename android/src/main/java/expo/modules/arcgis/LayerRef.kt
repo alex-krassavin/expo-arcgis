@@ -66,6 +66,21 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
   suspend fun queryStatistics(query: Map<String, Any?>): List<Map<String, Any?>> =
     table.queryStatistics(buildStatisticsQueryParameters(query)).getOrThrow().map { serializeStatisticRecord(it) }
 
+  /** Adds a feature, pushes the edit to the service, and returns the new object id. */
+  suspend fun addFeature(attributes: Map<String, Any?>, geometry: Map<String, Any?>?): Long? {
+    val feature = table.createFeature()
+    applyAttributes(feature, attributes)
+    geometry?.let { dict -> geometryFromDict(dict)?.let { feature.geometry = it } }
+    table.addFeature(feature).getOrThrow()
+    return persistEdits()
+  }
+
+  /** Pushes pending local edits to the feature service (no-op for non-service tables). */
+  private suspend fun persistEdits(): Long? {
+    val serviceTable = table as? ServiceFeatureTable ?: return null
+    return serviceTable.applyEdits().getOrThrow().firstOrNull()?.objectId
+  }
+
   override fun applyProps(changed: Map<String, Any?>) {
     applyCommonProps(changed)
     if (changed.containsKey("renderer")) {
