@@ -12,6 +12,8 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var viewpointVersion = 0
   let locationDisplay = LocationDisplay(dataSource: SystemLocationDataSource())
   @Published private(set) var locationEnabled = false
+  /// Bumped on each location config change so the start `.task(id:)` re-runs (e.g. after a source swap).
+  @Published private(set) var locationVersion = 0
   @Published private(set) var geometryEditor: GeometryEditor?
   /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
   var proxy: MapViewProxy?
@@ -35,12 +37,15 @@ final class MapViewModel: ObservableObject {
   }
 
   func setLocationDisplay(
-    enabled: Bool, autoPanMode: LocationDisplay.AutoPanMode, showsLocation: Bool, wanderExtentFactor: Float?
+    enabled: Bool, autoPanMode: LocationDisplay.AutoPanMode, showsLocation: Bool,
+    wanderExtentFactor: Float?, dataSource: LocationDataSource?
   ) {
     locationDisplay.autoPanMode = autoPanMode
     locationDisplay.showsLocation = showsLocation
     if let wanderExtentFactor { locationDisplay.wanderExtentFactor = wanderExtentFactor }
+    if let dataSource { locationDisplay.dataSource = dataSource }
     locationEnabled = enabled
+    locationVersion += 1
   }
 
   func setGeometryEditor(_ editor: GeometryEditor?) {
@@ -81,7 +86,7 @@ struct ExpoArcgisMapContainer: View {
             guard let viewpoint = model.viewpoint else { return }
             _ = await proxy.setViewpoint(viewpoint, duration: 0.5)
           }
-          .task(id: model.locationEnabled) {
+          .task(id: model.locationVersion) {
             if model.locationEnabled {
               try? await model.locationDisplay.dataSource.start()
             } else {
@@ -163,11 +168,35 @@ class ExpoArcgisMapView: ExpoView {
         enabled: true,
         autoPanMode: autoPanMode(config["autoPanMode"] as? String),
         showsLocation: config["showLocation"] as? Bool ?? true,
-        wanderExtentFactor: (config["wanderExtentFactor"] as? NSNumber)?.floatValue
+        wanderExtentFactor: (config["wanderExtentFactor"] as? NSNumber)?.floatValue,
+        dataSource: locationDataSource(config["source"])
       )
     } else {
-      model.setLocationDisplay(enabled: false, autoPanMode: .off, showsLocation: false, wanderExtentFactor: nil)
+      model.setLocationDisplay(
+        enabled: false, autoPanMode: .off, showsLocation: false, wanderExtentFactor: nil, dataSource: nil
+      )
     }
+  }
+
+  /// Resolves the JS `source` to a data source. Returns nil to keep the current source unchanged.
+  private func locationDataSource(_ source: Any?) -> LocationDataSource? {
+    if let source = source as? [String: Any], source["type"] as? String == "simulated",
+       let route = (source["route"] as? [String: Any]).flatMap(geometryFromDict) as? Polyline {
+      return simulatedSource(route: route, speed: (source["speed"] as? NSNumber)?.doubleValue ?? 10)
+    }
+    // 'system' / unspecified: swap back only if currently simulated, otherwise keep the source.
+    return model.locationDisplay.dataSource is SimulatedLocationDataSource ? SystemLocationDataSource() : nil
+  }
+
+  /// Builds a simulated source that walks the route's vertices as device locations.
+  private func simulatedSource(route: Polyline, speed: Double) -> SimulatedLocationDataSource {
+    let source = SimulatedLocationDataSource()
+    source.addSimulatedLocations(
+      route.parts.flatMap { $0.points }.map {
+        Location(position: $0, horizontalAccuracy: 0, verticalAccuracy: 0, speed: speed, course: 0)
+      }
+    )
+    return source
   }
 
   /// Binds an interactive GeometryEditor (by reference) for sketching; nil clears it.

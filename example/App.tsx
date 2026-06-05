@@ -18,6 +18,7 @@ import {
   type FeatureReduction,
   type Geometry,
   type LabelDefinition,
+  type LocationEventPayload,
   type MapLoadErrorEventPayload,
   type MapViewHandle,
   type Renderer,
@@ -93,6 +94,17 @@ const CITY_CLUSTER: FeatureReduction = { type: 'cluster', radius: 60 };
 // "Edit features": a public, anonymously-editable feature service (Esri sample).
 const WILDFIRE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0';
 
+// "Device location": a short route for the simulated location data source (Santa Monica Mtns).
+const ROUTE: Geometry = {
+  type: 'polyline',
+  points: [
+    { x: -118.805, y: 34.0 },
+    { x: -118.8, y: 34.005 },
+    { x: -118.795, y: 34.01 },
+    { x: -118.79, y: 34.012 },
+  ],
+};
+
 // "Display a scene" tutorial camera + terrain (Santa Monica Mountains, in 3D).
 const CAMERA: Camera = {
   position: { x: -118.804, y: 34.0, z: 5330 },
@@ -140,6 +152,7 @@ export default function App() {
   const [cluster, setCluster] = useState(false);
   const [editLayer, setEditLayer] = useState(false);
   const [editedId, setEditedId] = useState<number | null>(null);
+  const [simulate, setSimulate] = useState(false);
   const mapRef = useRef<MapViewHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -344,7 +357,18 @@ export default function App() {
                 ref={mapRef}
                 style={styles.map}
                 viewpoint={viewpoint}
-                locationDisplay={showLocation ? { autoPanMode: 'recenter' } : undefined}
+                locationDisplay={
+                  simulate
+                    ? { source: { type: 'simulated', route: ROUTE }, autoPanMode: 'navigation' }
+                    : showLocation
+                      ? { autoPanMode: 'recenter' }
+                      : undefined
+                }
+                onLocationChange={(event: { nativeEvent: LocationEventPayload }) =>
+                  setStatus(
+                    `Location ${event.nativeEvent.position.latitude.toFixed(4)}, ${event.nativeEvent.position.longitude.toFixed(4)}`
+                  )
+                }
                 onMapLoaded={() => setStatus('Map loaded ✅ — tap to drop a pin')}
                 onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                   setStatus(`Load error: ${event.nativeEvent.message}`)
@@ -398,6 +422,7 @@ export default function App() {
                 <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
                 <Button title={wms ? 'No WMS' : 'WMS'} onPress={() => setWms((v) => !v)} />
                 <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
+                <Button title={simulate ? 'Stop sim' : 'Simulate'} onPress={() => setSimulate((v) => !v)} />
                 <Button title="Buffer pin" onPress={bufferPin} />
                 <Button title={draw ? 'Done' : 'Draw'} onPress={() => setDraw((v) => !v)} />
                 <Button title={cities ? 'Hide cities' : 'Cities'} onPress={() => setCities((v) => !v)} />

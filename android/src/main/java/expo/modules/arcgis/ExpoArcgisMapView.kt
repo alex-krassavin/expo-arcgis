@@ -7,8 +7,14 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.geometry.Polyline
 import com.arcgismaps.location.Location
+import com.arcgismaps.location.LocationDataSource
 import com.arcgismaps.location.LocationDisplayAutoPanMode
+import com.arcgismaps.location.SimulatedLocationDataSource
+import com.arcgismaps.location.SimulationParameters
+import com.arcgismaps.location.SystemLocationDataSource
+import java.time.Instant
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
 import com.arcgismaps.mapping.view.ScreenCoordinate
@@ -139,7 +145,23 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     locationDisplay.setAutoPanMode(autoPanMode(config["autoPanMode"] as? String))
     (config["showLocation"] as? Boolean)?.let { locationDisplay.showLocation = it }
     (config["wanderExtentFactor"] as? Number)?.toFloat()?.let { locationDisplay.wanderExtentFactor = it }
-    scope.launch { locationDisplay.dataSource.start() }
+    val newSource = locationDataSource(config["source"])
+    scope.launch {
+      locationDisplay.dataSource.stop()
+      if (newSource != null) locationDisplay.dataSource = newSource
+      locationDisplay.dataSource.start()
+    }
+  }
+
+  /** Resolves the JS `source` to a data source. Returns null to keep the current source unchanged. */
+  private fun locationDataSource(source: Any?): LocationDataSource? {
+    if (source is Map<*, *> && source["type"] == "simulated") {
+      val route = (source["route"] as? Map<*, *>)?.let { geometryFromDict(it) } as? Polyline ?: return null
+      val speed = (source["speed"] as? Number)?.toDouble() ?: 10.0
+      return SimulatedLocationDataSource(route, SimulationParameters(Instant.now(), speed, 0.0, 0.0))
+    }
+    // 'system' / unspecified: swap back only if currently simulated, otherwise keep the source.
+    return if (mapView.locationDisplay.dataSource is SimulatedLocationDataSource) SystemLocationDataSource() else null
   }
 
   private fun locationPayload(location: Location): LocationEventPayload = LocationEventPayload(

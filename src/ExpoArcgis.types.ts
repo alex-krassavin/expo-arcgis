@@ -68,6 +68,11 @@ export type LocationDisplay = {
   showLocation?: boolean;
   /** How far the location can wander before the view re-pans, as a factor of the symbol size. */
   wanderExtentFactor?: number;
+  /**
+   * The location data source. `'system'` (device GPS, the default) or a simulated source that
+   * drives the location along a `route` polyline — handy for testing without real movement.
+   */
+  source?: 'system' | { type: 'simulated'; route: Geometry; speed?: number };
 };
 
 /** Payload for the `<MapView onLocationChange>` event — one device-location fix. */
