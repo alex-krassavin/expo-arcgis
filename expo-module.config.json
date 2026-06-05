@@ -1,9 +1,9 @@
 {
   "platforms": ["apple", "android"],
   "apple": {
-    "modules": ["ExpoArcgisModule"]
+    "modules": ["ExpoArcgisModule", "ExpoArcgisGeometryModule"]
   },
   "android": {
-    "modules": ["expo.modules.arcgis.ExpoArcgisModule"]
+    "modules": ["expo.modules.arcgis.ExpoArcgisModule", "expo.modules.arcgis.ExpoArcgisGeometryModule"]
   }
 }

@@ -116,6 +116,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     scope.launch { locationDisplay.dataSource.start() }
   }
 
+  /** Binds an interactive GeometryEditor for sketching (null clears it). */
+  fun setGeometryEditor(ref: GeometryEditorRef?) {
+    mapView.geometryEditor = ref?.editor
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // The view-based MapView renders only while observing a lifecycle.

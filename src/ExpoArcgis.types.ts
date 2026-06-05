@@ -301,6 +301,40 @@ export type MgrsConversionMode =
   | 'old180InZone60';
 
 // ────────────────────────────────────────────────────────────────────────────
+// GeometryEditor — interactive sketching on a `<MapView>`.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** The kind of geometry a `<GeometryEditor>` sketches. */
+export type GeometryEditorType = 'point' | 'multipoint' | 'polyline' | 'polygon' | 'envelope';
+
+/**
+ * Props for the interactive `<GeometryEditor>` — a child of `<MapView>` that lets the user
+ * sketch a geometry. (The native SDK binds the editor to 2D map views only.)
+ */
+export type GeometryEditorProps = {
+  /** The kind of geometry to sketch. */
+  type: GeometryEditorType;
+  /** When `true` (default) editing is started with `type`; set `false` to stop. */
+  active?: boolean;
+  /** Called as the sketch geometry changes (`null` when empty / cleared). */
+  onGeometryChange?: (geometry: Geometry | null) => void;
+};
+
+/** Imperative handle exposed by `<GeometryEditor>` via `ref`. */
+export type GeometryEditorHandle = {
+  /** Undo the last edit. */
+  undo(): void;
+  /** Redo the last undone edit. */
+  redo(): void;
+  /** Clear the current sketch. */
+  clear(): void;
+  /** Delete the currently selected vertex/part. */
+  deleteSelectedElement(): void;
+  /** Stop editing and return the final geometry (or `null`). */
+  stop(): Geometry | null;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // Symbols — mirror `SimpleMarkerSymbol` / `SimpleLineSymbol` / `SimpleFillSymbol`.
 // Colors are hex strings: `#RRGGBB` or `#RRGGBBAA` (alpha last).
 // ────────────────────────────────────────────────────────────────────────────

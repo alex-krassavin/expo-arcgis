@@ -1,4 +1,7 @@
 import {
+  coordinateFormatter,
+  geometryEngine,
+  GeometryEditor,
   Graphic,
   GraphicsOverlay,
   Map,
@@ -10,6 +13,7 @@ import {
   SceneView,
   WmsLayer,
   type Camera,
+  type Geometry,
   type MapLoadErrorEventPayload,
   type Renderer,
   type Surface,
@@ -98,6 +102,17 @@ export default function App() {
   const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
   const [buildings, setBuildings] = useState(false);
   const [shadows, setShadows] = useState(false);
+  const [buffer, setBuffer] = useState<Geometry | null>(null);
+  const [draw, setDraw] = useState(false);
+
+  // "Buffer pin" — geodesic buffer of the tapped pin + its lat/long readout (CoordinateFormatter).
+  function bufferPin() {
+    if (!pin) return;
+    const point = { type: 'point' as const, x: pin.longitude, y: pin.latitude };
+    setBuffer(geometryEngine.geodesicBuffer(point, 500, 'meters'));
+    const dms = coordinateFormatter.toLatitudeLongitude(point, 'degreesMinutesSeconds', 1);
+    setStatus(`Pin ${dms ?? '—'} · 500 m buffer`);
+  }
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -143,6 +158,13 @@ export default function App() {
           <Graphic
             geometry={{ type: 'point', x: pin.longitude, y: pin.latitude }}
             symbol={{ type: 'simple-marker', color: '#ff3b30', size: 14 }}
+          />
+        )}
+        {/* Geodesic buffer of the pin (GeometryEngine) */}
+        {buffer && (
+          <Graphic
+            geometry={buffer}
+            symbol={{ type: 'simple-fill', color: '#34c75955', outline: { color: '#34c759', width: 2 } }}
           />
         )}
       </GraphicsOverlay>
@@ -206,6 +228,17 @@ export default function App() {
                 }
               >
                 {graphics}
+                {/* Interactive sketching — reports the drawn polygon's geodesic area */}
+                {draw && (
+                  <GeometryEditor
+                    type="polygon"
+                    onGeometryChange={(g) => {
+                      if (!g) return;
+                      const area = Math.abs(geometryEngine.geodesicArea(g, 'squareMeters'));
+                      setStatus(`Sketch area: ${(area / 1e6).toFixed(3)} km²`);
+                    }}
+                  />
+                )}
               </MapView>
             </Map>
           )}
@@ -238,6 +271,8 @@ export default function App() {
                 <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
                 <Button title={wms ? 'No WMS' : 'WMS'} onPress={() => setWms((v) => !v)} />
                 <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
+                <Button title="Buffer pin" onPress={bufferPin} />
+                <Button title={draw ? 'Done' : 'Draw'} onPress={() => setDraw((v) => !v)} />
               </>
             )}
           </View>

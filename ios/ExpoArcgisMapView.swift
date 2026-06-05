@@ -12,6 +12,7 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var viewpointVersion = 0
   let locationDisplay = LocationDisplay(dataSource: SystemLocationDataSource())
   @Published private(set) var locationEnabled = false
+  @Published private(set) var geometryEditor: GeometryEditor?
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -35,6 +36,10 @@ final class MapViewModel: ObservableObject {
     locationDisplay.showsLocation = showsLocation
     locationEnabled = enabled
   }
+
+  func setGeometryEditor(_ editor: GeometryEditor?) {
+    geometryEditor = editor
+  }
 }
 
 /// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
@@ -45,8 +50,10 @@ struct ExpoArcgisMapContainer: View {
     if let map = model.map {
       MapViewReader { proxy in
         MapView(map: map, graphicsOverlays: model.graphicsOverlays)
-          // `locationDisplay(_:)` returns `MapView`, so it must precede the SwiftUI modifiers below.
+          // `locationDisplay(_:)` / `geometryEditor(_:)` return `MapView`, so they must precede
+          // the SwiftUI modifiers below.
           .locationDisplay(model.locationDisplay)
+          .geometryEditor(model.geometryEditor)
           .onSingleTapGesture { screenPoint, mapPoint in
             // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
             // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
@@ -144,6 +151,11 @@ class ExpoArcgisMapView: ExpoView {
     } else {
       model.setLocationDisplay(enabled: false, autoPanMode: .off, showsLocation: false)
     }
+  }
+
+  /// Binds an interactive GeometryEditor (by reference) for sketching; nil clears it.
+  func setGeometryEditor(_ ref: GeometryEditorRef?) {
+    model.setGeometryEditor(ref?.editor)
   }
 }
 

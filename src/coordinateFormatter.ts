@@ -1,4 +1,4 @@
-import Module from './ExpoArcgisModule';
+import Module from './ExpoArcgisGeometryModule';
 import type {
   LatitudeLongitudeFormat,
   MgrsConversionMode,

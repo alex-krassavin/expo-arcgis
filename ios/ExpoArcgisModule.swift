@@ -16,55 +16,6 @@ public class ExpoArcgisModule: Module {
       ArcGISEnvironment.apiKey = APIKey(apiKey)
     }
 
-    // GeometryEngine — spatial operations exposed as the JS `geometryEngine` namespace.
-    Function("geProject", geProject)
-    Function("geBuffer", geBuffer)
-    Function("geGeodeticBuffer", geGeodeticBuffer)
-    Function("geArea", geArea)
-    Function("geGeodeticArea", geGeodeticArea)
-    Function("geLength", geLength)
-    Function("geGeodeticLength", geGeodeticLength)
-    Function("geDistance", geDistance)
-    Function("geGeodeticDistance", geGeodeticDistance)
-    Function("geUnion", geUnion)
-    Function("geIntersection", geIntersection)
-    Function("geDifference", geDifference)
-    Function("geSymmetricDifference", geSymmetricDifference)
-    Function("geClip", geClip)
-    Function("geCut", geCut)
-    Function("geConvexHull", geConvexHull)
-    Function("geBoundary", geBoundary)
-    Function("geSimplify", geSimplify)
-    Function("geDensify", geDensify)
-    Function("geGeneralize", geGeneralize)
-    Function("geOffset", geOffset)
-    Function("geCombineExtents", geCombineExtents)
-    Function("geContains", geContains)
-    Function("geCrosses", geCrosses)
-    Function("geDisjoint", geDisjoint)
-    Function("geEquals", geEquals)
-    Function("geIntersects", geIntersects)
-    Function("geOverlaps", geOverlaps)
-    Function("geTouches", geTouches)
-    Function("geWithin", geWithin)
-    Function("geRelate", geRelate)
-    Function("geIsSimple", geIsSimple)
-    Function("geNearestCoordinate", geNearestCoordinate)
-    Function("geNearestVertex", geNearestVertex)
-    Function("geMove", geMove)
-    Function("geRotate", geRotate)
-    Function("geScale", geScale)
-
-    // CoordinateFormatter — point <-> notation strings, exposed as the JS `coordinateFormatter` namespace.
-    Function("cfToLatLong", cfToLatLong)
-    Function("cfFromLatLong", cfFromLatLong)
-    Function("cfToMgrs", cfToMgrs)
-    Function("cfFromMgrs", cfFromMgrs)
-    Function("cfToUsng", cfToUsng)
-    Function("cfFromUsng", cfFromUsng)
-    Function("cfToUtm", cfToUtm)
-    Function("cfFromUtm", cfFromUtm)
-
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef.self) {
       Constructor { (props: [String: Any]?) -> MapRef in
@@ -290,6 +241,18 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
+    // (no `Events(...)` element on Swift `Class`; SharedObject.emit + JS addListener suffice).
+    Class(GeometryEditorRef.self) {
+      Constructor { () -> GeometryEditorRef in GeometryEditorRef() }
+      Function("start") { (ref: GeometryEditorRef, type: String) in ref.start(type) }
+      Function("stop") { (ref: GeometryEditorRef) in ref.stop() }
+      Function("clearGeometry") { (ref: GeometryEditorRef) in ref.clearGeometry() }
+      Function("undo") { (ref: GeometryEditorRef) in ref.undo() }
+      Function("redo") { (ref: GeometryEditorRef) in ref.redo() }
+      Function("deleteSelectedElement") { (ref: GeometryEditorRef) in ref.deleteSelectedElement() }
+    }
+
     // 2D map host — receives the map + graphics overlay SharedObjects as props.
     View(ExpoArcgisMapView.self) {
       Events("onMapLoaded", "onMapLoadError", "onTap")
@@ -308,6 +271,10 @@ public class ExpoArcgisModule: Module {
 
       Prop("locationDisplay") { (view: ExpoArcgisMapView, config: [String: Any]?) in
         view.setLocationDisplay(config)
+      }
+
+      Prop("geometryEditor") { (view: ExpoArcgisMapView, ref: GeometryEditorRef?) in
+        view.setGeometryEditor(ref)
       }
     }
 

@@ -3,7 +3,7 @@ import { useMemo, useState, type PropsWithChildren, type ReactNode } from 'react
 
 import type { SceneViewProps } from './ExpoArcgis.types';
 import type { SceneRef, GraphicsOverlayRef } from './ExpoArcgisModule';
-import { GeoViewContext, useGeoModel, type GraphicsOverlayHost } from './contexts';
+import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
 
 type NativeSceneViewProps = SceneViewProps & {
   /** The native scene handle (SharedObject), passed by reference as a view prop. */
@@ -23,10 +23,12 @@ export function SceneView({ children, ...props }: PropsWithChildren<SceneViewPro
   const scene = useGeoModel() as SceneRef;
 
   const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
-  const host = useMemo<GraphicsOverlayHost>(
+  const host = useMemo<GeoViewHost>(
     () => ({
       add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
       remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
+      // The SDK binds a GeometryEditor to MapView only; 3D scene editing is not supported.
+      setGeometryEditor: () => {},
     }),
     []
   );
