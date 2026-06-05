@@ -24,12 +24,25 @@ public class LayerRef: SharedObject {
   }
 }
 
-/// Operational FeatureLayer backed by a service feature table URL.
+/// Operational FeatureLayer from a feature service URL or a local shapefile.
 public final class FeatureLayerRef: LayerRef {
-  init(url: String) {
-    let table = ServiceFeatureTable(url: URL(string: url)!)
-    super.init(layer: FeatureLayer(featureTable: table))
+  init(props: [String: Any]) {
+    super.init(layer: FeatureLayer(featureTable: featureTable(from: props)))
   }
+}
+
+/// Builds a `FeatureTable` from a JS source: `{ type:"shapefile", path }` or a service URL
+/// (via `source: { type:"service", url }` or the `url` shorthand).
+func featureTable(from props: [String: Any]) -> FeatureTable {
+  if let source = props["source"] as? [String: Any] {
+    if (source["type"] as? String) == "shapefile", let path = source["path"] as? String {
+      return ShapefileFeatureTable(fileURL: URL(fileURLWithPath: path))
+    }
+    if let url = source["url"] as? String {
+      return ServiceFeatureTable(url: URL(string: url)!)
+    }
+  }
+  return ServiceFeatureTable(url: URL(string: props["url"] as? String ?? "")!)
 }
 
 /// Operational tiled layer backed by a tiled map service URL.

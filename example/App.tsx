@@ -8,6 +8,7 @@ import {
   Scene,
   SceneLayer,
   SceneView,
+  WmsLayer,
   type Camera,
   type MapLoadErrorEventPayload,
   type Renderer,
@@ -46,6 +47,9 @@ const WEB_SCENE_ID = '579f97b2f3b94d4a8e48a5f140a6639b';
 
 // Public ArcGIS dynamic map service for the "Manage operational layers" sample.
 const USA_MAP_SERVICE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer';
+
+// Public WMS service (terrestris OSM) — one representative of the Layers section.
+const WMS_URL = 'https://ows.terrestris.de/osm/service';
 
 // Renderer for the "Style graphics with renderer" sample (styles symbol-less graphics).
 const GREEN_RENDERER: Renderer = {
@@ -88,6 +92,7 @@ export default function App() {
   const [webMap, setWebMap] = useState(false);
   const [showLayer, setShowLayer] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
+  const [wms, setWms] = useState(false);
   const [mode3D, setMode3D] = useState(false);
   const [webScene, setWebScene] = useState(false);
   const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
@@ -187,6 +192,7 @@ export default function App() {
               portalItem={webMap ? { itemId: WEB_MAP_ID } : undefined}
             >
               {showLayer && <MapImageLayer url={USA_MAP_SERVICE} opacity={0.7} />}
+              {wms && <WmsLayer url={WMS_URL} layerNames={['OSM-WMS']} opacity={0.6} />}
               <MapView
                 style={styles.map}
                 viewpoint={viewpoint}
@@ -230,6 +236,7 @@ export default function App() {
                 <Button title="Griffith Obs." onPress={() => setViewpoint(GRIFFITH)} />
                 <Button title={webMap ? 'Basemap' : 'Web map'} onPress={() => setWebMap((v) => !v)} />
                 <Button title={showLayer ? 'Hide layer' : 'USA layer'} onPress={() => setShowLayer((v) => !v)} />
+                <Button title={wms ? 'No WMS' : 'WMS'} onPress={() => setWms((v) => !v)} />
                 <Button title={showLocation ? 'Hide me' : 'My location'} onPress={toggleLocation} />
               </>
             )}

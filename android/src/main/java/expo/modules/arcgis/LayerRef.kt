@@ -1,6 +1,8 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.FeatureTable
 import com.arcgismaps.data.ServiceFeatureTable
+import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISSceneLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
@@ -38,11 +40,21 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
   }
 }
 
-/** Operational FeatureLayer backed by a service feature table URL. */
-class FeatureLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
-  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(ServiceFeatureTable(url))
+/** Operational FeatureLayer from a feature service URL or a local shapefile. */
+class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
+  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(featureTable(props))
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Builds a [FeatureTable] from a JS source: `{type:"shapefile",path}` or a service URL (or `url`). */
+private fun featureTable(props: Map<String, Any?>): FeatureTable {
+  val source = props["source"] as? Map<*, *>
+  if (source != null) {
+    if (source["type"] == "shapefile") return ShapefileFeatureTable(source["path"] as? String ?: "")
+    (source["url"] as? String)?.let { return ServiceFeatureTable(it) }
+  }
+  return ServiceFeatureTable(props["url"] as? String ?: "")
 }
 
 /** Operational tiled layer backed by a tiled map service URL. */

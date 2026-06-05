@@ -91,10 +91,20 @@ export type LayerProps = {
   visible?: boolean;
 };
 
-/** Props for a `<FeatureLayer>` — mirror the native `FeatureLayer`. */
+/** Source for a `<FeatureLayer>`'s feature table — a feature service or a local shapefile. */
+export type FeatureTableSource =
+  | { type: 'service'; url: string }
+  | { type: 'shapefile'; path: string };
+
+/**
+ * Props for a `<FeatureLayer>` — mirror the native `FeatureLayer`. Provide either `url`
+ * (feature-service shorthand) or an explicit `source`.
+ */
 export type FeatureLayerProps = LayerProps & {
-  /** URL of the feature service / feature layer. */
-  url: string;
+  /** Feature service URL — shorthand for `source: { type: 'service', url }`. */
+  url?: string;
+  /** Explicit feature-table source (service or local shapefile). */
+  source?: FeatureTableSource;
 };
 
 /** Props for a `<TileLayer>` — mirror the native `ArcGISTiledLayer`. */

@@ -66,7 +66,7 @@ class ExpoArcgisModule : Module() {
     // Operational layers — SharedObjects the JS <FeatureLayer>/<TileLayer> construct.
     Class(FeatureLayerRef::class) {
       Constructor { props: Map<String, Any?> ->
-        FeatureLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+        FeatureLayerRef(appContext, props).also { it.applyProps(props) }
       }
       Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
