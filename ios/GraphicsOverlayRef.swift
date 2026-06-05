@@ -32,7 +32,7 @@ public final class GraphicRef: SharedObject {
     for (key, value) in changed {
       switch key {
       case "geometry":
-        graphic.geometry = (value as? [String: Any]).flatMap(buildGeometry)
+        graphic.geometry = (value as? [String: Any]).flatMap(geometryFromDict)
       case "symbol":
         graphic.symbol = (value as? [String: Any]).flatMap(buildSymbol)
       default:
@@ -40,39 +40,6 @@ public final class GraphicRef: SharedObject {
       }
     }
   }
-}
-
-// MARK: - Geometry
-
-func buildGeometry(_ g: [String: Any]) -> Geometry? {
-  let sr = spatialReference(from: g["spatialReference"])
-  switch g["type"] as? String {
-  case "point":
-    return Point(x: number(g["x"]), y: number(g["y"]), spatialReference: sr)
-  case "polyline":
-    return Polyline(points: vertices(g["points"], spatialReference: sr))
-  case "polygon":
-    return Polygon(points: vertices(g["points"], spatialReference: sr))
-  default:
-    return nil
-  }
-}
-
-private func vertices(_ value: Any?, spatialReference sr: SpatialReference) -> [Point] {
-  guard let array = value as? [[String: Any]] else { return [] }
-  return array.map { Point(x: number($0["x"]), y: number($0["y"]), spatialReference: sr) }
-}
-
-/// Only WGS84 and Web Mercator are mapped in v1; any other WKID falls back to WGS84.
-private func spatialReference(from value: Any?) -> SpatialReference {
-  switch (value as? NSNumber)?.intValue {
-  case 3857, 102100: return .webMercator
-  default: return .wgs84
-  }
-}
-
-private func number(_ value: Any?) -> Double {
-  (value as? NSNumber)?.doubleValue ?? 0
 }
 
 // MARK: - Symbols

@@ -178,28 +178,61 @@ export type Point = {
   spatialReference?: SpatialReference;
 };
 
-/** A polyline geometry — an ordered list of vertices forming a single path. */
-export type Polyline = {
-  points: Point[];
-  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
-  spatialReference?: SpatialReference;
-};
-
-/** A polygon geometry — an ordered list of vertices forming a single ring (auto-closed). */
-export type Polygon = {
+/** A multipoint geometry — an unordered collection of points sharing one symbol. */
+export type Multipoint = {
   points: Point[];
   /** Coordinate system WKID. Defaults to `4326` (WGS84). */
   spatialReference?: SpatialReference;
 };
 
 /**
- * A graphic's geometry. The `type` discriminator mirrors the ArcGIS web API
- * (`"point"` / `"polyline"` / `"polygon"`) and selects the native geometry class.
+ * A polyline geometry — one or more paths. Provide `points` for a single path
+ * (shorthand) or `parts` for an explicit multi-path line. Geometry operations
+ * (buffer, union, …) return geometries using `parts`.
+ */
+export type Polyline = {
+  /** Vertices of a single path — shorthand for a one-part polyline. */
+  points?: Point[];
+  /** Explicit paths; each inner array is one path. */
+  parts?: Point[][];
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
+};
+
+/**
+ * A polygon geometry — one or more rings (auto-closed). Provide `points` for a
+ * single ring (shorthand) or `parts` for an explicit multi-ring polygon.
+ */
+export type Polygon = {
+  /** Vertices of a single ring — shorthand for a one-part polygon. */
+  points?: Point[];
+  /** Explicit rings; each inner array is one ring. */
+  parts?: Point[][];
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
+};
+
+/** An envelope geometry — an axis-aligned bounding box (the extent of other geometries). */
+export type Envelope = {
+  xMin: number;
+  yMin: number;
+  xMax: number;
+  yMax: number;
+  /** Coordinate system WKID. Defaults to `4326` (WGS84). */
+  spatialReference?: SpatialReference;
+};
+
+/**
+ * A geometry value. The `type` discriminator mirrors the ArcGIS web API
+ * (`"point"` / `"multipoint"` / `"polyline"` / `"polygon"` / `"envelope"`) and
+ * selects the native geometry class.
  */
 export type Geometry =
   | ({ type: 'point' } & Point)
+  | ({ type: 'multipoint' } & Multipoint)
   | ({ type: 'polyline' } & Polyline)
-  | ({ type: 'polygon' } & Polygon);
+  | ({ type: 'polygon' } & Polygon)
+  | ({ type: 'envelope' } & Envelope);
 
 // ────────────────────────────────────────────────────────────────────────────
 // Symbols — mirror `SimpleMarkerSymbol` / `SimpleLineSymbol` / `SimpleFillSymbol`.

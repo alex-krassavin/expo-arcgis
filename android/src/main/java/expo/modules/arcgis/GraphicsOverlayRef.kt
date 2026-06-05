@@ -1,11 +1,6 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.Color
-import com.arcgismaps.geometry.Geometry
-import com.arcgismaps.geometry.Point
-import com.arcgismaps.geometry.PolygonBuilder
-import com.arcgismaps.geometry.PolylineBuilder
-import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.symbology.SimpleFillSymbol
 import com.arcgismaps.mapping.symbology.SimpleFillSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleLineSymbol
@@ -45,43 +40,16 @@ class GraphicRef(appContext: AppContext) : SharedObject(appContext) {
   fun applyProps(changed: Map<String, Any?>) {
     changed.forEach { (key, value) ->
       when (key) {
-        "geometry" -> graphic.geometry = (value as? Map<*, *>)?.let(::buildGeometry)
+        "geometry" -> graphic.geometry = (value as? Map<*, *>)?.let(::geometryFromDict)
         "symbol" -> graphic.symbol = (value as? Map<*, *>)?.let(::buildSymbol)
       }
     }
   }
 }
 
-// region Geometry
-
-private fun buildGeometry(g: Map<*, *>): Geometry? {
-  val sr = spatialReference(g["spatialReference"])
-  return when (g["type"]) {
-    "point" -> Point(num(g["x"]), num(g["y"]), sr)
-    "polyline" -> PolylineBuilder(sr).apply {
-      vertices(g["points"]).forEach { (x, y) -> addPoint(x, y) }
-    }.toGeometry()
-    "polygon" -> PolygonBuilder(sr).apply {
-      vertices(g["points"]).forEach { (x, y) -> addPoint(x, y) }
-    }.toGeometry()
-    else -> null
-  }
-}
-
-private fun vertices(value: Any?): List<Pair<Double, Double>> =
-  (value as? List<*>)?.mapNotNull { p ->
-    (p as? Map<*, *>)?.let { num(it["x"]) to num(it["y"]) }
-  } ?: emptyList()
-
-/** Only WGS84 and Web Mercator are mapped in v1; any other WKID falls back to WGS84. */
-private fun spatialReference(value: Any?): SpatialReference = when ((value as? Number)?.toInt()) {
-  3857, 102100 -> SpatialReference.webMercator()
-  else -> SpatialReference.wgs84()
-}
+// region Symbols
 
 private fun num(value: Any?, default: Double = 0.0): Double = (value as? Number)?.toDouble() ?: default
-
-// region Symbols
 
 private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
   "simple-marker" -> SimpleMarkerSymbol(
