@@ -249,6 +249,13 @@ export type FeatureLayerHandle = {
    * the feature service. Resolves to the new feature's object id (or `null` for non-service tables).
    */
   addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
+  /** Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit. */
+  updateFeature(
+    objectId: number,
+    changes: { attributes?: Record<string, unknown>; geometry?: Geometry }
+  ): Promise<void>;
+  /** Deletes the feature with `objectId` and pushes the edit. */
+  deleteFeature(objectId: number): Promise<void>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

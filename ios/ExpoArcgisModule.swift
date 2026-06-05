@@ -84,6 +84,12 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("addFeature") { (ref: FeatureLayerRef, attributes: [String: Any], geometry: [String: Any]?) in
         try await ref.addFeature(attributes, geometry)
       }
+      AsyncFunction("updateFeature") { (ref: FeatureLayerRef, objectId: Int, changes: [String: Any]) in
+        try await ref.updateFeature(objectId, changes)
+      }
+      AsyncFunction("deleteFeature") { (ref: FeatureLayerRef, objectId: Int) in
+        try await ref.deleteFeature(objectId)
+      }
     }
 
     Class(TiledLayerRef.self) {

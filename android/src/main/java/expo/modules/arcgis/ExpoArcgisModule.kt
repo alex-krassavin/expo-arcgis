@@ -88,6 +88,12 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("addFeature") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?>? ->
         ref.addFeature(attributes, geometry)
       }
+      AsyncFunction("updateFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, changes: Map<String, Any?> ->
+        ref.updateFeature(objectId, changes)
+      }
+      AsyncFunction("deleteFeature") Coroutine { ref: FeatureLayerRef, objectId: Long ->
+        ref.deleteFeature(objectId)
+      }
     }
 
     Class(TiledLayerRef::class) {

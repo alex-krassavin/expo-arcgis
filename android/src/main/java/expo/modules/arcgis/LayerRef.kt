@@ -1,7 +1,9 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.Feature
 import com.arcgismaps.data.FeatureTable
 import com.arcgismaps.data.QueryFeatureFields
+import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
@@ -73,6 +75,27 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
     geometry?.let { dict -> geometryFromDict(dict)?.let { feature.geometry = it } }
     table.addFeature(feature).getOrThrow()
     return persistEdits()
+  }
+
+  /** Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit. */
+  suspend fun updateFeature(objectId: Long, changes: Map<String, Any?>) {
+    val feature = featureByObjectId(objectId) ?: return
+    (changes["attributes"] as? Map<*, *>)?.let { applyAttributes(feature, it) }
+    (changes["geometry"] as? Map<*, *>)?.let { geometryFromDict(it)?.let { g -> feature.geometry = g } }
+    table.updateFeature(feature).getOrThrow()
+    persistEdits()
+  }
+
+  /** Deletes the feature with `objectId` and pushes the edit. */
+  suspend fun deleteFeature(objectId: Long) {
+    val feature = featureByObjectId(objectId) ?: return
+    table.deleteFeature(feature).getOrThrow()
+    persistEdits()
+  }
+
+  private suspend fun featureByObjectId(objectId: Long): Feature? {
+    val params = QueryParameters().apply { objectIds.add(objectId) }
+    return table.queryFeatures(params).getOrThrow().firstOrNull()
   }
 
   /** Pushes pending local edits to the feature service (no-op for non-service tables). */

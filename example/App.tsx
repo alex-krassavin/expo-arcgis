@@ -90,6 +90,9 @@ const CITIES_LABELS: LabelDefinition[] = [
 // Clustering (feature reduction) for the same layer.
 const CITY_CLUSTER: FeatureReduction = { type: 'cluster', radius: 60 };
 
+// "Edit features": a public, anonymously-editable feature service (Esri sample).
+const WILDFIRE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0';
+
 // "Display a scene" tutorial camera + terrain (Santa Monica Mountains, in 3D).
 const CAMERA: Camera = {
   position: { x: -118.804, y: 34.0, z: 5330 },
@@ -135,8 +138,33 @@ export default function App() {
   const [draw, setDraw] = useState(false);
   const [cities, setCities] = useState(false);
   const [cluster, setCluster] = useState(false);
+  const [editLayer, setEditLayer] = useState(false);
+  const [editedId, setEditedId] = useState<number | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
+  const editRef = useRef<FeatureLayerHandle>(null);
+
+  // "Edit features" — add / move / delete a feature on an editable service via the layer ref.
+  async function addHere() {
+    if (!editRef.current || !pin) return setStatus('Enable “Edit layer” and tap the map first');
+    const point = { type: 'point' as const, x: pin.longitude, y: pin.latitude };
+    const id = await editRef.current.addFeature({}, point);
+    setEditedId(id);
+    setStatus(`Added feature #${id ?? '—'}`);
+  }
+  async function moveHere() {
+    if (!editRef.current || editedId == null || !pin) return setStatus('Add a feature, then tap to move it');
+    await editRef.current.updateFeature(editedId, {
+      geometry: { type: 'point', x: pin.longitude, y: pin.latitude },
+    });
+    setStatus(`Moved feature #${editedId} to the tapped point`);
+  }
+  async function deleteFeature() {
+    if (!editRef.current || editedId == null) return setStatus('Add a feature first');
+    await editRef.current.deleteFeature(editedId);
+    setStatus(`Deleted feature #${editedId}`);
+    setEditedId(null);
+  }
 
   // "Buffer pin" — geodesic buffer of the tapped pin + its lat/long readout (CoordinateFormatter).
   function bufferPin() {
@@ -310,6 +338,8 @@ export default function App() {
                   featureReduction={cluster ? CITY_CLUSTER : undefined}
                 />
               )}
+              {/* Editable feature layer — add / move / delete features via its ref */}
+              {editLayer && <FeatureLayer ref={editRef} url={WILDFIRE} />}
               <MapView
                 ref={mapRef}
                 style={styles.map}
@@ -374,6 +404,10 @@ export default function App() {
                 <Button title={cluster ? 'No cluster' : 'Cluster'} onPress={() => setCluster((v) => !v)} />
                 <Button title="Big cities" onPress={bigCities} />
                 <Button title="Avg pop" onPress={avgPop} />
+                <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
+                <Button title="Add here" onPress={addHere} />
+                <Button title="Move here" onPress={moveHere} />
+                <Button title="Delete" onPress={deleteFeature} />
               </>
             )}
           </View>

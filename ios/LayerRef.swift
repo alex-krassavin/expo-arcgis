@@ -68,6 +68,28 @@ public final class FeatureLayerRef: LayerRef {
     return try await persistEdits()
   }
 
+  /// Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit.
+  func updateFeature(_ objectId: Int, _ changes: [String: Any]) async throws {
+    guard let feature = try await featureByObjectId(objectId) else { return }
+    if let attributes = changes["attributes"] as? [String: Any] { applyAttributes(feature, attributes) }
+    if let geometry = (changes["geometry"] as? [String: Any]).flatMap(geometryFromDict) { feature.geometry = geometry }
+    try await table.update(feature)
+    _ = try await persistEdits()
+  }
+
+  /// Deletes the feature with `objectId` and pushes the edit.
+  func deleteFeature(_ objectId: Int) async throws {
+    guard let feature = try await featureByObjectId(objectId) else { return }
+    try await table.delete(feature)
+    _ = try await persistEdits()
+  }
+
+  private func featureByObjectId(_ objectId: Int) async throws -> Feature? {
+    let params = QueryParameters()
+    params.addObjectIDs([objectId])
+    return Array(try await table.queryFeatures(using: params).features()).first
+  }
+
   /// Pushes pending local edits to the feature service (no-op for non-service tables).
   private func persistEdits() async throws -> Int? {
     guard let serviceTable = table as? ServiceFeatureTable else { return nil }

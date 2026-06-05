@@ -41,6 +41,8 @@ export declare class FeatureLayerRef extends LayerRef {
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
   queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
   addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
+  updateFeature(objectId: number, changes: Record<string, unknown>): Promise<void>;
+  deleteFeature(objectId: number): Promise<void>;
 }
 
 /** Reference to a native `Graphic` drawn on a graphics overlay. */

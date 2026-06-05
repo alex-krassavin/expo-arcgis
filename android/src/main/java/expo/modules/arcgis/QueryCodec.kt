@@ -98,8 +98,8 @@ internal fun serializeStatisticRecord(record: StatisticRecord): Map<String, Any?
 // region Editing
 
 /** Applies JS attribute values onto a feature (used by add / update). */
-internal fun applyAttributes(feature: Feature, attributes: Map<String, Any?>) {
-  attributes.forEach { (key, value) -> if (value != null) feature.attributes[key] = value }
+internal fun applyAttributes(feature: Feature, attributes: Map<*, *>) {
+  attributes.forEach { (key, value) -> if (value != null) feature.attributes[key.toString()] = value }
 }
 
 // region Identify
