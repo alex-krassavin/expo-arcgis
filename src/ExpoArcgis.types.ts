@@ -428,6 +428,9 @@ export type Geometry =
 /** A `point` geometry — convenient alias used where an operation requires a point. */
 export type PointGeometry = { type: 'point' } & Point;
 
+/** A `polyline` geometry — convenient alias used where an operation returns a line (e.g. a route). */
+export type PolylineGeometry = { type: 'polyline' } & Polyline;
+
 // ────────────────────────────────────────────────────────────────────────────
 // GeometryEngine — units, curve types and result shapes for spatial operations.
 // ────────────────────────────────────────────────────────────────────────────
@@ -549,6 +552,57 @@ export type SuggestParameters = {
   preferredSearchLocation?: PointGeometry;
   /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
   locatorUrl?: string;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// Routing — directions between stops via the `router` namespace.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** One stop along a route. Mirrors the native `Stop` (constructed from a point). */
+export type RouteStop = {
+  /** The stop location. */
+  point: PointGeometry;
+  /** Optional label for the stop (echoed back on returned stops). */
+  name?: string;
+};
+
+/** Parameters for `router.solveRoute`. Mirrors the native `RouteParameters`. */
+export type RouteParameters = {
+  /**
+   * Travel mode name to use, looked up among the service's travel modes
+   * (e.g. `'Driving Time'`, `'Walking Time'`). Defaults to the service default.
+   */
+  travelMode?: string;
+  /** Whether to return route geometry/metrics. Defaults to `true`. */
+  returnRoutes?: boolean;
+  /** Whether to return the (possibly re-sequenced) stops. Defaults to `false`. */
+  returnStops?: boolean;
+  /** Whether the service may reorder stops to find the optimal sequence. Defaults to `false`. */
+  findBestSequence?: boolean;
+  /** Route service URL. Defaults to the ArcGIS World Route Service. */
+  routeServiceUrl?: string;
+};
+
+/** A single solved route. Mirrors the native `Route`. */
+export type Route = {
+  /** The route line (null if the service returns none). */
+  geometry: PolylineGeometry | null;
+  /** Route name (usually derived from the first and last stop). */
+  name: string;
+  /** Total length of the route, in meters. */
+  totalLength: number;
+  /** Travel time along the route, in minutes. */
+  travelTime: number;
+  /** Total elapsed time including any wait/service time, in minutes. */
+  totalTime: number;
+};
+
+/** Result of `router.solveRoute`. Mirrors the native `RouteResult`. */
+export type RouteResult = {
+  /** The solved routes (one unless multiple route names / `findBestSequence` are used). */
+  routes: Route[];
+  /** Informational and warning messages from the solve operation. */
+  messages: string[];
 };
 
 // ────────────────────────────────────────────────────────────────────────────

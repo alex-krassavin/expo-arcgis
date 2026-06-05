@@ -67,5 +67,10 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("suggest") { (searchText: String, params: [String: Any]) in
       try await suggest(searchText, params)
     }
+
+    // Routing — solve a route between stops, exposed as the JS `router` namespace.
+    AsyncFunction("solveRoute") { (stops: [[String: Any]], params: [String: Any]) in
+      try await solveRoute(stops, params)
+    }
   }
 }

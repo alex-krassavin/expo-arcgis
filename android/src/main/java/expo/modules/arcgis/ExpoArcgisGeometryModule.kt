@@ -72,5 +72,10 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("suggest") Coroutine { searchText: String, params: Map<String, Any?> ->
       suggest(searchText, params)
     }
+
+    // Routing — solve a route between stops, exposed as the JS `router` namespace.
+    AsyncFunction("solveRoute") Coroutine { stops: List<Map<String, Any?>>, params: Map<String, Any?> ->
+      solveRoute(stops, params)
+    }
   }
 }

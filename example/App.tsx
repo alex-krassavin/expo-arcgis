@@ -10,6 +10,7 @@ import {
   MapImageLayer,
   MapSettings,
   MapView,
+  router,
   Scene,
   SceneLayer,
   SceneView,
@@ -155,6 +156,7 @@ export default function App() {
   const [editedId, setEditedId] = useState<number | null>(null);
   const [simulate, setSimulate] = useState(false);
   const [geocoded, setGeocoded] = useState<Geometry | null>(null);
+  const [routeGeom, setRouteGeom] = useState<Geometry | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -234,6 +236,18 @@ export default function App() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
   }
+  // "Route" — solve a route between two LA-area stops (router namespace).
+  async function solveRouteDemo() {
+    const { routes } = await router.solveRoute([
+      { point: { type: 'point', x: -118.4965, y: 34.0195 }, name: 'Santa Monica' },
+      { point: { type: 'point', x: -118.2437, y: 34.0522 }, name: 'Downtown LA' },
+    ]);
+    const route = routes[0];
+    if (route?.geometry) {
+      setRouteGeom(route.geometry);
+      setStatus(`Route: ${(route.totalLength / 1000).toFixed(1)} km · ${Math.round(route.travelTime)} min`);
+    } else setStatus('No route found');
+  }
 
   async function toggleLocation() {
     if (!showLocation && Platform.OS === 'android') {
@@ -305,6 +319,13 @@ export default function App() {
           <Graphic
             geometry={geocoded}
             symbol={{ type: 'simple-marker', style: 'diamond', color: '#5856d6', size: 16 }}
+          />
+        )}
+        {/* Solved route line */}
+        {routeGeom && (
+          <Graphic
+            geometry={routeGeom}
+            symbol={{ type: 'simple-line', color: '#5856d6', width: 4 }}
           />
         )}
       </GraphicsOverlay>
@@ -461,6 +482,7 @@ export default function App() {
                 <Button title="Find LA" onPress={findLA} />
                 <Button title="Reverse pin" onPress={reversePin} />
                 <Button title="Suggest" onPress={suggestPlaces} />
+                <Button title="Route" onPress={solveRouteDemo} />
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />

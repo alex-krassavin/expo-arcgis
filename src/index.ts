@@ -36,6 +36,7 @@ export { GeometryEditor } from './GeometryEditor';
 export { geometryEngine } from './geometryEngine';
 export { coordinateFormatter } from './coordinateFormatter';
 export { geocoder } from './geocoder';
+export { router } from './router';
 export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';
 
 export * from './ExpoArcgis.types';
