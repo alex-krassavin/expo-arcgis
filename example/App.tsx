@@ -245,7 +245,9 @@ export default function App() {
     const route = routes[0];
     if (route?.geometry) {
       setRouteGeom(route.geometry);
-      setStatus(`Route: ${(route.totalLength / 1000).toFixed(1)} km · ${Math.round(route.travelTime)} min`);
+      const first = route.directions[0]?.text ?? '';
+      const metrics = `${(route.totalLength / 1000).toFixed(1)} km · ${Math.round(route.travelTime)} min`;
+      setStatus(`Route: ${metrics}${first ? ` — ${first}` : ''} (${route.directions.length} steps)`);
     } else setStatus('No route found');
   }
 

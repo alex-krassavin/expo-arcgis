@@ -577,10 +577,26 @@ export type RouteParameters = {
   returnRoutes?: boolean;
   /** Whether to return the (possibly re-sequenced) stops. Defaults to `false`. */
   returnStops?: boolean;
+  /** Whether to generate turn-by-turn directions. Defaults to `true`. */
+  returnDirections?: boolean;
+  /** Language for the generated directions (e.g. `'en'`, `'es'`). Defaults to the service default. */
+  directionsLanguage?: string;
   /** Whether the service may reorder stops to find the optimal sequence. Defaults to `false`. */
   findBestSequence?: boolean;
   /** Route service URL. Defaults to the ArcGIS World Route Service. */
   routeServiceUrl?: string;
+};
+
+/** One turn-by-turn instruction along a route. Mirrors the native `DirectionManeuver`. */
+export type DirectionManeuver = {
+  /** Human-readable instruction text. */
+  text: string;
+  /** Length of this maneuver, in meters. */
+  length: number;
+  /** Duration of this maneuver, in minutes. */
+  duration: number;
+  /** Geometry of this maneuver (a line segment, or null). */
+  geometry: Geometry | null;
 };
 
 /** A single solved route. Mirrors the native `Route`. */
@@ -595,6 +611,8 @@ export type Route = {
   travelTime: number;
   /** Total elapsed time including any wait/service time, in minutes. */
   totalTime: number;
+  /** Turn-by-turn directions (empty unless `returnDirections` is set). */
+  directions: DirectionManeuver[];
 };
 
 /** Result of `router.solveRoute`. Mirrors the native `RouteResult`. */

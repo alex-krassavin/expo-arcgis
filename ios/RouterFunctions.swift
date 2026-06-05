@@ -52,7 +52,8 @@ private func buildStops(_ stops: [[String: Any]]) -> [Stop] {
 }
 
 private func applyRouteParameters(_ parameters: RouteParameters, _ params: [String: Any], task: RouteTask) {
-  parameters.returnsDirections = false
+  parameters.returnsDirections = params["returnDirections"] as? Bool ?? true
+  if let directionsLanguage = params["directionsLanguage"] as? String { parameters.directionsLanguage = directionsLanguage }
   if let returnRoutes = params["returnRoutes"] as? Bool { parameters.returnsRoutes = returnRoutes }
   if let returnStops = params["returnStops"] as? Bool { parameters.returnsStops = returnStops }
   if let findBestSequence = params["findBestSequence"] as? Bool { parameters.findsBestSequence = findBestSequence }
@@ -76,5 +77,15 @@ private func serializeRoute(_ route: Route) -> [String: Any] {
     "totalLength": route.totalLength.converted(to: .meters).value,
     "travelTime": route.travelTime,
     "totalTime": route.totalTime,
+    "directions": route.directionManeuvers.map(serializeManeuver),
+  ]
+}
+
+private func serializeManeuver(_ maneuver: DirectionManeuver) -> [String: Any] {
+  [
+    "text": maneuver.text,
+    "length": maneuver.length.converted(to: .meters).value,
+    "duration": maneuver.duration,
+    "geometry": maneuver.geometry.map(dictFromGeometry) ?? NSNull(),
   ]
 }

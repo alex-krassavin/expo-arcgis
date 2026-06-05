@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.geometry.Point
+import com.arcgismaps.tasks.networkanalysis.DirectionManeuver
 import com.arcgismaps.tasks.networkanalysis.Route
 import com.arcgismaps.tasks.networkanalysis.RouteParameters
 import com.arcgismaps.tasks.networkanalysis.RouteResult
@@ -48,7 +49,8 @@ private fun applyRouteParameters(
   params: Map<String, Any?>,
   task: RouteTask,
 ) {
-  parameters.returnDirections = false
+  parameters.returnDirections = params["returnDirections"] as? Boolean ?: true
+  (params["directionsLanguage"] as? String)?.let { parameters.directionsLanguage = it }
   (params["returnRoutes"] as? Boolean)?.let { parameters.returnRoutes = it }
   (params["returnStops"] as? Boolean)?.let { parameters.returnStops = it }
   (params["findBestSequence"] as? Boolean)?.let { parameters.findBestSequence = it }
@@ -68,4 +70,12 @@ private fun serializeRoute(route: Route): Map<String, Any?> = mapOf(
   "totalLength" to route.totalLength,
   "travelTime" to route.travelTime,
   "totalTime" to route.totalTime,
+  "directions" to route.directionManeuvers.map { serializeManeuver(it) },
+)
+
+private fun serializeManeuver(maneuver: DirectionManeuver): Map<String, Any?> = mapOf(
+  "text" to maneuver.directionText,
+  "length" to maneuver.length,
+  "duration" to maneuver.duration,
+  "geometry" to maneuver.geometry?.let { dictFromGeometry(it) },
 )
