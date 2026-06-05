@@ -1,5 +1,6 @@
 package expo.modules.arcgis
 
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -60,5 +61,13 @@ class ExpoArcgisGeometryModule : Module() {
     Function("cfFromUsng", ::cfFromUsng)
     Function("cfToUtm", ::cfToUtm)
     Function("cfFromUtm", ::cfFromUtm)
+
+    // Geocoding — address <-> coordinates search, exposed as the JS `geocoder` namespace.
+    AsyncFunction("geocode") Coroutine { searchText: String, params: Map<String, Any?> ->
+      geocode(searchText, params)
+    }
+    AsyncFunction("reverseGeocode") Coroutine { point: Map<String, Any?>, params: Map<String, Any?> ->
+      reverseGeocode(point, params)
+    }
   }
 }

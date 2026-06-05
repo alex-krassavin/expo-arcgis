@@ -56,5 +56,13 @@ public class ExpoArcgisGeometryModule: Module {
     Function("cfFromUsng", cfFromUsng)
     Function("cfToUtm", cfToUtm)
     Function("cfFromUtm", cfFromUtm)
+
+    // Geocoding — address <-> coordinates search, exposed as the JS `geocoder` namespace.
+    AsyncFunction("geocode") { (searchText: String, params: [String: Any]) in
+      try await geocode(searchText, params)
+    }
+    AsyncFunction("reverseGeocode") { (point: [String: Any], params: [String: Any]) in
+      try await reverseGeocode(point, params)
+    }
   }
 }

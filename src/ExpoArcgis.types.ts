@@ -492,6 +492,46 @@ export type MgrsConversionMode =
   | 'old180InZone60';
 
 // ────────────────────────────────────────────────────────────────────────────
+// Geocoding — address ↔ coordinates search via the `geocoder` namespace.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** One geocode/reverse-geocode match. Mirrors the native `GeocodeResult`. */
+export type GeocodeResult = {
+  /** Human-readable address / place name. */
+  label: string;
+  /** Point to display for the match (null if the locator returns none). */
+  location: PointGeometry | null;
+  /** Match confidence, 0–100. */
+  score: number;
+  /** Result attributes (fields depend on the locator). */
+  attributes: Record<string, unknown>;
+};
+
+/** Parameters for `geocoder.geocode`. Mirrors the native `GeocodeParameters`. */
+export type GeocodeParameters = {
+  /** Maximum number of matches to return. */
+  maxResults?: number;
+  /** Two/three-letter country code to constrain the search. */
+  countryCode?: string;
+  /** Place categories to filter by (e.g. `['Coffee shop']`). */
+  categories?: string[];
+  /** A point near which results are preferred. */
+  preferredSearchLocation?: PointGeometry;
+  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  locatorUrl?: string;
+};
+
+/** Parameters for `geocoder.reverseGeocode`. Mirrors the native `ReverseGeocodeParameters`. */
+export type ReverseGeocodeParameters = {
+  /** Maximum number of matches to return. */
+  maxResults?: number;
+  /** Maximum search distance from the point, in meters. */
+  maxDistance?: number;
+  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  locatorUrl?: string;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────
 

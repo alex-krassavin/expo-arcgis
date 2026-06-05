@@ -1,6 +1,11 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import type { GeodeticDistanceResult, Geometry, ProximityResult } from './ExpoArcgis.types';
+import type {
+  GeocodeResult,
+  GeodeticDistanceResult,
+  Geometry,
+  ProximityResult,
+} from './ExpoArcgis.types';
 
 /**
  * Backing native module for the `geometryEngine` and `coordinateFormatter` namespaces. Kept
@@ -73,6 +78,10 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   cfFromUsng(coordinates: string, wkid: number): Geometry | null;
   cfToUtm(p: Geometry, mode: string | null, addSpaces: boolean): string | null;
   cfFromUtm(coordinates: string, wkid: number, mode: string | null): Geometry | null;
+
+  // Geocoding — backing functions for the `geocoder` namespace (see ./geocoder).
+  geocode(searchText: string, params: Record<string, unknown>): Promise<GeocodeResult[]>;
+  reverseGeocode(point: Geometry, params: Record<string, unknown>): Promise<GeocodeResult[]>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');
