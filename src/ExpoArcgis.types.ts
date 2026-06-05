@@ -66,6 +66,24 @@ export type LocationDisplay = {
   autoPanMode?: LocationDisplayAutoPanMode;
   /** Whether to draw the location symbol. Defaults to `true`. */
   showLocation?: boolean;
+  /** How far the location can wander before the view re-pans, as a factor of the symbol size. */
+  wanderExtentFactor?: number;
+};
+
+/** Payload for the `<MapView onLocationChange>` event — one device-location fix. */
+export type LocationEventPayload = {
+  /** Location in geographic coordinates (WGS84). `z` is altitude in meters when available. */
+  position: { latitude: number; longitude: number; z?: number };
+  /** Horizontal accuracy radius, in meters. */
+  horizontalAccuracy: number;
+  /** Vertical accuracy, in meters. */
+  verticalAccuracy: number;
+  /** Direction of travel, in degrees clockwise from north. */
+  course: number;
+  /** Speed, in meters per second. */
+  speed: number;
+  /** Fix time, as epoch milliseconds. */
+  timestamp: number;
 };
 
 /** Props for the `<MapView>` host component. */
@@ -81,6 +99,8 @@ export type MapViewProps = {
   onMapLoadError?: (event: { nativeEvent: MapLoadErrorEventPayload }) => void;
   /** Called when the user taps the map. */
   onTap?: (event: { nativeEvent: TapEventPayload }) => void;
+  /** Called on each device-location update (requires `locationDisplay`). */
+  onLocationChange?: (event: { nativeEvent: LocationEventPayload }) => void;
 };
 
 /** Common operational-layer props (subset of ArcGIS layer properties). */

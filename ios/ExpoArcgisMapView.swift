@@ -19,6 +19,7 @@ final class MapViewModel: ObservableObject {
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
   var onTap: ((_ latitude: Double, _ longitude: Double, _ screenX: Double, _ screenY: Double) -> Void)?
+  var onLocationChange: ((Location) -> Void)?
 
   func setMap(_ map: Map?) {
     self.map = map
@@ -33,9 +34,12 @@ final class MapViewModel: ObservableObject {
     viewpointVersion += 1
   }
 
-  func setLocationDisplay(enabled: Bool, autoPanMode: LocationDisplay.AutoPanMode, showsLocation: Bool) {
+  func setLocationDisplay(
+    enabled: Bool, autoPanMode: LocationDisplay.AutoPanMode, showsLocation: Bool, wanderExtentFactor: Float?
+  ) {
     locationDisplay.autoPanMode = autoPanMode
     locationDisplay.showsLocation = showsLocation
+    if let wanderExtentFactor { locationDisplay.wanderExtentFactor = wanderExtentFactor }
     locationEnabled = enabled
   }
 
@@ -84,6 +88,11 @@ struct ExpoArcgisMapContainer: View {
               await model.locationDisplay.dataSource.stop()
             }
           }
+          .task {
+            for await location in model.locationDisplay.$location {
+              if let location { model.onLocationChange?(location) }
+            }
+          }
       }
     }
   }
@@ -94,6 +103,7 @@ class ExpoArcgisMapView: ExpoView {
   private let onMapLoaded = EventDispatcher()
   private let onMapLoadError = EventDispatcher()
   private let onTap = EventDispatcher()
+  private let onLocationChange = EventDispatcher()
 
   private let model = MapViewModel()
   private var hostingController: UIHostingController<ExpoArcgisMapContainer>?
@@ -113,6 +123,9 @@ class ExpoArcgisMapView: ExpoView {
         "mapPoint": ["latitude": latitude, "longitude": longitude],
         "screenPoint": ["x": screenX, "y": screenY],
       ])
+    }
+    model.onLocationChange = { [weak self] location in
+      self?.onLocationChange(serializeLocation(location))
     }
 
     let hostingController = UIHostingController(rootView: ExpoArcgisMapContainer(model: model))
@@ -149,10 +162,11 @@ class ExpoArcgisMapView: ExpoView {
       model.setLocationDisplay(
         enabled: true,
         autoPanMode: autoPanMode(config["autoPanMode"] as? String),
-        showsLocation: config["showLocation"] as? Bool ?? true
+        showsLocation: config["showLocation"] as? Bool ?? true,
+        wanderExtentFactor: (config["wanderExtentFactor"] as? NSNumber)?.floatValue
       )
     } else {
-      model.setLocationDisplay(enabled: false, autoPanMode: .off, showsLocation: false)
+      model.setLocationDisplay(enabled: false, autoPanMode: .off, showsLocation: false, wanderExtentFactor: nil)
     }
   }
 
@@ -175,6 +189,20 @@ class ExpoArcgisMapView: ExpoView {
     )
     return results.map(serializeIdentifyResult)
   }
+}
+
+/// Serializes a device-location fix to the `onLocationChange` JS payload.
+func serializeLocation(_ location: Location) -> [String: Any] {
+  var position: [String: Any] = ["latitude": location.position.y, "longitude": location.position.x]
+  if let z = location.position.z { position["z"] = z }
+  return [
+    "position": position,
+    "horizontalAccuracy": location.horizontalAccuracy,
+    "verticalAccuracy": location.verticalAccuracy,
+    "course": location.course,
+    "speed": location.speed,
+    "timestamp": location.timestamp.timeIntervalSince1970 * 1000,
+  ]
 }
 
 /// Maps the JS auto-pan union to the native `LocationDisplay.AutoPanMode`.

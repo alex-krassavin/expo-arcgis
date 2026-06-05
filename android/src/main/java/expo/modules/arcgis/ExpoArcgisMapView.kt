@@ -7,6 +7,7 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.location.Location
 import com.arcgismaps.location.LocationDisplayAutoPanMode
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
@@ -41,11 +42,27 @@ class TapEventPayload(
   @Field val screenPoint: ScreenPointRecord = ScreenPointRecord(),
 ) : Record
 
+class LocationPositionRecord(
+  @Field val latitude: Double = 0.0,
+  @Field val longitude: Double = 0.0,
+  @Field val z: Double? = null,
+) : Record
+
+class LocationEventPayload(
+  @Field val position: LocationPositionRecord = LocationPositionRecord(),
+  @Field val horizontalAccuracy: Double = 0.0,
+  @Field val verticalAccuracy: Double = 0.0,
+  @Field val course: Double = 0.0,
+  @Field val speed: Double = 0.0,
+  @Field val timestamp: Double = 0.0,
+) : Record
+
 /** Declarative 2D map host. Renders the [MapRef] passed as the `map` view prop. */
 class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
   private val onMapLoaded by EventDispatcher<MapLoadedEventPayload>()
   private val onMapLoadError by EventDispatcher<MapLoadErrorEventPayload>()
   private val onTap by EventDispatcher<TapEventPayload>()
+  private val onLocationChange by EventDispatcher<LocationEventPayload>()
 
   private val mapView = MapView(context).also {
     it.layoutParams = ViewGroup.LayoutParams(
@@ -72,6 +89,12 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
             screenPoint = ScreenPointRecord(event.screenCoordinate.x, event.screenCoordinate.y)
           )
         )
+      }
+    }
+    // Emit a location event on each device-location update.
+    scope.launch {
+      mapView.locationDisplay.location.collect { location ->
+        location?.let { onLocationChange(locationPayload(it)) }
       }
     }
   }
@@ -115,8 +138,18 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
     locationDisplay.setAutoPanMode(autoPanMode(config["autoPanMode"] as? String))
     (config["showLocation"] as? Boolean)?.let { locationDisplay.showLocation = it }
+    (config["wanderExtentFactor"] as? Number)?.toFloat()?.let { locationDisplay.wanderExtentFactor = it }
     scope.launch { locationDisplay.dataSource.start() }
   }
+
+  private fun locationPayload(location: Location): LocationEventPayload = LocationEventPayload(
+    position = LocationPositionRecord(location.position.y, location.position.x, location.position.z),
+    horizontalAccuracy = location.horizontalAccuracy,
+    verticalAccuracy = location.verticalAccuracy,
+    course = location.course,
+    speed = location.speed,
+    timestamp = location.timestamp.toEpochMilli().toDouble(),
+  )
 
   /** Binds an interactive GeometryEditor for sketching (null clears it). */
   fun setGeometryEditor(ref: GeometryEditorRef?) {

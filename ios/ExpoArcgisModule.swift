@@ -276,7 +276,7 @@ public class ExpoArcgisModule: Module {
 
     // 2D map host — receives the map + graphics overlay SharedObjects as props.
     View(ExpoArcgisMapView.self) {
-      Events("onMapLoaded", "onMapLoadError", "onTap")
+      Events("onMapLoaded", "onMapLoadError", "onTap", "onLocationChange")
 
       Prop("map") { (view: ExpoArcgisMapView, ref: MapRef?) in
         view.setMap(ref)
