@@ -1,6 +1,9 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.Color
+import com.arcgismaps.mapping.labeling.ArcadeLabelExpression
+import com.arcgismaps.mapping.labeling.LabelDefinition
+import com.arcgismaps.mapping.labeling.SimpleLabelExpression
 import com.arcgismaps.mapping.symbology.ClassBreak
 import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
 import com.arcgismaps.mapping.symbology.HorizontalAlignment
@@ -86,6 +89,20 @@ private fun rendererValues(value: Any?): List<Any> =
       else -> item.toString()
     }
   } ?: emptyList()
+
+// region Labels
+
+/** Builds a [LabelDefinition] (expression + text symbol + optional where clause) from a JS dict. */
+internal fun buildLabelDefinition(d: Map<*, *>): LabelDefinition {
+  val expressionText = d["expression"] as? String ?: ""
+  val expression =
+    if (d["useArcade"] == true) ArcadeLabelExpression(expressionText) else SimpleLabelExpression(expressionText)
+  val textSymbol = (d["symbol"] as? Map<*, *>)?.let { buildSymbol(it) } as? TextSymbol
+    ?: TextSymbol("", Color.fromRgba(0, 0, 0, 255), 12f, HorizontalAlignment.Center, VerticalAlignment.Middle)
+  return LabelDefinition(expression, textSymbol).apply {
+    (d["whereClause"] as? String)?.let { whereClause = it }
+  }
+}
 
 /** Invisible marker used as a UniqueValueRenderer default when JS supplies none (Kotlin requires non-null). */
 private fun transparentMarker(): Symbol =

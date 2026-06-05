@@ -36,6 +36,15 @@ public final class FeatureLayerRef: LayerRef {
     if changed.keys.contains("renderer") {
       featureLayer.renderer = (changed["renderer"] as? [String: Any]).flatMap(buildRenderer)
     }
+    if let labelsEnabled = changed["labelsEnabled"] as? Bool {
+      featureLayer.labelsAreEnabled = labelsEnabled
+    }
+    if changed.keys.contains("labels") {
+      featureLayer.removeAllLabelDefinitions()
+      for case let labelDict as [String: Any] in (changed["labels"] as? [Any] ?? []) {
+        featureLayer.addLabelDefinition(buildLabelDefinition(labelDict))
+      }
+    }
   }
 }
 

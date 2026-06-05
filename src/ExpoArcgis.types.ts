@@ -107,6 +107,25 @@ export type FeatureLayerProps = LayerProps & {
   source?: FeatureTableSource;
   /** Overrides the layer's symbology (simple / unique-value / class-breaks). */
   renderer?: Renderer;
+  /** Whether the layer's labels are drawn. */
+  labelsEnabled?: boolean;
+  /** Label rules applied to the layer's features. */
+  labels?: LabelDefinition[];
+};
+
+/** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */
+export type LabelDefinition = {
+  /**
+   * Label expression. A simple field expression (`[FIELD]`) by default, or an Arcade
+   * expression (`$feature.FIELD`) when `useArcade` is set.
+   */
+  expression: string;
+  /** Treat `expression` as an Arcade expression instead of a simple field expression. */
+  useArcade?: boolean;
+  /** Text symbol for the labels. Defaults to black 12 pt. */
+  symbol?: TextSymbol;
+  /** Optional SQL `where` clause limiting which features are labeled. */
+  whereClause?: string;
 };
 
 /** Props for a `<TileLayer>` — mirror the native `ArcGISTiledLayer`. */

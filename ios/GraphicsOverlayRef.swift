@@ -90,6 +90,20 @@ private func rendererValues(_ value: Any?) -> [any Sendable] {
   }
 }
 
+// MARK: - Labels
+
+/// Builds a `LabelDefinition` (expression + text symbol + optional where clause) from a JS dict.
+func buildLabelDefinition(_ d: [String: Any]) -> LabelDefinition {
+  let expressionText = d["expression"] as? String ?? ""
+  let expression: LabelExpression = (d["useArcade"] as? Bool ?? false)
+    ? ArcadeLabelExpression(arcadeString: expressionText)
+    : SimpleLabelExpression(simpleExpression: expressionText)
+  let textSymbol = (d["symbol"] as? [String: Any]).flatMap(buildSymbol) as? TextSymbol
+  let definition = LabelDefinition(labelExpression: expression, textSymbol: textSymbol)
+  if let whereClause = d["whereClause"] as? String { definition.whereClause = whereClause }
+  return definition
+}
+
 // MARK: - Symbols
 
 func buildSymbol(_ s: [String: Any]) -> Symbol? {

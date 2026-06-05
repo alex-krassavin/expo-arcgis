@@ -50,6 +50,13 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
       val renderer = (changed["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
       if (renderer != null) layer.renderer = renderer else layer.resetRenderer()
     }
+    (changed["labelsEnabled"] as? Boolean)?.let { layer.labelsEnabled = it }
+    if (changed.containsKey("labels")) {
+      layer.labelDefinitions.clear()
+      (changed["labels"] as? List<*>)?.forEach { label ->
+        (label as? Map<*, *>)?.let { layer.labelDefinitions.add(buildLabelDefinition(it)) }
+      }
+    }
   }
 }
 
