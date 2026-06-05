@@ -11,9 +11,14 @@ import com.arcgismaps.mapping.layers.Layer
 import com.arcgismaps.mapping.layers.Ogc3DTilesLayer
 import com.arcgismaps.mapping.layers.OpenStreetMapLayer
 import com.arcgismaps.mapping.layers.PointCloudLayer
+import com.arcgismaps.mapping.layers.RasterLayer
 import com.arcgismaps.mapping.layers.WebTiledLayer
+import com.arcgismaps.mapping.layers.KmlLayer
 import com.arcgismaps.mapping.layers.WmsLayer
 import com.arcgismaps.mapping.layers.WmtsLayer
+import com.arcgismaps.mapping.kml.KmlDataset
+import com.arcgismaps.raster.ImageServiceRaster
+import com.arcgismaps.raster.Raster
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -113,6 +118,25 @@ class WmsLayerRef(appContext: AppContext, url: String, layerNames: List<String>)
 /** Operational WMTS layer (Web Map Tile Service) backed by a service URL + layer id. */
 class WmtsLayerRef(appContext: AppContext, url: String, layerId: String) : LayerRef(appContext) {
   override val layer: WmtsLayer = WmtsLayer(url, layerId)
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational raster layer from a remote image service or a local raster file. */
+class RasterLayerRef(appContext: AppContext, source: Map<String, Any?>) : LayerRef(appContext) {
+  override val layer: RasterLayer = RasterLayer(rasterFromSource(source))
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Builds a [Raster] from a JS source dict: `{type:"imageService",url}` or `{type:"file",path}`. */
+private fun rasterFromSource(s: Map<String, Any?>): Raster =
+  if (s["type"] == "file") Raster.createWithPath(s["path"] as? String ?: "")
+  else ImageServiceRaster(s["url"] as? String ?: "")
+
+/** Operational KML layer from a remote .kml/.kmz URL or local file. */
+class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: KmlLayer = KmlLayer(KmlDataset(url))
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

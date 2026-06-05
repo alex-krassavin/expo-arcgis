@@ -5,10 +5,12 @@ import type {
   FeatureLayerProps,
   GraphicProps,
   IntegratedMeshLayerProps,
+  KmlLayerProps,
   MapImageLayerProps,
   MapProps,
   Ogc3DTilesLayerProps,
   PointCloudLayerProps,
+  RasterLayerProps,
   Renderer,
   SceneLayerProps,
   SceneProps,
@@ -74,6 +76,8 @@ declare class ExpoArcgisModule extends NativeModule {
   OpenStreetMapLayerRef: new () => LayerRef;
   WmsLayerRef: new (props: WmsLayerProps) => LayerRef;
   WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
+  RasterLayerRef: new (props: RasterLayerProps) => LayerRef;
+  KmlLayerRef: new (props: KmlLayerProps) => LayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
 }

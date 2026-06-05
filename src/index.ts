@@ -27,6 +27,8 @@ export {
   OpenStreetMapLayer,
   WmsLayer,
   WmtsLayer,
+  RasterLayer,
+  KmlLayer,
 } from './layers';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';

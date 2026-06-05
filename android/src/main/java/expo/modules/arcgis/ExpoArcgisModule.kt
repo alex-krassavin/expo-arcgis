@@ -172,6 +172,26 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    Class(RasterLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        @Suppress("UNCHECKED_CAST")
+        val source = props["source"] as? Map<String, Any?> ?: emptyMap()
+        RasterLayerRef(appContext, source).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: RasterLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(KmlLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        KmlLayerRef(appContext, props["url"] as String).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: KmlLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef::class) {
       Constructor { GraphicsOverlayRef(appContext) }

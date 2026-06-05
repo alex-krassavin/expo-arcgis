@@ -194,6 +194,28 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    Class(RasterLayerRef.self) {
+      Constructor { (props: [String: Any]) -> RasterLayerRef in
+        let ref = RasterLayerRef(source: props["source"] as? [String: Any] ?? [:])
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: RasterLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
+    Class(KmlLayerRef.self) {
+      Constructor { (props: [String: Any]) -> KmlLayerRef in
+        let ref = KmlLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: KmlLayerRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef.self) {
       Constructor { () -> GraphicsOverlayRef in GraphicsOverlayRef() }

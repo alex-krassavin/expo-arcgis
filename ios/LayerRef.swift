@@ -108,3 +108,25 @@ public final class WmtsLayerRef: LayerRef {
     super.init(layer: WMTSLayer(url: URL(string: url)!, layerID: layerID))
   }
 }
+
+/// Operational raster layer from a remote image service or a local raster file.
+public final class RasterLayerRef: LayerRef {
+  init(source: [String: Any]) {
+    super.init(layer: RasterLayer(raster: rasterFromSource(source)))
+  }
+}
+
+/// Builds a `Raster` from a JS source dict: `{ type: "imageService", url }` or `{ type: "file", path }`.
+func rasterFromSource(_ s: [String: Any]) -> Raster {
+  if (s["type"] as? String) == "file", let path = s["path"] as? String {
+    return Raster(fileURL: URL(fileURLWithPath: path))
+  }
+  return ImageServiceRaster(url: URL(string: s["url"] as? String ?? "")!)
+}
+
+/// Operational KML layer from a remote `.kml`/`.kmz` URL or local file.
+public final class KmlLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: KMLLayer(dataset: KMLDataset(url: URL(string: url)!)))
+  }
+}

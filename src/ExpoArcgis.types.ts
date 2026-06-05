@@ -139,6 +139,15 @@ export type WmsLayerProps = LayerProps & { url: string; layerNames: string[] };
 /** Props for a `<WmtsLayer>` — mirror the native WMTS layer (service URL + layer id). */
 export type WmtsLayerProps = LayerProps & { url: string; layerId: string };
 
+/** Raster source for a `<RasterLayer>`: a remote ArcGIS image service or a local raster file. */
+export type RasterSource = { type: 'imageService'; url: string } | { type: 'file'; path: string };
+
+/** Props for a `<RasterLayer>` — mirror the native `RasterLayer` (image service or local raster). */
+export type RasterLayerProps = LayerProps & { source: RasterSource };
+
+/** Props for a `<KmlLayer>` — mirror `KMLLayer` (remote `.kml`/`.kmz` URL or local file). */
+export type KmlLayerProps = LayerProps & { url: string };
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────

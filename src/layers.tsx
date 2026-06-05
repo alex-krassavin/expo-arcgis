@@ -1,8 +1,10 @@
 import type {
   IntegratedMeshLayerProps,
+  KmlLayerProps,
   Ogc3DTilesLayerProps,
   OpenStreetMapLayerProps,
   PointCloudLayerProps,
+  RasterLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
   WmsLayerProps,
@@ -49,4 +51,14 @@ export const WmsLayer = createLayerComponent<WmsLayerProps>(
 /** Declarative WMTS layer (Web Map Tile Service: URL + layer id). */
 export const WmtsLayer = createLayerComponent<WmtsLayerProps>(
   (props) => new ExpoArcgisModule.WmtsLayerRef(props)
+);
+
+/** Declarative `RasterLayer` from a remote image service or a local raster file. */
+export const RasterLayer = createLayerComponent<RasterLayerProps>(
+  (props) => new ExpoArcgisModule.RasterLayerRef(props)
+);
+
+/** Declarative `KmlLayer` from a remote `.kml`/`.kmz` URL or a local file. */
+export const KmlLayer = createLayerComponent<KmlLayerProps>(
+  (props) => new ExpoArcgisModule.KmlLayerRef(props)
 );
