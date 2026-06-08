@@ -37,6 +37,7 @@ export { AnalysisOverlay } from './AnalysisOverlay';
 export { Viewshed } from './Viewshed';
 export { LineOfSight } from './LineOfSight';
 export { GeometryEditor } from './GeometryEditor';
+export { UtilityNetwork } from './UtilityNetwork';
 export { geometryEngine } from './geometryEngine';
 export { coordinateFormatter } from './coordinateFormatter';
 export { geocoder } from './geocoder';

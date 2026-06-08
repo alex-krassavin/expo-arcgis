@@ -22,6 +22,8 @@ import type {
   SceneProps,
   TargetVisibility,
   TileLayerProps,
+  UtilityElementDescriptor,
+  UtilityTraceResult,
   VectorTileLayerProps,
   ViewshedProps,
   WebTiledLayerProps,
@@ -117,6 +119,20 @@ export declare class SceneRef extends SharedObject {
   removeLayer(layer: LayerRef): void;
 }
 
+/**
+ * Reference to a native `UtilityNetwork` loaded from a feature service. The `<UtilityNetwork>`
+ * component builds one, loads it (attaching it to the map), and runs traces through it.
+ */
+export declare class UtilityNetworkRef extends SharedObject {
+  /** Builds + loads the network, adds it to `map`, and resolves with the network name. */
+  load(map: MapRef): Promise<string>;
+  /** Runs a trace and returns the element results. */
+  trace(
+    traceType: string,
+    startingLocations: UtilityElementDescriptor[]
+  ): Promise<UtilityTraceResult>;
+}
+
 /** The geo model that operational layers attach to — a `<Map>` or a `<Scene>`. */
 export type GeoModelRef = MapRef | SceneRef;
 
@@ -152,6 +168,7 @@ declare class ExpoArcgisModule extends NativeModule {
   AnalysisOverlayRef: new () => AnalysisOverlayRef;
   ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
   LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
+  UtilityNetworkRef: new (props: { serviceGeodatabaseUrl: string }) => UtilityNetworkRef;
 }
 
 export default requireNativeModule<ExpoArcgisModule>('ExpoArcgis');

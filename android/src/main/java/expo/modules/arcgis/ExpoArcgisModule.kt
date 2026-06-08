@@ -270,6 +270,19 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: LineOfSightRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
+    // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
+    Class(UtilityNetworkRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        UtilityNetworkRef(appContext, props["serviceGeodatabaseUrl"] as? String ?: "")
+      }
+      AsyncFunction("load") Coroutine { ref: UtilityNetworkRef, map: MapRef ->
+        ref.load(map)
+      }
+      AsyncFunction("trace") Coroutine { ref: UtilityNetworkRef, traceType: String, startingLocations: List<Map<String, Any?>> ->
+        ref.trace(traceType, startingLocations)
+      }
+    }
+
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange.
     Class(GeometryEditorRef::class) {
       Constructor { GeometryEditorRef(appContext) }

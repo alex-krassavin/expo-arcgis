@@ -698,6 +698,71 @@ export type GeoprocessingResult = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Utility network — load a network and run traces via `<UtilityNetwork>`.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** A utility-network trace algorithm. Mirrors the native `UtilityTraceParameters.TraceType`. */
+export type UtilityTraceType =
+  | 'connected'
+  | 'subnetwork'
+  | 'upstream'
+  | 'downstream'
+  | 'isolation'
+  | 'loops'
+  | 'shortestPath';
+
+/**
+ * Describes a starting location for a trace — the network element to begin from, identified by
+ * its asset-type path and global id. The native side resolves it to a `UtilityElement`.
+ */
+export type UtilityElementDescriptor = {
+  /** Network source name (e.g. `'Electric Distribution Device'`). */
+  networkSource: string;
+  /** Asset group name (e.g. `'Circuit Breaker'`). */
+  assetGroup: string;
+  /** Asset type name (e.g. `'Three Phase'`). */
+  assetType: string;
+  /** Feature global id (`{...}` UUID string). */
+  globalId: string;
+};
+
+/** One element returned by a trace. Mirrors the native `UtilityElement`. */
+export type UtilityElementInfo = {
+  objectId: number;
+  globalId: string;
+  networkSource: string;
+  assetGroup: string;
+  assetType: string;
+};
+
+/** Result of `UtilityNetwork.trace`. Flattens the native `UtilityElementTraceResult`. */
+export type UtilityTraceResult = {
+  /** Number of elements found by the trace. */
+  elementCount: number;
+  /** The elements found by the trace. */
+  elements: UtilityElementInfo[];
+};
+
+/** Props for `<UtilityNetwork>` — a utility network loaded from a feature service, a child of `<Map>`. */
+export type UtilityNetworkProps = {
+  /** Feature-service URL of the utility network's service geodatabase. May require `setTokenCredential`. */
+  serviceGeodatabaseUrl: string;
+  /** Called once the network has loaded, with its name. */
+  onLoad?: (name: string) => void;
+  /** Called if the network fails to load. */
+  onLoadError?: (message: string) => void;
+};
+
+/** Imperative handle exposed by `<UtilityNetwork>` via `ref`. */
+export type UtilityNetworkHandle = {
+  /** Runs a trace of `traceType` from the given starting locations. */
+  trace(
+    traceType: UtilityTraceType,
+    startingLocations: UtilityElementDescriptor[]
+  ): Promise<UtilityTraceResult>;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────
 

@@ -294,6 +294,19 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: LineOfSightRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
+    // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
+    Class(UtilityNetworkRef.self) {
+      Constructor { (props: [String: Any]) -> UtilityNetworkRef in
+        UtilityNetworkRef(serviceGeodatabaseUrl: props["serviceGeodatabaseUrl"] as? String ?? "")
+      }
+      AsyncFunction("load") { (ref: UtilityNetworkRef, map: MapRef) in
+        try await ref.load(map)
+      }
+      AsyncFunction("trace") { (ref: UtilityNetworkRef, traceType: String, startingLocations: [[String: Any]]) in
+        try await ref.trace(traceType, startingLocations)
+      }
+    }
+
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
     // (no `Events(...)` element on Swift `Class`; SharedObject.emit + JS addListener suffice).
     Class(GeometryEditorRef.self) {

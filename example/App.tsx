@@ -16,6 +16,8 @@ import {
   router,
   Scene,
   SceneLayer,
+  setTokenCredential,
+  UtilityNetwork,
   Viewshed,
   SceneView,
   WmsLayer,
@@ -31,6 +33,7 @@ import {
   type Renderer,
   type Surface,
   type TapEventPayload,
+  type UtilityNetworkHandle,
   type Viewpoint,
 } from 'expo-arcgis';
 import { useRef, useState } from 'react';
@@ -142,6 +145,10 @@ const SUN_TIME = Date.UTC(2024, 5, 21, 19, 0, 0);
 // Esri sample Viewshed geoprocessing service (public): observation point + distance → visible polygons.
 const VIEWSHED_GP =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
+// Esri sample Naperville electric utility network (token-secured; public sample login).
+const NAPERVILLE_UN =
+  'https://sampleserver7.arcgisonline.com/server/rest/services/UtilityNetwork/NapervilleElectric/FeatureServer';
+const UN_LOGIN = { username: 'viewer01', password: 'I68VGU^nMurF' };
 
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
@@ -167,7 +174,9 @@ export default function App() {
   const [geocoded, setGeocoded] = useState<Geometry | null>(null);
   const [routeGeom, setRouteGeom] = useState<Geometry | null>(null);
   const [gpGeometries, setGpGeometries] = useState<Geometry[]>([]);
+  const [un, setUn] = useState(false);
   const mapRef = useRef<MapViewHandle>(null);
+  const unRef = useRef<UtilityNetworkHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
 
@@ -245,6 +254,16 @@ export default function App() {
   async function suggestPlaces() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
+  }
+  // "Load UN" — authenticate, then mount the Naperville utility network (<UtilityNetwork>).
+  async function loadUN() {
+    setStatus('Utility network: authenticating…');
+    try {
+      await setTokenCredential(NAPERVILLE_UN, UN_LOGIN.username, UN_LOGIN.password);
+      setUn(true);
+    } catch (e) {
+      setStatus(`UN auth error: ${String(e)}`);
+    }
   }
   // "Viewshed GP" — run the Esri Viewshed geoprocessing service (geoprocessor namespace).
   async function viewshedGP() {
@@ -454,6 +473,14 @@ export default function App() {
             >
               {showLayer && <MapImageLayer url={USA_MAP_SERVICE} opacity={0.7} />}
               {wms && <WmsLayer url={WMS_URL} layerNames={['OSM-WMS']} opacity={0.6} />}
+              {un && (
+                <UtilityNetwork
+                  ref={unRef}
+                  serviceGeodatabaseUrl={NAPERVILLE_UN}
+                  onLoad={(name) => setStatus(`UN loaded: ${name}`)}
+                  onLoadError={(message) => setStatus(`UN error: ${message}`)}
+                />
+              )}
               {/* Styled feature layer: class-breaks by population + labels (+ clustering toggle) */}
               {cities && (
                 <FeatureLayer
@@ -549,6 +576,7 @@ export default function App() {
                 <Button title="Viewshed GP" onPress={viewshedGP} />
                 <Button title="Suggest" onPress={suggestPlaces} />
                 <Button title="Route" onPress={solveRouteDemo} />
+                <Button title={un ? 'UN loaded' : 'Load UN'} onPress={loadUN} />
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />
