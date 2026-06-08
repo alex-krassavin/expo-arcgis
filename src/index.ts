@@ -40,6 +40,7 @@ export { Graphic } from './Graphic';
 export { AnalysisOverlay } from './AnalysisOverlay';
 export { Viewshed } from './Viewshed';
 export { LineOfSight } from './LineOfSight';
+export { DistanceMeasurement } from './DistanceMeasurement';
 export { GeometryEditor } from './GeometryEditor';
 export { UtilityNetwork } from './UtilityNetwork';
 export { geometryEngine } from './geometryEngine';

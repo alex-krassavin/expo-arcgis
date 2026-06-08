@@ -2,6 +2,7 @@ package expo.modules.arcgis
 
 import com.arcgismaps.analysis.interactive.Analysis
 import com.arcgismaps.analysis.interactive.ExploratoryLineOfSightTargetVisibility
+import com.arcgismaps.analysis.interactive.ExploratoryLocationDistanceMeasurement
 import com.arcgismaps.analysis.interactive.ExploratoryLocationLineOfSight
 import com.arcgismaps.analysis.interactive.ExploratoryLocationViewshed
 import com.arcgismaps.geometry.Point
@@ -102,6 +103,49 @@ class LineOfSightRef(appContext: AppContext, props: Map<String, Any?>) : Analysi
       when (key) {
         "observer" -> analysisPoint(value)?.let { lineOfSight.observerLocation = it }
         "target" -> analysisPoint(value)?.let { lineOfSight.targetLocation = it }
+      }
+    }
+  }
+}
+
+/**
+ * SharedObject wrapping an [ExploratoryLocationDistanceMeasurement] — direct/horizontal/vertical
+ * distance between two 3D points. Streams the measurements to JS via `onMeasurementChange`.
+ */
+class DistanceMeasurementRef(appContext: AppContext, props: Map<String, Any?>) : AnalysisRef(appContext) {
+  private val measurement = ExploratoryLocationDistanceMeasurement(
+    analysisPoint(props["startLocation"]) ?: Point(0.0, 0.0, SpatialReference.wgs84()),
+    analysisPoint(props["endLocation"]) ?: Point(0.0, 0.0, SpatialReference.wgs84()),
+  )
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+  override val analysis: Analysis get() = measurement
+
+  init {
+    scope.launch {
+      measurement.measurementChanged.collect { m ->
+        emit(
+          "onMeasurementChange",
+          mapOf(
+            "directDistance" to m.directDistance.value,
+            "horizontalDistance" to m.horizontalDistance.value,
+            "verticalDistance" to m.verticalDistance.value,
+          ),
+        )
+      }
+    }
+  }
+
+  override fun deallocate() {
+    scope.cancel()
+    super.deallocate()
+  }
+
+  fun applyProps(changed: Map<String, Any?>) {
+    changed.forEach { (key, value) ->
+      when (key) {
+        "startLocation" -> analysisPoint(value)?.let { measurement.startLocation = it }
+        "endLocation" -> analysisPoint(value)?.let { measurement.endLocation = it }
       }
     }
   }

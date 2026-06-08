@@ -3,6 +3,7 @@ import { SharedObject } from 'expo-modules-core';
 
 import type {
   ConnectionStatus,
+  DistanceMeasurementProps,
   DynamicEntityLayerProps,
   Feature,
   FeatureLayerProps,
@@ -106,6 +107,18 @@ type LineOfSightEvents = {
 
 /** Reference to a native exploratory line of sight (`ExploratoryLocationLineOfSight`). */
 export declare class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
+
+/** Events emitted by a `DistanceMeasurementRef` as the measured distances change. */
+type DistanceMeasurementEvents = {
+  onMeasurementChange(payload: {
+    directDistance: number;
+    horizontalDistance: number;
+    verticalDistance: number;
+  }): void;
+};
+
+/** Reference to a native distance measurement (`ExploratoryLocationDistanceMeasurement`). */
+export declare class DistanceMeasurementRef extends AnalysisRef<DistanceMeasurementEvents> {}
 
 /** Reference to a native `AnalysisOverlay` owned by a `<SceneView>`. */
 export declare class AnalysisOverlayRef extends SharedObject {
@@ -230,6 +243,9 @@ declare class ExpoArcgisModule extends NativeModule {
   AnalysisOverlayRef: new () => AnalysisOverlayRef;
   ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
   LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
+  DistanceMeasurementRef: new (
+    props: Pick<DistanceMeasurementProps, 'startLocation' | 'endLocation'>
+  ) => DistanceMeasurementRef;
   UtilityNetworkRef: new (props: { serviceGeodatabaseUrl: string }) => UtilityNetworkRef;
 }
 

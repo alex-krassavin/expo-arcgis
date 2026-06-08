@@ -345,6 +345,11 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: LineOfSightRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
+    Class(DistanceMeasurementRef.self) {
+      Constructor { (props: [String: Any]) -> DistanceMeasurementRef in DistanceMeasurementRef(props: props) }
+      Function("applyProps") { (ref: DistanceMeasurementRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+
     // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
     Class(UtilityNetworkRef.self) {
       Constructor { (props: [String: Any]) -> UtilityNetworkRef in

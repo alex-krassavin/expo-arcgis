@@ -318,6 +318,12 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: LineOfSightRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
+    Class(DistanceMeasurementRef::class) {
+      Constructor { props: Map<String, Any?> -> DistanceMeasurementRef(appContext, props) }
+      Events("onMeasurementChange")
+      Function("applyProps") { ref: DistanceMeasurementRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+
     // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
     Class(UtilityNetworkRef::class) {
       Constructor { props: Map<String, Any?> ->

@@ -759,6 +759,22 @@ export type LineOfSightProps = {
   onTargetVisibilityChange?: (visibility: TargetVisibility) => void;
 };
 
+/** Direct / horizontal / vertical distance (in the measurement's unit, default meters). */
+export type DistanceMeasurement = {
+  directDistance: number;
+  horizontalDistance: number;
+  verticalDistance: number;
+};
+
+export type DistanceMeasurementProps = {
+  /** Start point of the measurement. */
+  startLocation: PointGeometry;
+  /** End point of the measurement. */
+  endLocation: PointGeometry;
+  /** Called as the measured distances change. */
+  onMeasurementChange?: (measurement: DistanceMeasurement) => void;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geoprocessing — server-side analysis via the `geoprocessor` namespace.
 // ────────────────────────────────────────────────────────────────────────────

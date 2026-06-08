@@ -126,6 +126,53 @@ public final class LineOfSightRef: AnalysisRef {
   }
 }
 
+/// SharedObject wrapping an `ExploratoryLocationDistanceMeasurement` — direct/horizontal/vertical
+/// distance between two 3D points. Streams the measurements to JS via `onMeasurementChange`.
+public final class DistanceMeasurementRef: AnalysisRef {
+  private let measurement: ExploratoryLocationDistanceMeasurement
+  private var observation: Task<Void, Never>?
+
+  init(props: [String: Any]) {
+    let start = (props["startLocation"] as? [String: Any]).flatMap(geometryFromDict) as? Point
+      ?? Point(x: 0, y: 0, spatialReference: .wgs84)
+    let end = (props["endLocation"] as? [String: Any]).flatMap(geometryFromDict) as? Point
+      ?? Point(x: 0, y: 0, spatialReference: .wgs84)
+    let measurement = ExploratoryLocationDistanceMeasurement(startLocation: start, endLocation: end)
+    self.measurement = measurement
+    super.init(analysis: measurement)
+    observation = Task { [weak self] in
+      guard let stream = self?.measurement.measurements else { return }
+      for await m in stream {
+        guard let self else { break }
+        self.emit(event: "onMeasurementChange", payload: [
+          "directDistance": m.directDistance.value,
+          "horizontalDistance": m.horizontalDistance.value,
+          "verticalDistance": m.verticalDistance.value,
+        ])
+      }
+    }
+  }
+
+  override public func sharedObjectWillRelease() {
+    observation?.cancel()
+    observation = nil
+    super.sharedObjectWillRelease()
+  }
+
+  func applyProps(_ changed: [String: Any]) {
+    for (key, value) in changed {
+      switch key {
+      case "startLocation":
+        if let p = (value as? [String: Any]).flatMap(geometryFromDict) as? Point { measurement.startLocation = p }
+      case "endLocation":
+        if let p = (value as? [String: Any]).flatMap(geometryFromDict) as? Point { measurement.endLocation = p }
+      default:
+        break
+      }
+    }
+  }
+}
+
 /// Maps the native line-of-sight visibility enum to the JS `TargetVisibility` union.
 private func visibilityString(_ v: ExploratoryLineOfSight.TargetVisibility) -> String {
   switch v {
