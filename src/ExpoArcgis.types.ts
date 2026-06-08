@@ -785,7 +785,7 @@ export type LineOfSightProps = {
 };
 
 /** Direct / horizontal / vertical distance (in the measurement's unit, default meters). */
-export type DistanceMeasurement = {
+export type DistanceMeasurementResult = {
   directDistance: number;
   horizontalDistance: number;
   verticalDistance: number;
@@ -797,7 +797,7 @@ export type DistanceMeasurementProps = {
   /** End point of the measurement. */
   endLocation: PointGeometry;
   /** Called as the measured distances change. */
-  onMeasurementChange?: (measurement: DistanceMeasurement) => void;
+  onMeasurementChange?: (measurement: DistanceMeasurementResult) => void;
 };
 
 // ────────────────────────────────────────────────────────────────────────────
