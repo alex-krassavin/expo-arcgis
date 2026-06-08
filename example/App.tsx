@@ -19,6 +19,8 @@ import {
   Scene,
   SceneLayer,
   setTokenCredential,
+  signInWithOAuth,
+  signOut,
   UtilityNetwork,
   Viewshed,
   SceneView,
@@ -44,7 +46,7 @@ import {
   type Viewpoint,
 } from 'expo-arcgis';
 import { useRef, useState } from 'react';
-import { Button, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
+import { Button, Linking, PermissionsAndroid, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // "Add a point, line, and polygon" tutorial geometries (Santa Monica Mountains).
@@ -370,6 +372,33 @@ export default function App() {
       } else setStatus('Preplanned: no path returned');
     } catch (e) {
       setStatus(`Preplanned error: ${String(e)}`);
+    }
+  }
+  // "Sign in (OAuth)" — OAuth 2.0 user login (needs a registered OAuth app's client id + redirect).
+  async function oauthSignIn() {
+    setStatus('OAuth: signing in…');
+    try {
+      // The module has no browser dependency — the consumer opens the auth session. Here we use
+      // React Native's Linking; a real app could use expo-web-browser / expo-auth-session instead.
+      const openAuthSession = (authorizeUrl: string, redirectUrl: string) =>
+        new Promise<string | null>((resolve) => {
+          const sub = Linking.addEventListener('url', ({ url }) => {
+            if (url.startsWith(redirectUrl)) {
+              sub.remove();
+              resolve(url);
+            }
+          });
+          Linking.openURL(authorizeUrl);
+        });
+      await signInWithOAuth(
+        'https://www.arcgis.com',
+        'YOUR_CLIENT_ID',
+        'expo-arcgis-example://auth',
+        openAuthSession
+      );
+      setStatus('OAuth sign-in ✅ — secured portal items now load');
+    } catch (e) {
+      setStatus(`OAuth error: ${String(e)}`);
     }
   }
   // "Load UN" — authenticate, then mount the Naperville utility network (<UtilityNetwork>).
@@ -761,6 +790,8 @@ export default function App() {
                 <Button title="Suggest" onPress={suggestPlaces} />
                 <Button title="Route" onPress={solveRouteDemo} />
                 <Button title={un ? 'UN loaded' : 'Load UN'} onPress={loadUN} />
+                <Button title="Sign in (OAuth)" onPress={oauthSignIn} />
+                <Button title="Sign out" onPress={() => signOut()} />
                 {un && <Button title="Connected" onPress={() => runTrace('connected')} />}
                 {un && <Button title="Downstream" onPress={() => runTrace('downstream')} />}
                 {un && <Button title="Configs" onPress={namedConfigTrace} />}

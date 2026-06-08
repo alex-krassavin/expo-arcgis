@@ -43,6 +43,14 @@ class ExpoArcgisModule : Module() {
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 
+    // OAuth user sign-in (Android): JS opens the browser between these two steps.
+    AsyncFunction("oauthStart") Coroutine { portalUrl: String, clientId: String, redirectUrl: String ->
+      OAuthController.start(portalUrl, clientId, redirectUrl)
+    }
+    AsyncFunction("oauthComplete") Coroutine { redirectUrl: String ->
+      OAuthController.complete(redirectUrl)
+    }
+
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef::class) {
       Constructor { props: Map<String, Any?>? ->

@@ -677,3 +677,23 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 ### Итог раздела
 `<DynamicEntityLayer>` (stream-сервис или custom feed) + connectionStatus-событие + trackDisplay + queryDynamicEntities + pushObservation. Сборочно верифицировано; живой поток (сеть + stream-сервис) — на устройстве. **DEFER:** popups, `ArcGISStreamServiceFilter`, purge/reconnection-тюнинг, observation-history, `onDynamicEntityChanged`-события, pull-режим (periodic refresh).
+
+## 29. Починка Security & Authentication (план одобрен, 2 фазы)
+
+Старая авторизация (`setTokenCredential(serviceUrl, username, password)` → ручное добавление токена в `arcGISCredentialStore` ДО загрузки) была хрупкой. Туториал рекомендует `ArcGISAuthenticationChallengeHandler` (реактивно). Пользователь: «делай первый 2 пункта» (token-handler + OAuth).
+
+### Фаза 1 — AUTH1: challenge-handler для токенов ✅
+- `AuthChallengeHandler.swift`/`.kt` (новый) — синглтон `ArcGISAuthenticationChallengeHandler` с опциональным логином. `handle(challenge)`: **Swift `TokenCredential.credential(for: challenge, username:, password:)`** (overload от challenge!) / **Kotlin `TokenCredential.create(challenge.requestUrl, …)`** → `Disposition.continueWithCredential` / `ArcGISAuthenticationChallengeResponse.ContinueWithCredential` (иначе `continueWithoutCredential`/`ContinueAndFail`). Ставится в `OnCreate`: `authenticationManager.arcGISAuthenticationChallengeHandler = handler`.
+- `setTokenCredential(username, password)` — **убран serviceUrl** (sync `Function`, хендлер берёт URL из challenge). `signOut()` — очистка логина + `arcGISCredentialStore.removeAll()`. Демо: UN-логин без URL.
+- **Верификация:** TS/Android/iOS ✅.
+
+### Фаза 2 — AUTH2: OAuth user sign-in ✅
+- `signInWithOAuth(portalUrl, clientId, redirectUrl, openAuthSession?)`. **iOS:** натив `OAuthUserCredential.credential(for: OAuthUserConfiguration(portalURL:clientID:redirectURL:))` — SDK сам презентует `ASWebAuthenticationSession` → `arcGISCredentialStore.add(cred)`. **Android:** `oauthStart` → `OAuthUserCredential.create(config){ signIn -> }` (suspend; `OAuthController` через `CompletableDeferred` отдаёт `signIn.authorizeUrl`) → JS открывает браузер → `oauthComplete(redirect)` → `signIn.complete(redirect)` → cred в store.
+- **АРХИТЕКТУРНОЕ решение пользователя:** браузер — **проблема потребителя, не модуля**. `signInWithOAuth` принимает callback `openAuthSession: (authorizeUrl, redirectUrl) => Promise<string|null>`; модуль **БЕЗ зависимости от браузера** (нет expo-web-browser). Демо передаёт callback через `Linking` (встроенный; в проде — expo-web-browser/expo-auth-session). iOS callback не нужен (auto-present).
+- **Верификация:** TS · Android (`:expo-arcgis`+`:app`) · iOS (`ExpoArcgis`+`expoarcgisexample`) ✅.
+
+### Build-infra урок
+Добавление НОВОГО пода (expo-web-browser) в example + конкурентный `pod install`/`clean` за-churn-или iOS-workspace (повреждённый `Pods.xcodeproj`, пропавшие per-pod схемы, битые module-map'ы Swift-подов в Expo-precompiled). Лечение: развязать модуль от браузер-зависимости (callback) → убрать expo-web-browser отовсюду → `pod install` регенерит pod-набор обратно в known-good. **Также:** `plugin/build` (config-plugin) — НЕтрекаемый build-артефакт; `npm install`/prepare его чистит, а инкрементальный `tsbuildinfo` потом пропускает эмит → перед full-app-сборкой `rm plugin/tsconfig.tsbuildinfo && npm run build:plugin`.
+
+### Итог раздела
+Реактивный token-auth (challenge-handler) + OAuth-вход (iOS auto-present / Android callback-based, модуль без браузер-зависимости) + `signOut`. Сборочно верифицировано; живой вход — на устройстве (token: sample-логин; OAuth: зарегистрированное приложение + redirect). **DEFER:** per-service креды, persistent store, OAuth через сам challenge-handler, IAP/PKI/app-login, custom refresh, server-revoke.

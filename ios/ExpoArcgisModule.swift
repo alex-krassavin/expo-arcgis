@@ -31,6 +31,15 @@ public class ExpoArcgisModule: Module {
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 
+    // OAuth user sign-in. On iOS the SDK presents the auth browser (ASWebAuthenticationSession)
+    // itself; we just await the credential and cache it. (Android drives the browser from JS.)
+    AsyncFunction("signInWithOAuth") { (portalUrl: String, clientId: String, redirectUrl: String) in
+      guard let portal = URL(string: portalUrl), let redirect = URL(string: redirectUrl) else { return }
+      let configuration = OAuthUserConfiguration(portalURL: portal, clientID: clientId, redirectURL: redirect)
+      let credential = try await OAuthUserCredential.credential(for: configuration)
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential)
+    }
+
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef.self) {
       Constructor { (props: [String: Any]?) -> MapRef in
