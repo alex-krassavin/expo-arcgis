@@ -223,6 +223,17 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    // Real-time DynamicEntityLayer (stream service) — emits onConnectionStatusChange.
+    Class(DynamicEntityLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        DynamicEntityLayerRef(appContext, props).also { it.applyProps(props) }
+      }
+      Events("onConnectionStatusChange")
+      Function("applyProps") { ref: DynamicEntityLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+    }
+
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.
     Class(GraphicsOverlayRef::class) {
       Constructor { GraphicsOverlayRef(appContext) }

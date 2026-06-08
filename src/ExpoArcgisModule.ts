@@ -2,6 +2,8 @@ import { NativeModule, requireNativeModule } from 'expo';
 import { SharedObject } from 'expo-modules-core';
 
 import type {
+  ConnectionStatus,
+  DynamicEntityLayerProps,
   Feature,
   FeatureLayerProps,
   Geometry,
@@ -34,7 +36,9 @@ import type {
 } from './ExpoArcgis.types';
 
 /** Reference to a native operational layer (FeatureLayer / ArcGISTiledLayer), shared by reference. */
-export declare class LayerRef extends SharedObject {
+export declare class LayerRef<
+  TEvents extends Record<string, (...args: any[]) => void> = Record<never, never>,
+> extends SharedObject<TEvents> {
   applyProps(changed: Record<string, unknown>): void;
 }
 
@@ -50,6 +54,20 @@ export declare class FeatureLayerRef extends LayerRef {
   addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
   updateFeature(objectId: number, changes: Record<string, unknown>): Promise<void>;
   deleteFeature(objectId: number): Promise<void>;
+}
+
+/** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */
+type DynamicEntityLayerEvents = {
+  onConnectionStatusChange: (event: { status: ConnectionStatus }) => void;
+};
+
+/** Reference to a native real-time `DynamicEntityLayer` (stream service / custom feed). */
+export declare class DynamicEntityLayerRef extends LayerRef<DynamicEntityLayerEvents> {
+  queryDynamicEntities(): Promise<{
+    count: number;
+    entities: { attributes: Record<string, unknown>; geometry: Geometry | null }[];
+  }>;
+  pushObservation(attributes: Record<string, unknown>, geometry: Geometry): void;
 }
 
 /** Reference to a native `Graphic` drawn on a graphics overlay. */
@@ -110,15 +128,15 @@ export declare class GeometryEditorRef extends SharedObject<GeometryEditorEvents
  */
 export declare class MapRef extends SharedObject {
   applyProps(changed: Partial<MapProps>): void;
-  addLayer(layer: LayerRef): void;
-  removeLayer(layer: LayerRef): void;
+  addLayer(layer: LayerRef<any>): void;
+  removeLayer(layer: LayerRef<any>): void;
 }
 
 /** Reference to a native `ArcGISScene` (3D). Same shape as `MapRef`. */
 export declare class SceneRef extends SharedObject {
   applyProps(changed: Partial<SceneProps>): void;
-  addLayer(layer: LayerRef): void;
-  removeLayer(layer: LayerRef): void;
+  addLayer(layer: LayerRef<any>): void;
+  removeLayer(layer: LayerRef<any>): void;
 }
 
 /**
@@ -192,6 +210,7 @@ declare class ExpoArcgisModule extends NativeModule {
   WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
   RasterLayerRef: new (props: RasterLayerProps) => LayerRef;
   KmlLayerRef: new (props: KmlLayerProps) => LayerRef;
+  DynamicEntityLayerRef: new (props: DynamicEntityLayerProps) => DynamicEntityLayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
   GeometryEditorRef: new () => GeometryEditorRef;

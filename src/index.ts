@@ -32,6 +32,7 @@ export {
   RasterLayer,
   KmlLayer,
 } from './layers';
+export { DynamicEntityLayer } from './DynamicEntityLayer';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
 export { AnalysisOverlay } from './AnalysisOverlay';

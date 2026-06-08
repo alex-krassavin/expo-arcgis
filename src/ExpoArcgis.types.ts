@@ -363,6 +363,58 @@ export type RasterLayerProps = LayerProps & { source: RasterSource };
 /** Props for a `<KmlLayer>` — mirror `KMLLayer` (remote `.kml`/`.kmz` URL or local file). */
 export type KmlLayerProps = LayerProps & { url: string };
 
+/** Connection state of a real-time `DynamicEntityDataSource`. Mirrors `ConnectionStatus`. */
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed';
+
+/** Track display options for a `<DynamicEntityLayer>` (history of past observations). */
+export type TrackDisplay = {
+  /** How many past observations to keep per track. */
+  maximumObservations?: number;
+  /** Whether to draw previous observations (the track line/points). */
+  showsPreviousObservations?: boolean;
+};
+
+/** Field definition for a custom dynamic-entity data source. */
+export type DynamicEntityField = {
+  name: string;
+  /** Field type. Defaults to `text`. */
+  type?: 'text' | 'int32' | 'int64' | 'float64' | 'date';
+};
+
+/** Config for a `CustomDynamicEntityDataSource` — push your own observations via `pushObservation`. */
+export type CustomDynamicSource = {
+  /** Attribute that identifies an entity (observations sharing it form one track). */
+  entityIdField: string;
+  /** The observation attribute schema. */
+  fields: DynamicEntityField[];
+};
+
+/** Props for `<DynamicEntityLayer>` — real-time moving entities from a stream service or custom feed. */
+export type DynamicEntityLayerProps = LayerProps & {
+  /** Stream service URL (a real-time WebSocket feed of moving entities). */
+  streamServiceUrl?: string;
+  /** Alternative to `streamServiceUrl`: a custom data source you feed via the ref's `pushObservation`. */
+  customSource?: CustomDynamicSource;
+  /** Track display (history of past observations). */
+  trackDisplay?: TrackDisplay;
+  /** Fired as the data source connects / disconnects. */
+  onConnectionStatusChange?: (status: ConnectionStatus) => void;
+};
+
+/** A live dynamic entity returned by `queryDynamicEntities`. */
+export type DynamicEntityInfo = {
+  attributes: Record<string, unknown>;
+  geometry: Geometry | null;
+};
+
+/** Imperative handle exposed by `<DynamicEntityLayer>` via `ref`. */
+export type DynamicEntityLayerHandle = {
+  /** Returns the data source's currently-tracked dynamic entities. */
+  queryDynamicEntities(): Promise<{ count: number; entities: DynamicEntityInfo[] }>;
+  /** Pushes an observation into a `customSource` (attributes + geometry). */
+  pushObservation(attributes: Record<string, unknown>, geometry: Geometry): void;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Geometries — mirror the native `Geometry` types (`Point` / `Polyline` / `Polygon`).
 // ────────────────────────────────────────────────────────────────────────────

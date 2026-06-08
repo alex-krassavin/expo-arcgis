@@ -1,6 +1,7 @@
 import {
   AnalysisOverlay,
   coordinateFormatter,
+  DynamicEntityLayer,
   FeatureLayer,
   geocoder,
   geoprocessor,
@@ -24,6 +25,7 @@ import {
   WmsLayer,
   type Camera,
   type Feature,
+  type DynamicEntityLayerHandle,
   type FeatureLayerHandle,
   type FeatureReduction,
   type Geometry,
@@ -108,6 +110,9 @@ const CITY_CLUSTER: FeatureReduction = { type: 'cluster', radius: 60 };
 
 // "Edit features": a public, anonymously-editable feature service (Esri sample).
 const WILDFIRE = 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0';
+// Esri sample real-time stream service (live moving vehicles around the NE US).
+const SANDY_RTGIS =
+  'https://realtimegis2016.esri.com:6443/arcgis/rest/services/SandyRTGIS/StreamServer';
 
 // "Device location": a short route for the simulated location data source (Santa Monica Mtns).
 const ROUTE: Geometry = {
@@ -199,8 +204,10 @@ export default function App() {
   const [un, setUn] = useState(false);
   const [offlinePath, setOfflinePath] = useState<string | null>(null);
   const [offlineJob, setOfflineJob] = useState<JobRef<OfflineMapResult> | null>(null);
+  const [realtime, setRealtime] = useState(false);
   const mapRef = useRef<MapViewHandle>(null);
   const sceneRef = useRef<SceneViewHandle>(null);
+  const realtimeRef = useRef<DynamicEntityLayerHandle>(null);
   const unRef = useRef<UtilityNetworkHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -630,6 +637,15 @@ export default function App() {
               )}
               {/* Editable feature layer — add / move / delete features via its ref */}
               {editLayer && <FeatureLayer ref={editRef} url={WILDFIRE} />}
+              {/* Real-time dynamic entities streamed from a stream service */}
+              {realtime && (
+                <DynamicEntityLayer
+                  ref={realtimeRef}
+                  streamServiceUrl={SANDY_RTGIS}
+                  trackDisplay={{ maximumObservations: 5, showsPreviousObservations: true }}
+                  onConnectionStatusChange={(s) => setStatus(`Real-time: ${s}`)}
+                />
+              )}
               <MapView
                 ref={mapRef}
                 style={styles.map}
@@ -726,6 +742,7 @@ export default function App() {
                 <Button title="Retry load" onPress={retryLoad} />
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
+                <Button title={realtime ? 'Stop RT' : 'Real-time'} onPress={() => setRealtime((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />
                 <Button title="Delete" onPress={deleteFeature} />
