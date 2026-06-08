@@ -1,5 +1,9 @@
 import Module from './ExpoArcgisGeometryModule';
-import type { Geometry, OfflineMapResult } from './ExpoArcgis.types';
+import type {
+  Geometry,
+  OfflineMapResult,
+  PreplannedMapAreaInfo,
+} from './ExpoArcgis.types';
 
 /**
  * Take maps and data offline, mirroring `ArcGIS.OfflineMapTask` and the related export/sync tasks.
@@ -18,4 +22,16 @@ export const offline = {
     downloadName: string
   ): Promise<OfflineMapResult> =>
     Module.generateOfflineMap(portalItemId, areaOfInterest, downloadName),
+
+  /** Lists the preplanned offline map areas published with the web map `portalItemId`. */
+  preplannedMapAreas: (portalItemId: string): Promise<PreplannedMapAreaInfo[]> =>
+    Module.preplannedMapAreas(portalItemId),
+
+  /** Downloads a preplanned offline map area (by `areaIndex`) into a directory named `downloadName`. */
+  downloadPreplannedOfflineMap: (
+    portalItemId: string,
+    areaIndex: number,
+    downloadName: string
+  ): Promise<OfflineMapResult> =>
+    Module.downloadPreplannedOfflineMap(portalItemId, areaIndex, downloadName),
 };

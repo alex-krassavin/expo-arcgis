@@ -811,6 +811,28 @@ export type OfflineMapResult = {
   path: string;
 };
 
+/** A preplanned offline map area published with a web map. Mirrors `PreplannedMapArea`. */
+export type PreplannedMapAreaInfo = {
+  /** Area title. */
+  title: string;
+  /** Index into the web map's preplanned areas (pass to `offline.downloadPreplannedOfflineMap`). */
+  index: number;
+};
+
+/** Result of a geodatabase download. Mirrors the generated `Geodatabase`. */
+export type OfflineGeodatabaseResult = {
+  /** Local filesystem path of the downloaded `.geodatabase`. */
+  path: string;
+  /** Number of feature tables in the geodatabase. */
+  tableCount: number;
+};
+
+/** Result of a tile-cache / vector-tiles export. */
+export type OfflineTileResult = {
+  /** Local filesystem path of the downloaded tile package (`.tpkx` / `.vtpk`). */
+  path: string;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────

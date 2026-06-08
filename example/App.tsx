@@ -280,6 +280,22 @@ export default function App() {
       setStatus(`Offline error: ${String(e)}`);
     }
   }
+  // "Preplanned" — list the web map's preplanned areas and download the first (offline namespace).
+  async function preplannedOffline() {
+    setStatus('Preplanned: listing areas…');
+    try {
+      const areas = await offline.preplannedMapAreas(OFFLINE_WEBMAP);
+      if (areas.length === 0) return setStatus('No preplanned areas');
+      setStatus(`Downloading preplanned "${areas[0].title}"…`);
+      const { path } = await offline.downloadPreplannedOfflineMap(OFFLINE_WEBMAP, areas[0].index, 'preplanned1');
+      if (path) {
+        setOfflinePath(path);
+        setStatus(`Preplanned "${areas[0].title}" ✅ (${areas.length} areas)`);
+      } else setStatus('Preplanned: no path returned');
+    } catch (e) {
+      setStatus(`Preplanned error: ${String(e)}`);
+    }
+  }
   // "Load UN" — authenticate, then mount the Naperville utility network (<UtilityNetwork>).
   async function loadUN() {
     setStatus('Utility network: authenticating…');
@@ -654,6 +670,7 @@ export default function App() {
                 {un && <Button title="Configs" onPress={namedConfigTrace} />}
                 {un && <Button title="Assoc" onPress={showAssociations} />}
                 <Button title="Take offline" onPress={takeOffline} />
+                <Button title="Preplanned" onPress={preplannedOffline} />
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />

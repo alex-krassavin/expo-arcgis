@@ -87,5 +87,11 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
       generateOfflineMap(appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)
     }
+    AsyncFunction("preplannedMapAreas") Coroutine { portalItemId: String ->
+      preplannedMapAreas(portalItemId)
+    }
+    AsyncFunction("downloadPreplannedOfflineMap") Coroutine { portalItemId: String, areaIndex: Int, downloadName: String ->
+      downloadPreplannedOfflineMap(appContext.reactContext?.filesDir, portalItemId, areaIndex, downloadName)
+    }
   }
 }

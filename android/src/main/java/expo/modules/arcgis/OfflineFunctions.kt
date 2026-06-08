@@ -36,3 +36,34 @@ internal suspend fun generateOfflineMap(
   job.result().getOrThrow()
   return mapOf("path" to dir.absolutePath)
 }
+
+private fun offlineMapTask(portalItemId: String): OfflineMapTask =
+  OfflineMapTask(PortalItem(Portal("https://www.arcgis.com", Portal.Connection.Anonymous), portalItemId))
+
+internal suspend fun preplannedMapAreas(portalItemId: String): List<Map<String, Any?>> {
+  val task = offlineMapTask(portalItemId)
+  task.load().getOrThrow()
+  return task.getPreplannedMapAreas().getOrThrow().mapIndexed { index, area ->
+    area.load()
+    mapOf("title" to area.portalItem.title, "index" to index)
+  }
+}
+
+internal suspend fun downloadPreplannedOfflineMap(
+  baseDir: File?,
+  portalItemId: String,
+  areaIndex: Int,
+  downloadName: String,
+): Map<String, Any?> {
+  baseDir ?: return mapOf("path" to "")
+  val task = offlineMapTask(portalItemId)
+  task.load().getOrThrow()
+  val area = task.getPreplannedMapAreas().getOrThrow().getOrNull(areaIndex)
+    ?: return mapOf("path" to "")
+  val parameters = task.createDefaultDownloadPreplannedOfflineMapParameters(area).getOrThrow()
+  val dir = offlineDownloadDir(baseDir, downloadName)
+  val job = task.createDownloadPreplannedOfflineMapJob(parameters, dir.absolutePath)
+  job.start()
+  job.result().getOrThrow()
+  return mapOf("path" to dir.absolutePath)
+}

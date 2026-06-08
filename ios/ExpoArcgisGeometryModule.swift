@@ -82,5 +82,11 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
       try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)
     }
+    AsyncFunction("preplannedMapAreas") { (portalItemId: String) in
+      try await preplannedMapAreas(portalItemId)
+    }
+    AsyncFunction("downloadPreplannedOfflineMap") { (portalItemId: String, areaIndex: Int, downloadName: String) in
+      try await downloadPreplannedOfflineMap(portalItemId, areaIndex, downloadName)
+    }
   }
 }
