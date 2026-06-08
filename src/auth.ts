@@ -18,6 +18,18 @@ export function signOut(): Promise<void> {
 }
 
 /**
+ * Authenticates the app itself (client id + secret — no user login) against `portalUrl`, caching
+ * an app token credential. Use for app-level access to secured services without a user sign-in.
+ */
+export function setAppCredential(
+  portalUrl: string,
+  clientId: string,
+  clientSecret: string
+): Promise<void> {
+  return Module.setAppCredential(portalUrl, clientId, clientSecret);
+}
+
+/**
  * Opens an OAuth authorization browser and resolves with the redirect URL the provider returns
  * (or `null` if the user cancelled). The consumer supplies this so the module stays free of any
  * browser dependency — e.g. with `expo-web-browser`:

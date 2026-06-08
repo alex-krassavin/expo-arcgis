@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
+import com.arcgismaps.httpcore.authentication.OAuthApplicationCredential
 import com.arcgismaps.httpcore.authentication.TokenCredential
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
@@ -49,6 +50,12 @@ class ExpoArcgisModule : Module() {
     }
     AsyncFunction("oauthComplete") Coroutine { redirectUrl: String ->
       OAuthController.complete(redirectUrl)
+    }
+
+    // App authentication (client id + secret, no user login) — caches an app token credential.
+    AsyncFunction("setAppCredential") Coroutine { portalUrl: String, clientId: String, clientSecret: String ->
+      val credential = OAuthApplicationCredential.create(portalUrl, clientId, clientSecret).getOrThrow()
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential)
     }
 
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.

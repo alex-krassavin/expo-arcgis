@@ -221,6 +221,8 @@ declare class ExpoArcgisModule extends NativeModule {
   oauthStart(portalUrl: string, clientId: string, redirectUrl: string): Promise<string>;
   /** Android OAuth step 2: completes the flow with the browser redirect URL. */
   oauthComplete(redirectUrl: string): Promise<void>;
+  /** App authentication (client id + secret, no user login) — caches an app token credential. */
+  setAppCredential(portalUrl: string, clientId: string, clientSecret: string): Promise<void>;
   // Constructable native handles (SharedObjects). JS names mirror the native classes.
   MapRef: new (props?: MapProps) => MapRef;
   SceneRef: new (props?: SceneProps) => SceneRef;

@@ -40,6 +40,15 @@ public class ExpoArcgisModule: Module {
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential)
     }
 
+    // App authentication (client id + secret, no user login) — caches an app token credential.
+    AsyncFunction("setAppCredential") { (portalUrl: String, clientId: String, clientSecret: String) in
+      guard let portal = URL(string: portalUrl) else { return }
+      let credential = try await OAuthApplicationCredential.credential(
+        for: portal, clientID: clientId, clientSecret: clientSecret
+      )
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential)
+    }
+
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
     Class(MapRef.self) {
       Constructor { (props: [String: Any]?) -> MapRef in
