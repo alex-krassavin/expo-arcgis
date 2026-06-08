@@ -4,6 +4,8 @@ import type {
   GeocodeResult,
   GeodeticDistanceResult,
   Geometry,
+  GeoprocessingInput,
+  GeoprocessingResult,
   ProximityResult,
   RouteResult,
   RouteStop,
@@ -89,6 +91,12 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
 
   // Routing — backing function for the `router` namespace (see ./router).
   solveRoute(stops: RouteStop[], params: Record<string, unknown>): Promise<RouteResult>;
+
+  // Geoprocessing — backing function for the `geoprocessor` namespace (see ./geoprocessor).
+  executeGeoprocessing(
+    serviceUrl: string,
+    inputs: Record<string, GeoprocessingInput>
+  ): Promise<GeoprocessingResult>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

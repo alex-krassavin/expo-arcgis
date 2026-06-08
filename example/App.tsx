@@ -3,6 +3,7 @@ import {
   coordinateFormatter,
   FeatureLayer,
   geocoder,
+  geoprocessor,
   geometryEngine,
   GeometryEditor,
   Graphic,
@@ -19,6 +20,7 @@ import {
   SceneView,
   WmsLayer,
   type Camera,
+  type Feature,
   type FeatureLayerHandle,
   type FeatureReduction,
   type Geometry,
@@ -137,6 +139,9 @@ const CAMERA_SF: Camera = { position: { x: -122.4, y: 37.78, z: 600 }, heading: 
 
 // A fixed sun position (summer noon, Pacific) for the "Show light and shadows" sample.
 const SUN_TIME = Date.UTC(2024, 5, 21, 19, 0, 0);
+// Esri sample Viewshed geoprocessing service (public): observation point + distance → visible polygons.
+const VIEWSHED_GP =
+  'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
 
 export default function App() {
   const [status, setStatus] = useState('Loading map…');
@@ -161,6 +166,7 @@ export default function App() {
   const [simulate, setSimulate] = useState(false);
   const [geocoded, setGeocoded] = useState<Geometry | null>(null);
   const [routeGeom, setRouteGeom] = useState<Geometry | null>(null);
+  const [gpGeometries, setGpGeometries] = useState<Geometry[]>([]);
   const mapRef = useRef<MapViewHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -239,6 +245,27 @@ export default function App() {
   async function suggestPlaces() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
+  }
+  // "Viewshed GP" — run the Esri Viewshed geoprocessing service (geoprocessor namespace).
+  async function viewshedGP() {
+    setStatus('Viewshed GP: running…');
+    try {
+      const { outputs } = await geoprocessor.execute(VIEWSHED_GP, {
+        Input_Observation_Point: {
+          type: 'features',
+          geometries: [{ type: 'point', x: -118.49, y: 34.05 }],
+        },
+        Viewshed_Distance: { type: 'linearUnit', value: 2, unit: 'miles' },
+      });
+      const features = (outputs.Viewshed_Result as Feature[] | undefined) ?? [];
+      const polygons = features
+        .map((f) => f.geometry)
+        .filter((g): g is Geometry => g != null);
+      setGpGeometries(polygons);
+      setStatus(`Viewshed GP: ${polygons.length} visible polygon(s)`);
+    } catch (e) {
+      setStatus(`Viewshed GP error: ${String(e)}`);
+    }
   }
   // "Route" — solve a route between two LA-area stops (router namespace).
   async function solveRouteDemo() {
@@ -334,6 +361,18 @@ export default function App() {
             symbol={{ type: 'simple-line', color: '#5856d6', width: 4 }}
           />
         )}
+        {/* Geoprocessing (viewshed) result polygons */}
+        {gpGeometries.map((geometry, i) => (
+          <Graphic
+            key={`gp-${i}`}
+            geometry={geometry}
+            symbol={{
+              type: 'simple-fill',
+              color: '#ffb70366',
+              outline: { color: '#ff6b00', width: 1 },
+            }}
+          />
+        ))}
       </GraphicsOverlay>
       <GraphicsOverlay renderer={GREEN_RENDERER}>
         {/* Symbol-less graphics — drawn by the overlay's renderer */}
@@ -507,6 +546,7 @@ export default function App() {
                 <Button title="Avg pop" onPress={avgPop} />
                 <Button title="Find LA" onPress={findLA} />
                 <Button title="Reverse pin" onPress={reversePin} />
+                <Button title="Viewshed GP" onPress={viewshedGP} />
                 <Button title="Suggest" onPress={suggestPlaces} />
                 <Button title="Route" onPress={solveRouteDemo} />
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />

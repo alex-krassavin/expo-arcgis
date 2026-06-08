@@ -673,6 +673,31 @@ export type LineOfSightProps = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Geoprocessing — server-side analysis via the `geoprocessor` namespace.
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A single typed input to a geoprocessing tool, mirroring the native `GeoprocessingParameter`
+ * subclasses. The `type` discriminator selects the native parameter built from `value`.
+ */
+export type GeoprocessingInput =
+  | { type: 'string'; value: string }
+  | { type: 'double'; value: number }
+  | { type: 'long'; value: number }
+  | { type: 'boolean'; value: boolean }
+  | { type: 'linearUnit'; value: number; unit?: LinearUnit }
+  | { type: 'features'; geometries: Geometry[] };
+
+/** Result of `geoprocessor.execute`. Mirrors the native `GeoprocessingResult`. */
+export type GeoprocessingResult = {
+  /**
+   * Output parameters keyed by name. Scalars (`string`/`double`/`long`/`boolean`) come back as
+   * their JS value; feature outputs come back as `Feature[]`. (Raster outputs are not serialized.)
+   */
+  outputs: Record<string, unknown>;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────
 

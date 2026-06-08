@@ -72,5 +72,10 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("solveRoute") { (stops: [[String: Any]], params: [String: Any]) in
       try await solveRoute(stops, params)
     }
+
+    // Geoprocessing — run a geoprocessing service, exposed as the JS `geoprocessor` namespace.
+    AsyncFunction("executeGeoprocessing") { (serviceUrl: String, inputs: [String: Any]) in
+      try await executeGeoprocessing(serviceUrl, inputs)
+    }
   }
 }

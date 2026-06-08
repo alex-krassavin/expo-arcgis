@@ -77,5 +77,10 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("solveRoute") Coroutine { stops: List<Map<String, Any?>>, params: Map<String, Any?> ->
       solveRoute(stops, params)
     }
+
+    // Geoprocessing — run a geoprocessing service, exposed as the JS `geoprocessor` namespace.
+    AsyncFunction("executeGeoprocessing") Coroutine { serviceUrl: String, inputs: Map<String, Any?> ->
+      executeGeoprocessing(serviceUrl, inputs)
+    }
   }
 }

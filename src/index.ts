@@ -40,6 +40,7 @@ export { geometryEngine } from './geometryEngine';
 export { coordinateFormatter } from './coordinateFormatter';
 export { geocoder } from './geocoder';
 export { router } from './router';
+export { geoprocessor } from './geoprocessor';
 export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';
 
 export * from './ExpoArcgis.types';
