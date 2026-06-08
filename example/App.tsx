@@ -277,6 +277,32 @@ export default function App() {
       setStatus(`Trace error: ${String(e)}`);
     }
   }
+  // "Configs" — list the network's named trace configurations and trace with the first one.
+  async function namedConfigTrace() {
+    if (!unRef.current) return setStatus('Load the utility network first');
+    try {
+      const configs = await unRef.current.queryNamedTraceConfigurations();
+      if (configs.length === 0) return setStatus('No named trace configurations');
+      const result = await unRef.current.traceWithConfiguration(
+        configs[0].globalId,
+        'Electric Distribution Device',
+        '1=1'
+      );
+      setStatus(`Config "${configs[0].name}": ${result.elementCount} elt (${configs.length} configs)`);
+    } catch (e) {
+      setStatus(`Config trace error: ${String(e)}`);
+    }
+  }
+  // "Assoc" — associations of a queried device (connectivity / containment / attachment).
+  async function showAssociations() {
+    if (!unRef.current) return setStatus('Load the utility network first');
+    try {
+      const { count, kinds } = await unRef.current.associations('Electric Distribution Device', '1=1');
+      setStatus(`Associations: ${count} (${kinds.join(', ') || 'none'})`);
+    } catch (e) {
+      setStatus(`Associations error: ${String(e)}`);
+    }
+  }
   // "Viewshed GP" — run the Esri Viewshed geoprocessing service (geoprocessor namespace).
   async function viewshedGP() {
     setStatus('Viewshed GP: running…');
@@ -591,6 +617,8 @@ export default function App() {
                 <Button title={un ? 'UN loaded' : 'Load UN'} onPress={loadUN} />
                 {un && <Button title="Connected" onPress={() => runTrace('connected')} />}
                 {un && <Button title="Downstream" onPress={() => runTrace('downstream')} />}
+                {un && <Button title="Configs" onPress={namedConfigTrace} />}
+                {un && <Button title="Assoc" onPress={showAssociations} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />

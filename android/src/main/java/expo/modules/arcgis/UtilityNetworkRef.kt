@@ -7,8 +7,11 @@ import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ServiceGeodatabase
 import com.arcgismaps.mapping.layers.FeatureLayer
 import com.arcgismaps.mapping.layers.SelectionMode
+import com.arcgismaps.utilitynetworks.UtilityAssociationType
 import com.arcgismaps.utilitynetworks.UtilityElement
 import com.arcgismaps.utilitynetworks.UtilityElementTraceResult
+import com.arcgismaps.utilitynetworks.UtilityNamedTraceConfiguration
+import com.arcgismaps.utilitynetworks.UtilityNamedTraceConfigurationQueryParameters
 import com.arcgismaps.utilitynetworks.UtilityNetwork
 import com.arcgismaps.utilitynetworks.UtilityTraceParameters
 import com.arcgismaps.utilitynetworks.UtilityTraceType
@@ -25,6 +28,9 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
 
   /** Operational feature layers created for the network's tables, keyed by table name (for selection). */
   private val featureLayers = mutableMapOf<String, FeatureLayer>()
+
+  /** Named trace configurations queried from the network, keyed by global id (for trace-by-config). */
+  private val namedConfigurations = mutableMapOf<String, UtilityNamedTraceConfiguration>()
 
   /** Builds the network, loads it, adds it (and its feature layers) to the map, returns its name. */
   suspend fun load(mapRef: MapRef): String {
@@ -50,39 +56,77 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
   ): Map<String, Any?> {
     val network = this.network ?: return emptyTraceResult()
     val elements = startingLocations.mapNotNull { makeUtilityElement(network, it) }
-    return runTrace(network, elements, traceTypeName, select = false)
+    if (elements.isEmpty()) return emptyTraceResult()
+    val parameters = UtilityTraceParameters(utilityTraceType(traceTypeName), elements)
+    return runTrace(network, parameters, select = false)
   }
 
-  /**
-   * Queries a starting feature from [tableName] (by [whereClause]), traces from it, and selects
-   * the result features on the map. Used for an interactive "trace from this device" flow.
-   */
+  /** Queries a starting feature from [tableName] (by [whereClause]), traces by type, selects results. */
   suspend fun traceFromQuery(
     tableName: String,
     whereClause: String,
     traceTypeName: String,
   ): Map<String, Any?> {
     val network = this.network ?: return emptyTraceResult()
-    val table = featureLayers[tableName]?.featureTable as? ServiceFeatureTable
-      ?: return emptyTraceResult()
+    val element = queryStartElement(network, tableName, whereClause) ?: return emptyTraceResult()
+    val parameters = UtilityTraceParameters(utilityTraceType(traceTypeName), listOf(element))
+    return runTrace(network, parameters, select = true)
+  }
+
+  /** Lists the network's named trace configurations (caches them for [traceWithConfiguration]). */
+  suspend fun queryNamedTraceConfigurations(): List<Map<String, Any?>> {
+    val network = this.network ?: return emptyList()
+    val configs = network
+      .queryNamedTraceConfigurations(UtilityNamedTraceConfigurationQueryParameters())
+      .getOrThrow()
+    configs.forEach { namedConfigurations[it.globalId.toString()] = it }
+    return configs.map { mapOf("name" to it.name, "globalId" to it.globalId.toString()) }
+  }
+
+  /** Traces using a named configuration (by global id), from a feature queried from [tableName]. */
+  suspend fun traceWithConfiguration(
+    configGlobalId: String,
+    tableName: String,
+    whereClause: String,
+  ): Map<String, Any?> {
+    val network = this.network ?: return emptyTraceResult()
+    val config = namedConfigurations[configGlobalId] ?: return emptyTraceResult()
+    val element = queryStartElement(network, tableName, whereClause) ?: return emptyTraceResult()
+    val parameters = UtilityTraceParameters(config, listOf(element))
+    return runTrace(network, parameters, select = true)
+  }
+
+  /** Returns the associations (connectivity / containment / attachment) of a queried element. */
+  suspend fun associations(tableName: String, whereClause: String): Map<String, Any?> {
+    val network = this.network ?: return mapOf("count" to 0, "kinds" to emptyList<Any?>())
+    val element = queryStartElement(network, tableName, whereClause)
+      ?: return mapOf("count" to 0, "kinds" to emptyList<Any?>())
+    val associations = network.getAssociations(element, null).getOrThrow()
+    val kinds = associations.map { associationKindName(it.associationType) }.toSet().toList()
+    return mapOf("count" to associations.size, "kinds" to kinds)
+  }
+
+  // region Helpers
+
+  private suspend fun queryStartElement(
+    network: UtilityNetwork,
+    tableName: String,
+    whereClause: String,
+  ): UtilityElement? {
+    val table = featureLayers[tableName]?.featureTable as? ServiceFeatureTable ?: return null
     val query = QueryParameters().apply {
       this.whereClause = whereClause
       maxFeatures = 1
     }
-    val feature = table.queryFeatures(query).getOrThrow().firstOrNull() as? ArcGISFeature
-      ?: return emptyTraceResult()
-    val element = network.createElementOrNull(feature, null) ?: return emptyTraceResult()
-    return runTrace(network, listOf(element), traceTypeName, select = true)
+    val feature = table.queryFeatures(query).getOrThrow().firstOrNull() as? ArcGISFeature ?: return null
+    return network.createElementOrNull(feature, null)
   }
 
   private suspend fun runTrace(
     network: UtilityNetwork,
-    elements: List<UtilityElement>,
-    traceTypeName: String,
+    parameters: UtilityTraceParameters,
     select: Boolean,
   ): Map<String, Any?> {
-    if (elements.isEmpty()) return emptyTraceResult()
-    val parameters = UtilityTraceParameters(utilityTraceType(traceTypeName), elements)
     val results = network.trace(parameters).getOrThrow()
     val found = results.filterIsInstance<UtilityElementTraceResult>().firstOrNull()?.elements
       ?: emptyList()
@@ -137,4 +181,12 @@ private fun utilityTraceType(name: String): UtilityTraceType = when (name) {
   "loops" -> UtilityTraceType.Loops
   "shortestPath" -> UtilityTraceType.ShortestPath
   else -> UtilityTraceType.Connected
+}
+
+/** Maps a [UtilityAssociationType] to a short JS string. */
+private fun associationKindName(type: UtilityAssociationType): String = when (type) {
+  is UtilityAssociationType.Connectivity -> "connectivity"
+  is UtilityAssociationType.Containment -> "containment"
+  is UtilityAssociationType.Attachment -> "attachment"
+  else -> "junctionEdge"
 }

@@ -22,7 +22,9 @@ import type {
   SceneProps,
   TargetVisibility,
   TileLayerProps,
+  UtilityAssociationSummary,
   UtilityElementDescriptor,
+  UtilityNamedTraceConfiguration,
   UtilityTraceResult,
   VectorTileLayerProps,
   ViewshedProps,
@@ -137,6 +139,16 @@ export declare class UtilityNetworkRef extends SharedObject {
     whereClause: string,
     traceType: string
   ): Promise<UtilityTraceResult>;
+  /** Lists the network's named trace configurations. */
+  queryNamedTraceConfigurations(): Promise<UtilityNamedTraceConfiguration[]>;
+  /** Traces using a named configuration (by global id), from a queried starting feature. */
+  traceWithConfiguration(
+    configGlobalId: string,
+    tableName: string,
+    whereClause: string
+  ): Promise<UtilityTraceResult>;
+  /** Returns the associations of a queried feature. */
+  associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
 }
 
 /** The geo model that operational layers attach to — a `<Map>` or a `<Scene>`. */

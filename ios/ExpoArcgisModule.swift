@@ -308,6 +308,15 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("traceFromQuery") { (ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String) in
         try await ref.traceFromQuery(tableName, whereClause, traceType)
       }
+      AsyncFunction("queryNamedTraceConfigurations") { (ref: UtilityNetworkRef) in
+        try await ref.queryNamedTraceConfigurations()
+      }
+      AsyncFunction("traceWithConfiguration") { (ref: UtilityNetworkRef, configGlobalId: String, tableName: String, whereClause: String) in
+        try await ref.traceWithConfiguration(configGlobalId, tableName, whereClause)
+      }
+      AsyncFunction("associations") { (ref: UtilityNetworkRef, tableName: String, whereClause: String) in
+        try await ref.associations(tableName, whereClause)
+      }
     }
 
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange

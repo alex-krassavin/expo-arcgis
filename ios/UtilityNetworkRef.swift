@@ -10,6 +10,8 @@ public final class UtilityNetworkRef: SharedObject {
   private var serviceGeodatabase: ServiceGeodatabase?
   /// Operational feature layers created for the network's tables, keyed by table name (for selection).
   private var featureLayers: [String: FeatureLayer] = [:]
+  /// Named trace configurations queried from the network, keyed by global id (for trace-by-config).
+  private var namedConfigurations: [String: UtilityNamedTraceConfiguration] = [:]
 
   init(serviceGeodatabaseUrl: String) {
     self.serviceGeodatabaseUrl = serviceGeodatabaseUrl
@@ -40,32 +42,67 @@ public final class UtilityNetworkRef: SharedObject {
   func trace(_ traceTypeName: String, _ startingLocations: [[String: Any]]) async throws -> [String: Any] {
     guard let network else { return emptyTraceResult }
     let elements = startingLocations.compactMap { makeUtilityElement(network, $0) }
-    return try await runTrace(network, elements, traceTypeName, select: false)
-  }
-
-  /// Queries a starting feature from `tableName` (by `whereClause`), traces from it, and selects
-  /// the result features on the map. Used for an interactive "trace from this device" flow.
-  func traceFromQuery(_ tableName: String, _ whereClause: String, _ traceTypeName: String) async throws -> [String: Any] {
-    guard let network,
-      let table = featureLayers[tableName]?.featureTable as? ServiceFeatureTable
-    else { return emptyTraceResult }
-    let query = QueryParameters()
-    query.whereClause = whereClause
-    query.maxFeatures = 1
-    let queryResult = try await table.queryFeatures(using: query)
-    guard let feature = Array(queryResult.features()).first as? ArcGISFeature,
-      let element = network.makeElement(arcGISFeature: feature)
-    else { return emptyTraceResult }
-    return try await runTrace(network, [element], traceTypeName, select: true)
-  }
-
-  private func runTrace(
-    _ network: UtilityNetwork, _ elements: [UtilityElement], _ traceTypeName: String, select: Bool
-  ) async throws -> [String: Any] {
     guard !elements.isEmpty else { return emptyTraceResult }
     let parameters = UtilityTraceParameters(
       traceType: utilityTraceType(traceTypeName), startingLocations: elements
     )
+    return try await runTrace(network, parameters, select: false)
+  }
+
+  /// Queries a starting feature from `tableName` (by `whereClause`), traces from it by trace type,
+  /// and selects the result features on the map.
+  func traceFromQuery(_ tableName: String, _ whereClause: String, _ traceTypeName: String) async throws -> [String: Any] {
+    guard let network, let element = try await queryStartElement(network, tableName, whereClause) else {
+      return emptyTraceResult
+    }
+    let parameters = UtilityTraceParameters(
+      traceType: utilityTraceType(traceTypeName), startingLocations: [element]
+    )
+    return try await runTrace(network, parameters, select: true)
+  }
+
+  /// Lists the network's named trace configurations (caches them for `traceWithConfiguration`).
+  func queryNamedTraceConfigurations() async throws -> [[String: Any]] {
+    guard let network else { return [] }
+    let configs = try await network.queryNamedTraceConfigurations()
+    var cache: [String: UtilityNamedTraceConfiguration] = [:]
+    for config in configs { cache[config.globalID.uuidString] = config }
+    namedConfigurations = cache
+    return configs.map { ["name": $0.name, "globalId": $0.globalID.uuidString] }
+  }
+
+  /// Traces using a named configuration (by global id), from a feature queried from `tableName`.
+  func traceWithConfiguration(_ configGlobalId: String, _ tableName: String, _ whereClause: String) async throws -> [String: Any] {
+    guard let network, let config = namedConfigurations[configGlobalId],
+      let element = try await queryStartElement(network, tableName, whereClause)
+    else { return emptyTraceResult }
+    let parameters = UtilityTraceParameters(namedTraceConfiguration: config, startingLocations: [element])
+    return try await runTrace(network, parameters, select: true)
+  }
+
+  /// Returns the associations (connectivity / containment / attachment) of a queried element.
+  func associations(_ tableName: String, _ whereClause: String) async throws -> [String: Any] {
+    guard let network, let element = try await queryStartElement(network, tableName, whereClause) else {
+      return ["count": 0, "kinds": []]
+    }
+    let associations = try await network.associations(for: element)
+    let kinds = Set(associations.map { associationKindName($0.kind) })
+    return ["count": associations.count, "kinds": Array(kinds)]
+  }
+
+  // MARK: - Helpers
+
+  private func queryStartElement(_ network: UtilityNetwork, _ tableName: String, _ whereClause: String) async throws -> UtilityElement? {
+    guard let table = featureLayers[tableName]?.featureTable as? ServiceFeatureTable else { return nil }
+    let query = QueryParameters()
+    query.whereClause = whereClause
+    query.maxFeatures = 1
+    let queryResult = try await table.queryFeatures(using: query)
+    guard let feature = Array(queryResult.features()).first as? ArcGISFeature else { return nil }
+    return network.makeElement(arcGISFeature: feature)
+  }
+
+  private func runTrace(_ network: UtilityNetwork, _ parameters: UtilityTraceParameters, select: Bool) async throws -> [String: Any] {
     let results = try await network.trace(using: parameters)
     let found = results.compactMap { $0 as? UtilityElementTraceResult }.first?.elements ?? []
     if select { await selectElements(found) }
@@ -125,5 +162,15 @@ private func utilityTraceType(_ name: String) -> UtilityTraceParameters.TraceTyp
   case "loops": return .loops
   case "shortestPath": return .shortestPath
   default: return .connected
+  }
+}
+
+/// Maps a `UtilityAssociation.Kind` to a short JS string.
+private func associationKindName(_ kind: UtilityAssociation.Kind) -> String {
+  switch kind {
+  case .connectivity: return "connectivity"
+  case .containment: return "containment"
+  case .attachment: return "attachment"
+  default: return "junctionEdge"
   }
 }

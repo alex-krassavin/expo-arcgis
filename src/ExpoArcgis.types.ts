@@ -753,6 +753,20 @@ export type UtilityNetworkProps = {
   onLoadError?: (message: string) => void;
 };
 
+/** A predefined trace configuration published with the network. Mirrors `UtilityNamedTraceConfiguration`. */
+export type UtilityNamedTraceConfiguration = {
+  name: string;
+  globalId: string;
+};
+
+/** Summary of an element's associations. Flattens the native `UtilityAssociation` list. */
+export type UtilityAssociationSummary = {
+  /** Number of associations found. */
+  count: number;
+  /** Distinct association kinds present (`connectivity` / `containment` / `attachment` / `junctionEdge`). */
+  kinds: string[];
+};
+
 /** Imperative handle exposed by `<UtilityNetwork>` via `ref`. */
 export type UtilityNetworkHandle = {
   /** Runs a trace of `traceType` from the given starting locations (explicit element descriptors). */
@@ -769,6 +783,16 @@ export type UtilityNetworkHandle = {
     whereClause: string,
     traceType: UtilityTraceType
   ): Promise<UtilityTraceResult>;
+  /** Lists the network's predefined named trace configurations. */
+  queryNamedTraceConfigurations(): Promise<UtilityNamedTraceConfiguration[]>;
+  /** Traces using a named configuration (by `globalId`), from a feature queried from `tableName`. */
+  traceWithConfiguration(
+    configGlobalId: string,
+    tableName: string,
+    whereClause: string
+  ): Promise<UtilityTraceResult>;
+  /** Returns the associations of a feature queried from `tableName`. */
+  associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
 };
 
 // ────────────────────────────────────────────────────────────────────────────
