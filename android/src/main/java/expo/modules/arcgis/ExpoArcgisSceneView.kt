@@ -11,6 +11,7 @@ import com.arcgismaps.mapping.view.AtmosphereEffect
 import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.mapping.view.LightingMode
 import com.arcgismaps.mapping.view.SceneView
+import com.arcgismaps.mapping.view.ScreenCoordinate
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.viewevent.EventDispatcher
@@ -80,6 +81,19 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   fun setAnalysisOverlays(refs: List<AnalysisOverlayRef>) {
     sceneView.analysisOverlays.clear()
     sceneView.analysisOverlays.addAll(refs.map { it.overlay })
+  }
+
+  /** Identifies the features under a screen point (3D). Mirrors `MapView.identify`. */
+  fun identify(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
+    val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
+    val y = (screenPoint["y"] as? Number)?.toDouble() ?: 0.0
+    val tolerance = (options?.get("tolerance") as? Number)?.toDouble() ?: 12.0
+    val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
+    scope.launch {
+      sceneView.identifyLayers(ScreenCoordinate(x, y), tolerance, false, maxResults)
+        .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it) }) }
+        .onFailure { promise.reject("IDENTIFY_ERROR", it.message ?: "Identify failed", it) }
+    }
   }
 
   /** Retries loading the scene (Loadable pattern) — useful after a network outage. Re-emits the result. */

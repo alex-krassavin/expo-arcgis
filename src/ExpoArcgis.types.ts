@@ -269,6 +269,11 @@ export type MapViewHandle = {
 
 /** Imperative handle exposed by `<SceneView>` via `ref`. */
 export type SceneViewHandle = {
+  /** Identifies the features under a screen point (3D; in points, e.g. from `onTap`'s `screenPoint`). */
+  identify(
+    screenPoint: { x: number; y: number },
+    options?: { tolerance?: number; maxResults?: number }
+  ): Promise<IdentifyResult[]>;
   /** Retries loading the scene after a failure (e.g. a network outage). Re-fires `onSceneLoaded`/`onSceneLoadError`. */
   retryLoad(): Promise<void>;
 };

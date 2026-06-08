@@ -434,6 +434,10 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("retryLoad") { (view: ExpoArcgisSceneView) in
         try await view.retryLoad()
       }
+
+      AsyncFunction("identify") { (view: ExpoArcgisSceneView, screenPoint: [String: Any], options: [String: Any]?) in
+        try await view.identify(screenPoint, options)
+      }
     }
   }
 }

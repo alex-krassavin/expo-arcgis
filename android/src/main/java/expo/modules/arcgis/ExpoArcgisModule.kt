@@ -408,6 +408,10 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("retryLoad") { view: ExpoArcgisSceneView, promise: Promise ->
         view.retryLoad(promise)
       }
+
+      AsyncFunction("identify") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+        view.identify(screenPoint, options, promise)
+      }
     }
   }
 }

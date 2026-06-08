@@ -15,6 +15,8 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var sunLighting: SceneView.SunLighting = .off
   @Published private(set) var atmosphereEffect: SceneView.AtmosphereEffect = .horizonOnly
   @Published private(set) var sunDate = Date(timeIntervalSince1970: 1_372_683_600)
+  /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
+  var proxy: SceneViewProxy?
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -64,6 +66,7 @@ struct ExpoArcgisSceneContainer: View {
             let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
             model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
+          .onAppear { model.proxy = proxy }
           .task(id: ObjectIdentifier(scene)) {
             do {
               try await scene.load()
@@ -131,6 +134,21 @@ class ExpoArcgisSceneView: ExpoView {
     } catch {
       onSceneLoadError(["message": error.localizedDescription])
     }
+  }
+
+  /// Identifies the features under a screen point (3D). Mirrors `MapView.identify`.
+  func identify(_ screenPoint: [String: Any], _ options: [String: Any]?) async throws -> [[String: Any]] {
+    guard let proxy = model.proxy else { return [] }
+    let point = CGPoint(
+      x: (screenPoint["x"] as? NSNumber)?.doubleValue ?? 0,
+      y: (screenPoint["y"] as? NSNumber)?.doubleValue ?? 0
+    )
+    let tolerance = (options?["tolerance"] as? NSNumber)?.doubleValue ?? 12
+    let maxResults = (options?["maxResults"] as? NSNumber)?.intValue ?? 1
+    let results = try await proxy.identifyLayers(
+      screenPoint: point, tolerance: tolerance, maximumResultsPerLayer: maxResults
+    )
+    return results.map(serializeIdentifyResult)
   }
 
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {

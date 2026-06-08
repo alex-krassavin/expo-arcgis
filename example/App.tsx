@@ -613,9 +613,13 @@ export default function App() {
                 onSceneLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
                   setStatus(`Scene error: ${event.nativeEvent.message}`)
                 }
-                onTap={(event: { nativeEvent: TapEventPayload }) =>
-                  setPin(event.nativeEvent.mapPoint)
-                }
+                onTap={(event: { nativeEvent: TapEventPayload }) => {
+                  setPin(event.nativeEvent.mapPoint);
+                  sceneRef.current?.identify(event.nativeEvent.screenPoint).then((results) => {
+                    const total = results.reduce((n, r) => n + r.features.length, 0);
+                    if (total) setStatus(`3D identify: ${total} feature(s) in ${results.length} layer(s)`);
+                  });
+                }}
               >
                 {graphics}
                 {/* 3D scene symbol — a sphere floating over the terrain */}
