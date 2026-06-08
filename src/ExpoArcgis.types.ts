@@ -1146,6 +1146,8 @@ export type SceneProps = {
   surface?: Surface;
   /** Load the scene from an ArcGIS web scene. Construction-only (set once; remount to change). */
   portalItem?: PortalItem;
+  /** Local path to a mobile scene package (`.mspk`); its first scene is shown when loaded. */
+  mobileScenePackagePath?: string;
 };
 
 /** Sun lighting mode for a 3D scene view (controls shadows). */

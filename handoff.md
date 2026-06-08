@@ -711,7 +711,7 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 ## Приоритет B — крупные возможности (нужна архитектура / большой натив)
 - **B1 — Async-loadable слои (L).** Инфраструктура «layer.load() → готов» (сейчас слои — конструктор-синхронные). Разблокирует: **GeoPackage** (`GeoPackage.load()` → выбрать `geoPackageFeatureTables`/`rasters`), **Geodatabase-слой**, **OGC API Features** (`OgcFeatureCollectionTable`), **WFS** (`WfsFeatureTable` + `populateFromService`). `LayerRef` получает async-init + статус.
-- **B2 — Offline-сцены / MobileScenePackage (M).** `<Scene mobileScenePackagePath>` (зеркало `<Map mobileMapPackagePath>` из OFF1: `MobileScenePackage(path).load() → scenes.first`, `Scene` mutable + `onSceneChanged`). + offline-генерация сцен, если есть `OfflineMapTask` для сцен.
+- **B2 — Offline-сцены / MobileScenePackage ✅ ГОТОВО.** `<Scene mobileScenePackagePath>` — точное зеркало OFF1: `SceneRef.scene` стал **mutable** (`private(set) var` / `var … private set`) + callback `onSceneChanged`; `loadMobileScenePackage(path)` грузит `MobileScenePackage(fileURL/path).load() → scenes.first` async и свапает; `ExpoArcgisSceneView.setScene` wирует `onSceneChanged` (iOS `model.setScene` / Kotlin `applyScene`). `SceneProps.mobileScenePackagePath`. Демо-ветки нет (нужен реальный `.mspk` на устройстве) — API экспортирован + сборочно верифицирован. **Верификация:** TS/Android/iOS ✅.
 - **B3 — Offline-глубина (M).** Offline **Utility Network**; `OfflineMapSyncTask` + scheduled-updates (инкрементальная синхронизация скачанной карты); `GenerateOfflineMapParameterOverrides` (тонкая настройка области/слоёв/LOD); estimate-size перед загрузкой.
 
 ## Приоритет C — глубина по разделам

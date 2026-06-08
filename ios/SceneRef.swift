@@ -5,7 +5,9 @@ import ExpoModulesCore
 /// `Scene` is qualified as `ArcGIS.Scene` because `ExpoModulesCore` re-exports SwiftUI,
 /// whose `SwiftUI.Scene` (the app-scene protocol) otherwise collides with the ArcGIS type.
 public final class SceneRef: SharedObject {
-  let scene: ArcGIS.Scene
+  private(set) var scene: ArcGIS.Scene
+  /// Called when `scene` is replaced asynchronously (e.g. after a mobile scene package loads).
+  var onSceneChanged: ((ArcGIS.Scene) -> Void)?
 
   /// Builds the scene from a portal item (web scene) when provided, otherwise an empty scene.
   init(portalItem: [String: Any]?) {
@@ -54,9 +56,22 @@ public final class SceneRef: SharedObject {
           )
           scene.initialViewpoint = Viewpoint(boundingGeometry: point, camera: camera)
         }
+      case "mobileScenePackagePath":
+        if let path = value as? String { loadMobileScenePackage(path) }
       default:
         break
       }
+    }
+  }
+
+  /// Loads a mobile scene package (`.mspk`) off the main thread and swaps in its first scene.
+  private func loadMobileScenePackage(_ path: String) {
+    Task { [weak self] in
+      let package = MobileScenePackage(fileURL: URL(fileURLWithPath: path))
+      try? await package.load()
+      guard let self, let first = package.scenes.first else { return }
+      self.scene = first
+      self.onSceneChanged?(first)
     }
   }
 

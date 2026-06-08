@@ -123,6 +123,8 @@ class ExpoArcgisSceneView: ExpoView {
   /// Receives the native scene (by reference) from the `<Scene>` SharedObject.
   func setScene(_ ref: SceneRef?) {
     model.setScene(ref?.scene)
+    // The scene may be replaced asynchronously (e.g. once a mobile scene package loads) — re-render.
+    ref?.onSceneChanged = { [weak self] scene in self?.model.setScene(scene) }
   }
 
   /// Retries loading the scene (Loadable pattern) — useful after a network outage. Re-emits the result.

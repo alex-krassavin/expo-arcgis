@@ -58,9 +58,14 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
 
   /** Receives the native scene (by reference) from the `<Scene>` SharedObject. */
   fun setScene(ref: SceneRef?) {
-    val scene = ref?.scene ?: return
-    sceneView.scene = scene
+    ref ?: return
+    applyScene(ref.scene)
+    // The scene may be replaced asynchronously (e.g. once a mobile scene package loads) — re-apply.
+    ref.onSceneChanged = { newScene -> applyScene(newScene) }
+  }
 
+  private fun applyScene(scene: com.arcgismaps.mapping.ArcGISScene) {
+    sceneView.scene = scene
     loadJob?.cancel()
     loadJob = scope.launch {
       scene.load()

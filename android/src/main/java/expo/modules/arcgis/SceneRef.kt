@@ -5,6 +5,7 @@ import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.ArcGISTiledElevationSource
 import com.arcgismaps.mapping.Basemap
+import com.arcgismaps.mapping.MobileScenePackage
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Surface
 import com.arcgismaps.mapping.Viewpoint
@@ -12,10 +13,19 @@ import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.portal.Portal
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /** SharedObject wrapping a native [ArcGISScene] (3D). Mirrors [MapRef]. */
 class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
-  val scene: ArcGISScene = buildScene(portalItem)
+  var scene: ArcGISScene = buildScene(portalItem)
+    private set
+
+  /** Called when [scene] is replaced asynchronously (e.g. after a mobile scene package loads). */
+  var onSceneChanged: ((ArcGISScene) -> Unit)? = null
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
   fun applyProps(changed: Map<String, Any?>) {
     changed.forEach { (key, value) ->
@@ -43,6 +53,20 @@ class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : 
             )
             scene.initialViewpoint = Viewpoint(point, camera)
           }
+        }
+        "mobileScenePackagePath" -> (value as? String)?.let { loadMobileScenePackage(it) }
+      }
+    }
+  }
+
+  /** Loads a mobile scene package (`.mspk`) off the main thread and swaps in its first scene. */
+  private fun loadMobileScenePackage(path: String) {
+    scope.launch {
+      val pkg = MobileScenePackage(path)
+      pkg.load().onSuccess {
+        pkg.scenes.firstOrNull()?.let { first ->
+          scene = first
+          onSceneChanged?.invoke(first)
         }
       }
     }
