@@ -94,5 +94,11 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("syncGeodatabase") { (geodatabasePath: String, featureServiceUrl: String) in
       try await syncGeodatabase(geodatabasePath, featureServiceUrl)
     }
+    AsyncFunction("exportTileCache") { (tileServiceUrl: String, areaOfInterest: [String: Any], downloadName: String) in
+      try await exportTileCache(tileServiceUrl, areaOfInterest, downloadName)
+    }
+    AsyncFunction("exportVectorTiles") { (vectorTileServiceUrl: String, areaOfInterest: [String: Any], downloadName: String) in
+      try await exportVectorTiles(vectorTileServiceUrl, areaOfInterest, downloadName)
+    }
   }
 }

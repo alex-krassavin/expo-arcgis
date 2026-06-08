@@ -8,6 +8,7 @@ import type {
   GeoprocessingResult,
   OfflineGeodatabaseResult,
   OfflineMapResult,
+  OfflineTileResult,
   PreplannedMapAreaInfo,
   ProximityResult,
   RouteResult,
@@ -119,6 +120,16 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     downloadName: string
   ): Promise<OfflineGeodatabaseResult>;
   syncGeodatabase(geodatabasePath: string, featureServiceUrl: string): Promise<{ synced: boolean }>;
+  exportTileCache(
+    tileServiceUrl: string,
+    areaOfInterest: Geometry,
+    downloadName: string
+  ): Promise<OfflineTileResult>;
+  exportVectorTiles(
+    vectorTileServiceUrl: string,
+    areaOfInterest: Geometry,
+    downloadName: string
+  ): Promise<OfflineTileResult>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

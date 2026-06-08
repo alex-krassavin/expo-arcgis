@@ -3,9 +3,11 @@ package expo.modules.arcgis
 import com.arcgismaps.data.Geodatabase
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.portal.Portal
+import com.arcgismaps.tasks.exportvectortiles.ExportVectorTilesTask
 import com.arcgismaps.tasks.geodatabase.GeodatabaseSyncTask
 import com.arcgismaps.tasks.geodatabase.SyncDirection
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapTask
+import com.arcgismaps.tasks.tilecache.ExportTileCacheTask
 import java.io.File
 
 /**
@@ -99,4 +101,38 @@ internal suspend fun syncGeodatabase(
   job.start()
   job.result().getOrThrow()
   return mapOf("synced" to true)
+}
+
+internal suspend fun exportTileCache(
+  baseDir: File?,
+  tileServiceUrl: String,
+  areaOfInterest: Map<String, Any?>,
+  downloadName: String,
+): Map<String, Any?> {
+  val area = geometryFromDict(areaOfInterest) ?: return mapOf("path" to "")
+  baseDir ?: return mapOf("path" to "")
+  val task = ExportTileCacheTask(tileServiceUrl)
+  val parameters = task.createDefaultExportTileCacheParameters(area, 0.0, 0.0).getOrThrow()
+  val file = offlineDownloadDir(baseDir, "$downloadName.tpkx")
+  val job = task.createExportTileCacheJob(parameters, file.absolutePath)
+  job.start()
+  job.result().getOrThrow()
+  return mapOf("path" to file.absolutePath)
+}
+
+internal suspend fun exportVectorTiles(
+  baseDir: File?,
+  vectorTileServiceUrl: String,
+  areaOfInterest: Map<String, Any?>,
+  downloadName: String,
+): Map<String, Any?> {
+  val area = geometryFromDict(areaOfInterest) ?: return mapOf("path" to "")
+  baseDir ?: return mapOf("path" to "")
+  val task = ExportVectorTilesTask(vectorTileServiceUrl)
+  val parameters = task.createDefaultExportVectorTilesParameters(area, 0.0).getOrThrow()
+  val file = offlineDownloadDir(baseDir, "$downloadName.vtpk")
+  val job = task.createExportVectorTilesJob(parameters, file.absolutePath)
+  job.start()
+  job.result().getOrThrow()
+  return mapOf("path" to file.absolutePath)
 }

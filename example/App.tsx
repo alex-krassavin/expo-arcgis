@@ -160,6 +160,10 @@ const OFFLINE_AREA: Geometry = {
 const GDB_SERVICE =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Sync/SaveTheBaySync/FeatureServer';
 const GDB_AREA: Geometry = { type: 'envelope', xMin: -71.43, yMin: 41.74, xMax: -71.37, yMax: 41.79 };
+// Esri sample export-tiles-enabled tile service + a tiny extent (keep the download small).
+const TILE_SERVICE =
+  'https://sampleserver6.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer';
+const TILE_AREA: Geometry = { type: 'envelope', xMin: -117.19, yMin: 34.055, xMax: -117.18, yMax: 34.065 };
 // Esri sample Naperville electric utility network (token-secured; public sample login).
 const NAPERVILLE_UN =
   'https://sampleserver7.arcgisonline.com/server/rest/services/UtilityNetwork/NapervilleElectric/FeatureServer';
@@ -292,6 +296,16 @@ export default function App() {
       setStatus(path ? `Geodatabase: ${tableCount} table(s) → ${path.split('/').pop()}` : 'Geodatabase: no path');
     } catch (e) {
       setStatus(`Geodatabase error: ${String(e)}`);
+    }
+  }
+  // "Export tiles" — export a raster tile cache (.tpkx) from a tile service (offline namespace).
+  async function exportTilesDemo() {
+    setStatus('Export tiles: downloading…');
+    try {
+      const { path } = await offline.exportTileCache(TILE_SERVICE, TILE_AREA, 'tiles1');
+      setStatus(path ? `Tile cache → ${path.split('/').pop()}` : 'Export tiles: no path');
+    } catch (e) {
+      setStatus(`Export tiles error: ${String(e)}`);
     }
   }
   // "Preplanned" — list the web map's preplanned areas and download the first (offline namespace).
@@ -686,6 +700,7 @@ export default function App() {
                 <Button title="Take offline" onPress={takeOffline} />
                 <Button title="Preplanned" onPress={preplannedOffline} />
                 <Button title="Geodatabase" onPress={geodatabaseDemo} />
+                <Button title="Export tiles" onPress={exportTilesDemo} />
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />

@@ -99,5 +99,11 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("syncGeodatabase") Coroutine { geodatabasePath: String, featureServiceUrl: String ->
       syncGeodatabase(geodatabasePath, featureServiceUrl)
     }
+    AsyncFunction("exportTileCache") Coroutine { tileServiceUrl: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
+      exportTileCache(appContext.reactContext?.filesDir, tileServiceUrl, areaOfInterest, downloadName)
+    }
+    AsyncFunction("exportVectorTiles") Coroutine { vectorTileServiceUrl: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
+      exportVectorTiles(appContext.reactContext?.filesDir, vectorTileServiceUrl, areaOfInterest, downloadName)
+    }
   }
 }

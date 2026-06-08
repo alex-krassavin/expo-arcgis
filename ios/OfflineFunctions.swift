@@ -80,3 +80,29 @@ func syncGeodatabase(_ geodatabasePath: String, _ featureServiceUrl: String) asy
   _ = try await job.result.get()
   return ["synced": true]
 }
+
+func exportTileCache(_ tileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+  guard let url = URL(string: tileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
+    return ["path": ""]
+  }
+  let task = ExportTileCacheTask(url: url)
+  let parameters = try await task.makeDefaultExportTileCacheParameters(areaOfInterest: area)
+  let fileURL = offlineDownloadURL(downloadName + ".tpkx")
+  let job = task.makeExportTileCacheJob(parameters: parameters, downloadFileURL: fileURL)
+  job.start()
+  _ = try await job.result.get()
+  return ["path": fileURL.path]
+}
+
+func exportVectorTiles(_ vectorTileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+  guard let url = URL(string: vectorTileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
+    return ["path": ""]
+  }
+  let task = ExportVectorTilesTask(url: url)
+  let parameters = try await task.makeDefaultExportVectorTilesParameters(areaOfInterest: area)
+  let fileURL = offlineDownloadURL(downloadName + ".vtpk")
+  let job = task.makeExportVectorTilesJob(parameters: parameters, downloadFileURL: fileURL)
+  job.start()
+  _ = try await job.result.get()
+  return ["path": fileURL.path]
+}

@@ -3,6 +3,7 @@ import type {
   Geometry,
   OfflineGeodatabaseResult,
   OfflineMapResult,
+  OfflineTileResult,
   PreplannedMapAreaInfo,
 } from './ExpoArcgis.types';
 
@@ -53,4 +54,20 @@ export const offline = {
     featureServiceUrl: string
   ): Promise<{ synced: boolean }> =>
     Module.syncGeodatabase(geodatabasePath, featureServiceUrl),
+
+  /** Exports a raster tile cache (`.tpkx`) from a tile service for `areaOfInterest`. */
+  exportTileCache: (
+    tileServiceUrl: string,
+    areaOfInterest: Geometry,
+    downloadName: string
+  ): Promise<OfflineTileResult> =>
+    Module.exportTileCache(tileServiceUrl, areaOfInterest, downloadName),
+
+  /** Exports a vector tile package (`.vtpk`) from a vector tile service for `areaOfInterest`. */
+  exportVectorTiles: (
+    vectorTileServiceUrl: string,
+    areaOfInterest: Geometry,
+    downloadName: string
+  ): Promise<OfflineTileResult> =>
+    Module.exportVectorTiles(vectorTileServiceUrl, areaOfInterest, downloadName),
 };
