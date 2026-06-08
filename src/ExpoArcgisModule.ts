@@ -6,6 +6,7 @@ import type {
   FeatureLayerProps,
   Geometry,
   GraphicProps,
+  LineOfSightProps,
   QueryParameters,
   StatisticRecord,
   StatisticsQueryParameters,
@@ -19,6 +20,7 @@ import type {
   Renderer,
   SceneLayerProps,
   SceneProps,
+  TargetVisibility,
   TileLayerProps,
   VectorTileLayerProps,
   ViewshedProps,
@@ -64,17 +66,27 @@ type GeometryEditorEvents = {
 };
 
 /** Reference to a native exploratory `Analysis` (viewshed / line-of-sight) drawn on an analysis overlay. */
-export declare class AnalysisRef extends SharedObject {
+export declare class AnalysisRef<
+  TEvents extends Record<string, (...args: any[]) => void> = Record<never, never>,
+> extends SharedObject<TEvents> {
   applyProps(changed: Record<string, unknown>): void;
 }
 
 /** Reference to a native exploratory viewshed (`ExploratoryLocationViewshed`). */
 export declare class ViewshedRef extends AnalysisRef {}
 
+/** Events emitted by a `LineOfSightRef` as the target's visibility from the observer changes. */
+type LineOfSightEvents = {
+  onTargetVisibilityChange(payload: { visibility: TargetVisibility }): void;
+};
+
+/** Reference to a native exploratory line of sight (`ExploratoryLocationLineOfSight`). */
+export declare class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
+
 /** Reference to a native `AnalysisOverlay` owned by a `<SceneView>`. */
 export declare class AnalysisOverlayRef extends SharedObject {
-  addAnalysis(analysis: AnalysisRef): void;
-  removeAnalysis(analysis: AnalysisRef): void;
+  addAnalysis(analysis: AnalysisRef<any>): void;
+  removeAnalysis(analysis: AnalysisRef<any>): void;
   setVisible(visible: boolean): void;
 }
 
@@ -133,6 +145,7 @@ declare class ExpoArcgisModule extends NativeModule {
   GeometryEditorRef: new () => GeometryEditorRef;
   AnalysisOverlayRef: new () => AnalysisOverlayRef;
   ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
+  LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
 }
 
 export default requireNativeModule<ExpoArcgisModule>('ExpoArcgis');

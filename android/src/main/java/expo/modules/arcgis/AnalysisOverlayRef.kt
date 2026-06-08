@@ -1,12 +1,19 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.analysis.interactive.Analysis
+import com.arcgismaps.analysis.interactive.ExploratoryLineOfSightTargetVisibility
+import com.arcgismaps.analysis.interactive.ExploratoryLocationLineOfSight
 import com.arcgismaps.analysis.interactive.ExploratoryLocationViewshed
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.view.AnalysisOverlay
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * SharedObject wrapping a native [AnalysisOverlay] owned by a SceneView. Holds the visual analyses
@@ -67,8 +74,48 @@ class ViewshedRef(appContext: AppContext, props: Map<String, Any?>) : AnalysisRe
   }
 }
 
+/** SharedObject wrapping an [ExploratoryLocationLineOfSight] — streams target visibility to JS. */
+class LineOfSightRef(appContext: AppContext, props: Map<String, Any?>) : AnalysisRef(appContext) {
+  private val lineOfSight = ExploratoryLocationLineOfSight(
+    analysisPoint(props["observer"]) ?: Point(0.0, 0.0, SpatialReference.wgs84()),
+    analysisPoint(props["target"]) ?: Point(0.0, 0.0, SpatialReference.wgs84()),
+  )
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+  override val analysis: Analysis get() = lineOfSight
+
+  init {
+    scope.launch {
+      lineOfSight.targetVisibility.collect { visibility ->
+        emit("onTargetVisibilityChange", mapOf("visibility" to visibilityString(visibility)))
+      }
+    }
+  }
+
+  override fun deallocate() {
+    scope.cancel()
+    super.deallocate()
+  }
+
+  fun applyProps(changed: Map<String, Any?>) {
+    changed.forEach { (key, value) ->
+      when (key) {
+        "observer" -> analysisPoint(value)?.let { lineOfSight.observerLocation = it }
+        "target" -> analysisPoint(value)?.let { lineOfSight.targetLocation = it }
+      }
+    }
+  }
+}
+
 /** Decodes a JS point dict into a [Point] (returns null if the value is not a point geometry). */
 internal fun analysisPoint(value: Any?): Point? =
   (value as? Map<*, *>)?.let { geometryFromDict(it) } as? Point
 
 private fun numOr(value: Any?, default: Double): Double = (value as? Number)?.toDouble() ?: default
+
+/** Maps the native line-of-sight visibility to the JS `TargetVisibility` union. */
+private fun visibilityString(v: ExploratoryLineOfSightTargetVisibility): String = when (v) {
+  is ExploratoryLineOfSightTargetVisibility.Visible -> "visible"
+  is ExploratoryLineOfSightTargetVisibility.Obstructed -> "obstructed"
+  else -> "unknown"
+}

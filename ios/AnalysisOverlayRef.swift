@@ -78,3 +78,60 @@ public final class ViewshedRef: AnalysisRef {
     }
   }
 }
+
+/// SharedObject wrapping an `ExploratoryLocationLineOfSight` — observer→target visibility.
+/// Streams the target's visibility back to JS via `onTargetVisibilityChange`.
+public final class LineOfSightRef: AnalysisRef {
+  private let lineOfSight: ExploratoryLocationLineOfSight
+  private var observation: Task<Void, Never>?
+
+  init(props: [String: Any]) {
+    let observer = (props["observer"] as? [String: Any]).flatMap(geometryFromDict) as? Point
+      ?? Point(x: 0, y: 0, spatialReference: .wgs84)
+    let target = (props["target"] as? [String: Any]).flatMap(geometryFromDict) as? Point
+      ?? Point(x: 0, y: 0, spatialReference: .wgs84)
+    let lineOfSight = ExploratoryLocationLineOfSight(observerLocation: observer, targetLocation: target)
+    self.lineOfSight = lineOfSight
+    super.init(analysis: lineOfSight)
+    observation = Task { [weak self] in
+      guard let stream = self?.lineOfSight.$targetVisibility else { return }
+      for await visibility in stream {
+        guard let self else { break }
+        self.emit(event: "onTargetVisibilityChange", payload: ["visibility": visibilityString(visibility)])
+      }
+    }
+  }
+
+  override public func sharedObjectWillRelease() {
+    observation?.cancel()
+    observation = nil
+    super.sharedObjectWillRelease()
+  }
+
+  func applyProps(_ changed: [String: Any]) {
+    for (key, value) in changed {
+      switch key {
+      case "observer":
+        if let point = (value as? [String: Any]).flatMap(geometryFromDict) as? Point {
+          lineOfSight.observerLocation = point
+        }
+      case "target":
+        if let point = (value as? [String: Any]).flatMap(geometryFromDict) as? Point {
+          lineOfSight.targetLocation = point
+        }
+      default:
+        break
+      }
+    }
+  }
+}
+
+/// Maps the native line-of-sight visibility enum to the JS `TargetVisibility` union.
+private func visibilityString(_ v: ExploratoryLineOfSight.TargetVisibility) -> String {
+  switch v {
+  case .visible: return "visible"
+  case .obstructed: return "obstructed"
+  case .unknown: return "unknown"
+  @unknown default: return "unknown"
+  }
+}

@@ -656,6 +656,22 @@ export type ViewshedProps = {
   frustumOutlineVisible?: boolean;
 };
 
+/** Whether a line-of-sight target is visible from the observer. */
+export type TargetVisibility = 'visible' | 'obstructed' | 'unknown';
+
+/**
+ * Props for `<LineOfSight>` — an exploratory line of sight between an observer and a target.
+ * Mirrors the native `ExploratoryLocationLineOfSight`. 3D only (rendered in a `<SceneView>`).
+ */
+export type LineOfSightProps = {
+  /** Observer location. */
+  observer: PointGeometry;
+  /** Target location. */
+  target: PointGeometry;
+  /** Called when the target's visibility from the observer changes. */
+  onTargetVisibilityChange?: (visibility: TargetVisibility) => void;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────

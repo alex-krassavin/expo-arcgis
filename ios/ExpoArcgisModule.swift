@@ -279,6 +279,12 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: ViewshedRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
+    // Line of sight — emits onTargetVisibilityChange (SharedObject.emit + JS addListener).
+    Class(LineOfSightRef.self) {
+      Constructor { (props: [String: Any]) -> LineOfSightRef in LineOfSightRef(props: props) }
+      Function("applyProps") { (ref: LineOfSightRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
     // (no `Events(...)` element on Swift `Class`; SharedObject.emit + JS addListener suffice).
     Class(GeometryEditorRef.self) {

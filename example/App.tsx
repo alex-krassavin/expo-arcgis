@@ -7,6 +7,7 @@ import {
   GeometryEditor,
   Graphic,
   GraphicsOverlay,
+  LineOfSight,
   Map,
   MapImageLayer,
   MapSettings,
@@ -395,6 +396,11 @@ export default function App() {
                       verticalAngle={90}
                       minDistance={50}
                       maxDistance={4000}
+                    />
+                    <LineOfSight
+                      observer={{ type: 'point', x: -118.80657, y: 34.00059, z: 1200 }}
+                      target={{ type: 'point', x: -118.83, y: 34.012, z: 700 }}
+                      onTargetVisibilityChange={(v) => setStatus(`Line of sight: target ${v}`)}
                     />
                   </AnalysisOverlay>
                 )}

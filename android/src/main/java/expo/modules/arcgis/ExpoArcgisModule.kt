@@ -255,6 +255,13 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: ViewshedRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
+    // Line of sight — emits onTargetVisibilityChange as the target's visibility changes.
+    Class(LineOfSightRef::class) {
+      Constructor { props: Map<String, Any?> -> LineOfSightRef(appContext, props) }
+      Events("onTargetVisibilityChange")
+      Function("applyProps") { ref: LineOfSightRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange.
     Class(GeometryEditorRef::class) {
       Constructor { GeometryEditorRef(appContext) }
