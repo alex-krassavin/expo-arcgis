@@ -697,3 +697,38 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 ### Итог раздела
 Реактивный token-auth (challenge-handler) + OAuth-вход (iOS auto-present / Android callback-based, модуль без браузер-зависимости) + `signOut`. Сборочно верифицировано; живой вход — на устройстве (token: sample-логин; OAuth: зарегистрированное приложение + redirect). **DEFER:** per-service креды, persistent store, OAuth через сам challenge-handler, IAP/PKI/app-login, custom refresh, server-revoke.
+
+---
+
+# Roadmap (бэклог DEFER → фазы)
+
+Всё in-scope по §1–29 сделано и собрано на 3 таргетах. Ниже — отложенное, оформленное в фазы, приоритезированное по ценности/риску. Метод тот же: surf API по swiftinterface/jar → 1:1 в декларатив → демо → верификация TS/Android/iOS → handoff + память + коммит на фазу. Эффорт: **S** (1–2 файла), **M** (новый ref/namespace), **L** (новая архитектура/большой натив).
+
+## Приоритет A — быстрые / консистентность (низкий риск)
+- **A1 — JobRef везде (S).** Прогресс/отмена для ВСЕХ offline-функций + `geoprocessor` (сейчас `JobRef` только у `generateOfflineMap`). Паттерн идентичен PP2: free-func возвращает `JobRef(job){ awaitResult }`. Меняет возвраты на `Promise<JobRef<R>>`.
+- **A2 — SceneView identify (S).** Зеркало `MapView.identify` (Q3) для 3D: Swift `SceneViewProxy.identify(...)` / Kotlin `sceneView.identifyLayers(...)` (Promise-паттерн на View). Переиспользует `serializeIdentifyResult`.
+- **A3 — GeometryEditor глубже (S).** Выбор tool (`VertexTool`/`FreehandTool`/`ReticleVertexTool`/`ShapeTool`) пропом; доп. engine-операции (reshape/extend/cut-advanced/auto-complete); полный список юнитов.
+
+## Приоритет B — крупные возможности (нужна архитектура / большой натив)
+- **B1 — Async-loadable слои (L).** Инфраструктура «layer.load() → готов» (сейчас слои — конструктор-синхронные). Разблокирует: **GeoPackage** (`GeoPackage.load()` → выбрать `geoPackageFeatureTables`/`rasters`), **Geodatabase-слой**, **OGC API Features** (`OgcFeatureCollectionTable`), **WFS** (`WfsFeatureTable` + `populateFromService`). `LayerRef` получает async-init + статус.
+- **B2 — Offline-сцены / MobileScenePackage (M).** `<Scene mobileScenePackagePath>` (зеркало `<Map mobileMapPackagePath>` из OFF1: `MobileScenePackage(path).load() → scenes.first`, `Scene` mutable + `onSceneChanged`). + offline-генерация сцен, если есть `OfflineMapTask` для сцен.
+- **B3 — Offline-глубина (M).** Offline **Utility Network**; `OfflineMapSyncTask` + scheduled-updates (инкрементальная синхронизация скачанной карты); `GenerateOfflineMapParameterOverrides` (тонкая настройка области/слоёв/LOD); estimate-size перед загрузкой.
+
+## Приоритет C — глубина по разделам
+- **C1 — Spatial: GPU + GeoElement (M).** Семья `com.arcgismaps.analysis.visibility` (`ViewshedFunction`/`LineOfSightFunction`/`ObserverTargetPair` — высокопроизводительный батч); `ExploratoryGeoElement{Viewshed,LineOfSight}` (анализ привязан к движущемуся `GeoElement`); `ExploratoryLocationDistanceMeasurement`; camera-ctor вьюшеда; per-instance/static цвета.
+- **C2 — Geoprocessing-глубина (S→M).** GP raster-выход (`GeoprocessingResult` → `mapImageLayer`); job-прогресс (через A1 JobRef); типы параметров `date`/`dataFile`/`multiValue`; интроспекция `GeoprocessingTaskInfo` (параметры/типы сервиса).
+- **C3 — Symbols/Renderers (M).** `PictureMarkerSymbol` (URL/asset; Kotlin async `BitmapDrawable`), `HeatmapRenderer` (нет Kotlin-ctor → проверить factory), `DictionaryRenderer` + `DictionarySymbolStyle`/mobile-style-file, visual variables (color/size/rotation), `ModelSceneSymbol` (3D-ассет), multilayer/CIM.
+- **C4 — Editing-глубина (M).** Attachments (бинарь: add/fetch/delete), batch + undo (`ServiceFeatureTable.applyEdits`/`undoLocalEdits` отдельными вызовами), templates/subtypes (`FeatureTemplate`/`FeatureType`), related features (`queryRelatedFeatures`), attribute rules/contingent values.
+- **C5 — Location + Routing/Navigation (L).** Location: NMEA (`NmeaLocationDataSource`), Indoors/IPS (`IndoorsLocationDataSource`), Geotriggers. Routing: offline `RouteTask` (локальный `.geodatabase`), barriers, стопы из фич/PortalItem, навигация (`RouteTracker` + `TrackingStatus`/voice), curbApproach/timeWindows/bearing, `accumulateAttributeNames`.
+
+## Приоритет D — нишевое
+- **D1 — Real-time-глубина (M).** `onDynamicEntityChanged`-события (enter/update/purge), `ArcGISStreamServiceFilter` (where/geometry), purge/reconnection-тюнинг, observation-history (`entity.observations(max)`), popups (`PopupSource`), pull-режим (periodic feature-service refresh).
+- **D2 — Geocode-глубина (S).** Offline-локатор (`LocatorTask(.loc)`), structured-address (`GeocodeParameters` + `searchValues`/категории), round-trip `SuggestResult`→`geocode(suggestResult)` нативным объектом (сейчас по строке `label`), `resultAttributeNames`/`outputSpatialReference`.
+- **D3 — UN-advanced (M).** Subnetwork management (`getSubnetwork`/`SubnetworkController`), редактирование ассоциаций, validate-topology, ручной `UtilityTraceConfiguration` (не только named), terminal-configuration, tap→native-feature (identify вместо native-query).
+- **D4 — Auth-глубина (M).** Per-service разные креды (map URL→login), persistent credential store (выживание между запусками), app-login (`OAuthApplicationCredential` client_id/secret), IAP/PKI/сертификаты, custom token-timeout/refresh, server-revoke на signOut.
+
+## Платформенные пробелы SDK (не делаем, пока нет в SDK)
+- 3D-редактирование геометрии (нет `geometryEditor` у SceneView), Local scene + `BuildingSceneLayer` (нет `LocalSceneView` в Swift), AR tabletop (нужен toolkit + ARKit/ARCore).
+
+## Прочее (нишевые типы данных — по запросу)
+- Слои: ENC, Annotation, Dimension, GroupLayer, FeatureCollection, ImageOverlay (frames). Камеры: orbit/globe cameraControllers. Все — точечно при необходимости.
