@@ -167,6 +167,12 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
       depth: (s["depth"] as? NSNumber)?.doubleValue ?? 100,
       anchorPosition: sceneSymbolAnchor(s["anchor"] as? String)
     )
+  case "picture-marker":
+    guard let urlString = s["url"] as? String, let url = URL(string: urlString) else { return nil }
+    let picture = PictureMarkerSymbol(url: url)
+    if let width = (s["width"] as? NSNumber)?.doubleValue { picture.width = width }
+    if let height = (s["height"] as? NSNumber)?.doubleValue { picture.height = height }
+    return picture
   default:
     return nil
   }

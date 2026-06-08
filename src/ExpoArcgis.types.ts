@@ -1071,13 +1071,25 @@ export type SimpleMarkerSceneSymbol = {
   anchor?: 'center' | 'bottom' | 'top' | 'origin';
 };
 
+/** A marker drawn from an image at a URL. Mirrors `PictureMarkerSymbol`. */
+export type PictureMarkerSymbol = {
+  type: 'picture-marker';
+  /** Image URL (remote `http(s)` or a local file URL). */
+  url: string;
+  /** Display width in points (defaults to the image's intrinsic size). */
+  width?: number;
+  /** Display height in points (defaults to the image's intrinsic size). */
+  height?: number;
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol =
   | SimpleMarkerSymbol
   | SimpleLineSymbol
   | SimpleFillSymbol
   | TextSymbol
-  | SimpleMarkerSceneSymbol;
+  | SimpleMarkerSceneSymbol
+  | PictureMarkerSymbol;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };

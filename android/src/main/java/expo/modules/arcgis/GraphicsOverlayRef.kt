@@ -17,6 +17,7 @@ import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
+import com.arcgismaps.mapping.symbology.PictureMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
@@ -181,6 +182,12 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     num(s["depth"], 100.0),
     sceneSymbolAnchor(s["anchor"]),
   )
+  "picture-marker" -> (s["url"] as? String)?.let { url ->
+    PictureMarkerSymbol(url).apply {
+      (s["width"] as? Number)?.toFloat()?.let { width = it }
+      (s["height"] as? Number)?.toFloat()?.let { height = it }
+    }
+  }
   else -> null
 }
 
