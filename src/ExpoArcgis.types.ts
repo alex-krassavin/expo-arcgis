@@ -619,7 +619,10 @@ export type GeocodeParameters = {
   categories?: string[];
   /** A point near which results are preferred. */
   preferredSearchLocation?: PointGeometry;
-  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  /**
+   * Locator to use. An online geocode-service URL, or a local path to an offline locator
+   * (`.loc`) for disconnected geocoding. Defaults to the ArcGIS World Geocoding Service.
+   */
   locatorUrl?: string;
 };
 
@@ -629,7 +632,10 @@ export type ReverseGeocodeParameters = {
   maxResults?: number;
   /** Maximum search distance from the point, in meters. */
   maxDistance?: number;
-  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  /**
+   * Locator to use. An online geocode-service URL, or a local path to an offline locator
+   * (`.loc`) for disconnected geocoding. Defaults to the ArcGIS World Geocoding Service.
+   */
   locatorUrl?: string;
 };
 
@@ -649,7 +655,10 @@ export type SuggestParameters = {
   categories?: string[];
   /** A point near which suggestions are preferred. */
   preferredSearchLocation?: PointGeometry;
-  /** Locator service URL. Defaults to the ArcGIS World Geocoding Service. */
+  /**
+   * Locator to use. An online geocode-service URL, or a local path to an offline locator
+   * (`.loc`) for disconnected geocoding. Defaults to the ArcGIS World Geocoding Service.
+   */
   locatorUrl?: string;
 };
 

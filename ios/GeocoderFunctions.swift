@@ -12,13 +12,14 @@ private final class LocatorCache: @unchecked Sendable {
   private let lock = NSLock()
   private var tasks: [String: LocatorTask] = [:]
 
-  func task(for url: String) -> LocatorTask? {
+  func task(for locator: String) -> LocatorTask? {
     lock.lock()
     defer { lock.unlock() }
-    if let task = tasks[url] { return task }
-    guard let parsed = URL(string: url) else { return nil }
+    if let task = tasks[locator] { return task }
+    // A scheme'd URL (online geocode service); otherwise a local file path (an offline `.loc`).
+    let parsed = URL(string: locator).flatMap { $0.scheme != nil ? $0 : nil } ?? URL(fileURLWithPath: locator)
     let task = LocatorTask(url: parsed)
-    tasks[url] = task
+    tasks[locator] = task
     return task
   }
 }
