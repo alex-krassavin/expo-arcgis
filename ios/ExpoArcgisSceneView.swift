@@ -8,6 +8,7 @@ final class SceneViewModel: ObservableObject {
   // `ArcGIS.Scene` qualified to avoid collision with `SwiftUI.Scene` (this file imports SwiftUI).
   @Published private(set) var scene: ArcGIS.Scene?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
+  @Published private(set) var analysisOverlays: [AnalysisOverlay] = []
   @Published private(set) var camera: Camera?
   /// Bumped on each camera change so the SwiftUI `.task(id:)` re-runs and re-animates.
   @Published private(set) var cameraVersion = 0
@@ -27,6 +28,10 @@ final class SceneViewModel: ObservableObject {
     graphicsOverlays = overlays
   }
 
+  func setAnalysisOverlays(_ overlays: [AnalysisOverlay]) {
+    analysisOverlays = overlays
+  }
+
   func setCamera(_ camera: Camera) {
     self.camera = camera
     cameraVersion += 1
@@ -44,7 +49,11 @@ struct ExpoArcgisSceneContainer: View {
   var body: some View {
     if let scene = model.scene {
       SceneViewReader { proxy in
-        SceneView(scene: scene, graphicsOverlays: model.graphicsOverlays)
+        SceneView(
+          scene: scene,
+          graphicsOverlays: model.graphicsOverlays,
+          analysisOverlays: model.analysisOverlays
+        )
           // ArcGIS lighting modifiers return `SceneView`, so they precede the SwiftUI modifiers.
           .sunLighting(model.sunLighting)
           .atmosphereEffect(model.atmosphereEffect)
@@ -115,6 +124,10 @@ class ExpoArcgisSceneView: ExpoView {
 
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
+  }
+
+  func setAnalysisOverlays(_ refs: [AnalysisOverlayRef]) {
+    model.setAnalysisOverlays(refs.map { $0.overlay })
   }
 
   /// Animates the view to a runtime camera sent from JS.

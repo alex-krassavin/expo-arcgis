@@ -45,6 +45,9 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
         remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
         setGeometryEditor: (editor) => setGeometryEditor(editor),
+        // Visual analyses (viewshed / line-of-sight) are 3D only — no-op on a 2D map.
+        addAnalysisOverlay: () => {},
+        removeAnalysisOverlay: () => {},
       }),
       []
     );

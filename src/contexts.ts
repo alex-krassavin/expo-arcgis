@@ -1,6 +1,11 @@
 import { createContext, useContext } from 'react';
 
-import type { GeoModelRef, GeometryEditorRef, GraphicsOverlayRef } from './ExpoArcgisModule';
+import type {
+  AnalysisOverlayRef,
+  GeoModelRef,
+  GeometryEditorRef,
+  GraphicsOverlayRef,
+} from './ExpoArcgisModule';
 
 /**
  * The nearest geo model — a `<Map>` or `<Scene>`. Operational layers attach here.
@@ -28,8 +33,14 @@ export type GeometryEditorHost = {
   setGeometryEditor(editor: GeometryEditorRef | null): void;
 };
 
+/** Lets an `<AnalysisOverlay>` register itself with the nearest `<SceneView>` (no-op on `<MapView>`). */
+export type AnalysisOverlayHost = {
+  addAnalysisOverlay(overlay: AnalysisOverlayRef): void;
+  removeAnalysisOverlay(overlay: AnalysisOverlayRef): void;
+};
+
 /** What a `<MapView>` / `<SceneView>` exposes to its children. */
-export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost;
+export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost;
 
 /** The nearest geo view — a `<MapView>` or `<SceneView>`. Overlays / editors attach here. */
 export const GeoViewContext = createContext<GeoViewHost | undefined>(undefined);
@@ -49,6 +60,17 @@ export function useGraphicsOverlay(): GraphicsOverlayRef {
   const overlay = useContext(GraphicsOverlayContext);
   if (!overlay) {
     throw new Error('<Graphic> must be used within a <GraphicsOverlay>.');
+  }
+  return overlay;
+}
+
+/** The nearest `<AnalysisOverlay>`. Visual analyses (`<Viewshed>` / `<LineOfSight>`) attach here. */
+export const AnalysisOverlayContext = createContext<AnalysisOverlayRef | undefined>(undefined);
+
+export function useAnalysisOverlay(): AnalysisOverlayRef {
+  const overlay = useContext(AnalysisOverlayContext);
+  if (!overlay) {
+    throw new Error('<Viewshed> / <LineOfSight> must be used within an <AnalysisOverlay>.');
   }
   return overlay;
 }

@@ -1,4 +1,5 @@
 import {
+  AnalysisOverlay,
   coordinateFormatter,
   FeatureLayer,
   geocoder,
@@ -13,6 +14,7 @@ import {
   router,
   Scene,
   SceneLayer,
+  Viewshed,
   SceneView,
   WmsLayer,
   type Camera,
@@ -148,6 +150,7 @@ export default function App() {
   const [sceneCamera, setSceneCamera] = useState<Camera | undefined>(undefined);
   const [buildings, setBuildings] = useState(false);
   const [shadows, setShadows] = useState(false);
+  const [viewshed, setViewshed] = useState(true);
   const [buffer, setBuffer] = useState<Geometry | null>(null);
   const [draw, setDraw] = useState(false);
   const [cities, setCities] = useState(false);
@@ -381,6 +384,20 @@ export default function App() {
                     }}
                   />
                 </GraphicsOverlay>
+                {/* Spatial analysis — exploratory viewshed over the terrain (toggle) */}
+                {viewshed && (
+                  <AnalysisOverlay>
+                    <Viewshed
+                      location={{ type: 'point', x: -118.80657, y: 34.00059, z: 1200 }}
+                      heading={0}
+                      pitch={70}
+                      horizontalAngle={120}
+                      verticalAngle={90}
+                      minDistance={50}
+                      maxDistance={4000}
+                    />
+                  </AnalysisOverlay>
+                )}
               </SceneView>
             </Scene>
           ) : (
@@ -465,6 +482,7 @@ export default function App() {
                   }}
                 />
                 <Button title={shadows ? 'No shadows' : 'Shadows'} onPress={() => setShadows((v) => !v)} />
+                <Button title={viewshed ? 'No viewshed' : 'Viewshed'} onPress={() => setViewshed((v) => !v)} />
               </>
             ) : (
               <>

@@ -21,6 +21,7 @@ import type {
   SceneProps,
   TileLayerProps,
   VectorTileLayerProps,
+  ViewshedProps,
   WebTiledLayerProps,
   WmsLayerProps,
   WmtsLayerProps,
@@ -61,6 +62,21 @@ export declare class GraphicsOverlayRef extends SharedObject {
 type GeometryEditorEvents = {
   onGeometryChange(payload: { geometry?: Geometry }): void;
 };
+
+/** Reference to a native exploratory `Analysis` (viewshed / line-of-sight) drawn on an analysis overlay. */
+export declare class AnalysisRef extends SharedObject {
+  applyProps(changed: Record<string, unknown>): void;
+}
+
+/** Reference to a native exploratory viewshed (`ExploratoryLocationViewshed`). */
+export declare class ViewshedRef extends AnalysisRef {}
+
+/** Reference to a native `AnalysisOverlay` owned by a `<SceneView>`. */
+export declare class AnalysisOverlayRef extends SharedObject {
+  addAnalysis(analysis: AnalysisRef): void;
+  removeAnalysis(analysis: AnalysisRef): void;
+  setVisible(visible: boolean): void;
+}
 
 /** Reference to a native interactive `GeometryEditor`, bound to a `<MapView>`. */
 export declare class GeometryEditorRef extends SharedObject<GeometryEditorEvents> {
@@ -115,6 +131,8 @@ declare class ExpoArcgisModule extends NativeModule {
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;
   GeometryEditorRef: new () => GeometryEditorRef;
+  AnalysisOverlayRef: new () => AnalysisOverlayRef;
+  ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
 }
 
 export default requireNativeModule<ExpoArcgisModule>('ExpoArcgis');

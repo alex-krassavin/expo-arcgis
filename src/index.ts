@@ -32,6 +32,8 @@ export {
 } from './layers';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
+export { AnalysisOverlay } from './AnalysisOverlay';
+export { Viewshed } from './Viewshed';
 export { GeometryEditor } from './GeometryEditor';
 export { geometryEngine } from './geometryEngine';
 export { coordinateFormatter } from './coordinateFormatter';

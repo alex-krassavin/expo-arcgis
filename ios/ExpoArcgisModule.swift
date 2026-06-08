@@ -262,6 +262,23 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    // Analysis overlay (owned by a SceneView) and the exploratory visual analyses drawn on it.
+    Class(AnalysisOverlayRef.self) {
+      Constructor { () -> AnalysisOverlayRef in AnalysisOverlayRef() }
+      Function("addAnalysis") { (ref: AnalysisOverlayRef, analysis: AnalysisRef) in
+        ref.addAnalysis(analysis)
+      }
+      Function("removeAnalysis") { (ref: AnalysisOverlayRef, analysis: AnalysisRef) in
+        ref.removeAnalysis(analysis)
+      }
+      Function("setVisible") { (ref: AnalysisOverlayRef, visible: Bool) in ref.setVisible(visible) }
+    }
+
+    Class(ViewshedRef.self) {
+      Constructor { (props: [String: Any]) -> ViewshedRef in ViewshedRef(props: props) }
+      Function("applyProps") { (ref: ViewshedRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
     // (no `Events(...)` element on Swift `Class`; SharedObject.emit + JS addListener suffice).
     Class(GeometryEditorRef.self) {
@@ -315,6 +332,10 @@ public class ExpoArcgisModule: Module {
 
       Prop("graphicsOverlays") { (view: ExpoArcgisSceneView, refs: [GraphicsOverlayRef]) in
         view.setGraphicsOverlays(refs)
+      }
+
+      Prop("analysisOverlays") { (view: ExpoArcgisSceneView, refs: [AnalysisOverlayRef]) in
+        view.setAnalysisOverlays(refs)
       }
 
       Prop("camera") { (view: ExpoArcgisSceneView, camera: [String: Any]?) in

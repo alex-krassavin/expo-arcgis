@@ -624,6 +624,39 @@ export type RouteResult = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Spatial analysis (visual) — exploratory viewshed / line-of-sight on a `<SceneView>`.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Props for `<AnalysisOverlay>` — a container for visual analyses, hosted by a `<SceneView>`. */
+export type AnalysisOverlayProps = {
+  /** Whether the overlay's analyses are drawn. Defaults to `true`. */
+  visible?: boolean;
+};
+
+/**
+ * Props for `<Viewshed>` — an exploratory viewshed (visible area from an observer). Mirrors the
+ * native `ExploratoryLocationViewshed`. 3D only (rendered in a `<SceneView>`).
+ */
+export type ViewshedProps = {
+  /** Observer location. */
+  location: PointGeometry;
+  /** Direction the observer faces, in degrees (0 = north, clockwise). */
+  heading: number;
+  /** Observer pitch, in degrees (0 = horizontal, 90 = straight down). */
+  pitch: number;
+  /** Horizontal field-of-view angle, in degrees (0–360). */
+  horizontalAngle: number;
+  /** Vertical field-of-view angle, in degrees (0–180). */
+  verticalAngle: number;
+  /** Near clipping distance from the observer, in meters. */
+  minDistance?: number;
+  /** Far clipping distance from the observer, in meters. */
+  maxDistance?: number;
+  /** Whether to draw the viewshed frustum outline. Defaults to `false`. */
+  frustumOutlineVisible?: boolean;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────
 

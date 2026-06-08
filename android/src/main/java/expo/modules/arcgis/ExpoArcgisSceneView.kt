@@ -75,6 +75,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     sceneView.graphicsOverlays.addAll(refs.map { it.overlay })
   }
 
+  /** Receives the analysis overlays declared as `<AnalysisOverlay>` children of the `<SceneView>`. */
+  fun setAnalysisOverlays(refs: List<AnalysisOverlayRef>) {
+    sceneView.analysisOverlays.clear()
+    sceneView.analysisOverlays.addAll(refs.map { it.overlay })
+  }
+
   /** Animates the view to a runtime camera sent from JS. */
   fun setCamera(c: Map<String, Any?>?) {
     val position = c?.get("position") as? Map<*, *> ?: return
