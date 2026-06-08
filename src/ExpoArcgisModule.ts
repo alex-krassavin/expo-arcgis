@@ -131,6 +131,12 @@ export declare class UtilityNetworkRef extends SharedObject {
     traceType: string,
     startingLocations: UtilityElementDescriptor[]
   ): Promise<UtilityTraceResult>;
+  /** Queries a starting feature, traces from it, and selects the result features on the map. */
+  traceFromQuery(
+    tableName: string,
+    whereClause: string,
+    traceType: string
+  ): Promise<UtilityTraceResult>;
 }
 
 /** The geo model that operational layers attach to — a `<Map>` or a `<Scene>`. */

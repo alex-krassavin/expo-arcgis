@@ -34,6 +34,7 @@ import {
   type Surface,
   type TapEventPayload,
   type UtilityNetworkHandle,
+  type UtilityTraceType,
   type Viewpoint,
 } from 'expo-arcgis';
 import { useRef, useState } from 'react';
@@ -263,6 +264,17 @@ export default function App() {
       setUn(true);
     } catch (e) {
       setStatus(`UN auth error: ${String(e)}`);
+    }
+  }
+  // "Trace ▸" — trace the utility network from a queried device and select the results.
+  async function runTrace(traceType: UtilityTraceType) {
+    if (!unRef.current) return setStatus('Load the utility network first');
+    setStatus(`Trace (${traceType})…`);
+    try {
+      const result = await unRef.current.traceFromQuery('Electric Distribution Device', '1=1', traceType);
+      setStatus(`Trace ${traceType}: ${result.elementCount} element(s)`);
+    } catch (e) {
+      setStatus(`Trace error: ${String(e)}`);
     }
   }
   // "Viewshed GP" — run the Esri Viewshed geoprocessing service (geoprocessor namespace).
@@ -577,6 +589,8 @@ export default function App() {
                 <Button title="Suggest" onPress={suggestPlaces} />
                 <Button title="Route" onPress={solveRouteDemo} />
                 <Button title={un ? 'UN loaded' : 'Load UN'} onPress={loadUN} />
+                {un && <Button title="Connected" onPress={() => runTrace('connected')} />}
+                {un && <Button title="Downstream" onPress={() => runTrace('downstream')} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />

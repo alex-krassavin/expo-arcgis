@@ -305,6 +305,9 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("trace") { (ref: UtilityNetworkRef, traceType: String, startingLocations: [[String: Any]]) in
         try await ref.trace(traceType, startingLocations)
       }
+      AsyncFunction("traceFromQuery") { (ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String) in
+        try await ref.traceFromQuery(tableName, whereClause, traceType)
+      }
     }
 
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange

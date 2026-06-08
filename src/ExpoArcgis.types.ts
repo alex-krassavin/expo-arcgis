@@ -755,10 +755,19 @@ export type UtilityNetworkProps = {
 
 /** Imperative handle exposed by `<UtilityNetwork>` via `ref`. */
 export type UtilityNetworkHandle = {
-  /** Runs a trace of `traceType` from the given starting locations. */
+  /** Runs a trace of `traceType` from the given starting locations (explicit element descriptors). */
   trace(
     traceType: UtilityTraceType,
     startingLocations: UtilityElementDescriptor[]
+  ): Promise<UtilityTraceResult>;
+  /**
+   * Queries a starting feature from the layer `tableName` (matching `whereClause`), traces from it,
+   * and selects the result features on the map. Convenient for an interactive "trace from here" flow.
+   */
+  traceFromQuery(
+    tableName: string,
+    whereClause: string,
+    traceType: UtilityTraceType
   ): Promise<UtilityTraceResult>;
 };
 
