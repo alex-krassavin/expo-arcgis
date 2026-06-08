@@ -4,6 +4,7 @@ import com.arcgismaps.data.FeatureCollectionTable
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.tasks.geoprocessing.GeoprocessingTask
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingBoolean
+import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDate
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDouble
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingFeatures
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingLinearUnit
@@ -11,6 +12,7 @@ import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingL
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingParameter
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingString
 import expo.modules.kotlin.AppContext
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -47,6 +49,7 @@ private fun buildGeoprocessingParameter(d: Map<*, *>): GeoprocessingParameter? =
   "double" -> GeoprocessingDouble((d["value"] as? Number)?.toDouble() ?: 0.0)
   "long" -> GeoprocessingLong((d["value"] as? Number)?.toInt() ?: 0)
   "boolean" -> GeoprocessingBoolean(d["value"] as? Boolean ?: false)
+  "date" -> GeoprocessingDate(Instant.ofEpochMilli((d["value"] as? Number)?.toLong() ?: 0L))
   "linearUnit" -> GeoprocessingLinearUnit(
     (d["value"] as? Number)?.toDouble() ?: 0.0,
     linearUnit(d["unit"] as? String),
@@ -71,6 +74,7 @@ private suspend fun serializeGeoprocessingParameter(param: GeoprocessingParamete
   is GeoprocessingDouble -> param.value
   is GeoprocessingLong -> param.value
   is GeoprocessingBoolean -> param.value
+  is GeoprocessingDate -> param.value.toEpochMilli()
   is GeoprocessingLinearUnit -> param.distance
   is GeoprocessingFeatures -> {
     if (param.canFetchOutputFeatures) param.fetchOutputFeatures().getOrThrow()

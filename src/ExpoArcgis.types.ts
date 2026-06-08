@@ -788,6 +788,7 @@ export type GeoprocessingInput =
   | { type: 'double'; value: number }
   | { type: 'long'; value: number }
   | { type: 'boolean'; value: boolean }
+  | { type: 'date'; value: number }
   | { type: 'linearUnit'; value: number; unit?: LinearUnit }
   | { type: 'features'; geometries: Geometry[] };
 

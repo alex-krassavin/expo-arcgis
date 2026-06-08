@@ -47,6 +47,8 @@ private func buildGeoprocessingParameter(_ d: [String: Any]) -> GeoprocessingPar
     return GeoprocessingLong(value: (d["value"] as? NSNumber)?.int32Value ?? 0)
   case "boolean":
     return GeoprocessingBoolean(value: d["value"] as? Bool ?? false)
+  case "date":
+    return GeoprocessingDate(value: Date(timeIntervalSince1970: ((d["value"] as? NSNumber)?.doubleValue ?? 0) / 1000))
   case "linearUnit":
     return GeoprocessingLinearUnit(
       distance: (d["value"] as? NSNumber)?.doubleValue ?? 0,
@@ -75,6 +77,7 @@ private func serializeGeoprocessingParameter(_ param: GeoprocessingParameter) as
   case let p as GeoprocessingDouble: return p.value
   case let p as GeoprocessingLong: return Int(p.value)
   case let p as GeoprocessingBoolean: return p.value
+  case let p as GeoprocessingDate: return p.value.timeIntervalSince1970 * 1000
   case let p as GeoprocessingLinearUnit: return p.distance
   case let p as GeoprocessingFeatures:
     if p.canFetchOutputFeatures { try await p.fetchOutputFeatures() }
