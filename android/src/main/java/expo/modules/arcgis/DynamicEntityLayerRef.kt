@@ -1,16 +1,23 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.Field
+import com.arcgismaps.data.FieldType
 import com.arcgismaps.mapping.layers.DynamicEntityLayer
 import com.arcgismaps.mapping.layers.Layer
 import com.arcgismaps.realtime.ArcGISStreamService
 import com.arcgismaps.realtime.ConnectionStatus
+import com.arcgismaps.realtime.CustomDynamicEntityDataSource
 import com.arcgismaps.realtime.DynamicEntityDataSource
+import com.arcgismaps.realtime.DynamicEntityDataSourceInfo
 import com.arcgismaps.realtime.DynamicEntityQueryParameters
 import expo.modules.kotlin.AppContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -18,8 +25,10 @@ import kotlinx.coroutines.launch
  * entities that update live). Emits `onConnectionStatusChange` as the data source connects.
  */
 class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
-  val dataSource: DynamicEntityDataSource =
-    ArcGISStreamService(props["streamServiceUrl"] as? String ?: "")
+  // Non-null only in custom-source mode — observations pushed from JS are emitted into this flow.
+  private val pushFlow: MutableSharedFlow<CustomDynamicEntityDataSource.FeedEvent>? =
+    if (props["customSource"] != null) MutableSharedFlow(extraBufferCapacity = 64) else null
+  val dataSource: DynamicEntityDataSource = buildDataSource(props, pushFlow)
   override val layer: Layer = DynamicEntityLayer(dataSource)
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
@@ -29,6 +38,13 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
         emit("onConnectionStatusChange", mapOf("status" to connectionStatusString(status)))
       }
     }
+  }
+
+  /** Pushes an observation into a custom data source (no-op for a stream service). */
+  fun pushObservation(attributes: Map<String, Any?>, geometry: Map<String, Any?>) {
+    val flow = pushFlow ?: return
+    val geom = geometryFromDict(geometry) ?: return
+    flow.tryEmit(CustomDynamicEntityDataSource.FeedEvent.NewObservation(geom, attributes))
   }
 
   /** Returns the data source's currently-tracked dynamic entities (attributes + geometry). */
@@ -71,4 +87,39 @@ fun connectionStatusString(status: ConnectionStatus): String = when (status) {
   is ConnectionStatus.Connecting -> "connecting"
   is ConnectionStatus.Connected -> "connected"
   is ConnectionStatus.Failed -> "failed"
+}
+
+/** Builds the real-time data source: a custom feed (push from JS) or a stream service. */
+private fun buildDataSource(
+  props: Map<String, Any?>,
+  pushFlow: MutableSharedFlow<CustomDynamicEntityDataSource.FeedEvent>?,
+): DynamicEntityDataSource {
+  val custom = props["customSource"] as? Map<*, *>
+  if (custom != null && pushFlow != null) {
+    val info = DynamicEntityDataSourceInfo(
+      custom["entityIdField"] as? String ?: "id",
+      buildDynamicEntityFields(custom["fields"] as? List<*>),
+    )
+    return CustomDynamicEntityDataSource(object : CustomDynamicEntityDataSource.EntityFeedProvider {
+      override val feed: SharedFlow<CustomDynamicEntityDataSource.FeedEvent> = pushFlow.asSharedFlow()
+      override suspend fun onLoad(): DynamicEntityDataSourceInfo = info
+      override suspend fun onConnect() {}
+      override suspend fun onDisconnect() {}
+    })
+  }
+  return ArcGISStreamService(props["streamServiceUrl"] as? String ?: "")
+}
+
+/** Builds [Field]s from JS `{ name, type }` defs for a custom data source. */
+private fun buildDynamicEntityFields(defs: List<*>?): List<Field> =
+  (defs ?: emptyList<Any?>()).filterIsInstance<Map<*, *>>().map { def ->
+    Field(dynamicEntityFieldType(def["type"] as? String), def["name"] as? String ?: "", "", 0, null, true, true)
+  }
+
+private fun dynamicEntityFieldType(type: String?): FieldType = when (type) {
+  "int32" -> FieldType.Int32
+  "int64" -> FieldType.Int64
+  "float64" -> FieldType.Float64
+  "date" -> FieldType.Date
+  else -> FieldType.Text
 }

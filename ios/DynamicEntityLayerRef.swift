@@ -5,14 +5,35 @@ import ExpoModulesCore
 /// entities that update live). Emits `onConnectionStatusChange` as the data source connects.
 public final class DynamicEntityLayerRef: LayerRef {
   let dataSource: DynamicEntityDataSource
+  private let pushFeed: PushFeed?
   private var statusTask: Task<Void, Never>?
 
   init(props: [String: Any]) {
-    let urlString = props["streamServiceUrl"] as? String ?? "https://example.invalid"
-    let source = ArcGISStreamService(url: URL(string: urlString) ?? URL(string: "https://example.invalid")!)
+    let source: DynamicEntityDataSource
+    if let custom = props["customSource"] as? [String: Any] {
+      let feed = PushFeed()
+      let info = DynamicEntityDataSourceInfo(
+        entityIDFieldName: custom["entityIdField"] as? String ?? "id",
+        fields: buildDynamicEntityFields(custom["fields"] as? [[String: Any]] ?? [])
+      )
+      self.pushFeed = feed
+      source = CustomDynamicEntityDataSource(info: info) { feed }
+    } else {
+      let urlString = props["streamServiceUrl"] as? String ?? "https://example.invalid"
+      self.pushFeed = nil
+      source = ArcGISStreamService(url: URL(string: urlString) ?? URL(string: "https://example.invalid")!)
+    }
     self.dataSource = source
     super.init(layer: DynamicEntityLayer(dataSource: source))
     observeConnectionStatus()
+  }
+
+  /// Pushes an observation into a custom data source (no-op for a stream service).
+  func pushObservation(_ attributes: [String: Any], _ geometry: [String: Any]) {
+    pushFeed?.push(
+      geometry: geometryFromDict(geometry),
+      attributes: attributes.mapValues(sendableAttribute)
+    )
   }
 
   private func observeConnectionStatus() {
@@ -63,5 +84,47 @@ func connectionStatusString(_ status: ConnectionStatus) -> String {
   case .connected: return "connected"
   case .failed: return "failed"
   @unknown default: return "disconnected"
+  }
+}
+
+/// A `CustomDynamicEntityFeed` driven imperatively — `push` yields a `newObservation` event.
+final class PushFeed: CustomDynamicEntityFeed, @unchecked Sendable {
+  typealias Events = AsyncStream<CustomDynamicEntityFeedEvent>
+  let events: AsyncStream<CustomDynamicEntityFeedEvent>
+  private let continuation: AsyncStream<CustomDynamicEntityFeedEvent>.Continuation
+
+  init() {
+    var cont: AsyncStream<CustomDynamicEntityFeedEvent>.Continuation!
+    self.events = AsyncStream { cont = $0 }
+    self.continuation = cont
+  }
+
+  func push(geometry: Geometry?, attributes: [String: any Sendable]) {
+    continuation.yield(.newObservation(geometry: geometry, attributes: attributes))
+  }
+}
+
+/// Converts a JS attribute value to a `Sendable` one (`Sendable` is a marker — it can't be cast at runtime).
+private func sendableAttribute(_ value: Any) -> any Sendable {
+  if let string = value as? String { return string }
+  if let number = value as? NSNumber { return number.doubleValue }
+  return String(describing: value)
+}
+
+/// Builds `Field`s from JS `{ name, type }` defs for a custom data source (`ArcGIS.Field` — Expo also
+/// exposes a `Field` property wrapper, so the namespace is required).
+func buildDynamicEntityFields(_ defs: [[String: Any]]) -> [ArcGIS.Field] {
+  defs.map { def in
+    ArcGIS.Field(type: dynamicEntityFieldType(def["type"] as? String), name: def["name"] as? String ?? "", alias: "")
+  }
+}
+
+private func dynamicEntityFieldType(_ type: String?) -> FieldType {
+  switch type {
+  case "int32": return .int32
+  case "int64": return .int64
+  case "float64": return .float64
+  case "date": return .date
+  default: return .text
   }
 }

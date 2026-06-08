@@ -205,9 +205,12 @@ export default function App() {
   const [offlinePath, setOfflinePath] = useState<string | null>(null);
   const [offlineJob, setOfflineJob] = useState<JobRef<OfflineMapResult> | null>(null);
   const [realtime, setRealtime] = useState(false);
+  const [customRT, setCustomRT] = useState(false);
   const mapRef = useRef<MapViewHandle>(null);
   const sceneRef = useRef<SceneViewHandle>(null);
   const realtimeRef = useRef<DynamicEntityLayerHandle>(null);
+  const customRtRef = useRef<DynamicEntityLayerHandle>(null);
+  const pushCount = useRef(0);
   const unRef = useRef<UtilityNetworkHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -286,6 +289,15 @@ export default function App() {
   async function suggestPlaces() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
+  }
+  // "Push point" — push a moving observation into the custom dynamic-entity source.
+  function pushPoint() {
+    const i = pushCount.current++;
+    customRtRef.current?.pushObservation(
+      { id: 'vehicle-1' },
+      { type: 'point', x: -100 + i * 0.4, y: 40 }
+    );
+    setStatus(`Pushed observation #${i + 1}`);
   }
   // "Query entities" — count the dynamic entities currently tracked by the real-time layer.
   async function queryRealtime() {
@@ -656,6 +668,14 @@ export default function App() {
                   onConnectionStatusChange={(s) => setStatus(`Real-time: ${s}`)}
                 />
               )}
+              {/* Custom dynamic-entity source — observations pushed from JS via the ref */}
+              {customRT && (
+                <DynamicEntityLayer
+                  ref={customRtRef}
+                  customSource={{ entityIdField: 'id', fields: [{ name: 'id', type: 'text' }] }}
+                  trackDisplay={{ maximumObservations: 10, showsPreviousObservations: true }}
+                />
+              )}
               <MapView
                 ref={mapRef}
                 style={styles.map}
@@ -754,6 +774,8 @@ export default function App() {
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title={realtime ? 'Stop RT' : 'Real-time'} onPress={() => setRealtime((v) => !v)} />
                 {realtime && <Button title="Query entities" onPress={queryRealtime} />}
+                <Button title={customRT ? 'Stop custom RT' : 'Custom RT'} onPress={() => setCustomRT((v) => !v)} />
+                {customRT && <Button title="Push point" onPress={pushPoint} />}
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />
                 <Button title="Delete" onPress={deleteFeature} />

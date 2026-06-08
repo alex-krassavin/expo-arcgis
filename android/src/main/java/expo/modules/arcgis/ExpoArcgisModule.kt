@@ -235,6 +235,9 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("queryDynamicEntities") Coroutine { ref: DynamicEntityLayerRef ->
         ref.queryDynamicEntities()
       }
+      Function("pushObservation") { ref: DynamicEntityLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?> ->
+        ref.pushObservation(attributes, geometry)
+      }
     }
 
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.

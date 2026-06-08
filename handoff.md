@@ -661,3 +661,19 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 ### Итог
 Перенял из «programming patterns»: Loadable `retryLoad` + Tasks/Jobs `progress`+`cancel` (через generic `JobRef`). Остальные offline-функции/geoprocessor могут принять JobRef идентично (DEFER). Сборочно верифицировано на 3 таргетах.
+
+## 28. Раздел Real-time (dynamic entities) — план одобрен, 3 фазы (полный объём)
+
+Живые движущиеся объекты из real-time источников. `DynamicEntityLayer` — это `Layer`, источник `DynamicEntityDataSource`. Ложится в layer-паттерн: `DynamicEntityLayerRef : LayerRef`, декларативный `<DynamicEntityLayer>` — ребёнок `<Map>` (как `<FeatureLayer>`, forwardRef + событие + handle). Пакет Kotlin `com.arcgismaps.realtime.*`.
+
+### Фаза 1 — RT1: `<DynamicEntityLayer streamServiceUrl>` (core) ✅
+- `DynamicEntityLayerRef.swift`/`.kt` (новый): `layer = DynamicEntityLayer(ArcGISStreamService(url))`; подписка на `dataSource.connectionStatus` (Swift `$connectionStatus` AsyncStream в `Task` / Kotlin `StateFlow.collect` в scope) → `emit("onConnectionStatusChange", {status})`. `ConnectionStatus` — Swift enum / Kotlin sealed. `trackDisplayProperties` (`maximumObservations`; **Swift `showsPreviousObservations` vs Kotlin `showPreviousObservations`**). **`LayerRef` стал generic по событиям** (`LayerRef<TEvents>`, как `AnalysisRef`); `addLayer(LayerRef<any>)`. JS `<DynamicEntityLayer>` forwardRef (колбэк отделён от нативных props → wired через `addListener`). Демо: тоггл «Real-time» (SandyRTGIS stream). **Верификация:** TS/Android/iOS ✅.
+
+### Фаза 2 — RT2: query dynamic entities ✅
+- ref-метод `queryDynamicEntities()` → `{count, entities:[{attributes, geometry}]}` через `dataSource.queryDynamicEntities(DynamicEntityQueryParameters())` (Swift `result.entities()` Sequence / Kotlin `DynamicEntityQueryResult : Iterable`). Демо: «Query entities». **Верификация:** TS/Android/iOS ✅.
+
+### Фаза 3 — RT3: CustomDynamicEntityDataSource (push своих observations) ✅
+- `<DynamicEntityLayer customSource={{entityIdField, fields}}>` + ref `pushObservation(attributes, geometry)`. Натив строит `CustomDynamicEntityDataSource` через feed: **Swift конкретный `CustomDynamicEntityFeed` (`PushFeed`, `typealias Events = AsyncStream<CustomDynamicEntityFeedEvent>` + continuation; `push` → `.newObservation(geometry:attributes:)`); `CustomDynamicEntityDataSource(info:){ feed }`.** **Kotlin анонимный `EntityFeedProvider` (`val feed = MutableSharedFlow.asSharedFlow()`, suspend `onLoad/onConnect/onDisconnect`); push → `flow.tryEmit(FeedEvent.NewObservation(geom, attrs))`.** `DynamicEntityDataSourceInfo(entityIdField, fields)`; `Field` — **Swift `ArcGIS.Field(type:name:alias:)`** (namespace обязателен — Expo тоже даёт `@Field`), Kotlin `Field(FieldType, name, alias, len, domain, ed, null)`. Атрибуты: **Swift нельзя кастить `Any as? any Sendable`** (marker) → маппер `String`/`NSNumber.doubleValue`/`String(describing:)`. Демо: «Custom RT» + «Push point» (движущийся объект). **Верификация:** TS · Android (`:expo-arcgis`+`:app`) · iOS (`ExpoArcgis`+`expoarcgisexample`) ✅.
+
+### Итог раздела
+`<DynamicEntityLayer>` (stream-сервис или custom feed) + connectionStatus-событие + trackDisplay + queryDynamicEntities + pushObservation. Сборочно верифицировано; живой поток (сеть + stream-сервис) — на устройстве. **DEFER:** popups, `ArcGISStreamServiceFilter`, purge/reconnection-тюнинг, observation-history, `onDynamicEntityChanged`-события, pull-режим (periodic refresh).
