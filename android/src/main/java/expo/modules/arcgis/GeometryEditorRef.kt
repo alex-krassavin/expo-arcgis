@@ -1,7 +1,12 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.geometry.GeometryType
+import com.arcgismaps.mapping.view.geometryeditor.FreehandTool
 import com.arcgismaps.mapping.view.geometryeditor.GeometryEditor
+import com.arcgismaps.mapping.view.geometryeditor.ReticleVertexTool
+import com.arcgismaps.mapping.view.geometryeditor.ShapeTool
+import com.arcgismaps.mapping.view.geometryeditor.ShapeToolType
+import com.arcgismaps.mapping.view.geometryeditor.VertexTool
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +48,22 @@ class GeometryEditorRef(appContext: AppContext) : SharedObject(appContext) {
       else -> return
     }
     editor.start(geometryType)
+  }
+
+  /**
+   * Selects the interaction tool: `vertex` (default), `freehand`, `reticleVertex`, or a shape tool
+   * (`arrow` / `ellipse` / `rectangle` / `triangle`).
+   */
+  fun setTool(name: String) {
+    editor.tool = when (name) {
+      "freehand" -> FreehandTool()
+      "reticleVertex" -> ReticleVertexTool()
+      "arrow" -> ShapeTool(ShapeToolType.Arrow)
+      "ellipse" -> ShapeTool(ShapeToolType.Ellipse)
+      "rectangle" -> ShapeTool(ShapeToolType.Rectangle)
+      "triangle" -> ShapeTool(ShapeToolType.Triangle)
+      else -> VertexTool()
+    }
   }
 
   /** Stops editing and returns the final geometry (or null if nothing was drawn). */

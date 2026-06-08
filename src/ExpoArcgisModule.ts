@@ -115,6 +115,7 @@ export declare class AnalysisOverlayRef extends SharedObject {
 /** Reference to a native interactive `GeometryEditor`, bound to a `<MapView>`. */
 export declare class GeometryEditorRef extends SharedObject<GeometryEditorEvents> {
   start(type: string): void;
+  setTool(name: string): void;
   stop(): Geometry | null;
   clearGeometry(): void;
   undo(): void;

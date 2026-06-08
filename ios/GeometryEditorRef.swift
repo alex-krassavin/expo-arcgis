@@ -40,6 +40,20 @@ public final class GeometryEditorRef: SharedObject {
     }
   }
 
+  /// Selects the interaction tool: `vertex` (default), `freehand`, `reticleVertex`, or a shape
+  /// tool (`arrow` / `ellipse` / `rectangle` / `triangle`).
+  func setTool(_ name: String) {
+    switch name {
+    case "freehand": editor.tool = FreehandTool()
+    case "reticleVertex": editor.tool = ReticleVertexTool()
+    case "arrow": editor.tool = ShapeTool(kind: .arrow)
+    case "ellipse": editor.tool = ShapeTool(kind: .ellipse)
+    case "rectangle": editor.tool = ShapeTool(kind: .rectangle)
+    case "triangle": editor.tool = ShapeTool(kind: .triangle)
+    default: editor.tool = VertexTool()
+    }
+  }
+
   /// Stops editing and returns the final geometry (or nil if nothing was drawn).
   func stop() -> [String: Any]? {
     editor.stop().map(dictFromGeometry)

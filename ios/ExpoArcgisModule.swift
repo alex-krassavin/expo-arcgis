@@ -357,6 +357,7 @@ public class ExpoArcgisModule: Module {
     Class(GeometryEditorRef.self) {
       Constructor { () -> GeometryEditorRef in GeometryEditorRef() }
       Function("start") { (ref: GeometryEditorRef, type: String) in ref.start(type) }
+      Function("setTool") { (ref: GeometryEditorRef, name: String) in ref.setTool(name) }
       Function("stop") { (ref: GeometryEditorRef) in ref.stop() }
       Function("clearGeometry") { (ref: GeometryEditorRef) in ref.clearGeometry() }
       Function("undo") { (ref: GeometryEditorRef) in ref.undo() }

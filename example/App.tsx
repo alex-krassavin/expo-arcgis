@@ -744,6 +744,7 @@ export default function App() {
                 {draw && (
                   <GeometryEditor
                     type="polygon"
+                    tool="freehand"
                     onGeometryChange={(g) => {
                       if (!g) return;
                       const area = Math.abs(geometryEngine.geodesicArea(g, 'squareMeters'));

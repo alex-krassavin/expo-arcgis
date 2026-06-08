@@ -909,11 +909,23 @@ export type GeometryEditorType = 'point' | 'multipoint' | 'polyline' | 'polygon'
  * Props for the interactive `<GeometryEditor>` — a child of `<MapView>` that lets the user
  * sketch a geometry. (The native SDK binds the editor to 2D map views only.)
  */
+/** Interaction tool for the geometry editor. Mirrors `VertexTool`/`FreehandTool`/`ShapeTool`. */
+export type GeometryEditorTool =
+  | 'vertex'
+  | 'freehand'
+  | 'reticleVertex'
+  | 'arrow'
+  | 'ellipse'
+  | 'rectangle'
+  | 'triangle';
+
 export type GeometryEditorProps = {
   /** The kind of geometry to sketch. */
   type: GeometryEditorType;
   /** When `true` (default) editing is started with `type`; set `false` to stop. */
   active?: boolean;
+  /** Interaction tool (default `vertex`). Shape tools (`arrow`/`ellipse`/…) sketch by dragging. */
+  tool?: GeometryEditorTool;
   /** Called as the sketch geometry changes (`null` when empty / cleared). */
   onGeometryChange?: (geometry: Geometry | null) => void;
 };

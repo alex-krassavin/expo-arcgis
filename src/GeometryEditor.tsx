@@ -13,7 +13,7 @@ import { useGeoView } from './contexts';
  * inside a `<SceneView>`.
  */
 export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorProps>(
-  function GeometryEditor({ type, active = true, onGeometryChange }, handle) {
+  function GeometryEditor({ type, active = true, tool, onGeometryChange }, handle) {
     const view = useGeoView();
     const ref = useRef<GeometryEditorRef | undefined>(undefined);
     if (!ref.current) {
@@ -40,15 +40,16 @@ export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorPro
       return () => subscription.remove();
     }, [onGeometryChange]);
 
-    // Start / restart / stop editing as `active` or `type` changes.
+    // Start / restart / stop editing as `active`, `type`, or `tool` changes.
     useEffect(() => {
       const editor = ref.current!;
       if (active) {
+        if (tool) editor.setTool(tool);
         editor.start(type);
       } else {
         editor.stop();
       }
-    }, [active, type]);
+    }, [active, type, tool]);
 
     useImperativeHandle(
       handle,
