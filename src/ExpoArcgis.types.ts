@@ -45,6 +45,12 @@ export type MapProps = {
   initialViewpoint?: Viewpoint;
   /** Load the map from an ArcGIS web map. Construction-only (set once; remount to change). */
   portalItem?: PortalItem;
+  /**
+   * Display an offline map from a mobile map package (`.mmpk`) at this local path — e.g. the
+   * directory returned by `offline.generateOfflineMap`. The package loads asynchronously and the
+   * map appears once ready.
+   */
+  mobileMapPackagePath?: string;
 };
 
 export type MapLoadedEventPayload = {
@@ -793,6 +799,16 @@ export type UtilityNetworkHandle = {
   ): Promise<UtilityTraceResult>;
   /** Returns the associations of a feature queried from `tableName`. */
   associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// Offline — take maps and data offline (downloads to disk) via the `offline` namespace.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Result of an offline-map download. `path` is the local mobile map package directory. */
+export type OfflineMapResult = {
+  /** Local filesystem path of the downloaded mobile map package (pass to `<Map mobileMapPackagePath>`). */
+  path: string;
 };
 
 // ────────────────────────────────────────────────────────────────────────────

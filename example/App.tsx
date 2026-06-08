@@ -13,6 +13,7 @@ import {
   MapImageLayer,
   MapSettings,
   MapView,
+  offline,
   router,
   Scene,
   SceneLayer,
@@ -146,6 +147,15 @@ const SUN_TIME = Date.UTC(2024, 5, 21, 19, 0, 0);
 // Esri sample Viewshed geoprocessing service (public): observation point + distance → visible polygons.
 const VIEWSHED_GP =
   'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Elevation/ESRI_Elevation_World/GPServer/Viewshed';
+// Esri sample offline-enabled web map (Naperville water network) + a small area of interest.
+const OFFLINE_WEBMAP = 'acc027394bc84c2fb04d1ed317aac674';
+const OFFLINE_AREA: Geometry = {
+  type: 'envelope',
+  xMin: -88.1526,
+  yMin: 41.7694,
+  xMax: -88.1387,
+  yMax: 41.7799,
+};
 // Esri sample Naperville electric utility network (token-secured; public sample login).
 const NAPERVILLE_UN =
   'https://sampleserver7.arcgisonline.com/server/rest/services/UtilityNetwork/NapervilleElectric/FeatureServer';
@@ -176,6 +186,7 @@ export default function App() {
   const [routeGeom, setRouteGeom] = useState<Geometry | null>(null);
   const [gpGeometries, setGpGeometries] = useState<Geometry[]>([]);
   const [un, setUn] = useState(false);
+  const [offlinePath, setOfflinePath] = useState<string | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
   const unRef = useRef<UtilityNetworkHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
@@ -255,6 +266,19 @@ export default function App() {
   async function suggestPlaces() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
+  }
+  // "Take offline" — generate an on-demand offline map, then display it (offline namespace).
+  async function takeOffline() {
+    setStatus('Taking map offline…');
+    try {
+      const { path } = await offline.generateOfflineMap(OFFLINE_WEBMAP, OFFLINE_AREA, 'offlineMap1');
+      if (path) {
+        setOfflinePath(path);
+        setStatus('Offline map downloaded ✅');
+      } else setStatus('Offline: no path returned');
+    } catch (e) {
+      setStatus(`Offline error: ${String(e)}`);
+    }
   }
   // "Load UN" — authenticate, then mount the Naperville utility network (<UtilityNetwork>).
   async function loadUN() {
@@ -502,6 +526,16 @@ export default function App() {
                 )}
               </SceneView>
             </Scene>
+          ) : offlinePath ? (
+            <Map key={offlinePath} mobileMapPackagePath={offlinePath}>
+              <MapView
+                style={styles.map}
+                onMapLoaded={() => setStatus('Offline map displayed ✅')}
+                onMapLoadError={(event: { nativeEvent: MapLoadErrorEventPayload }) =>
+                  setStatus(`Offline map error: ${event.nativeEvent.message}`)
+                }
+              />
+            </Map>
           ) : (
             <Map
               key={webMap ? 'web' : 'base'}
@@ -619,6 +653,8 @@ export default function App() {
                 {un && <Button title="Downstream" onPress={() => runTrace('downstream')} />}
                 {un && <Button title="Configs" onPress={namedConfigTrace} />}
                 {un && <Button title="Assoc" onPress={showAssociations} />}
+                <Button title="Take offline" onPress={takeOffline} />
+                {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />

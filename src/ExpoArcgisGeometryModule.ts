@@ -6,6 +6,7 @@ import type {
   Geometry,
   GeoprocessingInput,
   GeoprocessingResult,
+  OfflineMapResult,
   ProximityResult,
   RouteResult,
   RouteStop,
@@ -97,6 +98,13 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     serviceUrl: string,
     inputs: Record<string, GeoprocessingInput>
   ): Promise<GeoprocessingResult>;
+
+  // Offline — backing functions for the `offline` namespace (see ./offline).
+  generateOfflineMap(
+    portalItemId: string,
+    areaOfInterest: Geometry,
+    downloadName: string
+  ): Promise<OfflineMapResult>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

@@ -107,9 +107,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Receives the native map (by reference) from the `<Map>` SharedObject. */
   fun setMap(ref: MapRef?) {
-    val map = ref?.map ?: return
-    mapView.map = map
+    ref ?: return
+    applyMap(ref.map)
+    // The map may be replaced asynchronously (e.g. once a mobile map package loads) — re-apply then.
+    ref.onMapChanged = { newMap -> applyMap(newMap) }
+  }
 
+  private fun applyMap(map: com.arcgismaps.mapping.ArcGISMap) {
+    mapView.map = map
     loadJob?.cancel()
     loadJob = scope.launch {
       map.load()

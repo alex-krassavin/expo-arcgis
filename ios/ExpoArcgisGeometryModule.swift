@@ -77,5 +77,10 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("executeGeoprocessing") { (serviceUrl: String, inputs: [String: Any]) in
       try await executeGeoprocessing(serviceUrl, inputs)
     }
+
+    // Offline — take maps/data offline, exposed as the JS `offline` namespace.
+    AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
+      try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)
+    }
   }
 }

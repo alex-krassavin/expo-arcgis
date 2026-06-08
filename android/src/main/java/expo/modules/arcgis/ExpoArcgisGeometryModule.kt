@@ -82,5 +82,10 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("executeGeoprocessing") Coroutine { serviceUrl: String, inputs: Map<String, Any?> ->
       executeGeoprocessing(serviceUrl, inputs)
     }
+
+    // Offline — take maps/data offline, exposed as the JS `offline` namespace.
+    AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
+      generateOfflineMap(appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)
+    }
   }
 }

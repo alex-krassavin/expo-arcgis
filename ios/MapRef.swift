@@ -4,7 +4,9 @@ import ExpoModulesCore
 /// SharedObject wrapping a native ArcGIS `Map`. Constructed and reconciled declaratively from the
 /// JS `<Map>` component; the `<MapView>` reads `map` by reference to render it.
 public final class MapRef: SharedObject {
-  let map: Map
+  private(set) var map: Map
+  /// Called when `map` is replaced asynchronously (e.g. after a mobile map package finishes loading).
+  var onMapChanged: ((Map) -> Void)?
 
   /// Builds the map from a portal item (web map) when provided, otherwise an empty map.
   init(portalItem: [String: Any]?) {
@@ -39,9 +41,22 @@ public final class MapRef: SharedObject {
            let scale = (vp["scale"] as? NSNumber)?.doubleValue {
           map.initialViewpoint = Viewpoint(latitude: lat, longitude: lon, scale: scale)
         }
+      case "mobileMapPackagePath":
+        if let path = value as? String { loadMobileMapPackage(path) }
       default:
         break
       }
+    }
+  }
+
+  /// Loads a mobile map package (`.mmpk`) off the main thread and swaps in its first map when ready.
+  private func loadMobileMapPackage(_ path: String) {
+    Task { [weak self] in
+      let package = MobileMapPackage(fileURL: URL(fileURLWithPath: path))
+      try? await package.load()
+      guard let self, let first = package.maps.first else { return }
+      self.map = first
+      self.onMapChanged?(first)
     }
   }
 

@@ -3,18 +3,28 @@ package expo.modules.arcgis
 import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.Basemap
 import com.arcgismaps.mapping.BasemapStyle
+import com.arcgismaps.mapping.MobileMapPackage
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.portal.Portal
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * SharedObject wrapping a native [ArcGISMap]. Constructed and reconciled declaratively from the
  * JS `<Map>` component; the `<MapView>` reads [map] by reference to render it.
  */
 class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
-  val map: ArcGISMap = buildMap(portalItem)
+  var map: ArcGISMap = buildMap(portalItem)
+    private set
+
+  /** Called when [map] is replaced asynchronously (e.g. after a mobile map package finishes loading). */
+  var onMapChanged: ((ArcGISMap) -> Unit)? = null
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
   /** Generic setter dispatched by key — applies only the changed props sent from JS. */
   fun applyProps(changed: Map<String, Any?>) {
@@ -30,6 +40,20 @@ class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : Sh
           if (lat != null && lon != null && scale != null) {
             map.initialViewpoint = Viewpoint(lat, lon, scale)
           }
+        }
+        "mobileMapPackagePath" -> (value as? String)?.let { loadMobileMapPackage(it) }
+      }
+    }
+  }
+
+  /** Loads a mobile map package (`.mmpk`) off the main thread and swaps in its first map when ready. */
+  private fun loadMobileMapPackage(path: String) {
+    scope.launch {
+      val pkg = MobileMapPackage(path)
+      pkg.load().onSuccess {
+        pkg.maps.firstOrNull()?.let { first ->
+          map = first
+          onMapChanged?.invoke(first)
         }
       }
     }

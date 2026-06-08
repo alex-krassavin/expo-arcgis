@@ -144,6 +144,8 @@ class ExpoArcgisMapView: ExpoView {
   /// Receives the native map (by reference) from the `<Map>` SharedObject.
   func setMap(_ ref: MapRef?) {
     model.setMap(ref?.map)
+    // The map may be replaced asynchronously (e.g. once a mobile map package loads) — re-render then.
+    ref?.onMapChanged = { [weak self] map in self?.model.setMap(map) }
   }
 
   /// Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`.
