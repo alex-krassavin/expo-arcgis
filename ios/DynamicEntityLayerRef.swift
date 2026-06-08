@@ -68,6 +68,12 @@ public final class DynamicEntityLayerRef: LayerRef {
         layer.trackDisplayProperties.showsPreviousObservations = showsPrev
       }
     }
+    if let filterDict = changed["filter"] as? [String: Any] {
+      let filter = ArcGISStreamServiceFilter()
+      if let whereClause = filterDict["whereClause"] as? String { filter.whereClause = whereClause }
+      if let geometry = (filterDict["geometry"] as? [String: Any]).flatMap(geometryFromDict) { filter.geometry = geometry }
+      (dataSource as? ArcGISStreamService)?.filter = filter
+    }
   }
 
   override public func sharedObjectWillRelease() {

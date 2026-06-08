@@ -428,6 +428,8 @@ export type DynamicEntityLayerProps = LayerProps & {
   customSource?: CustomDynamicSource;
   /** Track display (history of past observations). */
   trackDisplay?: TrackDisplay;
+  /** Stream-service filter — only entities matching `whereClause` (and/or within `geometry`) stream in. */
+  filter?: { whereClause?: string; geometry?: Geometry };
   /** Fired as the data source connects / disconnects. */
   onConnectionStatusChange?: (status: ConnectionStatus) => void;
 };

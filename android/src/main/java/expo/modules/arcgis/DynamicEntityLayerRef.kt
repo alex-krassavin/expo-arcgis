@@ -5,6 +5,7 @@ import com.arcgismaps.data.FieldType
 import com.arcgismaps.mapping.layers.DynamicEntityLayer
 import com.arcgismaps.mapping.layers.Layer
 import com.arcgismaps.realtime.ArcGISStreamService
+import com.arcgismaps.realtime.ArcGISStreamServiceFilter
 import com.arcgismaps.realtime.ConnectionStatus
 import com.arcgismaps.realtime.CustomDynamicEntityDataSource
 import com.arcgismaps.realtime.DynamicEntityDataSource
@@ -72,6 +73,13 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
       (track["showsPreviousObservations"] as? Boolean)?.let {
         entityLayer.trackDisplayProperties.showPreviousObservations = it
       }
+    }
+    (changed["filter"] as? Map<*, *>)?.let { filterDict ->
+      val filter = ArcGISStreamServiceFilter().apply {
+        (filterDict["whereClause"] as? String)?.let { whereClause = it }
+        (filterDict["geometry"] as? Map<*, *>)?.let { g -> geometryFromDict(g)?.let { geometry = it } }
+      }
+      (dataSource as? ArcGISStreamService)?.filter = filter
     }
   }
 
