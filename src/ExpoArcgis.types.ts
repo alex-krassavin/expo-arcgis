@@ -898,6 +898,8 @@ export type UtilityAssociationSummary = {
 
 /** Imperative handle exposed by `<UtilityNetwork>` via `ref`. */
 export type UtilityNetworkHandle = {
+  /** Returns metadata about the loaded network (its network-source names). */
+  describeNetwork(): { networkSources: string[] };
   /** Runs a trace of `traceType` from the given starting locations (explicit element descriptors). */
   trace(
     traceType: UtilityTraceType,

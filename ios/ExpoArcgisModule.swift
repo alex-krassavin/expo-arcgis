@@ -361,6 +361,7 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("load") { (ref: UtilityNetworkRef, map: MapRef) in
         try await ref.load(map)
       }
+      Function("describeNetwork") { (ref: UtilityNetworkRef) in ref.describeNetwork() }
       AsyncFunction("trace") { (ref: UtilityNetworkRef, traceType: String, startingLocations: [[String: Any]]) in
         try await ref.trace(traceType, startingLocations)
       }

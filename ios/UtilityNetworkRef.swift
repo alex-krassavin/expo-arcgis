@@ -38,6 +38,12 @@ public final class UtilityNetworkRef: SharedObject {
     return network.name
   }
 
+  /// Returns metadata about the loaded network — the names of its network sources.
+  func describeNetwork() -> [String: Any] {
+    guard let definition = network?.definition else { return ["networkSources": []] }
+    return ["networkSources": definition.networkSources.map { $0.name }]
+  }
+
   /// Runs a trace from explicit asset-type descriptors (no map feature needed).
   func trace(_ traceTypeName: String, _ startingLocations: [[String: Any]]) async throws -> [String: Any] {
     guard let network else { return emptyTraceResult }

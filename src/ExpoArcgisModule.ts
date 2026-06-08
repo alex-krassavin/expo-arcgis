@@ -164,6 +164,8 @@ export declare class SceneRef extends SharedObject {
 export declare class UtilityNetworkRef extends SharedObject {
   /** Builds + loads the network, adds it to `map`, and resolves with the network name. */
   load(map: MapRef): Promise<string>;
+  /** Returns metadata about the loaded network (its network-source names). */
+  describeNetwork(): { networkSources: string[] };
   /** Runs a trace and returns the element results. */
   trace(
     traceType: string,

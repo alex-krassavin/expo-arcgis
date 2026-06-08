@@ -335,6 +335,7 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("load") Coroutine { ref: UtilityNetworkRef, map: MapRef ->
         ref.load(map)
       }
+      Function("describeNetwork") { ref: UtilityNetworkRef -> ref.describeNetwork() }
       AsyncFunction("trace") Coroutine { ref: UtilityNetworkRef, traceType: String, startingLocations: List<Map<String, Any?>> ->
         ref.trace(traceType, startingLocations)
       }

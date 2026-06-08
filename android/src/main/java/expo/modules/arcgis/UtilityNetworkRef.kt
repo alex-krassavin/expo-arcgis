@@ -50,6 +50,12 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
   }
 
   /** Runs a trace from explicit asset-type descriptors (no map feature needed). */
+  /** Returns metadata about the loaded network — the names of its network sources. */
+  fun describeNetwork(): Map<String, Any?> {
+    val sources = network?.definition?.networkSources?.value?.map { it.name } ?: emptyList()
+    return mapOf("networkSources" to sources)
+  }
+
   suspend fun trace(
     traceTypeName: String,
     startingLocations: List<Map<String, Any?>>,
