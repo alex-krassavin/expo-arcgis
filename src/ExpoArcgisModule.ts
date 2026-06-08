@@ -123,6 +123,12 @@ export type GeoModelRef = MapRef | SceneRef;
 declare class ExpoArcgisModule extends NativeModule {
   /** Sets the ArcGIS API key (access token) used to authenticate with ArcGIS services. */
   setApiKey(apiKey: string): void;
+  /**
+   * Acquires a token credential for a secured service (e.g. a utility-network feature service)
+   * and registers it in the credential store. Needed for services that require a login rather
+   * than just an API key.
+   */
+  setTokenCredential(serviceUrl: string, username: string, password: string): Promise<void>;
   // Constructable native handles (SharedObjects). JS names mirror the native classes.
   MapRef: new (props?: MapProps) => MapRef;
   SceneRef: new (props?: SceneProps) => SceneRef;

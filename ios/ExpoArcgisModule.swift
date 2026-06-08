@@ -1,5 +1,6 @@
 import ArcGIS
 import ExpoModulesCore
+import Foundation
 
 public class ExpoArcgisModule: Module {
   public func definition() -> ModuleDefinition {
@@ -14,6 +15,14 @@ public class ExpoArcgisModule: Module {
 
     Function("setApiKey") { (apiKey: String) in
       ArcGISEnvironment.apiKey = APIKey(apiKey)
+    }
+
+    // Token auth for secured services (e.g. utility-network feature services) — acquire a
+    // token credential from a login and register it in the credential store.
+    AsyncFunction("setTokenCredential") { (serviceUrl: String, username: String, password: String) in
+      guard let url = URL(string: serviceUrl) else { return }
+      let credential = try await TokenCredential.credential(for: url, username: username, password: password)
+      try ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential, for: url)
     }
 
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.

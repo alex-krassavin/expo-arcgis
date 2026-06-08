@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
+import com.arcgismaps.httpcore.authentication.TokenCredential
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
@@ -26,6 +27,13 @@ class ExpoArcgisModule : Module() {
 
     Function("setApiKey") { apiKey: String ->
       ArcGISEnvironment.apiKey = ApiKey.create(apiKey)
+    }
+
+    // Token auth for secured services (e.g. utility-network feature services) — acquire a
+    // token credential from a login and register it in the credential store.
+    AsyncFunction("setTokenCredential") Coroutine { serviceUrl: String, username: String, password: String ->
+      val credential = TokenCredential.create(serviceUrl, username, password).getOrThrow()
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential)
     }
 
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.
