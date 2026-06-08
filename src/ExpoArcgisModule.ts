@@ -14,6 +14,8 @@ import type {
   StatisticsQueryParameters,
   IntegratedMeshLayerProps,
   KmlLayerProps,
+  OgcFeatureLayerProps,
+  WfsLayerProps,
   MapImageLayerProps,
   MapProps,
   Ogc3DTilesLayerProps,
@@ -219,6 +221,8 @@ declare class ExpoArcgisModule extends NativeModule {
   WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
   RasterLayerRef: new (props: RasterLayerProps) => LayerRef;
   KmlLayerRef: new (props: KmlLayerProps) => LayerRef;
+  WfsLayerRef: new (props: WfsLayerProps) => LayerRef;
+  OgcFeatureLayerRef: new (props: OgcFeatureLayerProps) => LayerRef;
   DynamicEntityLayerRef: new (props: DynamicEntityLayerProps) => DynamicEntityLayerRef;
   GraphicsOverlayRef: new () => GraphicsOverlayRef;
   GraphicRef: new (props: GraphicProps) => GraphicRef;

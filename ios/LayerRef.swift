@@ -229,3 +229,21 @@ public final class KmlLayerRef: LayerRef {
     super.init(layer: KMLLayer(dataset: KMLDataset(url: URL(string: url)!)))
   }
 }
+
+/// Operational WFS layer — a `FeatureLayer` over a `WFSFeatureTable` (Web Feature Service).
+public final class WfsLayerRef: LayerRef {
+  init(url: String, tableName: String) {
+    let table = WFSFeatureTable(url: URL(string: url)!, tableName: tableName)
+    table.featureRequestMode = .onInteractionCache
+    super.init(layer: FeatureLayer(featureTable: table))
+  }
+}
+
+/// Operational OGC API - Features layer — a `FeatureLayer` over an `OGCFeatureCollectionTable`.
+public final class OgcFeatureLayerRef: LayerRef {
+  init(url: String, collectionID: String) {
+    let table = OGCFeatureCollectionTable(url: URL(string: url)!, collectionID: collectionID)
+    table.featureRequestMode = .onInteractionCache
+    super.init(layer: FeatureLayer(featureTable: table))
+  }
+}

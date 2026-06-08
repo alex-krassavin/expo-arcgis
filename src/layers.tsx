@@ -2,11 +2,13 @@ import type {
   IntegratedMeshLayerProps,
   KmlLayerProps,
   Ogc3DTilesLayerProps,
+  OgcFeatureLayerProps,
   OpenStreetMapLayerProps,
   PointCloudLayerProps,
   RasterLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
+  WfsLayerProps,
   WmsLayerProps,
   WmtsLayerProps,
 } from './ExpoArcgis.types';
@@ -61,4 +63,14 @@ export const RasterLayer = createLayerComponent<RasterLayerProps>(
 /** Declarative `KmlLayer` from a remote `.kml`/`.kmz` URL or a local file. */
 export const KmlLayer = createLayerComponent<KmlLayerProps>(
   (props) => new ExpoArcgisModule.KmlLayerRef(props)
+);
+
+/** Declarative WFS layer (Web Feature Service: URL + feature-type/table name). */
+export const WfsLayer = createLayerComponent<WfsLayerProps>(
+  (props) => new ExpoArcgisModule.WfsLayerRef(props)
+);
+
+/** Declarative OGC API - Features layer (landing-page URL + collection id). */
+export const OgcFeatureLayer = createLayerComponent<OgcFeatureLayerProps>(
+  (props) => new ExpoArcgisModule.OgcFeatureLayerRef(props)
 );

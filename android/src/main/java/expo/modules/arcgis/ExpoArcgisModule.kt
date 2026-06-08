@@ -238,6 +238,22 @@ class ExpoArcgisModule : Module() {
       }
     }
 
+    // WFS (Web Feature Service) + OGC API - Features — feature layers over async-populating tables.
+    Class(WfsLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        WfsLayerRef(appContext, props["url"] as? String ?: "", props["tableName"] as? String ?: "")
+          .also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: WfsLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+    Class(OgcFeatureLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        OgcFeatureLayerRef(appContext, props["url"] as? String ?: "", props["collectionId"] as? String ?: "")
+          .also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: OgcFeatureLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+
     // Real-time DynamicEntityLayer (stream service) — emits onConnectionStatusChange.
     Class(DynamicEntityLayerRef::class) {
       Constructor { props: Map<String, Any?> ->

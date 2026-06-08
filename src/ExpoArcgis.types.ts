@@ -368,6 +368,22 @@ export type RasterLayerProps = LayerProps & { source: RasterSource };
 /** Props for a `<KmlLayer>` — mirror `KMLLayer` (remote `.kml`/`.kmz` URL or local file). */
 export type KmlLayerProps = LayerProps & { url: string };
 
+/** WFS (Web Feature Service) layer — a feature layer over `WFSFeatureTable`. */
+export type WfsLayerProps = LayerProps & {
+  /** WFS service URL. */
+  url: string;
+  /** Feature type / table name to display (e.g. `'namespace:typeName'`). */
+  tableName: string;
+};
+
+/** OGC API - Features layer — a feature layer over `OGCFeatureCollectionTable`. */
+export type OgcFeatureLayerProps = LayerProps & {
+  /** OGC API - Features landing-page URL. */
+  url: string;
+  /** Collection id to display. */
+  collectionId: string;
+};
+
 /** Connection state of a real-time `DynamicEntityDataSource`. Mirrors `ConnectionStatus`. */
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed';
 

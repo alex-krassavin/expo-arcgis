@@ -1,11 +1,14 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.data.Feature
+import com.arcgismaps.data.FeatureRequestMode
 import com.arcgismaps.data.FeatureTable
 import com.arcgismaps.data.QueryFeatureFields
 import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ShapefileFeatureTable
+import com.arcgismaps.data.OgcFeatureCollectionTable
+import com.arcgismaps.data.WfsFeatureTable
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISSceneLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
@@ -225,6 +228,24 @@ private fun rasterFromSource(s: Map<String, Any?>): Raster =
 /** Operational KML layer from a remote .kml/.kmz URL or local file. */
 class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: KmlLayer = KmlLayer(KmlDataset(url))
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational WFS layer — a [FeatureLayer] over a [WfsFeatureTable] (Web Feature Service). */
+class WfsLayerRef(appContext: AppContext, url: String, tableName: String) : LayerRef(appContext) {
+  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(
+    WfsFeatureTable(url, tableName).apply { featureRequestMode = FeatureRequestMode.OnInteractionCache }
+  )
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational OGC API - Features layer — a [FeatureLayer] over an [OgcFeatureCollectionTable]. */
+class OgcFeatureLayerRef(appContext: AppContext, url: String, collectionId: String) : LayerRef(appContext) {
+  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(
+    OgcFeatureCollectionTable(url, collectionId).apply { featureRequestMode = FeatureRequestMode.OnInteractionCache }
+  )
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

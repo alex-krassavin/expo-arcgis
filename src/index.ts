@@ -31,6 +31,8 @@ export {
   WmtsLayer,
   RasterLayer,
   KmlLayer,
+  WfsLayer,
+  OgcFeatureLayer,
 } from './layers';
 export { DynamicEntityLayer } from './DynamicEntityLayer';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
