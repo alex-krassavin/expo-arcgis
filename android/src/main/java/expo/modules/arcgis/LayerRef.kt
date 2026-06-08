@@ -1,5 +1,6 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.ArcGISFeatureTable
 import com.arcgismaps.data.Feature
 import com.arcgismaps.data.FeatureRequestMode
 import com.arcgismaps.data.FeatureTable
@@ -70,6 +71,15 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
 
   suspend fun queryStatistics(query: Map<String, Any?>): List<Map<String, Any?>> =
     table.queryStatistics(buildStatisticsQueryParameters(query)).getOrThrow().map { serializeStatisticRecord(it) }
+
+  /** Returns the table's editing templates (name + prototype attributes), for building edit UIs. */
+  suspend fun queryFeatureTemplates(): List<Map<String, Any?>> {
+    table.load().getOrThrow()
+    val templates = (table as? ArcGISFeatureTable)?.featureTemplates ?: emptyList()
+    return templates.map { template ->
+      mapOf("name" to template.name, "prototypeAttributes" to template.prototypeAttributes)
+    }
+  }
 
   /** Adds a feature, pushes the edit to the service, and returns the new object id. */
   suspend fun addFeature(attributes: Map<String, Any?>, geometry: Map<String, Any?>?): Long? {

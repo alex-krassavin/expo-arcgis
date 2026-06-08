@@ -59,6 +59,15 @@ public final class FeatureLayerRef: LayerRef {
     return result.statisticRecords().map(serializeStatisticRecord)
   }
 
+  /// Returns the table's editing templates (name + prototype attributes), for building edit UIs.
+  func queryFeatureTemplates() async throws -> [[String: Any]] {
+    try await table.load()
+    let templates = (table as? ArcGISFeatureTable)?.featureTemplates ?? []
+    return templates.map { template in
+      ["name": template.name, "prototypeAttributes": template.prototypeAttributes.mapValues { $0 as Any }]
+    }
+  }
+
   /// Adds a feature, pushes the edit to the service, and returns the new object id.
   func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?) async throws -> Int? {
     let feature = table.makeFeature()

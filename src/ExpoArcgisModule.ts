@@ -7,6 +7,7 @@ import type {
   DynamicEntityLayerProps,
   Feature,
   FeatureLayerProps,
+  FeatureTemplate,
   Geometry,
   GraphicProps,
   LineOfSightProps,
@@ -54,6 +55,7 @@ export declare class FeatureLayerRef extends LayerRef {
   queryFeatureCount(query?: QueryParameters): Promise<number>;
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
   queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
+  queryFeatureTemplates(): Promise<FeatureTemplate[]>;
   addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
   updateFeature(objectId: number, changes: Record<string, unknown>): Promise<void>;
   deleteFeature(objectId: number): Promise<void>;

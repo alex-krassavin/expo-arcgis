@@ -279,6 +279,14 @@ export type SceneViewHandle = {
 };
 
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
+/** An editing template published with a feature table. Mirrors `FeatureTemplate`. */
+export type FeatureTemplate = {
+  /** Template name. */
+  name: string;
+  /** Attribute values a new feature created from this template starts with. */
+  prototypeAttributes: Record<string, unknown>;
+};
+
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */
   queryFeatures(query?: QueryParameters): Promise<Feature[]>;
@@ -288,6 +296,8 @@ export type FeatureLayerHandle = {
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
   /** Computes aggregate statistics over the layer's features. */
   queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
+  /** Returns the table's editing templates (name + prototype attributes), for building edit UIs. */
+  queryFeatureTemplates(): Promise<FeatureTemplate[]>;
   /**
    * Adds a feature (attributes + optional geometry) to the layer's table and pushes the edit to
    * the feature service. Resolves to the new feature's object id (or `null` for non-service tables).
