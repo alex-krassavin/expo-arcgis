@@ -1,7 +1,9 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.geometry.Point
+import com.arcgismaps.tasks.networkanalysis.CurbApproach
 import com.arcgismaps.tasks.networkanalysis.DirectionManeuver
+import com.arcgismaps.tasks.networkanalysis.PointBarrier
 import com.arcgismaps.tasks.networkanalysis.Route
 import com.arcgismaps.tasks.networkanalysis.RouteParameters
 import com.arcgismaps.tasks.networkanalysis.RouteResult
@@ -41,7 +43,23 @@ internal suspend fun solveRoute(
 private fun buildStops(stops: List<Map<String, Any?>>): List<Stop> = stops.mapNotNull { dict ->
   val point = (dict["point"] as? Map<*, *>)?.let { geometryFromDict(it) } as? Point
     ?: return@mapNotNull null
-  Stop(point).apply { (dict["name"] as? String)?.let { name = it } }
+  Stop(point).apply {
+    (dict["name"] as? String)?.let { name = it }
+    curbApproachFromString(dict["curbApproach"] as? String)?.let { curbApproach = it }
+  }
+}
+
+/** Builds point barriers (locations the route must avoid) from JS point geometries. */
+private fun buildPointBarriers(barriers: List<*>): List<PointBarrier> =
+  barriers.filterIsInstance<Map<*, *>>().mapNotNull { geometryFromDict(it) as? Point }.map { PointBarrier(it) }
+
+/** Maps the JS curb-approach union to the native [CurbApproach]. */
+private fun curbApproachFromString(s: String?): CurbApproach? = when (s) {
+  "eitherSide" -> CurbApproach.EitherSide
+  "leftSide" -> CurbApproach.LeftSide
+  "rightSide" -> CurbApproach.RightSide
+  "noUTurn" -> CurbApproach.NoUTurn
+  else -> null
 }
 
 private fun applyRouteParameters(
@@ -54,6 +72,7 @@ private fun applyRouteParameters(
   (params["returnRoutes"] as? Boolean)?.let { parameters.returnRoutes = it }
   (params["returnStops"] as? Boolean)?.let { parameters.returnStops = it }
   (params["findBestSequence"] as? Boolean)?.let { parameters.findBestSequence = it }
+  (params["barriers"] as? List<*>)?.let { parameters.setPointBarriers(buildPointBarriers(it)) }
   (params["travelMode"] as? String)?.let { name ->
     task.getRouteTaskInfo().travelModes.firstOrNull { it.name == name }?.let { parameters.travelMode = it }
   }

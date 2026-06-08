@@ -661,6 +661,8 @@ export type RouteStop = {
   point: PointGeometry;
   /** Optional label for the stop (echoed back on returned stops). */
   name?: string;
+  /** Which side of the vehicle the stop should be approached from. */
+  curbApproach?: 'eitherSide' | 'leftSide' | 'rightSide' | 'noUTurn';
 };
 
 /** Parameters for `router.solveRoute`. Mirrors the native `RouteParameters`. */
@@ -680,6 +682,8 @@ export type RouteParameters = {
   directionsLanguage?: string;
   /** Whether the service may reorder stops to find the optimal sequence. Defaults to `false`. */
   findBestSequence?: boolean;
+  /** Point barriers — locations the route must avoid (e.g. road closures). */
+  barriers?: PointGeometry[];
   /** Route service URL. Defaults to the ArcGIS World Route Service. */
   routeServiceUrl?: string;
 };

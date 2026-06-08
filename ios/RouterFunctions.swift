@@ -47,7 +47,24 @@ private func buildStops(_ stops: [[String: Any]]) -> [Stop] {
     else { return nil }
     let stop = Stop(point: point)
     if let name = dict["name"] as? String { stop.name = name }
+    if let approach = curbApproach(dict["curbApproach"] as? String) { stop.curbApproach = approach }
     return stop
+  }
+}
+
+/// Builds point barriers (locations the route must avoid) from JS point geometries.
+private func buildPointBarriers(_ barriers: [[String: Any]]) -> [PointBarrier] {
+  barriers.compactMap { (geometryFromDict($0) as? Point).map(PointBarrier.init(point:)) }
+}
+
+/// Maps the JS curb-approach union to the native `CurbApproach`.
+private func curbApproach(_ s: String?) -> CurbApproach? {
+  switch s {
+  case "eitherSide": return .eitherSide
+  case "leftSide": return .leftSide
+  case "rightSide": return .rightSide
+  case "noUTurn": return .noUTurn
+  default: return nil
   }
 }
 
@@ -57,6 +74,7 @@ private func applyRouteParameters(_ parameters: RouteParameters, _ params: [Stri
   if let returnRoutes = params["returnRoutes"] as? Bool { parameters.returnsRoutes = returnRoutes }
   if let returnStops = params["returnStops"] as? Bool { parameters.returnsStops = returnStops }
   if let findBestSequence = params["findBestSequence"] as? Bool { parameters.findsBestSequence = findBestSequence }
+  if let barriers = params["barriers"] as? [[String: Any]] { parameters.setPointBarriers(buildPointBarriers(barriers)) }
   if let travelModeName = params["travelMode"] as? String,
     let mode = task.info.travelModes.first(where: { $0.name == travelModeName }) {
     parameters.travelMode = mode
