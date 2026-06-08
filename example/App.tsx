@@ -376,7 +376,8 @@ export default function App() {
   async function loadUN() {
     setStatus('Utility network: authenticating…');
     try {
-      await setTokenCredential(NAPERVILLE_UN, UN_LOGIN.username, UN_LOGIN.password);
+      // Store the login; the challenge handler authenticates the UN service when it loads.
+      setTokenCredential(UN_LOGIN.username, UN_LOGIN.password);
       setUn(true);
     } catch (e) {
       setStatus(`UN auth error: ${String(e)}`);

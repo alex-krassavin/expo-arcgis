@@ -11,18 +11,24 @@ public class ExpoArcgisModule: Module {
       if let key = readApiKeyFromInfoPlist() {
         ArcGISEnvironment.apiKey = APIKey(key)
       }
+      // Reactive auth: the SDK asks this handler for credentials when a secured resource is hit.
+      ArcGISEnvironment.authenticationManager.arcGISAuthenticationChallengeHandler = AuthChallengeHandler.shared
     }
 
     Function("setApiKey") { (apiKey: String) in
       ArcGISEnvironment.apiKey = APIKey(apiKey)
     }
 
-    // Token auth for secured services (e.g. utility-network feature services) — acquire a
-    // token credential from a login and register it in the credential store.
-    AsyncFunction("setTokenCredential") { (serviceUrl: String, username: String, password: String) in
-      guard let url = URL(string: serviceUrl) else { return }
-      let credential = try await TokenCredential.credential(for: url, username: username, password: password)
-      try ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential, for: url)
+    // Token auth for secured services (e.g. utility-network feature services) — store the login;
+    // the challenge handler mints a TokenCredential for the exact challenged resource on demand.
+    Function("setTokenCredential") { (username: String, password: String) in
+      AuthChallengeHandler.shared.setCredentials(username: username, password: password)
+    }
+
+    // Clears the stored login and all cached credentials (token + OAuth).
+    AsyncFunction("signOut") {
+      AuthChallengeHandler.shared.setCredentials(username: nil, password: nil)
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 
     // Declarative map model — a SharedObject the JS <Map> constructs and reconciles.

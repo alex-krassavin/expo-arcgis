@@ -11,7 +11,7 @@ export type {
 } from './ExpoArcgisModule';
 
 export { MapSettings, useMapSettings, type MapSettingsConfig } from './MapSettings';
-export { setTokenCredential } from './auth';
+export { setTokenCredential, signOut } from './auth';
 export { Map } from './Map';
 export { Scene } from './Scene';
 export { MapView } from './MapView';

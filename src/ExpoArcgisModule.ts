@@ -188,11 +188,19 @@ declare class ExpoArcgisModule extends NativeModule {
   /** Sets the ArcGIS API key (access token) used to authenticate with ArcGIS services. */
   setApiKey(apiKey: string): void;
   /**
-   * Acquires a token credential for a secured service (e.g. a utility-network feature service)
-   * and registers it in the credential store. Needed for services that require a login rather
-   * than just an API key.
+   * Stores a login used to authenticate token-secured services (e.g. a utility-network feature
+   * service). The challenge handler mints a `TokenCredential` for the exact resource the SDK
+   * challenges for — no service URL or up-front timing needed.
    */
-  setTokenCredential(serviceUrl: string, username: string, password: string): Promise<void>;
+  setTokenCredential(username: string, password: string): void;
+  /** Clears the stored login and all cached credentials (token + OAuth). */
+  signOut(): Promise<void>;
+  /** iOS-only OAuth sign-in: the SDK presents the auth browser, then caches the credential. */
+  signInWithOAuth(portalUrl: string, clientId: string, redirectUrl: string): Promise<void>;
+  /** Android OAuth step 1: starts the flow and returns the authorize URL to open in a browser. */
+  oauthStart(portalUrl: string, clientId: string, redirectUrl: string): Promise<string>;
+  /** Android OAuth step 2: completes the flow with the browser redirect URL. */
+  oauthComplete(redirectUrl: string): Promise<void>;
   // Constructable native handles (SharedObjects). JS names mirror the native classes.
   MapRef: new (props?: MapProps) => MapRef;
   SceneRef: new (props?: SceneProps) => SceneRef;
