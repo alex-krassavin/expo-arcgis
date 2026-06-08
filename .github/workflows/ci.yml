@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Typecheck · build · package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` runs the `prepare` script, which builds build/ and plugin/build via tsc.
+      - name: Install (builds build/ + plugin/build)
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # publint + are-the-types-wrong (the exact gate from `npm run check:package`).
+      - name: Validate published package
+        run: npm run check:package

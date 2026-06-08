@@ -1,0 +1,48 @@
+name: Publish
+
+# Publishes to npm when a GitHub Release is published (tag → release), or on manual dispatch.
+# The published version is whatever is in package.json — bump it and commit before releasing.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for npm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+
+      # Guard against publishing a version that doesn't match the release tag (expects vX.Y.Z).
+      - name: Verify tag matches package.json version
+        if: github.event_name == 'release'
+        run: |
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "${{ github.ref_name }}" ]; then
+            echo "::error::Release tag ${{ github.ref_name }} != package.json $PKG_VERSION — bump package.json and re-tag."
+            exit 1
+          fi
+
+      # `npm ci` runs `prepare` → builds build/ + plugin/build.
+      - name: Install (builds build/ + plugin/build)
+        run: npm ci
+
+      - name: Validate published package
+        run: npm run check:package
+
+      # `npm publish` re-runs `prepare`, so the tarball is built fresh from source.
+      # --provenance ties the package to this workflow run (supply-chain attestation).
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

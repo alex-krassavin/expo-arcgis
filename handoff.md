@@ -749,4 +749,9 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 **Верификация:** `npm run check:package` → «No problems found 🌟»; `npm publish --dry-run` → `expo-arcgis@0.1.0`, 242 файла/177 кБ, чисто (только нотис «нужен npm login»).
 
-**Осталось пользователю:** `npm login` → `npm publish` (имя `expo-arcgis` — проверить доступность; при занятости — scoped `@alex-krassavin/expo-arcgis`). На-устройстве runtime-валидация (рендер/сеть/сенсоры) — отдельно.
+**Имя `expo-arcgis` на npm — СВОБОДНО** (E404). На-устройстве runtime-валидация (рендер/сеть/сенсоры) — отдельно.
+
+## CI/CD (GitHub Actions)
+- **`.github/workflows/ci.yml`** — на push/PR в `main`: `npm ci` (=сборка через `prepare`) → `tsc --noEmit` → `npm run check:package`. Гейтим зелёными проверками, **НЕ lint**: в лайнте 18 ошибок `react-hooks` «Cannot access refs during render» — это намеренная идиома ленивой инициализации native-ref (`if(!ref.current) ref.current=new XRef()`) во всех компонентах с начала проекта; работает, верифицировано сборками; чинить/глушить правило — отдельно. (Конфликт `DistanceMeasurement` тип↔компонент — пофикшен: тип → `DistanceMeasurementResult`.)
+- **`.github/workflows/publish.yml`** — на GitHub **Release published** (или ручной `workflow_dispatch`): проверка тега `vX.Y.Z` == `package.json` → `npm ci` → `check:package` → `npm publish --provenance --access public`. Нужен секрет **`NPM_TOKEN`** (npm automation token) в Settings→Secrets→Actions. Provenance: `id-token: write` + публичный репо + совпадающий `repository.url` (всё есть).
+- **Релиз:** bump `version` в package.json → commit → GitHub Release с тегом `vX.Y.Z` → workflow публикует. Native-сборка (Android/iOS) в CI НЕ включена (тяжело: ArcGIS SDK 300 + Xcode 26 macOS-runner) — нативка верифицируется локально; в пакет едут исходники, их собирает приложение-потребитель.
