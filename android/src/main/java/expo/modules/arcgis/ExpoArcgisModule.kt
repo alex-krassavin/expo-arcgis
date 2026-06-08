@@ -334,6 +334,10 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("identify") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
         view.identify(screenPoint, options, promise)
       }
+
+      AsyncFunction("retryLoad") { view: ExpoArcgisMapView, promise: Promise ->
+        view.retryLoad(promise)
+      }
     }
 
     // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
@@ -367,6 +371,10 @@ class ExpoArcgisModule : Module() {
 
       Prop("sunTime") { view: ExpoArcgisSceneView, value: Double? ->
         view.setSunTime(value)
+      }
+
+      AsyncFunction("retryLoad") { view: ExpoArcgisSceneView, promise: Promise ->
+        view.retryLoad(promise)
       }
     }
   }

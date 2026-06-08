@@ -196,6 +196,19 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
+  /** Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result. */
+  fun retryLoad(promise: Promise) {
+    val map = mapView.map ?: run { promise.resolve(null); return }
+    scope.launch {
+      map.retryLoad()
+        .onSuccess { onMapLoaded(MapLoadedEventPayload()); promise.resolve(null) }
+        .onFailure { error ->
+          onMapLoadError(MapLoadErrorEventPayload(error.message ?: "Failed to load map"))
+          promise.resolve(null)
+        }
+    }
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // The view-based MapView renders only while observing a lifecycle.

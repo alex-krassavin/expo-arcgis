@@ -122,6 +122,17 @@ class ExpoArcgisSceneView: ExpoView {
     model.setScene(ref?.scene)
   }
 
+  /// Retries loading the scene (Loadable pattern) — useful after a network outage. Re-emits the result.
+  func retryLoad() async throws {
+    guard let scene = model.scene else { return }
+    do {
+      try await scene.retryLoad()
+      onSceneLoaded(["spatialReferenceWkid": NSNull()])
+    } catch {
+      onSceneLoadError(["message": error.localizedDescription])
+    }
+  }
+
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
   }

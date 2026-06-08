@@ -141,6 +141,17 @@ class ExpoArcgisMapView: ExpoView {
     self.hostingController = hostingController
   }
 
+  /// Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result.
+  func retryLoad() async throws {
+    guard let map = model.map else { return }
+    do {
+      try await map.retryLoad()
+      onMapLoaded(["spatialReferenceWkid": NSNull()])
+    } catch {
+      onMapLoadError(["message": error.localizedDescription])
+    }
+  }
+
   /// Receives the native map (by reference) from the `<Map>` SharedObject.
   func setMap(_ ref: MapRef?) {
     model.setMap(ref?.map)

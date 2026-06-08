@@ -32,6 +32,7 @@ import {
   type MapLoadErrorEventPayload,
   type MapViewHandle,
   type Renderer,
+  type SceneViewHandle,
   type Surface,
   type TapEventPayload,
   type UtilityNetworkHandle,
@@ -196,6 +197,7 @@ export default function App() {
   const [un, setUn] = useState(false);
   const [offlinePath, setOfflinePath] = useState<string | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
+  const sceneRef = useRef<SceneViewHandle>(null);
   const unRef = useRef<UtilityNetworkHandle>(null);
   const citiesRef = useRef<FeatureLayerHandle>(null);
   const editRef = useRef<FeatureLayerHandle>(null);
@@ -274,6 +276,12 @@ export default function App() {
   async function suggestPlaces() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
+  }
+  // "Retry load" — re-attempt the map/scene load after a failure (Loadable pattern).
+  async function retryLoad() {
+    setStatus('Retrying load…');
+    if (mode3D) await sceneRef.current?.retryLoad();
+    else await mapRef.current?.retryLoad();
   }
   // "Take offline" — generate an on-demand offline map, then display it (offline namespace).
   async function takeOffline() {
@@ -521,6 +529,7 @@ export default function App() {
             >
               {buildings && <SceneLayer url={SF_BUILDINGS} />}
               <SceneView
+                ref={sceneRef}
                 style={styles.map}
                 camera={sceneCamera}
                 sunLighting={shadows ? 'lightAndShadows' : 'off'}
@@ -671,6 +680,7 @@ export default function App() {
                 />
                 <Button title={shadows ? 'No shadows' : 'Shadows'} onPress={() => setShadows((v) => !v)} />
                 <Button title={viewshed ? 'No viewshed' : 'Viewshed'} onPress={() => setViewshed((v) => !v)} />
+                <Button title="Retry load" onPress={retryLoad} />
               </>
             ) : (
               <>
@@ -701,6 +711,7 @@ export default function App() {
                 <Button title="Preplanned" onPress={preplannedOffline} />
                 <Button title="Geodatabase" onPress={geodatabaseDemo} />
                 <Button title="Export tiles" onPress={exportTilesDemo} />
+                <Button title="Retry load" onPress={retryLoad} />
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />

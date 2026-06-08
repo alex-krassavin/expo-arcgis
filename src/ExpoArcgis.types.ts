@@ -263,6 +263,14 @@ export type MapViewHandle = {
     screenPoint: { x: number; y: number },
     options?: { tolerance?: number; maxResults?: number }
   ): Promise<IdentifyResult[]>;
+  /** Retries loading the map after a failure (e.g. a network outage). Re-fires `onMapLoaded`/`onMapLoadError`. */
+  retryLoad(): Promise<void>;
+};
+
+/** Imperative handle exposed by `<SceneView>` via `ref`. */
+export type SceneViewHandle = {
+  /** Retries loading the scene after a failure (e.g. a network outage). Re-fires `onSceneLoaded`/`onSceneLoadError`. */
+  retryLoad(): Promise<void>;
 };
 
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */

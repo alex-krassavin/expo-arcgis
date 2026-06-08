@@ -12,6 +12,7 @@ import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.mapping.view.LightingMode
 import com.arcgismaps.mapping.view.SceneView
 import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 import kotlinx.coroutines.CoroutineScope
@@ -79,6 +80,19 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   fun setAnalysisOverlays(refs: List<AnalysisOverlayRef>) {
     sceneView.analysisOverlays.clear()
     sceneView.analysisOverlays.addAll(refs.map { it.overlay })
+  }
+
+  /** Retries loading the scene (Loadable pattern) — useful after a network outage. Re-emits the result. */
+  fun retryLoad(promise: Promise) {
+    val scene = sceneView.scene ?: run { promise.resolve(null); return }
+    scope.launch {
+      scene.retryLoad()
+        .onSuccess { onSceneLoaded(MapLoadedEventPayload()); promise.resolve(null) }
+        .onFailure { error ->
+          onSceneLoadError(MapLoadErrorEventPayload(error.message ?: "Failed to load scene"))
+          promise.resolve(null)
+        }
+    }
   }
 
   /** Animates the view to a runtime camera sent from JS. */
