@@ -109,6 +109,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     areaOfInterest: Geometry,
     downloadName: string
   ): Promise<JobRef<OfflineMapResult>>;
+  syncOfflineMap(mobileMapPackagePath: string): Promise<JobRef<{ synced: boolean }>>;
   preplannedMapAreas(portalItemId: string): Promise<PreplannedMapAreaInfo[]>;
   downloadPreplannedOfflineMap(
     portalItemId: string,

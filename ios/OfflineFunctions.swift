@@ -62,6 +62,21 @@ func downloadPreplannedOfflineMap(_ portalItemId: String, _ areaIndex: Int, _ do
   }
 }
 
+/// Returns a `JobRef` that syncs a downloaded offline map (`.mmpk` at `mobileMapPackagePath`) with
+/// its services — pushes local edits up and pulls server updates down.
+func syncOfflineMap(_ mobileMapPackagePath: String) async throws -> JobRef {
+  let package = MobileMapPackage(fileURL: URL(fileURLWithPath: mobileMapPackagePath))
+  try await package.load()
+  guard let map = package.maps.first else { throw OfflineError.invalidParameters }
+  let task = OfflineMapSyncTask(map: map)
+  let parameters = try await task.makeDefaultOfflineMapSyncParameters()
+  let job = task.makeSyncOfflineMapJob(parameters: parameters)
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["synced": true]
+  }
+}
+
 func generateGeodatabase(_ featureServiceUrl: String, _ extent: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let url = URL(string: featureServiceUrl), let area = geometryFromDict(extent) else {
     throw OfflineError.invalidParameters

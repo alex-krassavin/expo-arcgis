@@ -27,6 +27,13 @@ export const offline = {
   ): Promise<JobRef<OfflineMapResult>> =>
     Module.generateOfflineMap(portalItemId, areaOfInterest, downloadName),
 
+  /**
+   * Syncs a downloaded offline map (`.mmpk` at `mobileMapPackagePath`) with its services — pushes
+   * local edits up and pulls server updates down. Returns a `JobRef` (`await job.result()`).
+   */
+  syncOfflineMap: (mobileMapPackagePath: string): Promise<JobRef<{ synced: boolean }>> =>
+    Module.syncOfflineMap(mobileMapPackagePath),
+
   /** Lists the preplanned offline map areas published with the web map `portalItemId`. */
   preplannedMapAreas: (portalItemId: string): Promise<PreplannedMapAreaInfo[]> =>
     Module.preplannedMapAreas(portalItemId),

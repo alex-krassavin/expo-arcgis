@@ -811,6 +811,20 @@ export default function App() {
                 <Button title="Geodatabase" onPress={geodatabaseDemo} />
                 <Button title="Export tiles" onPress={exportTilesDemo} />
                 <Button title="Retry load" onPress={retryLoad} />
+                {offlinePath && (
+                  <Button
+                    title="Sync offline"
+                    onPress={async () => {
+                      setStatus('Syncing offline map…');
+                      try {
+                        await (await offline.syncOfflineMap(offlinePath)).result();
+                        setStatus('Offline map synced ✅');
+                      } catch (e) {
+                        setStatus(`Sync error: ${String(e)}`);
+                      }
+                    }}
+                  />
+                )}
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title={realtime ? 'Stop RT' : 'Real-time'} onPress={() => setRealtime((v) => !v)} />

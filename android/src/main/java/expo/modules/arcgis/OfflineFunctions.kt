@@ -6,6 +6,8 @@ import com.arcgismaps.portal.Portal
 import com.arcgismaps.tasks.exportvectortiles.ExportVectorTilesTask
 import com.arcgismaps.tasks.geodatabase.GeodatabaseSyncTask
 import com.arcgismaps.tasks.geodatabase.SyncDirection
+import com.arcgismaps.mapping.MobileMapPackage
+import com.arcgismaps.tasks.offlinemaptask.OfflineMapSyncTask
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapTask
 import com.arcgismaps.tasks.tilecache.ExportTileCacheTask
 import expo.modules.kotlin.AppContext
@@ -55,6 +57,23 @@ internal suspend fun preplannedMapAreas(portalItemId: String): List<Map<String, 
   return task.getPreplannedMapAreas().getOrThrow().mapIndexed { index, area ->
     area.load()
     mapOf("title" to area.portalItem.title, "index" to index)
+  }
+}
+
+/**
+ * Returns a [JobRef] that syncs a downloaded offline map (`.mmpk` at [mobileMapPackagePath]) with
+ * its services — pushes local edits up and pulls server updates down.
+ */
+internal suspend fun syncOfflineMap(appContext: AppContext, mobileMapPackagePath: String): JobRef {
+  val pkg = MobileMapPackage(mobileMapPackagePath)
+  pkg.load().getOrThrow()
+  val map = pkg.maps.firstOrNull() ?: throw IllegalArgumentException("No map in package")
+  val task = OfflineMapSyncTask(map)
+  val parameters = task.createDefaultOfflineMapSyncParameters().getOrThrow()
+  val job = task.createOfflineMapSyncJob(parameters)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("synced" to true)
   }
 }
 
