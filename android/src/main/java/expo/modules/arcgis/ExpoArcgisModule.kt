@@ -232,6 +232,9 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: DynamicEntityLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
       }
+      AsyncFunction("queryDynamicEntities") Coroutine { ref: DynamicEntityLayerRef ->
+        ref.queryDynamicEntities()
+      }
     }
 
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.

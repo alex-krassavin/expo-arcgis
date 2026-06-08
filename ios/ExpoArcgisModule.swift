@@ -256,6 +256,9 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: DynamicEntityLayerRef, changed: [String: Any]) in
         ref.applyProps(changed)
       }
+      AsyncFunction("queryDynamicEntities") { (ref: DynamicEntityLayerRef) in
+        try await ref.queryDynamicEntities()
+      }
     }
 
     // Graphics overlay (owned by a MapView) and the graphics drawn on it.

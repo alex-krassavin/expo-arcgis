@@ -5,6 +5,7 @@ import com.arcgismaps.mapping.layers.Layer
 import com.arcgismaps.realtime.ArcGISStreamService
 import com.arcgismaps.realtime.ConnectionStatus
 import com.arcgismaps.realtime.DynamicEntityDataSource
+import com.arcgismaps.realtime.DynamicEntityQueryParameters
 import expo.modules.kotlin.AppContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,21 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
         emit("onConnectionStatusChange", mapOf("status" to connectionStatusString(status)))
       }
     }
+  }
+
+  /** Returns the data source's currently-tracked dynamic entities (attributes + geometry). */
+  suspend fun queryDynamicEntities(): Map<String, Any?> {
+    val result = dataSource.queryDynamicEntities(DynamicEntityQueryParameters()).getOrThrow()
+    val entities = result.toList()
+    return mapOf(
+      "count" to entities.size,
+      "entities" to entities.map { entity ->
+        mapOf(
+          "attributes" to entity.attributes,
+          "geometry" to entity.geometry?.let { dictFromGeometry(it) },
+        )
+      },
+    )
   }
 
   override fun applyProps(changed: Map<String, Any?>) {

@@ -24,6 +24,18 @@ public final class DynamicEntityLayerRef: LayerRef {
     }
   }
 
+  /// Returns the data source's currently-tracked dynamic entities (attributes + geometry).
+  func queryDynamicEntities() async throws -> [String: Any] {
+    let result = try await dataSource.queryDynamicEntities(using: DynamicEntityQueryParameters())
+    let entities = Array(result.entities())
+    let serialized = entities.map { entity -> [String: Any] in
+      var dict: [String: Any] = ["attributes": entity.attributes.mapValues { $0 as Any }]
+      if let geometry = entity.geometry { dict["geometry"] = dictFromGeometry(geometry) }
+      return dict
+    }
+    return ["count": entities.count, "entities": serialized]
+  }
+
   override func applyProps(_ changed: [String: Any]) {
     super.applyProps(changed)
     guard let layer = layer as? DynamicEntityLayer else { return }

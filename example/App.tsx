@@ -287,6 +287,16 @@ export default function App() {
     const results = await geocoder.suggest('Coffee');
     setStatus(results.length ? `Suggestion: ${results[0].label}` : 'No suggestions');
   }
+  // "Query entities" — count the dynamic entities currently tracked by the real-time layer.
+  async function queryRealtime() {
+    if (!realtimeRef.current) return setStatus('Enable Real-time first');
+    try {
+      const { count } = await realtimeRef.current.queryDynamicEntities();
+      setStatus(`Dynamic entities tracked: ${count}`);
+    } catch (e) {
+      setStatus(`Query entities error: ${String(e)}`);
+    }
+  }
   // "Retry load" — re-attempt the map/scene load after a failure (Loadable pattern).
   async function retryLoad() {
     setStatus('Retrying load…');
@@ -743,6 +753,7 @@ export default function App() {
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title={realtime ? 'Stop RT' : 'Real-time'} onPress={() => setRealtime((v) => !v)} />
+                {realtime && <Button title="Query entities" onPress={queryRealtime} />}
                 <Button title="Add here" onPress={addHere} />
                 <Button title="Move here" onPress={moveHere} />
                 <Button title="Delete" onPress={deleteFeature} />
