@@ -83,9 +83,16 @@ class ExpoArcgisGeometryModule : Module() {
       executeGeoprocessing(serviceUrl, inputs)
     }
 
+    // Job handle for long-running downloads — emits onProgress, awaits via result(), supports cancel().
+    Class(JobRef::class) {
+      Events("onProgress")
+      AsyncFunction("result") Coroutine { ref: JobRef -> ref.result() }
+      AsyncFunction("cancel") Coroutine { ref: JobRef -> ref.cancel() }
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
-      generateOfflineMap(appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)
+      generateOfflineMap(appContext, appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)
     }
     AsyncFunction("preplannedMapAreas") Coroutine { portalItemId: String ->
       preplannedMapAreas(portalItemId)

@@ -7,6 +7,7 @@ export type {
   LayerRef,
   GraphicRef,
   GraphicsOverlayRef,
+  JobRef,
 } from './ExpoArcgisModule';
 
 export { MapSettings, useMapSettings, type MapSettingsConfig } from './MapSettings';

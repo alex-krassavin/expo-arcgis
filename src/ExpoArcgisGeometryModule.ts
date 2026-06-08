@@ -1,5 +1,6 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
+import type { JobRef } from './ExpoArcgisModule';
 import type {
   GeocodeResult,
   GeodeticDistanceResult,
@@ -107,7 +108,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     portalItemId: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineMapResult>;
+  ): Promise<JobRef<OfflineMapResult>>;
   preplannedMapAreas(portalItemId: string): Promise<PreplannedMapAreaInfo[]>;
   downloadPreplannedOfflineMap(
     portalItemId: string,

@@ -8,6 +8,7 @@ import com.arcgismaps.tasks.geodatabase.GeodatabaseSyncTask
 import com.arcgismaps.tasks.geodatabase.SyncDirection
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapTask
 import com.arcgismaps.tasks.tilecache.ExportTileCacheTask
+import expo.modules.kotlin.AppContext
 import java.io.File
 
 /**
@@ -23,23 +24,26 @@ internal fun offlineDownloadDir(baseDir: File, name: String): File {
   return dir
 }
 
+/** Returns a [JobRef] for an on-demand offline-map download (drive it via `result()` + `onProgress`). */
 internal suspend fun generateOfflineMap(
+  appContext: AppContext,
   baseDir: File?,
   portalItemId: String,
   areaOfInterest: Map<String, Any?>,
   downloadName: String,
-): Map<String, Any?> {
-  val area = geometryFromDict(areaOfInterest) ?: return mapOf("path" to "")
-  baseDir ?: return mapOf("path" to "")
+): JobRef {
+  val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
+  baseDir ?: throw IllegalStateException("No download directory available")
   val portalItem =
     PortalItem(Portal("https://www.arcgis.com", Portal.Connection.Anonymous), portalItemId)
   val task = OfflineMapTask(portalItem)
   val parameters = task.createDefaultGenerateOfflineMapParameters(area).getOrThrow()
   val dir = offlineDownloadDir(baseDir, downloadName)
   val job = task.createGenerateOfflineMapJob(parameters, dir.absolutePath)
-  job.start()
-  job.result().getOrThrow()
-  return mapOf("path" to dir.absolutePath)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("path" to dir.absolutePath)
+  }
 }
 
 private fun offlineMapTask(portalItemId: String): OfflineMapTask =

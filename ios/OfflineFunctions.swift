@@ -14,18 +14,22 @@ func offlineDownloadURL(_ name: String) -> URL {
   return url
 }
 
-func generateOfflineMap(_ portalItemId: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+enum OfflineError: Error { case invalidParameters }
+
+/// Returns a `JobRef` for an on-demand offline-map download (drive it via `result()` + `onProgress`).
+func generateOfflineMap(_ portalItemId: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let area = geometryFromDict(areaOfInterest), let itemID = PortalItem.ID(portalItemId) else {
-    return ["path": ""]
+    throw OfflineError.invalidParameters
   }
   let portalItem = PortalItem(portal: .arcGISOnline(connection: .anonymous), id: itemID)
   let task = OfflineMapTask(portalItem: portalItem)
   let parameters = try await task.makeDefaultGenerateOfflineMapParameters(areaOfInterest: area)
   let directory = offlineDownloadURL(downloadName)
   let job = task.makeGenerateOfflineMapJob(parameters: parameters, downloadDirectory: directory)
-  job.start()
-  _ = try await job.result.get()
-  return ["path": directory.path]
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["path": directory.path]
+  }
 }
 
 private func offlineMapTask(_ portalItemId: String) -> OfflineMapTask? {

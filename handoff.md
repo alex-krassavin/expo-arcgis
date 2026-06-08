@@ -648,3 +648,16 @@ Utility Network как декларативный `<UtilityNetwork>` (forwardRef
 
 ### Итог раздела
 Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplannedOfflineMap`/`generateGeodatabase`/`syncGeodatabase`/`exportTileCache`/`exportVectorTiles`) + декларативный показ `.mmpk` через `<Map mobileMapPackagePath>`. Демо-кнопки в 2D-ряду: Take offline / Preplanned / Geodatabase / Export tiles. **Сборочно верифицировано; реальная загрузка/sync — на устройстве** (сеть + offline-enabled/sync/exportTiles сервисы; размер tile-выгрузки — мелкий extent). **DEFER:** MobileScenePackage/.mspk, offline-сцены, `GenerateOfflineMapParameterOverrides`, `OfflineMapSyncTask`/scheduled-updates, estimate-size, прогресс-события job’ов, offline-локаторы/маршруты.
+
+## 27. Programming-patterns апгрейды (план одобрен, 2 фазы) — «ознакомься, подчерпни»
+
+Пользователь дал doc «Programming patterns» («ознакомься может что подчерпнёшь»). Код уже следует паттернам (GeoView-модель, async/await, Streamed/StateFlow-события, `CancellationError`, Loadable load+error). Сверка по факту выявила 2 пробела → пользователь выбрал «оба».
+
+### Фаза 1 — PP1: `retryLoad` (Loadable resilience) ✅
+- `<MapView>`/`<SceneView>` ref-метод `retryLoad()` (Loadable — устойчивость к сетевым сбоям): Swift `map/scene.retryLoad() async throws` + переэмит `onMapLoaded`/`onSceneLoaded`(error); Kotlin `retryLoad(): Result` (view AsyncFunction → **Promise-паттерн**, т.к. view-AsyncFunction не поддерживает Coroutine). `<SceneView>` стал **forwardRef** (как MapView) для отдачи ref. Демо: кнопки «Retry load» (2D+3D). **Верификация:** TS/Android/iOS ✅.
+
+### Фаза 2 — PP2: `JobRef` (прогресс + отмена) ✅
+- Generic `JobRef<R>` (`JobRef.swift`/`.kt`, новый) — SharedObject поверх базового `Job` + тип-стёртое замыкание `awaitResult`. `result()` → ставит наблюдение прогресса (**Swift `job.progress: Foundation.Progress` через KVO `observe(\.fractionCompleted)` → `Int(frac*100)`** vs **Kotlin `job.progress: StateFlow<Int>` collect**) → `job.start()` → `awaitResult()`. `cancel()` → `job.cancel()` (Swift async / Kotlin suspend). Событие `onProgress`. `Class(JobRef)` **без Constructor** (только возвращается из функций — Expo это допускает). `offline.generateOfflineMap` теперь возвращает `Promise<JobRef<OfflineMapResult>>`: `const job = await offline.generateOfflineMap(...); job.addListener('onProgress', …); const {path} = await job.result(); /* job.cancel() */`. Демо: «Take offline» показывает `%` + кнопка «Cancel». **Верификация:** TS · Android (`:expo-arcgis`+`:app`) · iOS (`ExpoArcgis`+`expoarcgisexample`) ✅.
+
+### Итог
+Перенял из «programming patterns»: Loadable `retryLoad` + Tasks/Jobs `progress`+`cancel` (через generic `JobRef`). Остальные offline-функции/geoprocessor могут принять JobRef идентично (DEFER). Сборочно верифицировано на 3 таргетах.

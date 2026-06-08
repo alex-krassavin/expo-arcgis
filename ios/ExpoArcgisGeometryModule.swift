@@ -78,6 +78,12 @@ public class ExpoArcgisGeometryModule: Module {
       try await executeGeoprocessing(serviceUrl, inputs)
     }
 
+    // Job handle for long-running downloads — emits onProgress, awaits via result(), supports cancel().
+    Class(JobRef.self) {
+      AsyncFunction("result") { (ref: JobRef) in try await ref.result() }
+      AsyncFunction("cancel") { (ref: JobRef) in await ref.cancel() }
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
       try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)

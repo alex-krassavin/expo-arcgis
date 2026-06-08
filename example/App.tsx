@@ -27,10 +27,12 @@ import {
   type FeatureLayerHandle,
   type FeatureReduction,
   type Geometry,
+  type JobRef,
   type LabelDefinition,
   type LocationEventPayload,
   type MapLoadErrorEventPayload,
   type MapViewHandle,
+  type OfflineMapResult,
   type Renderer,
   type SceneViewHandle,
   type Surface,
@@ -196,6 +198,7 @@ export default function App() {
   const [gpGeometries, setGpGeometries] = useState<Geometry[]>([]);
   const [un, setUn] = useState(false);
   const [offlinePath, setOfflinePath] = useState<string | null>(null);
+  const [offlineJob, setOfflineJob] = useState<JobRef<OfflineMapResult> | null>(null);
   const mapRef = useRef<MapViewHandle>(null);
   const sceneRef = useRef<SceneViewHandle>(null);
   const unRef = useRef<UtilityNetworkHandle>(null);
@@ -283,17 +286,25 @@ export default function App() {
     if (mode3D) await sceneRef.current?.retryLoad();
     else await mapRef.current?.retryLoad();
   }
-  // "Take offline" — generate an on-demand offline map, then display it (offline namespace).
+  // "Take offline" — generate an on-demand offline map (with progress + cancel), then display it.
   async function takeOffline() {
-    setStatus('Taking map offline…');
+    setStatus('Taking map offline… 0%');
     try {
-      const { path } = await offline.generateOfflineMap(OFFLINE_WEBMAP, OFFLINE_AREA, 'offlineMap1');
+      const job = await offline.generateOfflineMap(OFFLINE_WEBMAP, OFFLINE_AREA, 'offlineMap1');
+      setOfflineJob(job);
+      const sub = job.addListener('onProgress', ({ progress }) =>
+        setStatus(`Taking map offline… ${progress}%`)
+      );
+      const { path } = await job.result();
+      sub.remove();
+      setOfflineJob(null);
       if (path) {
         setOfflinePath(path);
         setStatus('Offline map downloaded ✅');
       } else setStatus('Offline: no path returned');
     } catch (e) {
-      setStatus(`Offline error: ${String(e)}`);
+      setOfflineJob(null);
+      setStatus(`Offline error/cancelled: ${String(e)}`);
     }
   }
   // "Geodatabase" — generate a .geodatabase from a sync-enabled feature service (offline namespace).
@@ -708,6 +719,7 @@ export default function App() {
                 {un && <Button title="Configs" onPress={namedConfigTrace} />}
                 {un && <Button title="Assoc" onPress={showAssociations} />}
                 <Button title="Take offline" onPress={takeOffline} />
+                {offlineJob && <Button title="Cancel" onPress={() => offlineJob.cancel()} />}
                 <Button title="Preplanned" onPress={preplannedOffline} />
                 <Button title="Geodatabase" onPress={geodatabaseDemo} />
                 <Button title="Export tiles" onPress={exportTilesDemo} />

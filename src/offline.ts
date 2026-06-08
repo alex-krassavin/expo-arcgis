@@ -1,4 +1,5 @@
 import Module from './ExpoArcgisGeometryModule';
+import type { JobRef } from './ExpoArcgisModule';
 import type {
   Geometry,
   OfflineGeodatabaseResult,
@@ -16,13 +17,14 @@ import type {
 export const offline = {
   /**
    * Takes a web map (`portalItemId`) offline on-demand for `areaOfInterest` (an envelope/polygon),
-   * downloading a mobile map package into a directory named `downloadName`.
+   * downloading a mobile map package into a directory named `downloadName`. Returns a `JobRef`:
+   * `await job.result()` to run it, `job.addListener('onProgress', …)` for progress, `job.cancel()`.
    */
   generateOfflineMap: (
     portalItemId: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineMapResult> =>
+  ): Promise<JobRef<OfflineMapResult>> =>
     Module.generateOfflineMap(portalItemId, areaOfInterest, downloadName),
 
   /** Lists the preplanned offline map areas published with the web map `portalItemId`. */

@@ -151,6 +151,18 @@ export declare class UtilityNetworkRef extends SharedObject {
   associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
 }
 
+/** Events emitted by a `JobRef` as a long-running job progresses. */
+type JobEvents = { onProgress(payload: { progress: number }): void };
+
+/**
+ * Handle for a long-running ArcGIS job (e.g. an offline-map download). Await `result()` to run it
+ * to completion, observe `onProgress` (0–100) via `addListener`, or `cancel()` it.
+ */
+export declare class JobRef<R> extends SharedObject<JobEvents> {
+  result(): Promise<R>;
+  cancel(): Promise<void>;
+}
+
 /** The geo model that operational layers attach to — a `<Map>` or a `<Scene>`. */
 export type GeoModelRef = MapRef | SceneRef;
 
