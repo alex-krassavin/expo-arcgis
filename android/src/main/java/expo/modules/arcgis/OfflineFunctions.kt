@@ -59,84 +59,94 @@ internal suspend fun preplannedMapAreas(portalItemId: String): List<Map<String, 
 }
 
 internal suspend fun downloadPreplannedOfflineMap(
+  appContext: AppContext,
   baseDir: File?,
   portalItemId: String,
   areaIndex: Int,
   downloadName: String,
-): Map<String, Any?> {
-  baseDir ?: return mapOf("path" to "")
+): JobRef {
+  baseDir ?: throw IllegalStateException("No download directory available")
   val task = offlineMapTask(portalItemId)
   task.load().getOrThrow()
   val area = task.getPreplannedMapAreas().getOrThrow().getOrNull(areaIndex)
-    ?: return mapOf("path" to "")
+    ?: throw IllegalArgumentException("Invalid preplanned area index")
   val parameters = task.createDefaultDownloadPreplannedOfflineMapParameters(area).getOrThrow()
   val dir = offlineDownloadDir(baseDir, downloadName)
   val job = task.createDownloadPreplannedOfflineMapJob(parameters, dir.absolutePath)
-  job.start()
-  job.result().getOrThrow()
-  return mapOf("path" to dir.absolutePath)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("path" to dir.absolutePath)
+  }
 }
 
 internal suspend fun generateGeodatabase(
+  appContext: AppContext,
   baseDir: File?,
   featureServiceUrl: String,
   extent: Map<String, Any?>,
   downloadName: String,
-): Map<String, Any?> {
-  val area = geometryFromDict(extent) ?: return mapOf("path" to "", "tableCount" to 0)
-  baseDir ?: return mapOf("path" to "", "tableCount" to 0)
+): JobRef {
+  val area = geometryFromDict(extent) ?: throw IllegalArgumentException("Invalid extent")
+  baseDir ?: throw IllegalStateException("No download directory available")
   val task = GeodatabaseSyncTask(featureServiceUrl)
   val parameters = task.createDefaultGenerateGeodatabaseParameters(area).getOrThrow()
   val file = offlineDownloadDir(baseDir, "$downloadName.geodatabase")
   val job = task.createGenerateGeodatabaseJob(parameters, file.absolutePath)
-  job.start()
-  val geodatabase = job.result().getOrThrow()
-  return mapOf("path" to geodatabase.path, "tableCount" to geodatabase.featureTables.size)
+  return JobRef(appContext, job) {
+    val geodatabase = job.result().getOrThrow()
+    mapOf("path" to geodatabase.path, "tableCount" to geodatabase.featureTables.size)
+  }
 }
 
 internal suspend fun syncGeodatabase(
+  appContext: AppContext,
   geodatabasePath: String,
   featureServiceUrl: String,
-): Map<String, Any?> {
+): JobRef {
   val geodatabase = Geodatabase(geodatabasePath)
   geodatabase.load().getOrThrow()
   val task = GeodatabaseSyncTask(featureServiceUrl)
   val job = task.createSyncGeodatabaseJob(SyncDirection.Bidirectional, true, geodatabase)
-  job.start()
-  job.result().getOrThrow()
-  return mapOf("synced" to true)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("synced" to true)
+  }
 }
 
 internal suspend fun exportTileCache(
+  appContext: AppContext,
   baseDir: File?,
   tileServiceUrl: String,
   areaOfInterest: Map<String, Any?>,
   downloadName: String,
-): Map<String, Any?> {
-  val area = geometryFromDict(areaOfInterest) ?: return mapOf("path" to "")
-  baseDir ?: return mapOf("path" to "")
+): JobRef {
+  val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
+  baseDir ?: throw IllegalStateException("No download directory available")
   val task = ExportTileCacheTask(tileServiceUrl)
   val parameters = task.createDefaultExportTileCacheParameters(area, 0.0, 0.0).getOrThrow()
   val file = offlineDownloadDir(baseDir, "$downloadName.tpkx")
   val job = task.createExportTileCacheJob(parameters, file.absolutePath)
-  job.start()
-  job.result().getOrThrow()
-  return mapOf("path" to file.absolutePath)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("path" to file.absolutePath)
+  }
 }
 
 internal suspend fun exportVectorTiles(
+  appContext: AppContext,
   baseDir: File?,
   vectorTileServiceUrl: String,
   areaOfInterest: Map<String, Any?>,
   downloadName: String,
-): Map<String, Any?> {
-  val area = geometryFromDict(areaOfInterest) ?: return mapOf("path" to "")
-  baseDir ?: return mapOf("path" to "")
+): JobRef {
+  val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
+  baseDir ?: throw IllegalStateException("No download directory available")
   val task = ExportVectorTilesTask(vectorTileServiceUrl)
   val parameters = task.createDefaultExportVectorTilesParameters(area, 0.0).getOrThrow()
   val file = offlineDownloadDir(baseDir, "$downloadName.vtpk")
   val job = task.createExportVectorTilesJob(parameters, file.absolutePath)
-  job.start()
-  job.result().getOrThrow()
-  return mapOf("path" to file.absolutePath)
+  return JobRef(appContext, job) {
+    job.result().getOrThrow()
+    mapOf("path" to file.absolutePath)
+  }
 }

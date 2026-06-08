@@ -10,6 +10,7 @@ import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingL
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingLong
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingParameter
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingString
+import expo.modules.kotlin.AppContext
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -24,9 +25,10 @@ private fun geoprocessingTask(url: String): GeoprocessingTask =
   geoprocessingTasks.getOrPut(url) { GeoprocessingTask(url) }
 
 internal suspend fun executeGeoprocessing(
+  appContext: AppContext,
   serviceUrl: String,
   inputs: Map<String, Any?>,
-): Map<String, Any?> {
+): JobRef {
   val task = geoprocessingTask(serviceUrl)
   // createDefaultParameters() loads the task and sets the service's execution type (sync / async).
   val parameters = task.createDefaultParameters().getOrThrow()
@@ -34,9 +36,10 @@ internal suspend fun executeGeoprocessing(
     (raw as? Map<*, *>)?.let { buildGeoprocessingParameter(it) }?.let { parameters.inputs[name] = it }
   }
   val job = task.createJob(parameters)
-  job.start()
-  val result = job.result().getOrThrow()
-  return mapOf("outputs" to serializeOutputs(result.outputs))
+  return JobRef(appContext, job) {
+    val result = job.result().getOrThrow()
+    mapOf("outputs" to serializeOutputs(result.outputs))
+  }
 }
 
 private fun buildGeoprocessingParameter(d: Map<*, *>): GeoprocessingParameter? = when (d["type"]) {

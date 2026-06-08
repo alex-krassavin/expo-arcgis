@@ -101,7 +101,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   executeGeoprocessing(
     serviceUrl: string,
     inputs: Record<string, GeoprocessingInput>
-  ): Promise<GeoprocessingResult>;
+  ): Promise<JobRef<GeoprocessingResult>>;
 
   // Offline — backing functions for the `offline` namespace (see ./offline).
   generateOfflineMap(
@@ -114,23 +114,26 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     portalItemId: string,
     areaIndex: number,
     downloadName: string
-  ): Promise<OfflineMapResult>;
+  ): Promise<JobRef<OfflineMapResult>>;
   generateGeodatabase(
     featureServiceUrl: string,
     extent: Geometry,
     downloadName: string
-  ): Promise<OfflineGeodatabaseResult>;
-  syncGeodatabase(geodatabasePath: string, featureServiceUrl: string): Promise<{ synced: boolean }>;
+  ): Promise<JobRef<OfflineGeodatabaseResult>>;
+  syncGeodatabase(
+    geodatabasePath: string,
+    featureServiceUrl: string
+  ): Promise<JobRef<{ synced: boolean }>>;
   exportTileCache(
     tileServiceUrl: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineTileResult>;
+  ): Promise<JobRef<OfflineTileResult>>;
   exportVectorTiles(
     vectorTileServiceUrl: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineTileResult>;
+  ): Promise<JobRef<OfflineTileResult>>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

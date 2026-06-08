@@ -342,7 +342,8 @@ export default function App() {
   async function geodatabaseDemo() {
     setStatus('Geodatabase: generating…');
     try {
-      const { path, tableCount } = await offline.generateGeodatabase(GDB_SERVICE, GDB_AREA, 'savethebay');
+      const job = await offline.generateGeodatabase(GDB_SERVICE, GDB_AREA, 'savethebay');
+      const { path, tableCount } = await job.result();
       setStatus(path ? `Geodatabase: ${tableCount} table(s) → ${path.split('/').pop()}` : 'Geodatabase: no path');
     } catch (e) {
       setStatus(`Geodatabase error: ${String(e)}`);
@@ -352,7 +353,7 @@ export default function App() {
   async function exportTilesDemo() {
     setStatus('Export tiles: downloading…');
     try {
-      const { path } = await offline.exportTileCache(TILE_SERVICE, TILE_AREA, 'tiles1');
+      const { path } = await (await offline.exportTileCache(TILE_SERVICE, TILE_AREA, 'tiles1')).result();
       setStatus(path ? `Tile cache → ${path.split('/').pop()}` : 'Export tiles: no path');
     } catch (e) {
       setStatus(`Export tiles error: ${String(e)}`);
@@ -365,7 +366,9 @@ export default function App() {
       const areas = await offline.preplannedMapAreas(OFFLINE_WEBMAP);
       if (areas.length === 0) return setStatus('No preplanned areas');
       setStatus(`Downloading preplanned "${areas[0].title}"…`);
-      const { path } = await offline.downloadPreplannedOfflineMap(OFFLINE_WEBMAP, areas[0].index, 'preplanned1');
+      const { path } = await (
+        await offline.downloadPreplannedOfflineMap(OFFLINE_WEBMAP, areas[0].index, 'preplanned1')
+      ).result();
       if (path) {
         setOfflinePath(path);
         setStatus(`Preplanned "${areas[0].title}" ✅ (${areas.length} areas)`);
@@ -453,13 +456,14 @@ export default function App() {
   async function viewshedGP() {
     setStatus('Viewshed GP: running…');
     try {
-      const { outputs } = await geoprocessor.execute(VIEWSHED_GP, {
+      const gpJob = await geoprocessor.execute(VIEWSHED_GP, {
         Input_Observation_Point: {
           type: 'features',
           geometries: [{ type: 'point', x: -118.49, y: 34.05 }],
         },
         Viewshed_Distance: { type: 'linearUnit', value: 2, unit: 'miles' },
       });
+      const { outputs } = await gpJob.result();
       const features = (outputs.Viewshed_Result as Feature[] | undefined) ?? [];
       const polygons = features
         .map((f) => f.geometry)

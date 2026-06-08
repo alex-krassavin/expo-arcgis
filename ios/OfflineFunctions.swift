@@ -48,65 +48,70 @@ func preplannedMapAreas(_ portalItemId: String) async throws -> [[String: Any]] 
   return result
 }
 
-func downloadPreplannedOfflineMap(_ portalItemId: String, _ areaIndex: Int, _ downloadName: String) async throws -> [String: Any] {
-  guard let task = offlineMapTask(portalItemId) else { return ["path": ""] }
+func downloadPreplannedOfflineMap(_ portalItemId: String, _ areaIndex: Int, _ downloadName: String) async throws -> JobRef {
+  guard let task = offlineMapTask(portalItemId) else { throw OfflineError.invalidParameters }
   try await task.load()
   let areas = try await task.preplannedMapAreas
-  guard areaIndex >= 0, areaIndex < areas.count else { return ["path": ""] }
+  guard areaIndex >= 0, areaIndex < areas.count else { throw OfflineError.invalidParameters }
   let parameters = try await task.makeDefaultDownloadPreplannedOfflineMapParameters(preplannedMapArea: areas[areaIndex])
   let directory = offlineDownloadURL(downloadName)
   let job = task.makeDownloadPreplannedOfflineMapJob(parameters: parameters, downloadDirectory: directory)
-  job.start()
-  _ = try await job.result.get()
-  return ["path": directory.path]
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["path": directory.path]
+  }
 }
 
-func generateGeodatabase(_ featureServiceUrl: String, _ extent: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+func generateGeodatabase(_ featureServiceUrl: String, _ extent: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let url = URL(string: featureServiceUrl), let area = geometryFromDict(extent) else {
-    return ["path": "", "tableCount": 0]
+    throw OfflineError.invalidParameters
   }
   let task = GeodatabaseSyncTask(url: url)
   let parameters = try await task.makeDefaultGenerateGeodatabaseParameters(extent: area)
   let fileURL = offlineDownloadURL(downloadName + ".geodatabase")
   let job = task.makeGenerateGeodatabaseJob(parameters: parameters, downloadFileURL: fileURL)
-  job.start()
-  let geodatabase = try await job.result.get()
-  return ["path": geodatabase.fileURL.path, "tableCount": geodatabase.featureTables.count]
+  return JobRef(job: job) {
+    let geodatabase = try await job.result.get()
+    return ["path": geodatabase.fileURL.path, "tableCount": geodatabase.featureTables.count]
+  }
 }
 
-func syncGeodatabase(_ geodatabasePath: String, _ featureServiceUrl: String) async throws -> [String: Any] {
-  guard let url = URL(string: featureServiceUrl) else { return ["synced": false] }
+func syncGeodatabase(_ geodatabasePath: String, _ featureServiceUrl: String) async throws -> JobRef {
+  guard let url = URL(string: featureServiceUrl) else { throw OfflineError.invalidParameters }
   let geodatabase = Geodatabase(fileURL: URL(fileURLWithPath: geodatabasePath))
   try await geodatabase.load()
   let task = GeodatabaseSyncTask(url: url)
   let job = task.makeSyncGeodatabaseJob(syncDirection: .bidirectional, rollbackOnFailure: true, geodatabase: geodatabase)
-  job.start()
-  _ = try await job.result.get()
-  return ["synced": true]
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["synced": true]
+  }
 }
 
-func exportTileCache(_ tileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+func exportTileCache(_ tileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let url = URL(string: tileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
-    return ["path": ""]
+    throw OfflineError.invalidParameters
   }
   let task = ExportTileCacheTask(url: url)
   let parameters = try await task.makeDefaultExportTileCacheParameters(areaOfInterest: area)
   let fileURL = offlineDownloadURL(downloadName + ".tpkx")
   let job = task.makeExportTileCacheJob(parameters: parameters, downloadFileURL: fileURL)
-  job.start()
-  _ = try await job.result.get()
-  return ["path": fileURL.path]
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["path": fileURL.path]
+  }
 }
 
-func exportVectorTiles(_ vectorTileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+func exportVectorTiles(_ vectorTileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let url = URL(string: vectorTileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
-    return ["path": ""]
+    throw OfflineError.invalidParameters
   }
   let task = ExportVectorTilesTask(url: url)
   let parameters = try await task.makeDefaultExportVectorTilesParameters(areaOfInterest: area)
   let fileURL = offlineDownloadURL(downloadName + ".vtpk")
   let job = task.makeExportVectorTilesJob(parameters: parameters, downloadFileURL: fileURL)
-  job.start()
-  _ = try await job.result.get()
-  return ["path": fileURL.path]
+  return JobRef(job: job) {
+    _ = try await job.result.get()
+    return ["path": fileURL.path]
+  }
 }

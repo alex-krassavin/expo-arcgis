@@ -80,7 +80,7 @@ class ExpoArcgisGeometryModule : Module() {
 
     // Geoprocessing — run a geoprocessing service, exposed as the JS `geoprocessor` namespace.
     AsyncFunction("executeGeoprocessing") Coroutine { serviceUrl: String, inputs: Map<String, Any?> ->
-      executeGeoprocessing(serviceUrl, inputs)
+      executeGeoprocessing(appContext, serviceUrl, inputs)
     }
 
     // Job handle for long-running downloads — emits onProgress, awaits via result(), supports cancel().
@@ -98,19 +98,19 @@ class ExpoArcgisGeometryModule : Module() {
       preplannedMapAreas(portalItemId)
     }
     AsyncFunction("downloadPreplannedOfflineMap") Coroutine { portalItemId: String, areaIndex: Int, downloadName: String ->
-      downloadPreplannedOfflineMap(appContext.reactContext?.filesDir, portalItemId, areaIndex, downloadName)
+      downloadPreplannedOfflineMap(appContext, appContext.reactContext?.filesDir, portalItemId, areaIndex, downloadName)
     }
     AsyncFunction("generateGeodatabase") Coroutine { featureServiceUrl: String, extent: Map<String, Any?>, downloadName: String ->
-      generateGeodatabase(appContext.reactContext?.filesDir, featureServiceUrl, extent, downloadName)
+      generateGeodatabase(appContext, appContext.reactContext?.filesDir, featureServiceUrl, extent, downloadName)
     }
     AsyncFunction("syncGeodatabase") Coroutine { geodatabasePath: String, featureServiceUrl: String ->
-      syncGeodatabase(geodatabasePath, featureServiceUrl)
+      syncGeodatabase(appContext, geodatabasePath, featureServiceUrl)
     }
     AsyncFunction("exportTileCache") Coroutine { tileServiceUrl: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
-      exportTileCache(appContext.reactContext?.filesDir, tileServiceUrl, areaOfInterest, downloadName)
+      exportTileCache(appContext, appContext.reactContext?.filesDir, tileServiceUrl, areaOfInterest, downloadName)
     }
     AsyncFunction("exportVectorTiles") Coroutine { vectorTileServiceUrl: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
-      exportVectorTiles(appContext.reactContext?.filesDir, vectorTileServiceUrl, areaOfInterest, downloadName)
+      exportVectorTiles(appContext, appContext.reactContext?.filesDir, vectorTileServiceUrl, areaOfInterest, downloadName)
     }
   }
 }

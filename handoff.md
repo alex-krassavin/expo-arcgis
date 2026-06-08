@@ -705,7 +705,7 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 Всё in-scope по §1–29 сделано и собрано на 3 таргетах. Ниже — отложенное, оформленное в фазы, приоритезированное по ценности/риску. Метод тот же: surf API по swiftinterface/jar → 1:1 в декларатив → демо → верификация TS/Android/iOS → handoff + память + коммит на фазу. Эффорт: **S** (1–2 файла), **M** (новый ref/namespace), **L** (новая архитектура/большой натив).
 
 ## Приоритет A — быстрые / консистентность (низкий риск)
-- **A1 — JobRef везде (S).** Прогресс/отмена для ВСЕХ offline-функций + `geoprocessor` (сейчас `JobRef` только у `generateOfflineMap`). Паттерн идентичен PP2: free-func возвращает `JobRef(job){ awaitResult }`. Меняет возвраты на `Promise<JobRef<R>>`.
+- **A1 — JobRef везде ✅ ГОТОВО (коммит ниже).** Прогресс/отмена для ВСЕХ offline-функций (`downloadPreplannedOfflineMap`/`generateGeodatabase`/`syncGeodatabase`/`exportTileCache`/`exportVectorTiles`) + `geoprocessor.execute`. Все теперь возвращают `Promise<JobRef<R>>` (паттерн PP2: free-func создаёт job + `JobRef(job){ awaitResult }`, не запускает/не ждёт сам). Kotlin-функции получили `appContext`-параметр (для `JobRef`-конструктора). Демо: `const job = await offline.X(...); await job.result()`. **Верификация:** TS/Android/iOS ✅.
 - **A2 — SceneView identify (S).** Зеркало `MapView.identify` (Q3) для 3D: Swift `SceneViewProxy.identify(...)` / Kotlin `sceneView.identifyLayers(...)` (Promise-паттерн на View). Переиспользует `serializeIdentifyResult`.
 - **A3 — GeometryEditor глубже (S).** Выбор tool (`VertexTool`/`FreehandTool`/`ReticleVertexTool`/`ShapeTool`) пропом; доп. engine-операции (reshape/extend/cut-advanced/auto-complete); полный список юнитов.
 

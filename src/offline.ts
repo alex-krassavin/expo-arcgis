@@ -31,12 +31,15 @@ export const offline = {
   preplannedMapAreas: (portalItemId: string): Promise<PreplannedMapAreaInfo[]> =>
     Module.preplannedMapAreas(portalItemId),
 
-  /** Downloads a preplanned offline map area (by `areaIndex`) into a directory named `downloadName`. */
+  /**
+   * Downloads a preplanned offline map area (by `areaIndex`) into a directory named `downloadName`.
+   * Returns a `JobRef` — `await job.result()`, observe `onProgress`, or `job.cancel()`.
+   */
   downloadPreplannedOfflineMap: (
     portalItemId: string,
     areaIndex: number,
     downloadName: string
-  ): Promise<OfflineMapResult> =>
+  ): Promise<JobRef<OfflineMapResult>> =>
     Module.downloadPreplannedOfflineMap(portalItemId, areaIndex, downloadName),
 
   /**
@@ -47,14 +50,14 @@ export const offline = {
     featureServiceUrl: string,
     extent: Geometry,
     downloadName: string
-  ): Promise<OfflineGeodatabaseResult> =>
+  ): Promise<JobRef<OfflineGeodatabaseResult>> =>
     Module.generateGeodatabase(featureServiceUrl, extent, downloadName),
 
   /** Bidirectionally syncs a downloaded geodatabase with its feature service. */
   syncGeodatabase: (
     geodatabasePath: string,
     featureServiceUrl: string
-  ): Promise<{ synced: boolean }> =>
+  ): Promise<JobRef<{ synced: boolean }>> =>
     Module.syncGeodatabase(geodatabasePath, featureServiceUrl),
 
   /** Exports a raster tile cache (`.tpkx`) from a tile service for `areaOfInterest`. */
@@ -62,7 +65,7 @@ export const offline = {
     tileServiceUrl: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineTileResult> =>
+  ): Promise<JobRef<OfflineTileResult>> =>
     Module.exportTileCache(tileServiceUrl, areaOfInterest, downloadName),
 
   /** Exports a vector tile package (`.vtpk`) from a vector tile service for `areaOfInterest`. */
@@ -70,6 +73,6 @@ export const offline = {
     vectorTileServiceUrl: string,
     areaOfInterest: Geometry,
     downloadName: string
-  ): Promise<OfflineTileResult> =>
+  ): Promise<JobRef<OfflineTileResult>> =>
     Module.exportVectorTiles(vectorTileServiceUrl, areaOfInterest, downloadName),
 };

@@ -21,8 +21,8 @@ private final class GeoprocessingTaskCache: @unchecked Sendable {
   }
 }
 
-func executeGeoprocessing(_ serviceUrl: String, _ inputs: [String: Any]) async throws -> [String: Any] {
-  guard let task = GeoprocessingTaskCache.shared.task(for: serviceUrl) else { return ["outputs": [:]] }
+func executeGeoprocessing(_ serviceUrl: String, _ inputs: [String: Any]) async throws -> JobRef {
+  guard let task = GeoprocessingTaskCache.shared.task(for: serviceUrl) else { throw OfflineError.invalidParameters }
   // makeDefaultParameters() loads the task and sets the service's execution type (sync / async).
   let parameters = try await task.makeDefaultParameters()
   for (name, raw) in inputs {
@@ -31,9 +31,10 @@ func executeGeoprocessing(_ serviceUrl: String, _ inputs: [String: Any]) async t
     }
   }
   let job = task.makeJob(parameters: parameters)
-  job.start()
-  let result = try await job.result.get()
-  return ["outputs": try await serializeOutputs(result.outputs)]
+  return JobRef(job: job) {
+    let result = try await job.result.get()
+    return ["outputs": try await serializeOutputs(result.outputs)]
+  }
 }
 
 private func buildGeoprocessingParameter(_ d: [String: Any]) -> GeoprocessingParameter? {
