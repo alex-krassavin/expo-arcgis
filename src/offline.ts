@@ -1,6 +1,7 @@
 import Module from './ExpoArcgisGeometryModule';
 import type {
   Geometry,
+  OfflineGeodatabaseResult,
   OfflineMapResult,
   PreplannedMapAreaInfo,
 } from './ExpoArcgis.types';
@@ -34,4 +35,22 @@ export const offline = {
     downloadName: string
   ): Promise<OfflineMapResult> =>
     Module.downloadPreplannedOfflineMap(portalItemId, areaIndex, downloadName),
+
+  /**
+   * Generates a `.geodatabase` from a sync-enabled feature service for `extent`, downloading it as
+   * `downloadName`. The returned `path` can be synced back later with `syncGeodatabase`.
+   */
+  generateGeodatabase: (
+    featureServiceUrl: string,
+    extent: Geometry,
+    downloadName: string
+  ): Promise<OfflineGeodatabaseResult> =>
+    Module.generateGeodatabase(featureServiceUrl, extent, downloadName),
+
+  /** Bidirectionally syncs a downloaded geodatabase with its feature service. */
+  syncGeodatabase: (
+    geodatabasePath: string,
+    featureServiceUrl: string
+  ): Promise<{ synced: boolean }> =>
+    Module.syncGeodatabase(geodatabasePath, featureServiceUrl),
 };

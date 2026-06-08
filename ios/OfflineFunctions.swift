@@ -56,3 +56,27 @@ func downloadPreplannedOfflineMap(_ portalItemId: String, _ areaIndex: Int, _ do
   _ = try await job.result.get()
   return ["path": directory.path]
 }
+
+func generateGeodatabase(_ featureServiceUrl: String, _ extent: [String: Any], _ downloadName: String) async throws -> [String: Any] {
+  guard let url = URL(string: featureServiceUrl), let area = geometryFromDict(extent) else {
+    return ["path": "", "tableCount": 0]
+  }
+  let task = GeodatabaseSyncTask(url: url)
+  let parameters = try await task.makeDefaultGenerateGeodatabaseParameters(extent: area)
+  let fileURL = offlineDownloadURL(downloadName + ".geodatabase")
+  let job = task.makeGenerateGeodatabaseJob(parameters: parameters, downloadFileURL: fileURL)
+  job.start()
+  let geodatabase = try await job.result.get()
+  return ["path": geodatabase.fileURL.path, "tableCount": geodatabase.featureTables.count]
+}
+
+func syncGeodatabase(_ geodatabasePath: String, _ featureServiceUrl: String) async throws -> [String: Any] {
+  guard let url = URL(string: featureServiceUrl) else { return ["synced": false] }
+  let geodatabase = Geodatabase(fileURL: URL(fileURLWithPath: geodatabasePath))
+  try await geodatabase.load()
+  let task = GeodatabaseSyncTask(url: url)
+  let job = task.makeSyncGeodatabaseJob(syncDirection: .bidirectional, rollbackOnFailure: true, geodatabase: geodatabase)
+  job.start()
+  _ = try await job.result.get()
+  return ["synced": true]
+}

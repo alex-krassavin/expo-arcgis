@@ -88,5 +88,11 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("downloadPreplannedOfflineMap") { (portalItemId: String, areaIndex: Int, downloadName: String) in
       try await downloadPreplannedOfflineMap(portalItemId, areaIndex, downloadName)
     }
+    AsyncFunction("generateGeodatabase") { (featureServiceUrl: String, extent: [String: Any], downloadName: String) in
+      try await generateGeodatabase(featureServiceUrl, extent, downloadName)
+    }
+    AsyncFunction("syncGeodatabase") { (geodatabasePath: String, featureServiceUrl: String) in
+      try await syncGeodatabase(geodatabasePath, featureServiceUrl)
+    }
   }
 }

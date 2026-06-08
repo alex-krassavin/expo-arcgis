@@ -156,6 +156,10 @@ const OFFLINE_AREA: Geometry = {
   xMax: -88.1387,
   yMax: 41.7799,
 };
+// Esri sample sync-enabled feature service (Save The Bay) + a small extent, for geodatabase sync.
+const GDB_SERVICE =
+  'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Sync/SaveTheBaySync/FeatureServer';
+const GDB_AREA: Geometry = { type: 'envelope', xMin: -71.43, yMin: 41.74, xMax: -71.37, yMax: 41.79 };
 // Esri sample Naperville electric utility network (token-secured; public sample login).
 const NAPERVILLE_UN =
   'https://sampleserver7.arcgisonline.com/server/rest/services/UtilityNetwork/NapervilleElectric/FeatureServer';
@@ -278,6 +282,16 @@ export default function App() {
       } else setStatus('Offline: no path returned');
     } catch (e) {
       setStatus(`Offline error: ${String(e)}`);
+    }
+  }
+  // "Geodatabase" — generate a .geodatabase from a sync-enabled feature service (offline namespace).
+  async function geodatabaseDemo() {
+    setStatus('Geodatabase: generating…');
+    try {
+      const { path, tableCount } = await offline.generateGeodatabase(GDB_SERVICE, GDB_AREA, 'savethebay');
+      setStatus(path ? `Geodatabase: ${tableCount} table(s) → ${path.split('/').pop()}` : 'Geodatabase: no path');
+    } catch (e) {
+      setStatus(`Geodatabase error: ${String(e)}`);
     }
   }
   // "Preplanned" — list the web map's preplanned areas and download the first (offline namespace).
@@ -671,6 +685,7 @@ export default function App() {
                 {un && <Button title="Assoc" onPress={showAssociations} />}
                 <Button title="Take offline" onPress={takeOffline} />
                 <Button title="Preplanned" onPress={preplannedOffline} />
+                <Button title="Geodatabase" onPress={geodatabaseDemo} />
                 {offlinePath && <Button title="Back online" onPress={() => setOfflinePath(null)} />}
                 <Button title={editLayer ? 'Hide edits' : 'Edit layer'} onPress={() => setEditLayer((v) => !v)} />
                 <Button title="Add here" onPress={addHere} />

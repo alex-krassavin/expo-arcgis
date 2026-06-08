@@ -6,6 +6,7 @@ import type {
   Geometry,
   GeoprocessingInput,
   GeoprocessingResult,
+  OfflineGeodatabaseResult,
   OfflineMapResult,
   PreplannedMapAreaInfo,
   ProximityResult,
@@ -112,6 +113,12 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     areaIndex: number,
     downloadName: string
   ): Promise<OfflineMapResult>;
+  generateGeodatabase(
+    featureServiceUrl: string,
+    extent: Geometry,
+    downloadName: string
+  ): Promise<OfflineGeodatabaseResult>;
+  syncGeodatabase(geodatabasePath: string, featureServiceUrl: string): Promise<{ synced: boolean }>;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

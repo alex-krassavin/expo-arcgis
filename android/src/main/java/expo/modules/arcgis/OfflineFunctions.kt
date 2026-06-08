@@ -1,7 +1,10 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.Geodatabase
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.portal.Portal
+import com.arcgismaps.tasks.geodatabase.GeodatabaseSyncTask
+import com.arcgismaps.tasks.geodatabase.SyncDirection
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapTask
 import java.io.File
 
@@ -66,4 +69,34 @@ internal suspend fun downloadPreplannedOfflineMap(
   job.start()
   job.result().getOrThrow()
   return mapOf("path" to dir.absolutePath)
+}
+
+internal suspend fun generateGeodatabase(
+  baseDir: File?,
+  featureServiceUrl: String,
+  extent: Map<String, Any?>,
+  downloadName: String,
+): Map<String, Any?> {
+  val area = geometryFromDict(extent) ?: return mapOf("path" to "", "tableCount" to 0)
+  baseDir ?: return mapOf("path" to "", "tableCount" to 0)
+  val task = GeodatabaseSyncTask(featureServiceUrl)
+  val parameters = task.createDefaultGenerateGeodatabaseParameters(area).getOrThrow()
+  val file = offlineDownloadDir(baseDir, "$downloadName.geodatabase")
+  val job = task.createGenerateGeodatabaseJob(parameters, file.absolutePath)
+  job.start()
+  val geodatabase = job.result().getOrThrow()
+  return mapOf("path" to geodatabase.path, "tableCount" to geodatabase.featureTables.size)
+}
+
+internal suspend fun syncGeodatabase(
+  geodatabasePath: String,
+  featureServiceUrl: String,
+): Map<String, Any?> {
+  val geodatabase = Geodatabase(geodatabasePath)
+  geodatabase.load().getOrThrow()
+  val task = GeodatabaseSyncTask(featureServiceUrl)
+  val job = task.createSyncGeodatabaseJob(SyncDirection.Bidirectional, true, geodatabase)
+  job.start()
+  job.result().getOrThrow()
+  return mapOf("synced" to true)
 }
