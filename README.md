@@ -1,10 +1,35 @@
 # expo-arcgis
 
-Native **ArcGIS Maps SDK** rendering for React Native, as an [Expo module](https://docs.expo.dev/modules/overview/).
-Wraps the ArcGIS Maps SDK for **Kotlin** (Android) and **Swift** (iOS) and exposes a `MapView` to JS.
+Native **ArcGIS Maps SDK** for React Native, as an [Expo module](https://docs.expo.dev/modules/overview/).
+It wraps the ArcGIS Maps SDK for **Kotlin** (Android) and **Swift** (iOS) and exposes a declarative,
+SDK-faithful component API to JS/TS — `<MapView>` / `<SceneView>` with layers, graphics, geometry,
+editing, query, analysis, geocoding, routing, geoprocessing, utility networks, offline, real-time and
+authentication.
 
-> Status: **v1 — minimal MapView** (basemap + initial viewpoint + load events). Pulls ArcGIS **300.0.0**.
-> The TypeScript layer and the config plugin are verified; the native bridge still needs an on-device build.
+> **Status — early / pre-1.0.** The full surface below is implemented and **compile-verified** on both
+> platforms (TypeScript · Android `compileDebugKotlin` · iOS pod build). On-device **runtime** validation
+> (rendering, network calls, device sensors) should be done in your own app. The API may still change
+> before 1.0. Pulls ArcGIS Maps SDK **300.0.0**.
+
+## Features
+
+| Area | What's covered |
+|---|---|
+| **2D / 3D** | `<MapView>` + `<Map>`; `<SceneView>` + `<Scene>` (surface, camera, web scenes, light/shadows) |
+| **Layers** | Feature, Tile, MapImage, Vector-tile, Raster, WMS, WMTS, KML, Scene, IntegratedMesh, PointCloud, OGC 3D Tiles, WebTiled, OpenStreetMap, **WFS**, **OGC API Features**, **DynamicEntity** (stream) |
+| **Graphics** | `<GraphicsOverlay>` + `<Graphic>`, symbols (simple marker/line/fill, text, 3D scene symbol, picture-marker), renderers (simple / unique-value / class-breaks), labels, clustering |
+| **Geometry** | `geometryEngine` (buffer, project, distance, intersect, …), `coordinateFormatter`, codec for all geometry types |
+| **Query** | feature query / count / extent / statistics on a `<FeatureLayer>` ref; `identify` on a view ref |
+| **Editing** | add / update / delete features, `<GeometryEditor>` (tools), feature templates |
+| **Location** | device location, simulated location data source, `onLocationChange` |
+| **Geocoding** | `geocoder.geocode` / `reverseGeocode` / `suggest`, offline `.loc` locators |
+| **Routing** | `router.solveRoute` / directions, travel modes, point barriers, curb approach |
+| **Analysis (3D)** | `<AnalysisOverlay>` + `<Viewshed>` / `<LineOfSight>` / `<DistanceMeasurement>` |
+| **Geoprocessing** | `geoprocessor.execute` → `JobRef` (progress + cancel), typed parameters |
+| **Utility network** | `<UtilityNetwork>` load + trace, named configs, associations, `describeNetwork` |
+| **Offline** | `offline.*` generate offline map, preplanned areas, geodatabase, tile / vector-tile export, sync — all as a cancellable `JobRef`; mobile map / scene packages |
+| **Real-time** | `<DynamicEntityLayer>` (stream service), query, custom data source, stream filter |
+| **Auth** | API key, token (challenge handler), OAuth user sign-in, app credential |
 
 ## Requirements
 
@@ -14,16 +39,19 @@ ArcGIS Maps SDK 300.0 sets the floor for any app using this module:
 |---|---|
 | iOS | **17.0**, built with **Xcode 26** |
 | Android | **API 28** (Android 9), compileSdk **36** |
-| Auth | An [ArcGIS API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/) |
+| Expo | SDK **54+** (New Architecture). Verified on Expo **56** / RN **0.82** / React **19** |
+| Auth | An [ArcGIS API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/) (or token / OAuth) |
+
+This is a native module — it does **not** run in Expo Go. Use a development build (`expo prebuild` + `run:ios`/`run:android`).
 
 ## Install
 
 ```sh
-npm install expo-arcgis
+npx expo install expo-arcgis
 ```
 
 Add the config plugin to your app config. It wires the Esri Maven repository (Android), raises
-`minSdk`/`compileSdk` and the iOS deployment target, and (optionally) injects your API key.
+`minSdk` / `compileSdk` and the iOS deployment target, and (optionally) injects your API key.
 
 ```js
 // app.config.js
@@ -36,7 +64,7 @@ module.exports = {
 };
 ```
 
-Then regenerate native projects:
+Then regenerate the native projects:
 
 ```sh
 npx expo prebuild --clean
@@ -53,13 +81,13 @@ npx expo prebuild --clean
 | `iosDeploymentTarget` | `string` | `17.0` | Minimum iOS deployment target. |
 | `locationWhenInUseUsageDescription` | `string` | – | Opt into location permissions for showing device position. |
 
-## Usage
+## Quick start
 
-The API is declarative and mirrors the ArcGIS SDK object model — a `<Map>` model inside a
-`<MapView>` host, wrapped in `<MapSettings>`:
+The API is declarative and mirrors the ArcGIS SDK object model — a `<Map>` model inside a `<MapView>`
+host, wrapped in `<MapSettings>`:
 
 ```tsx
-import { MapSettings, Map, MapView } from 'expo-arcgis';
+import { MapSettings, Map, MapView, FeatureLayer } from 'expo-arcgis';
 
 export function Screen() {
   return (
@@ -68,6 +96,7 @@ export function Screen() {
         basemap="arcGISTopographic"
         initialViewpoint={{ latitude: 34.027, longitude: -118.805, scale: 72_000 }}
       >
+        <FeatureLayer url="https://services.arcgis.com/.../FeatureServer/0" />
         <MapView
           style={{ flex: 1 }}
           onMapLoaded={() => console.log('loaded')}
@@ -79,11 +108,26 @@ export function Screen() {
 }
 ```
 
-### Components
+3D works the same way with `<Scene>` + `<SceneView>`. Imperative namespaces don't need a view:
 
-- **`<MapSettings config={{ apiKey }}>`** — global ArcGIS settings; applies the API key at runtime (alternative to the config plugin).
-- **`<Map basemap initialViewpoint>`** — the map model (mirrors `ArcGISMap`). `basemap` is an `BasemapStyle` (11 styles in v1); `initialViewpoint` is `{ latitude, longitude, scale }`.
-- **`<MapView style onMapLoaded onMapLoadError>`** — the 2D view host; renders the nearest `<Map>`. `onMapLoadError` provides `e.nativeEvent.message`.
+```ts
+import { geometryEngine, geocoder } from 'expo-arcgis';
+
+const buffered = geometryEngine.buffer(point, 500, 'meters');
+const [hit] = await geocoder.geocode('Los Angeles');
+```
+
+## API overview
+
+- **Views & models** — `MapSettings`, `Map`, `Scene`, `MapView`, `SceneView`
+- **Layers** — `FeatureLayer`, `TileLayer`, `MapImageLayer`, `SceneLayer`, `VectorTileLayer`,
+  `IntegratedMeshLayer`, `PointCloudLayer`, `Ogc3DTilesLayer`, `WebTiledLayer`, `OpenStreetMapLayer`,
+  `WmsLayer`, `WmtsLayer`, `RasterLayer`, `KmlLayer`, `WfsLayer`, `OgcFeatureLayer`, `DynamicEntityLayer`
+- **Graphics & analysis** — `GraphicsOverlay`, `Graphic`, `AnalysisOverlay`, `Viewshed`, `LineOfSight`,
+  `DistanceMeasurement`, `GeometryEditor`, `UtilityNetwork`
+- **Namespaces** — `geometryEngine`, `coordinateFormatter`, `geocoder`, `router`, `geoprocessor`, `offline`
+- **Auth** — `setTokenCredential`, `signInWithOAuth`, `setAppCredential`, `signOut`
+- **Hooks** — `useMapSettings`, `useGeoModel`, `useGeoView`, `useGraphicsOverlay`
 
 You can also set the key imperatively: `import ExpoArcgis from 'expo-arcgis'; ExpoArcgis.setApiKey('KEY')`.
 
@@ -95,9 +139,6 @@ npm install
 ARCGIS_API_KEY=your_key npx expo run:android   # or run:ios (needs Xcode 26)
 ```
 
-Without a key the map reports a load error via `onMapLoadError` — useful to confirm the bridge works.
+## License
 
-## Roadmap
-
-v1 is the minimal map. Next touch points: tap events + programmatic viewpoint, then operational
-layers (feature/tile), then location display.
+MIT © krassavin. See [LICENSE](./LICENSE).

@@ -732,3 +732,21 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 ## Прочее (нишевые типы данных — по запросу)
 - Слои: ENC, Annotation, Dimension, GroupLayer, FeatureCollection, ImageOverlay (frames). Камеры: orbit/globe cameraControllers. Все — точечно при необходимости.
+
+## Подготовка к npm-публикации (нативно под Expo; TanStack Config НЕ берём)
+**Почему не TanStack Config:** он под Vite/ESM web-либы; у нас Expo-модуль (CJS-ish `build/` через `expo-module-scripts` + нативные исходники + автолинковка + config-plugin). Конфликт build-движка; взяли только отдельные валидаторы `publint`+`attw`.
+
+**Решения (развилки):** `files`-allowlist (не denylist `.npmignore`); `publint`+`attw` в проверку; класть `src/` (валидные sourcemaps); БЕЗ `exports` (Metro-safe, как `main`/`types`).
+
+**Сделано:**
+- **`files`-allowlist** в package.json: `build`, `src`, **`android/src`+`android/build.gradle`**, **`ios/*.swift`+`ios/*.podspec`**, `expo-module.config.json`, `app.plugin.js`, `plugin/build`. **Гоча:** голые `android`/`ios` в `files` тащат `android/build` (Gradle-кэш, +800 файлов/10 МБ) — npm игнорит `.npmignore` для путей из `files`-allowlist → перечислять ТОЧНЫЕ под-пути источников. Итог тарбола: **~242 файла / 177 кБ** (было 980 / 1.6 МБ).
+- Метаданные: `repository`/`bugs`/`homepage` → `github.com/alex-krassavin/expo-arcgis`; `peerDependencies` диапазоны (`expo>=54`, `react>=18.2`, `react-native>=0.74`).
+- README переписан под полный масштаб (был «v1 minimal»): feature-матрица, requirements (iOS17/Android API28/Expo54+/SDK300), install+plugin, quick-start.
+- `prepare.js` уже собирает и `build/`, и `plugin/build` (`tsc --build plugin`) и бежит перед publish — отдельный prepublish-build не нужен.
+- Скрипт `npm run check:package` = `publint && attw --pack --profile esm-only --ignore-rules unexpected-module-syntax`. **ВАЖНО:** запускать ВРУЧНУЮ перед publish, НЕ из `prepublishOnly` — publint/attw сами зовут `npm pack`, вложение в publish-lifecycle ломает пересборку `prepare` (publint exit 3).
+
+**Гоча publint/attw для Expo-модулей:** `build/*.js` — ESM (`export from`, tsconfig `module:esnext`+`moduleResolution:bundler`) — это **каноничная Expo-конвенция** (expo-constants/expo-asset шипят так же, без `type`-поля). publint `--strict` и attw `node16` ругаются «ESM interpreted as CJS» — **ложноположительно для Metro-резолва**. Поэтому: publint без `--strict` (exit 0), attw `--profile esm-only --ignore-rules unexpected-module-syntax`. Целевой `bundler`-резолв у attw — **🟢**. Формат модуля НЕ меняем на CJS.
+
+**Верификация:** `npm run check:package` → «No problems found 🌟»; `npm publish --dry-run` → `expo-arcgis@0.1.0`, 242 файла/177 кБ, чисто (только нотис «нужен npm login»).
+
+**Осталось пользователю:** `npm login` → `npm publish` (имя `expo-arcgis` — проверить доступность; при занятости — scoped `@alex-krassavin/expo-arcgis`). На-устройстве runtime-валидация (рендер/сеть/сенсоры) — отдельно.

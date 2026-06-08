@@ -1,16 +1,9 @@
-# Exclude all top-level hidden directories by convention
-/.*/
+# What ships is controlled by the `files` allowlist in package.json. This file only carves
+# native build *outputs* (Gradle / Xcode) out of the published android/ and ios/ source trees.
 
-# Dev-only sources and tooling — the compiled build/ folder is published instead
-/example
-/internal
-/src
-/plugin/src
-/__mocks__
-/__tests__
+android/build
+android/.cxx
+ios/build
 
-# Configs not needed by consumers of the published package
-/babel.config.js
-/eslint.config.cjs
-/tsconfig.json
-/tsconfig.plugin.json
+# Tarballs produced by `npm pack`
+*.tgz

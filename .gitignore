@@ -2,6 +2,9 @@
 #
 .DS_Store
 
+# npm pack / publish tarballs
+*.tgz
+
 # VSCode
 .vscode/
 jsconfig.json

@@ -4,12 +4,24 @@
   "description": "ArcGIS Maps SDK for React Native — native Android (Kotlin) & iOS (Swift) map rendering as an Expo module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "src",
+    "android/src",
+    "android/build.gradle",
+    "ios/*.swift",
+    "ios/*.podspec",
+    "expo-module.config.json",
+    "app.plugin.js",
+    "plugin/build"
+  ],
   "scripts": {
     "build": "node internal/module_scripts/build.js",
     "build:plugin": "node internal/module_scripts/build.js plugin",
     "clean": "node internal/module_scripts/clean.js",
     "lint": "eslint src/",
     "test": "node internal/module_scripts/test.js",
+    "check:package": "publint && attw --pack --profile esm-only --ignore-rules unexpected-module-syntax",
     "prepare": "node internal/module_scripts/prepare.js",
     "open:ios": "node internal/module_scripts/open-ios.js",
     "open:android": "node internal/module_scripts/open-android.js"
@@ -23,15 +35,18 @@
     "mapview",
     "ExpoArcgis"
   ],
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-krassavin/expo-arcgis.git"
+  },
   "bugs": {
-    "url": "/issues"
+    "url": "https://github.com/alex-krassavin/expo-arcgis/issues"
   },
   "author": "krassavin <walonade@icloud.com>",
   "license": "MIT",
-  "homepage": "#readme",
-  "dependencies": {},
+  "homepage": "https://github.com/alex-krassavin/expo-arcgis#readme",
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.3",
     "@babel/core": "^7.26.0",
     "@types/jest": "^29.2.1",
     "@types/react": "~19.1.1",
@@ -42,6 +57,7 @@
     "jest": "^29.7.0",
     "jest-expo": "~55.0.9",
     "prettier": "^3.0.0",
+    "publint": "^0.3.21",
     "react-native": "0.82.1",
     "typescript": "^5.9.2"
   },
@@ -52,8 +68,8 @@
     ]
   },
   "peerDependencies": {
-    "expo": "*",
-    "react": "*",
-    "react-native": "*"
+    "expo": ">=54.0.0",
+    "react": ">=18.2.0",
+    "react-native": ">=0.74.0"
   }
 }
