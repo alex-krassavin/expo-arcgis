@@ -86,6 +86,17 @@ export const geometryEngine = {
   /** Smallest convex polygon that contains the geometry. */
   convexHull: (geometry: Geometry): Geometry | null => Module.geConvexHull(geometry),
 
+  /** Interior point suitable for placing a label inside a polygon. */
+  labelPoint: (polygon: Geometry): Geometry | null => Module.geLabelPoint(polygon),
+
+  /** Normalizes a geometry that crosses the antimeridian back into the −180…180 range. */
+  normalizeCentralMeridian: (geometry: Geometry): Geometry | null =>
+    Module.geNormalizeCentralMeridian(geometry),
+
+  /** Reshapes a polyline/polygon using a `reshaper` polyline. */
+  reshape: (geometry: Geometry, reshaper: Geometry): Geometry | null =>
+    Module.geReshape(geometry, reshaper),
+
   /** Boundary of the geometry (polygon → polyline, polyline → multipoint). */
   boundary: (geometry: Geometry): Geometry | null => Module.geBoundary(geometry),
 

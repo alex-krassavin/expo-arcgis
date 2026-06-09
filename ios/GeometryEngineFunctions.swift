@@ -97,6 +97,28 @@ func geConvexHull(_ g: [String: Any]) -> [String: Any]? {
   return encode(GeometryEngine.convexHull(for: geometry))
 }
 
+func geLabelPoint(_ g: [String: Any]) -> [String: Any]? {
+  guard let polygon = parseGeo(g) as? ArcGIS.Polygon else { return nil }
+  return encode(GeometryEngine.labelPoint(for: polygon))
+}
+
+func geNormalizeCentralMeridian(_ g: [String: Any]) -> [String: Any]? {
+  guard let geometry = parseGeo(g) else { return nil }
+  return encode(GeometryEngine.normalizeCentralMeridian(of: geometry))
+}
+
+func geReshape(_ g: [String: Any], _ reshaper: [String: Any]) -> [String: Any]? {
+  guard let line = parseGeo(reshaper) as? ArcGIS.Polyline else { return nil }
+  let geometry = parseGeo(g)
+  if let polyline = geometry as? ArcGIS.Polyline {
+    return encode(GeometryEngine.reshape(polyline, usingReshaper: line))
+  }
+  if let polygon = geometry as? ArcGIS.Polygon {
+    return encode(GeometryEngine.reshape(polygon, usingReshaper: line))
+  }
+  return nil
+}
+
 func geBoundary(_ g: [String: Any]) -> [String: Any]? {
   guard let geometry = parseGeo(g) else { return nil }
   return encode(GeometryEngine.boundary(of: geometry))

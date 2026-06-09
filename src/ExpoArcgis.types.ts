@@ -1124,6 +1124,19 @@ export type PictureMarkerSymbol = {
   height?: number;
 };
 
+/** A polygon fill drawn by tiling an image from a URL. Mirrors `PictureFillSymbol`. */
+export type PictureFillSymbol = {
+  type: 'picture-fill';
+  /** Image URL (remote `http(s)` or a local file URL). */
+  url: string;
+  /** Tile width in points (defaults to the image's intrinsic size). */
+  width?: number;
+  /** Tile height in points (defaults to the image's intrinsic size). */
+  height?: number;
+  /** Optional outline stroke. */
+  outline?: SimpleLineSymbol;
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol =
   | SimpleMarkerSymbol
@@ -1131,7 +1144,8 @@ export type Symbol =
   | SimpleFillSymbol
   | TextSymbol
   | SimpleMarkerSceneSymbol
-  | PictureMarkerSymbol;
+  | PictureMarkerSymbol
+  | PictureFillSymbol;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };

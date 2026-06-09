@@ -17,6 +17,7 @@ import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
+import com.arcgismaps.mapping.symbology.PictureFillSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
@@ -186,6 +187,13 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     PictureMarkerSymbol(url).apply {
       (s["width"] as? Number)?.toFloat()?.let { width = it }
       (s["height"] as? Number)?.toFloat()?.let { height = it }
+    }
+  }
+  "picture-fill" -> (s["url"] as? String)?.let { url ->
+    PictureFillSymbol(url).apply {
+      (s["width"] as? Number)?.toFloat()?.let { width = it }
+      (s["height"] as? Number)?.toFloat()?.let { height = it }
+      outline = outlineOf(s["outline"])
     }
   }
   else -> null

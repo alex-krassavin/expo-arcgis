@@ -173,6 +173,13 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
     if let width = (s["width"] as? NSNumber)?.doubleValue { picture.width = width }
     if let height = (s["height"] as? NSNumber)?.doubleValue { picture.height = height }
     return picture
+  case "picture-fill":
+    guard let urlString = s["url"] as? String, let url = URL(string: urlString) else { return nil }
+    let fill = PictureFillSymbol(url: url)
+    if let width = (s["width"] as? NSNumber)?.doubleValue { fill.width = width }
+    if let height = (s["height"] as? NSNumber)?.doubleValue { fill.height = height }
+    fill.outline = outline(s["outline"])
+    return fill
   default:
     return nil
   }

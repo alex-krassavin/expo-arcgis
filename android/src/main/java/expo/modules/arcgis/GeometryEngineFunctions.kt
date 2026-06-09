@@ -3,7 +3,9 @@ package expo.modules.arcgis
 import com.arcgismaps.geometry.Envelope
 import com.arcgismaps.geometry.Geometry
 import com.arcgismaps.geometry.GeometryEngine
+import com.arcgismaps.geometry.Multipart
 import com.arcgismaps.geometry.Point
+import com.arcgismaps.geometry.Polygon
 import com.arcgismaps.geometry.Polyline
 
 /**
@@ -103,6 +105,18 @@ internal fun geCut(g: Map<String, Any?>, cutter: Map<String, Any?>): List<Map<St
 
 internal fun geConvexHull(g: Map<String, Any?>): Map<String, Any?>? =
   parseGeo(g)?.let { encode(GeometryEngine.convexHullOrNull(it)) }
+
+internal fun geLabelPoint(g: Map<String, Any?>): Map<String, Any?>? =
+  (parseGeo(g) as? Polygon)?.let { encode(GeometryEngine.labelPointOrNull(it)) }
+
+internal fun geNormalizeCentralMeridian(g: Map<String, Any?>): Map<String, Any?>? =
+  parseGeo(g)?.let { encode(GeometryEngine.normalizeCentralMeridian(it)) }
+
+internal fun geReshape(g: Map<String, Any?>, reshaper: Map<String, Any?>): Map<String, Any?>? {
+  val multipart = parseGeo(g) as? Multipart ?: return null
+  val line = parseGeo(reshaper) as? Polyline ?: return null
+  return encode(GeometryEngine.reshape(multipart, line))
+}
 
 internal fun geBoundary(g: Map<String, Any?>): Map<String, Any?>? =
   parseGeo(g)?.let { encode(GeometryEngine.boundaryOrNull(it)) }

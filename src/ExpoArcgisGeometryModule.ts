@@ -57,6 +57,9 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   geClip(g: Geometry, envelope: Geometry): Geometry | null;
   geCut(g: Geometry, cutter: Geometry): Geometry[];
   geConvexHull(g: Geometry): Geometry | null;
+  geLabelPoint(polygon: Geometry): Geometry | null;
+  geNormalizeCentralMeridian(g: Geometry): Geometry | null;
+  geReshape(g: Geometry, reshaper: Geometry): Geometry | null;
   geBoundary(g: Geometry): Geometry | null;
   geSimplify(g: Geometry): Geometry | null;
   geDensify(g: Geometry, maxSegmentLength: number): Geometry | null;
