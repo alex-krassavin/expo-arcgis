@@ -277,6 +277,34 @@ public final class FeatureLayerRef: LayerRef {
     _ = try await persistEdits()
   }
 
+  /// Returns the valid contingent values for `fieldName` on the feature with `objectId`.
+  /// Requires the table to be an `ArcGISFeatureTable`; throws otherwise. Returns `nil` when
+  /// the feature is not found or the table has no contingent-values definition for that field.
+  /// Result shape: `{ fieldName, contingentValues: [{ type, ... }] }` where each entry is either
+  /// `{ type: "coded", codedValue: { name, code } }` or `{ type: "range", min, max }`.
+  /// Exotic subtypes (`ContingentAnyValue`, `ContingentNullValue`) are serialized as
+  /// `{ type: "any" }` / `{ type: "null" }` — consumers should treat them as "any value allowed".
+  func getContingentValues(_ objectId: Int, _ fieldName: String) async throws -> [String: Any] {
+    try await table.load()
+    guard let arcGISTable = table as? ArcGISFeatureTable else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 8,
+        userInfo: [NSLocalizedDescriptionKey: "getContingentValues requires an ArcGIS feature table (not a shapefile or WFS table)"])
+    }
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 9,
+        userInfo: [NSLocalizedDescriptionKey: "Feature not found for objectId \(objectId)"])
+    }
+    guard let result = arcGISTable.contingentValues(with: feature, forFieldNamed: fieldName) else {
+      return ["fieldName": fieldName, "contingentValues": [] as [[String: Any]]]
+    }
+    let serialized: [[String: Any]] = result.contingentValuesByFieldGroup.flatMap { (groupName, values) in
+      values.map { cv in serializeContingentValue(cv, groupName: groupName) }
+    }
+    return ["fieldName": fieldName, "contingentValues": serialized]
+  }
+
   private func featureByObjectId(_ objectId: Int) async throws -> Feature? {
     let params = QueryParameters()
     params.addObjectIDs([objectId])
@@ -391,6 +419,34 @@ private func applyDictionaryRenderer(_ featureLayer: FeatureLayer, _ dict: [Stri
       print("[ExpoArcgis] DictionarySymbolStyle load failed: \(error)")
     }
   }
+}
+
+/// Serializes a single `ContingentValue` to a JS-friendly dict, tagging it by type.
+/// - coded: `{ type: "coded", fieldGroupName, codedValue: { name, code } }`
+/// - range: `{ type: "range", fieldGroupName, min, max }`
+/// - any:   `{ type: "any", fieldGroupName }` — any value is valid for the field
+/// - null:  `{ type: "null", fieldGroupName }` — null/empty is a valid contingent value
+private func serializeContingentValue(_ cv: ContingentValue, groupName: String) -> [String: Any] {
+  var dict: [String: Any] = ["fieldGroupName": groupName]
+  if let coded = cv as? ContingentCodedValue {
+    dict["type"] = "coded"
+    let cv = coded.codedValue
+    var codeValue: Any = NSNull()
+    if let code = cv.code {
+      codeValue = code
+    }
+    dict["codedValue"] = ["name": cv.name, "code": codeValue]
+  } else if let range = cv as? ContingentRangeValue {
+    dict["type"] = "range"
+    dict["min"] = range.minValue
+    dict["max"] = range.maxValue
+  } else if cv is ContingentNullValue {
+    dict["type"] = "null"
+  } else {
+    // ContingentAnyValue or unknown future subtype — treat as "any value allowed"
+    dict["type"] = "any"
+  }
+  return dict
 }
 
 /// Builds a `FeatureTable` from a JS source: `{ type:"shapefile", path }` or a service URL

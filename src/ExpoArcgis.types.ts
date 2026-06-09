@@ -523,6 +523,34 @@ export type AttachmentInfo = {
   size: number;
 };
 
+/**
+ * One valid contingent value entry, discriminated by `type`:
+ * - `"coded"` — a specific coded-value domain entry is valid; `codedValue.code` is the domain code.
+ * - `"range"` — any numeric value in `[min, max]` is valid.
+ * - `"null"`  — a null / empty value is explicitly allowed for this field.
+ * - `"any"`   — any value is allowed (corresponds to `ContingentAnyValue`).
+ *
+ * `fieldGroupName` identifies which contingent-values field group this constraint belongs to,
+ * allowing callers to match constraints to the group they were defined under.
+ */
+export type ContingentValueEntry =
+  | { type: 'coded'; fieldGroupName: string; codedValue: { name: string; code: unknown } }
+  | { type: 'range'; fieldGroupName: string; min: unknown; max: unknown }
+  | { type: 'null'; fieldGroupName: string }
+  | { type: 'any'; fieldGroupName: string };
+
+/**
+ * Result of `FeatureLayerHandle.getContingentValues` — the field name that was queried plus
+ * all valid contingent values for that field given the feature's current attribute state.
+ * An empty `contingentValues` array means no constraints are defined (all values are valid).
+ */
+export type ContingentValuesResult = {
+  /** The field name that was queried. */
+  fieldName: string;
+  /** The valid contingent values, organised across all field groups that reference this field. */
+  contingentValues: ContingentValueEntry[];
+};
+
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */
   queryFeatures(query?: QueryParameters): Promise<Feature[]>;
@@ -633,6 +661,22 @@ export type FeatureLayerHandle = {
    * feature layer. The same handle is returned on repeat calls.
    */
   getServiceGeodatabase(): Promise<ServiceGeodatabaseHandle>;
+  /**
+   * Returns the valid contingent values for `fieldName` on the feature with `objectId`, given
+   * the feature's current attribute state. Contingent values constrain which attribute values
+   * are valid based on the values of other fields (e.g. "species" options depend on "habitat").
+   *
+   * Requires an ArcGIS feature table (service or mobile geodatabase) — rejects for shapefiles
+   * and WFS tables. Resolves with an empty `contingentValues` list when no constraints apply.
+   *
+   * @example
+   * ```ts
+   * const result = await layer.current.getContingentValues(42, 'species');
+   * // result.contingentValues[0] → { type: 'coded', fieldGroupName: 'HabitatGroup',
+   * //                                 codedValue: { name: 'Oak', code: 1 } }
+   * ```
+   */
+  getContingentValues(objectId: number, fieldName: string): Promise<ContingentValuesResult>;
 };
 
 /** Branch-version access level. */

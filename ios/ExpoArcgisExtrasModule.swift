@@ -43,6 +43,9 @@ public class ExpoArcgisExtrasModule: Module {
       AsyncFunction("addFeatureWithSubtype") { (ref: FeatureLayerRef, subtypeName: String, attributes: [String: Any]?, geometry: [String: Any]?, apply: Bool?) in
         try await ref.addFeatureWithSubtype(subtypeName, attributes, geometry, apply)
       }
+      AsyncFunction("getContingentValues") { (ref: FeatureLayerRef, objectId: Int, fieldName: String) in
+        try await ref.getContingentValues(objectId, fieldName)
+      }
       AsyncFunction("updateFeature") { (ref: FeatureLayerRef, objectId: Int, changes: [String: Any], apply: Bool?) in
         try await ref.updateFeature(objectId, changes, apply)
       }

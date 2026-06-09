@@ -3,6 +3,9 @@ package expo.modules.arcgis
 import android.util.Base64
 import com.arcgismaps.data.ArcGISFeature
 import com.arcgismaps.data.ArcGISFeatureTable
+import com.arcgismaps.data.ContingentCodedValue
+import com.arcgismaps.data.ContingentRangeValue
+import com.arcgismaps.data.ContingentValue
 import com.arcgismaps.data.Feature
 import com.arcgismaps.data.FeatureCollection
 import com.arcgismaps.data.FeatureCollectionTable
@@ -283,6 +286,54 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
     val bytes = Base64.decode(dataBase64, Base64.NO_WRAP)
     feature.updateAttachment(attachment, name, contentType, bytes).getOrThrow()
     persistEdits()
+  }
+
+  /**
+   * Returns the valid contingent values for [fieldName] on the feature with [objectId].
+   * Requires the table to be an [ArcGISFeatureTable]; throws otherwise. Returns an empty list when
+   * the feature is not found or the table has no contingent-values result for that field.
+   * Result shape: `{ fieldName, contingentValues: [{ type, ... }] }` where each entry is either
+   * `{ type: "coded", fieldGroupName, codedValue: { name, code } }` or
+   * `{ type: "range", fieldGroupName, min, max }`.
+   * Exotic subtypes are serialized as `{ type: "any" }` / `{ type: "null" }`.
+   */
+  suspend fun getContingentValues(objectId: Long, fieldName: String): Map<String, Any?> {
+    table.load().getOrThrow()
+    val arcGISTable = table as? ArcGISFeatureTable
+      ?: throw IllegalStateException("getContingentValues requires an ArcGIS feature table (not a shapefile or WFS table)")
+    val feature = featureByObjectId(objectId) as? ArcGISFeature
+      ?: throw IllegalArgumentException("Feature not found for objectId $objectId")
+    val result = arcGISTable.getContingentValuesOrNull(feature, fieldName)
+      ?: return mapOf("fieldName" to fieldName, "contingentValues" to emptyList<Map<String, Any?>>())
+    val serialized = result.byFieldGroup.flatMap { (groupName, values) ->
+      values.map { cv -> serializeContingentValue(cv, groupName) }
+    }
+    return mapOf("fieldName" to fieldName, "contingentValues" to serialized)
+  }
+
+  private fun serializeContingentValue(cv: ContingentValue, groupName: String): Map<String, Any?> {
+    val dict = mutableMapOf<String, Any?>("fieldGroupName" to groupName)
+    when (cv) {
+      is ContingentCodedValue -> {
+        dict["type"] = "coded"
+        val coded = cv.codedValue
+        dict["codedValue"] = mapOf("name" to coded.name, "code" to coded.code)
+      }
+      is ContingentRangeValue -> {
+        dict["type"] = "range"
+        dict["min"] = cv.minValue
+        dict["max"] = cv.maxValue
+      }
+      else -> {
+        // ContingentNullValue, ContingentAnyValue, or unknown future subtype
+        val typeName = cv::class.simpleName ?: ""
+        dict["type"] = when {
+          typeName.contains("Null", ignoreCase = true) -> "null"
+          else -> "any"
+        }
+      }
+    }
+    return dict
   }
 
   private suspend fun featureByObjectId(objectId: Long): Feature? {

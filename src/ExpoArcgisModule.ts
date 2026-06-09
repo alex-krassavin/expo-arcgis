@@ -4,6 +4,7 @@ import { SharedObject } from 'expo-modules-core';
 import type {
   AttachmentInfo,
   ConnectionStatus,
+  ContingentValuesResult,
   DynamicEntityChange,
   DynamicEntityObservationInfo,
   DistanceMeasurementProps,
@@ -101,6 +102,13 @@ export declare class FeatureLayerRef extends LayerRef {
   deleteAttachment(objectId: number, attachmentId: number): Promise<void>;
   updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
   getServiceGeodatabase(): Promise<ServiceGeodatabaseRef>;
+  /**
+   * Returns the valid contingent values for `fieldName` on the feature with `objectId`.
+   * The `fieldName` is the name of an attribute field whose valid values may be constrained by
+   * contingent-value rules (e.g. a "species" field whose options depend on "habitat"). Requires
+   * an ArcGIS feature table; rejects for shapefiles and WFS tables.
+   */
+  getContingentValues(objectId: number, fieldName: string): Promise<ContingentValuesResult>;
 }
 
 /**
