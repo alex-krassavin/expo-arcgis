@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import type { JobRef } from './ExpoArcgisModule';
+import type { GraphicRef, JobRef } from './ExpoArcgisModule';
 
 /**
  * Esri basemap styles available out of the box. These map to the native
@@ -2106,6 +2106,12 @@ export type CameraController =
       /** Initial camera distance from the target, in meters. */
       distance: number;
     }
+  | {
+      /** Orbit a moving `<Graphic>` — also pass that graphic's ref via `<SceneView orbitGraphic>`. */
+      type: 'orbitGeoElement';
+      /** Initial camera distance from the target graphic, in meters. */
+      distance: number;
+    }
   | { type: 'globe' };
 
 /** Props for the `<SceneView>` host component. */
@@ -2121,6 +2127,11 @@ export type SceneViewProps = {
   cameraController?: CameraController | null;
   /** Coordinate-grid overlay (MGRS / UTM / USNG / latitude-longitude). `null` / omitted = none. */
   grid?: GridConfig | null;
+  /**
+   * The graphic to orbit when `cameraController` is `{ type: 'orbitGeoElement' }` — the camera
+   * follows this `<Graphic>` as it moves. Pass the ref obtained from `<Graphic ref>`.
+   */
+  orbitGraphic?: GraphicRef | null;
   /** Sun lighting mode (shadows). Defaults to `off`. */
   sunLighting?: SunLighting;
   /** Atmosphere rendering. Defaults to `horizonOnly`. */

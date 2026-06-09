@@ -206,18 +206,35 @@ class ExpoArcgisSceneView: ExpoView {
   /// Sets the coordinate grid overlay from JS (nil clears it).
   func setGrid(_ dict: [String: Any]?) { model.setGrid(buildGrid(dict)) }
 
-  /// Builds and assigns the camera controller from the JS dict (`type`, `target`, `distance`).
+  /// Camera-controller config + the target graphic for an `orbitGeoElement` controller. Stored so
+  /// the controller can be (re)built once both the config and the graphic ref are available.
+  private var cameraControllerConfig: [String: Any]?
+  private var orbitGraphic: GraphicRef?
+
+  /// Stores the camera-controller config (`type`, `target`, `distance`) and rebuilds.
   func setCameraController(_ c: [String: Any]?) {
-    guard let type = c?["type"] as? String else {
-      model.setCameraController(nil)
-      return
-    }
-    switch type {
+    cameraControllerConfig = c
+    rebuildCameraController()
+  }
+
+  /// Stores the target graphic for an `orbitGeoElement` camera controller and rebuilds.
+  func setOrbitGraphic(_ ref: GraphicRef?) {
+    orbitGraphic = ref
+    rebuildCameraController()
+  }
+
+  /// Builds and assigns the camera controller from the stored config, combining with `orbitGraphic`.
+  private func rebuildCameraController() {
+    let c = cameraControllerConfig
+    switch c?["type"] as? String {
     case "orbitLocation":
-      let targetDict = c?["target"] as? [String: Any] ?? [:]
-      let target = scenePoint(targetDict)
+      let target = scenePoint(c?["target"] as? [String: Any] ?? [:])
       let distance = (c?["distance"] as? NSNumber)?.doubleValue ?? 1500.0
       model.setCameraController(OrbitLocationCameraController(target: target, distance: distance))
+    case "orbitGeoElement":
+      guard let graphic = orbitGraphic else { model.setCameraController(nil); return }
+      let distance = (c?["distance"] as? NSNumber)?.doubleValue ?? 1500.0
+      model.setCameraController(OrbitGeoElementCameraController(target: graphic.graphic, distance: distance))
     case "globe":
       model.setCameraController(GlobeCameraController())
     default:

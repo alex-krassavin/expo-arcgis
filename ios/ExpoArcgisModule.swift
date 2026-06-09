@@ -477,6 +477,10 @@ public class ExpoArcgisModule: Module {
         view.setGrid(grid)
       }
 
+      Prop("orbitGraphic") { (view: ExpoArcgisSceneView, ref: GraphicRef?) in
+        view.setOrbitGraphic(ref)
+      }
+
       Prop("sunLighting") { (view: ExpoArcgisSceneView, value: String?) in
         view.setSunLighting(value)
       }

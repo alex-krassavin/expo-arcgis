@@ -150,7 +150,22 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   }
 
   /** Sets or clears the scene's camera controller (orbit/globe). `null` restores the SDK default. */
+  private var cameraControllerConfig: Map<String, Any?>? = null
+  private var orbitGraphic: GraphicRef? = null
+
   fun setCameraController(c: Map<String, Any?>?) {
+    cameraControllerConfig = c
+    rebuildCameraController()
+  }
+
+  /** Stores the target graphic for an `orbitGeoElement` camera controller and rebuilds. */
+  fun setOrbitGraphic(ref: GraphicRef?) {
+    orbitGraphic = ref
+    rebuildCameraController()
+  }
+
+  private fun rebuildCameraController() {
+    val c = cameraControllerConfig
     sceneView.cameraController = when (c?.get("type") as? String) {
       "orbitLocation" -> {
         val target = c["target"] as? Map<*, *>
@@ -161,6 +176,13 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
                     else Point(x, y, SpatialReference.wgs84())
         val distance = (c["distance"] as? Number)?.toDouble() ?: 1500.0
         OrbitLocationCameraController(point, distance)
+      }
+      "orbitGeoElement" -> {
+        val graphic = orbitGraphic
+        if (graphic != null) {
+          val distance = (c["distance"] as? Number)?.toDouble() ?: 1500.0
+          com.arcgismaps.mapping.view.OrbitGeoElementCameraController(graphic.graphic, distance)
+        } else GlobeCameraController()
       }
       "globe" -> GlobeCameraController()
       else -> GlobeCameraController() // null/absent → restore SDK default (GlobeCameraController)
