@@ -38,6 +38,7 @@ import type {
   UtilityElementDescriptor,
   UtilityNamedTraceConfiguration,
   UtilityNetworkState,
+  UtilityTerminalConfiguration,
   UtilityTraceResult,
   VectorTileLayerProps,
   ViewshedProps,
@@ -226,6 +227,8 @@ export declare class UtilityNetworkRef extends SharedObject {
   ): Promise<UtilityTraceResult>;
   /** Returns the associations of a queried feature. */
   associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
+  /** Returns the terminal configurations defined in the network (synchronous — reads from definition). */
+  getTerminalConfigurations(): UtilityTerminalConfiguration[];
   /** Returns the network's topology state (dirty areas, errors, topology enabled). */
   getState(): Promise<UtilityNetworkState>;
   /** Validates the network topology over `extent`; returns a job to run / track / cancel. */

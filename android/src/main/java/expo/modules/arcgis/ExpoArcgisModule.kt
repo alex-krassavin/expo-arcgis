@@ -359,6 +359,9 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("associations") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String ->
         ref.associations(tableName, whereClause)
       }
+      Function("getTerminalConfigurations") { ref: UtilityNetworkRef ->
+        ref.getTerminalConfigurations()
+      }
       AsyncFunction("getState") Coroutine { ref: UtilityNetworkRef -> ref.getState() }
       Function("validateNetworkTopology") { ref: UtilityNetworkRef, extent: Map<String, Any?> ->
         ref.validateNetworkTopology(extent)

@@ -114,6 +114,19 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     return mapOf("count" to associations.size, "kinds" to kinds)
   }
 
+  /** Returns the terminal configurations defined in the network — each with its name and terminals. */
+  fun getTerminalConfigurations(): List<Map<String, Any?>> {
+    val definition = network?.definition ?: return emptyList()
+    return definition.terminalConfigurations.map { config ->
+      mapOf(
+        "name" to config.name,
+        "terminals" to config.terminals.map { t ->
+          mapOf("name" to t.name, "isUpstream" to t.isUpstreamTerminal())
+        },
+      )
+    }
+  }
+
   /** Returns the network's topology state — dirty areas, errors, and whether topology is enabled. */
   suspend fun getState(): Map<String, Any?> {
     val network = this.network ?: return emptyMap()

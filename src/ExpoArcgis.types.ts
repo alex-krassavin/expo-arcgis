@@ -1347,6 +1347,30 @@ export type UtilityNamedTraceConfiguration = {
   globalId: string;
 };
 
+/** One terminal in a `UtilityTerminalConfiguration`. Mirrors the native `UtilityTerminal`. */
+export type UtilityTerminal = {
+  /** Terminal name (e.g. `'High'`, `'Low'`). */
+  name: string;
+  /**
+   * Whether the terminal is the upstream terminal for the asset type.
+   * Tracing upstream vs. downstream from a junction uses this to select the correct terminal.
+   */
+  isUpstream: boolean;
+};
+
+/**
+ * A terminal configuration defined in the network. Mirrors `UtilityTerminalConfiguration`.
+ * Devices such as transformers have multiple terminals (e.g. high-side / low-side).
+ * Knowing the available terminals is a prerequisite for specifying a `terminal` on a
+ * `UtilityElement` when starting a directional trace.
+ */
+export type UtilityTerminalConfiguration = {
+  /** Configuration name (e.g. `'Transformer'`). */
+  name: string;
+  /** The terminals belonging to this configuration. */
+  terminals: UtilityTerminal[];
+};
+
 /** Summary of an element's associations. Flattens the native `UtilityAssociation` list. */
 export type UtilityAssociationSummary = {
   /** Number of associations found. */
@@ -1369,6 +1393,13 @@ export type UtilityNetworkState = {
 export type UtilityNetworkHandle = {
   /** Returns metadata about the loaded network (its network-source names). */
   describeNetwork(): { networkSources: string[] };
+  /**
+   * Returns the terminal configurations defined in the network.
+   * Use this to discover the available terminals on multi-terminal devices (e.g. transformers)
+   * before starting a directional trace that must specify a terminal. Synchronous — no network
+   * round-trip; reads from the already-loaded network definition.
+   */
+  getTerminalConfigurations(): UtilityTerminalConfiguration[];
   /** Returns the network's topology state — dirty areas, errors, and whether topology is enabled. */
   getState(): Promise<UtilityNetworkState>;
   /**

@@ -96,6 +96,19 @@ public final class UtilityNetworkRef: SharedObject {
     return ["count": associations.count, "kinds": Array(kinds)]
   }
 
+  /// Returns the terminal configurations defined in the network — each with its name and terminals.
+  func getTerminalConfigurations() -> [[String: Any]] {
+    guard let definition = network?.definition else { return [] }
+    return definition.terminalConfigurations.map { config in
+      [
+        "name": config.name,
+        "terminals": config.terminals.map { t in
+          ["name": t.name, "isUpstream": t.isUpstreamTerminal]
+        },
+      ]
+    }
+  }
+
   /// Returns the network's topology state — dirty areas, errors, and whether topology is enabled.
   func getState() async throws -> [String: Any] {
     guard let network else { return [:] }

@@ -384,6 +384,9 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("associations") { (ref: UtilityNetworkRef, tableName: String, whereClause: String) in
         try await ref.associations(tableName, whereClause)
       }
+      Function("getTerminalConfigurations") { (ref: UtilityNetworkRef) in
+        ref.getTerminalConfigurations()
+      }
       AsyncFunction("getState") { (ref: UtilityNetworkRef) in try await ref.getState() }
       Function("validateNetworkTopology") { (ref: UtilityNetworkRef, extent: [String: Any]) in
         ref.validateNetworkTopology(extent)
