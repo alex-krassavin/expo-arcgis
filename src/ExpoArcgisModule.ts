@@ -107,6 +107,24 @@ export declare class ServiceGeodatabaseRef extends SharedObject {
   supportsBranchVersioning(): boolean;
 }
 
+/**
+ * Reference to a native local mobile `Geodatabase` with transactional editing. Built by
+ * `offline.openGeodatabase(path)` (never constructed directly). Mirrors `GeodatabaseHandle`.
+ */
+export declare class GeodatabaseRef extends SharedObject {
+  beginTransaction(): Promise<void>;
+  commitTransaction(): Promise<void>;
+  rollbackTransaction(): Promise<void>;
+  isInTransaction(): boolean;
+  getFeatureTableNames(): string[];
+  queryFeatureCount(tableName: string, whereClause?: string): Promise<number>;
+  addFeature(
+    tableName: string,
+    attributes: Record<string, unknown>,
+    geometry?: Geometry
+  ): Promise<void>;
+}
+
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */
 type DynamicEntityLayerEvents = {
   onConnectionStatusChange: (event: { status: ConnectionStatus }) => void;

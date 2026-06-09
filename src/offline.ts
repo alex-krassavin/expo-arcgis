@@ -2,6 +2,7 @@ import Module from './ExpoArcgisGeometryModule';
 import ExtrasModule from './ExpoArcgisExtrasModule';
 import type { JobRef } from './ExpoArcgisModule';
 import type {
+  GeodatabaseHandle,
   Geometry,
   OfflineGeodatabaseResult,
   OfflineMapParameterOverrides,
@@ -104,4 +105,11 @@ export const offline = {
     options?: Record<string, unknown>
   ): Promise<TileCacheSizeEstimate> =>
     ExtrasModule.estimateTileCacheSize(tileServiceUrl, areaOfInterest, options),
+
+  /**
+   * Opens a local mobile geodatabase (`.geodatabase` file, e.g. from `generateGeodatabase`) for
+   * transactional editing — wrap edits in `beginTransaction` then `commitTransaction` or
+   * `rollbackTransaction`.
+   */
+  openGeodatabase: (path: string): Promise<GeodatabaseHandle> => ExtrasModule.openGeodatabase(path),
 };

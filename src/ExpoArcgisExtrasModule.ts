@@ -8,7 +8,7 @@ import type {
   RouteTrackerHandle,
   TileCacheSizeEstimate,
 } from './ExpoArcgis.types';
-import type { FeatureLayerRef } from './ExpoArcgisModule';
+import type { FeatureLayerRef, GeodatabaseRef } from './ExpoArcgisModule';
 
 /**
  * Third native module (`ExpoArcgisExtras`) hosting the heavier operational-layer SharedObject
@@ -34,6 +34,8 @@ declare class ExpoArcgisExtrasModule extends NativeModule {
     password: string,
     tokenExpirationMinutes: number | null
   ): Promise<void>;
+  /** Opens a local mobile geodatabase file for transactional editing. */
+  openGeodatabase(path: string): Promise<GeodatabaseRef>;
 }
 
 export default requireNativeModule<ExpoArcgisExtrasModule>('ExpoArcgisExtras');

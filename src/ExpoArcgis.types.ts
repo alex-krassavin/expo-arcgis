@@ -628,6 +628,32 @@ export type ServiceGeodatabaseHandle = {
   supportsBranchVersioning(): boolean;
 };
 
+/**
+ * A local mobile geodatabase (`.geodatabase` file) opened with `offline.openGeodatabase(path)`. Wrap
+ * a batch of edits in `beginTransaction` then `commitTransaction` (persist) or `rollbackTransaction`
+ * (discard). Edits target a feature table by name.
+ */
+export type GeodatabaseHandle = {
+  /** Starts a transaction. Subsequent edits are buffered until commit or rollback. */
+  beginTransaction(): Promise<void>;
+  /** Persists all edits made since `beginTransaction`. */
+  commitTransaction(): Promise<void>;
+  /** Discards all edits made since `beginTransaction`. */
+  rollbackTransaction(): Promise<void>;
+  /** Whether a transaction is currently open. */
+  isInTransaction(): boolean;
+  /** The names of the geodatabase's feature tables. */
+  getFeatureTableNames(): string[];
+  /** Counts features in `tableName` matching `whereClause` (all when omitted). */
+  queryFeatureCount(tableName: string, whereClause?: string): Promise<number>;
+  /** Adds a feature to `tableName`; local until the transaction is committed. */
+  addFeature(
+    tableName: string,
+    attributes: Record<string, unknown>,
+    geometry?: Geometry
+  ): Promise<void>;
+};
+
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */
 export type LabelDefinition = {
   /**

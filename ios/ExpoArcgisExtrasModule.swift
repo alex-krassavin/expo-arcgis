@@ -126,5 +126,23 @@ public class ExpoArcgisExtrasModule: Module {
       Function("getDefaultVersionName") { (ref: ServiceGeodatabaseRef) in ref.getDefaultVersionName() }
       Function("supportsBranchVersioning") { (ref: ServiceGeodatabaseRef) in ref.supportsBranchVersioning() }
     }
+
+    // Local mobile geodatabase with transactional editing.
+    AsyncFunction("openGeodatabase") { (path: String) in
+      try await openGeodatabase(path)
+    }
+    Class(GeodatabaseRef.self) {
+      AsyncFunction("beginTransaction") { (ref: GeodatabaseRef) in try await ref.beginTransaction() }
+      AsyncFunction("commitTransaction") { (ref: GeodatabaseRef) in try await ref.commitTransaction() }
+      AsyncFunction("rollbackTransaction") { (ref: GeodatabaseRef) in try await ref.rollbackTransaction() }
+      AsyncFunction("queryFeatureCount") { (ref: GeodatabaseRef, tableName: String, whereClause: String?) in
+        try await ref.queryFeatureCount(tableName, whereClause)
+      }
+      AsyncFunction("addFeature") { (ref: GeodatabaseRef, tableName: String, attributes: [String: Any], geometry: [String: Any]?) in
+        try await ref.addFeature(tableName, attributes, geometry)
+      }
+      Function("isInTransaction") { (ref: GeodatabaseRef) in ref.isInTransaction() }
+      Function("getFeatureTableNames") { (ref: GeodatabaseRef) in ref.getFeatureTableNames() }
+    }
   }
 }
