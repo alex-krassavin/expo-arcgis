@@ -127,6 +127,17 @@ public class ExpoArcgisGeometryModule: Module {
       }
       Function("applyProps") { (ref: SubtypeFeatureLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
+    // GroupLayer — a container layer that hosts its own child layers (addLayer/removeLayer).
+    Class(GroupLayerRef.self) {
+      Constructor { (props: [String: Any]) -> GroupLayerRef in
+        let ref = GroupLayerRef()
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: GroupLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+      Function("addLayer") { (ref: GroupLayerRef, layer: LayerRef) in ref.addLayer(layer) }
+      Function("removeLayer") { (ref: GroupLayerRef, layer: LayerRef) in ref.removeLayer(layer) }
+    }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in

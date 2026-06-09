@@ -18,6 +18,7 @@ import com.arcgismaps.mapping.layers.ArcGISVectorTiledLayer
 import com.arcgismaps.mapping.layers.BuildingSceneLayer
 import com.arcgismaps.mapping.layers.DimensionLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
+import com.arcgismaps.mapping.layers.GroupLayer
 import com.arcgismaps.mapping.layers.IntegratedMeshLayer
 import com.arcgismaps.mapping.layers.Layer
 import com.arcgismaps.mapping.layers.OrientedImageryLayer
@@ -292,5 +293,24 @@ class OrientedImageryLayerRef(appContext: AppContext, url: String) : LayerRef(ap
 /** Operational subtype feature layer (one sublayer per subtype) from a feature service URL. */
 class SubtypeFeatureLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: Layer = SubtypeFeatureLayer(ServiceFeatureTable(url))
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/**
+ * Container layer ([GroupLayer]) — holds child layers as a single unit. Acts as a layer host for
+ * its declared children (they add themselves to the group instead of the map).
+ */
+class GroupLayerRef(appContext: AppContext) : LayerRef(appContext) {
+  private val group = GroupLayer(emptyList())
+  override val layer: Layer = group
+
+  fun addLayer(ref: LayerRef) {
+    group.layers.add(ref.layer)
+  }
+
+  fun removeLayer(ref: LayerRef) {
+    group.layers.remove(ref.layer)
+  }
+
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

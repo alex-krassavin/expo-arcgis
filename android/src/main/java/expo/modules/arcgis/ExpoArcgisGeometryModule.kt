@@ -123,6 +123,15 @@ class ExpoArcgisGeometryModule : Module() {
       }
       Function("applyProps") { ref: SubtypeFeatureLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
+    // GroupLayer — a container layer that hosts its own child layers (addLayer/removeLayer).
+    Class(GroupLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        GroupLayerRef(appContext).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: GroupLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+      Function("addLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.addLayer(layer) }
+      Function("removeLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.removeLayer(layer) }
+    }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->

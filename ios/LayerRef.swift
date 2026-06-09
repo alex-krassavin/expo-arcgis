@@ -283,3 +283,19 @@ public final class SubtypeFeatureLayerRef: LayerRef {
     super.init(layer: SubtypeFeatureLayer(featureTable: ServiceFeatureTable(url: URL(string: url)!)))
   }
 }
+
+/// Container layer (`GroupLayer`) — holds child layers as a single unit. Acts as a layer host for
+/// its declared children (they add themselves to the group instead of the map).
+public final class GroupLayerRef: LayerRef {
+  private let group: GroupLayer
+
+  init() {
+    let group = GroupLayer()
+    self.group = group
+    super.init(layer: group)
+  }
+
+  func addLayer(_ ref: LayerRef) { group.addLayer(ref.layer) }
+
+  func removeLayer(_ ref: LayerRef) { group.removeLayer(ref.layer) }
+}

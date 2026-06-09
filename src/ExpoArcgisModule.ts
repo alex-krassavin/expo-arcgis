@@ -46,6 +46,12 @@ export declare class LayerRef<
   applyProps(changed: Record<string, unknown>): void;
 }
 
+/** Reference to a native `GroupLayer` — a `LayerRef` that also hosts its own child layers. */
+export declare class GroupLayerRef extends LayerRef {
+  addLayer(layer: LayerRef<any>): void;
+  removeLayer(layer: LayerRef<any>): void;
+}
+
 /**
  * Reference to a native `FeatureLayer` — a `LayerRef` plus the async query methods (these match
  * `FeatureLayerHandle`, so the component just hands this ref over via `useImperativeHandle`).

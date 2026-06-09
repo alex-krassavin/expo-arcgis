@@ -46,6 +46,7 @@ export {
   SubtypeFeatureLayer,
 } from './layers';
 export { DynamicEntityLayer } from './DynamicEntityLayer';
+export { GroupLayer } from './GroupLayer';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';
 export { Graphic } from './Graphic';
 export { AnalysisOverlay } from './AnalysisOverlay';
