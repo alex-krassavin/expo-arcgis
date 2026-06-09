@@ -8,6 +8,7 @@ import com.arcgismaps.mapping.reduction.ClusteringFeatureReduction
 import com.arcgismaps.mapping.reduction.FeatureReduction
 import com.arcgismaps.mapping.symbology.ClassBreak
 import com.arcgismaps.mapping.symbology.ClassBreaksRenderer
+import com.arcgismaps.mapping.symbology.CompositeSymbol
 import com.arcgismaps.mapping.symbology.HorizontalAlignment
 import com.arcgismaps.mapping.symbology.Renderer
 import com.arcgismaps.mapping.symbology.SceneSymbolAnchorPosition
@@ -212,6 +213,12 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
       composite.ranges.add(range)
     }
     composite
+  }
+  "composite" -> {
+    val symbolList = (s["symbols"] as? List<*> ?: emptyList<Any>()).mapNotNull { item ->
+      (item as? Map<*, *>)?.let(::buildSymbol)
+    }
+    CompositeSymbol(symbolList)
   }
   else -> null
 }

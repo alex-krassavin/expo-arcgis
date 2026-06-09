@@ -1447,6 +1447,25 @@ export type DistanceCompositeSceneSymbol = {
   ranges: DistanceSymbolRange[];
 };
 
+/**
+ * A composite symbol that overlays multiple symbols stacked on top of each other.
+ * Useful for combining a marker with a label, or layering two markers for a ring effect.
+ * Mirrors the native `CompositeSymbol`.
+ *
+ * @example
+ * ```ts
+ * { type: 'composite', symbols: [
+ *   { type: 'simple-marker', color: '#fff', size: 18 },
+ *   { type: 'simple-marker', color: '#e63946', size: 10 },
+ * ] }
+ * ```
+ */
+export type CompositeSymbolType = {
+  type: 'composite';
+  /** The symbols to stack, drawn in order (first = bottom, last = top). */
+  symbols: Symbol[];
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol =
   | SimpleMarkerSymbol
@@ -1456,7 +1475,8 @@ export type Symbol =
   | SimpleMarkerSceneSymbol
   | PictureMarkerSymbol
   | PictureFillSymbol
-  | DistanceCompositeSceneSymbol;
+  | DistanceCompositeSceneSymbol
+  | CompositeSymbolType;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };

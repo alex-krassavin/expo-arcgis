@@ -193,6 +193,10 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
       composite.addRange(range)
     }
     return composite
+  case "composite":
+    let symbolDicts = s["symbols"] as? [[String: Any]] ?? []
+    let builtSymbols = symbolDicts.compactMap(buildSymbol)
+    return CompositeSymbol(symbols: builtSymbols)
   default:
     return nil
   }
