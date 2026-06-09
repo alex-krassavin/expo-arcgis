@@ -71,6 +71,9 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("updateAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long, name: String, contentType: String, dataBase64: String ->
         ref.updateAttachment(objectId, attachmentId, name, contentType, dataBase64)
       }
+      AsyncFunction("getServiceGeodatabase") Coroutine { ref: FeatureLayerRef ->
+        ref.getServiceGeodatabase()
+      }
     }
 
     // Per-service token credential — mint a token for a specific URL and add it to the store.
@@ -97,6 +100,29 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("switchToNextDestination") Coroutine { ref: RouteTrackerRef ->
         ref.switchToNextDestination()
       }
+    }
+
+    // Branch versioning — a service geodatabase handle obtained from FeatureLayerRef.getServiceGeodatabase().
+    Class(ServiceGeodatabaseRef::class) {
+      AsyncFunction("fetchVersions") Coroutine { ref: ServiceGeodatabaseRef ->
+        ref.fetchVersions()
+      }
+      AsyncFunction("createVersion") Coroutine { ref: ServiceGeodatabaseRef, params: Map<String, Any?> ->
+        ref.createVersion(params)
+      }
+      AsyncFunction("switchVersion") Coroutine { ref: ServiceGeodatabaseRef, name: String ->
+        ref.switchVersion(name)
+      }
+      AsyncFunction("applyEdits") Coroutine { ref: ServiceGeodatabaseRef ->
+        ref.applyEdits()
+      }
+      AsyncFunction("undoLocalEdits") Coroutine { ref: ServiceGeodatabaseRef ->
+        ref.undoLocalEdits()
+      }
+      Function("hasLocalEdits") { ref: ServiceGeodatabaseRef -> ref.hasLocalEdits() }
+      Function("getVersionName") { ref: ServiceGeodatabaseRef -> ref.getVersionName() }
+      Function("getDefaultVersionName") { ref: ServiceGeodatabaseRef -> ref.getDefaultVersionName() }
+      Function("supportsBranchVersioning") { ref: ServiceGeodatabaseRef -> ref.supportsBranchVersioning() }
     }
   }
 }

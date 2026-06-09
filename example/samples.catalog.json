@@ -61,5 +61,6 @@
   { "slug": "layers/scale-display-filter", "category": "Layers", "title": "Scale display filter", "description": "Swap the active where-clause as the map scale changes." },
   { "slug": "analysis/geoelement-viewshed", "category": "Analysis", "title": "GeoElement viewshed", "description": "A viewshed that follows a moving graphic observer." },
   { "slug": "routing/route-tracker", "category": "Routing", "title": "Route tracker", "description": "Turn-by-turn navigation status from tracked locations." },
-  { "slug": "real-time/dynamic-entity-changes", "category": "Real-time", "title": "Entity change events", "description": "React to per-entity received / purged stream events." }
+  { "slug": "real-time/dynamic-entity-changes", "category": "Real-time", "title": "Entity change events", "description": "React to per-entity received / purged stream events." },
+  { "slug": "editing/branch-versioning", "category": "Editing", "title": "Branch versioning", "description": "List, create and switch service-geodatabase versions (ArcGIS Enterprise)." }
 ]

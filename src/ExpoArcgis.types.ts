@@ -549,6 +549,67 @@ export type FeatureLayerHandle = {
    * @param dataBase64 New base64-encoded file contents.
    */
   updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+  /**
+   * Returns the branch-versioning handle for this layer's service geodatabase (ArcGIS Enterprise
+   * branch-versioned services only). Loads the table first; rejects if the layer is not a service
+   * feature layer. The same handle is returned on repeat calls.
+   */
+  getServiceGeodatabase(): Promise<ServiceGeodatabaseHandle>;
+};
+
+/** Branch-version access level. */
+export type VersionAccess = 'public' | 'protected' | 'private';
+
+/** Metadata for one branch version of a service geodatabase. */
+export type ServiceVersionInfo = {
+  /** Fully-qualified version name (e.g. `"OWNER.versionName"`). */
+  name: string;
+  /** Free-text description. */
+  description: string;
+  /** Who may see / edit the version. */
+  access: VersionAccess;
+  /** Whether the current user owns this version. */
+  isOwner: boolean;
+  /** Server-assigned version GUID, when available. */
+  versionId?: string;
+};
+
+/** Parameters for creating a new branch version. */
+export type CreateVersionParams = {
+  /** Short version name (the server prefixes the owner). */
+  name: string;
+  /** Optional description. */
+  description?: string;
+  /** Access level. Defaults to `"public"`. */
+  access?: VersionAccess;
+};
+
+/**
+ * Handle to a service geodatabase's branch-versioning surface, from
+ * `FeatureLayerHandle.getServiceGeodatabase()`. Manages named versions and pushes the service-wide
+ * local edits (across every connected table) to the active version. Edit features through the
+ * `<FeatureLayer>` handle with `apply: false`, then call `applyEdits()` here to push them — distinct
+ * from the table-level `FeatureLayerHandle.applyEdits()`, which pushes only this layer's table.
+ */
+export type ServiceGeodatabaseHandle = {
+  /** Lists all branch versions on the service. */
+  fetchVersions(): Promise<ServiceVersionInfo[]>;
+  /** Creates a new branch version and resolves with its info. */
+  createVersion(params: CreateVersionParams): Promise<ServiceVersionInfo>;
+  /** Switches the active version (rejects if there are outstanding local edits). */
+  switchVersion(name: string): Promise<void>;
+  /** Pushes all connected tables' local edits to the active version in one batch. */
+  applyEdits(): Promise<EditResult[]>;
+  /** Discards all local edits across connected tables. */
+  undoLocalEdits(): Promise<void>;
+  /** Whether any connected table has unsaved local edits. */
+  hasLocalEdits(): boolean;
+  /** The active version's name. */
+  getVersionName(): string;
+  /** The default version name (e.g. `"sde.DEFAULT"`). */
+  getDefaultVersionName(): string;
+  /** Whether the service supports branch versioning. */
+  supportsBranchVersioning(): boolean;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

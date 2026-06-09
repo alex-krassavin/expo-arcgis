@@ -31,6 +31,8 @@ public class LayerRef: SharedObject {
 /// Operational FeatureLayer from a feature service URL or a local shapefile.
 public final class FeatureLayerRef: LayerRef {
   private let table: FeatureTable
+  /// Lazily-built branch-versioning handle for this layer's service geodatabase (cached).
+  private var cachedServiceGeodatabase: ServiceGeodatabaseRef?
 
   init(props: [String: Any]) {
     let table = featureTable(from: props)
@@ -112,6 +114,28 @@ public final class FeatureLayerRef: LayerRef {
   func undoLocalEdits() async throws {
     guard let serviceTable = table as? ServiceFeatureTable else { return }
     try await serviceTable.undoLocalEdits()
+  }
+
+  /// Returns the branch-versioning handle for this layer's service geodatabase. Loads the table
+  /// first (so the geodatabase is populated). Throws if the layer is not backed by a feature
+  /// service. The same handle is returned on repeat calls.
+  func getServiceGeodatabase() async throws -> ServiceGeodatabaseRef {
+    if let cached = cachedServiceGeodatabase { return cached }
+    guard let serviceTable = table as? ServiceFeatureTable else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 4,
+        userInfo: [NSLocalizedDescriptionKey: "Layer is not backed by a service feature table"])
+    }
+    try await serviceTable.load()
+    guard let geodatabase = serviceTable.serviceGeodatabase else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 5,
+        userInfo: [NSLocalizedDescriptionKey: "Service geodatabase unavailable for this layer"])
+    }
+    if let cached = cachedServiceGeodatabase { return cached }  // guard the load race
+    let ref = ServiceGeodatabaseRef(geodatabase: geodatabase)
+    cachedServiceGeodatabase = ref
+    return ref
   }
 
   /// Queries features related to `objectId` (across all relationships); returns groups by relationship.

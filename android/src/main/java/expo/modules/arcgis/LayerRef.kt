@@ -82,6 +82,9 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
   override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(table)
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+  /** Lazily-built branch-versioning handle for this layer's service geodatabase (cached). */
+  private var cachedServiceGeodatabase: ServiceGeodatabaseRef? = null
+
   /** Returns the features matching `query` (all features when null). Loads attributes in full. */
   suspend fun queryFeatures(query: Map<String, Any?>?): List<Map<String, Any?>> {
     val params = buildQueryParameters(query)
@@ -152,6 +155,23 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
   /** Discards all pending local edits (since the last `applyEdits`). */
   suspend fun undoLocalEdits() {
     (table as? ServiceFeatureTable)?.undoLocalEdits()?.getOrThrow()
+  }
+
+  /**
+   * Returns the branch-versioning handle for this layer's service geodatabase. Loads the table
+   * first (so the geodatabase is populated). Throws if the layer is not backed by a feature
+   * service. The same handle is returned on repeat calls.
+   */
+  suspend fun getServiceGeodatabase(): ServiceGeodatabaseRef {
+    cachedServiceGeodatabase?.let { return it }
+    val serviceTable = table as? ServiceFeatureTable
+      ?: throw IllegalStateException("Layer is not backed by a service feature table")
+    serviceTable.load().getOrThrow()
+    val geodatabase = serviceTable.serviceGeodatabase
+      ?: throw IllegalStateException("Service geodatabase unavailable for this layer")
+    cachedServiceGeodatabase?.let { return it }  // guard the load race
+    val ctx = appContext ?: throw IllegalStateException("No app context")
+    return ServiceGeodatabaseRef(ctx, geodatabase).also { cachedServiceGeodatabase = it }
   }
 
   /** Queries features related to `objectId` (across all relationships); returns groups by relationship. */

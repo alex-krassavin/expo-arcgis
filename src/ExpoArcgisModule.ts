@@ -8,7 +8,9 @@ import type {
   DynamicEntityObservationInfo,
   DistanceMeasurementProps,
   DynamicEntityLayerProps,
+  CreateVersionParams,
   EditResult,
+  ServiceVersionInfo,
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
@@ -85,6 +87,24 @@ export declare class FeatureLayerRef extends LayerRef {
   fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
   deleteAttachment(objectId: number, attachmentId: number): Promise<void>;
   updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+  getServiceGeodatabase(): Promise<ServiceGeodatabaseRef>;
+}
+
+/**
+ * Reference to a native `ServiceGeodatabase`'s branch-versioning surface. Built by
+ * `FeatureLayerRef.getServiceGeodatabase()` (never constructed directly). Mirrors
+ * `ServiceGeodatabaseHandle`.
+ */
+export declare class ServiceGeodatabaseRef extends SharedObject {
+  fetchVersions(): Promise<ServiceVersionInfo[]>;
+  createVersion(params: CreateVersionParams): Promise<ServiceVersionInfo>;
+  switchVersion(name: string): Promise<void>;
+  applyEdits(): Promise<EditResult[]>;
+  undoLocalEdits(): Promise<void>;
+  hasLocalEdits(): boolean;
+  getVersionName(): string;
+  getDefaultVersionName(): string;
+  supportsBranchVersioning(): boolean;
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */
