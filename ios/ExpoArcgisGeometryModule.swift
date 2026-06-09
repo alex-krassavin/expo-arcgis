@@ -189,8 +189,8 @@ public class ExpoArcgisGeometryModule: Module {
     }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
-    AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
-      try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)
+    AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String, overrides: [String: Any]?) in
+      try await generateOfflineMap(portalItemId, areaOfInterest, downloadName, overrides)
     }
     AsyncFunction("syncOfflineMap") { (mobileMapPackagePath: String) in
       try await syncOfflineMap(mobileMapPackagePath)

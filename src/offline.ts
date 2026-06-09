@@ -4,6 +4,7 @@ import type { JobRef } from './ExpoArcgisModule';
 import type {
   Geometry,
   OfflineGeodatabaseResult,
+  OfflineMapParameterOverrides,
   OfflineMapResult,
   OfflineTileResult,
   PreplannedMapAreaInfo,
@@ -21,13 +22,20 @@ export const offline = {
    * Takes a web map (`portalItemId`) offline on-demand for `areaOfInterest` (an envelope/polygon),
    * downloading a mobile map package into a directory named `downloadName`. Returns a `JobRef`:
    * `await job.result()` to run it, `job.addListener('onProgress', …)` for progress, `job.cancel()`.
+   *
+   * Pass optional `overrides` to narrow the tile-cache scale range and reduce download size:
+   * ```ts
+   * offline.generateOfflineMap(id, area, 'myMap', { minScale: 0, maxScale: 5000 })
+   * ```
+   * See `OfflineMapParameterOverrides` for details on how minScale/maxScale are applied.
    */
   generateOfflineMap: (
     portalItemId: string,
     areaOfInterest: Geometry,
-    downloadName: string
+    downloadName: string,
+    overrides?: OfflineMapParameterOverrides
   ): Promise<JobRef<OfflineMapResult>> =>
-    Module.generateOfflineMap(portalItemId, areaOfInterest, downloadName),
+    Module.generateOfflineMap(portalItemId, areaOfInterest, downloadName, overrides ?? null),
 
   /**
    * Syncs a downloaded offline map (`.mmpk` at `mobileMapPackagePath`) with its services — pushes

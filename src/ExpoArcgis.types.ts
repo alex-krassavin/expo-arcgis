@@ -1474,6 +1474,29 @@ export type TileCacheSizeEstimate = {
   tileCount: number;
 };
 
+/**
+ * Overrides for `offline.generateOfflineMap` that narrow the tile-cache scale range, producing a
+ * smaller download. Both values follow the ArcGIS scale convention (larger number = more zoomed
+ * out; 0 means "no limit" on that end).
+ *
+ * Applied via `GenerateOfflineMapParameterOverrides`: each `ExportTileCacheParameters` entry in
+ * the overrides object has its `levelIDs` list trimmed to the subset that falls within
+ * [minScale, maxScale]. Vector-tile entries are not affected (the SDK exposes no per-entry scale
+ * filter for `ExportVectorTilesParameters`).
+ */
+export type OfflineMapParameterOverrides = {
+  /**
+   * Coarsest scale to include (outermost/lowest-detail level). 0 = no coarse limit.
+   * E.g. `100000` keeps levels finer than 1:100 000.
+   */
+  minScale?: number;
+  /**
+   * Finest scale to include (innermost/highest-detail level). 0 = no fine limit.
+   * E.g. `5000` drops levels finer than 1:5 000, meaningfully reducing download size.
+   */
+  maxScale?: number;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // GeometryEditor — interactive sketching on a `<MapView>`.
 // ────────────────────────────────────────────────────────────────────────────

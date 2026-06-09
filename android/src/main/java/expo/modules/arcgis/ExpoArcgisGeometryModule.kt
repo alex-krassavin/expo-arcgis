@@ -182,8 +182,8 @@ class ExpoArcgisGeometryModule : Module() {
     }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
-    AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
-      generateOfflineMap(appContext, appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)
+    AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String, overrides: Map<String, Any?>? ->
+      generateOfflineMap(appContext, appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName, overrides)
     }
     AsyncFunction("syncOfflineMap") Coroutine { mobileMapPackagePath: String ->
       syncOfflineMap(appContext, mobileMapPackagePath)

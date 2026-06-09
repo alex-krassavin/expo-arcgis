@@ -18,6 +18,7 @@ import type {
   GeoprocessingInput,
   GeoprocessingResult,
   OfflineGeodatabaseResult,
+  OfflineMapParameterOverrides,
   OfflineMapResult,
   OfflineTileResult,
   PreplannedMapAreaInfo,
@@ -132,7 +133,8 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   generateOfflineMap(
     portalItemId: string,
     areaOfInterest: Geometry,
-    downloadName: string
+    downloadName: string,
+    overrides: OfflineMapParameterOverrides | null
   ): Promise<JobRef<OfflineMapResult>>;
   syncOfflineMap(mobileMapPackagePath: string): Promise<JobRef<{ synced: boolean }>>;
   preplannedMapAreas(portalItemId: string): Promise<PreplannedMapAreaInfo[]>;

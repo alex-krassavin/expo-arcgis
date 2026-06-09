@@ -17,7 +17,19 @@ func offlineDownloadURL(_ name: String) -> URL {
 enum OfflineError: Error { case invalidParameters }
 
 /// Returns a `JobRef` for an on-demand offline-map download (drive it via `result()` + `onProgress`).
-func generateOfflineMap(_ portalItemId: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> JobRef {
+/// When `overrides` contains `minScale`/`maxScale`, the function builds a
+/// `GenerateOfflineMapParameterOverrides` object, trims the `levelIDs` on every
+/// `ExportTileCacheParameters` entry to the scale window, then passes the overrides object to the
+/// job constructor.
+///
+/// **Vector-tile entries** (`ExportVectorTilesParameters`) are not filtered — `SDK 300.0` exposes
+/// no per-entry scale setter on `ExportVectorTilesParameters` via the override map (deferred).
+func generateOfflineMap(
+  _ portalItemId: String,
+  _ areaOfInterest: [String: Any],
+  _ downloadName: String,
+  _ overridesDict: [String: Any]?
+) async throws -> JobRef {
   guard let area = geometryFromDict(areaOfInterest), let itemID = PortalItem.ID(portalItemId) else {
     throw OfflineError.invalidParameters
   }
@@ -25,11 +37,68 @@ func generateOfflineMap(_ portalItemId: String, _ areaOfInterest: [String: Any],
   let task = OfflineMapTask(portalItem: portalItem)
   let parameters = try await task.makeDefaultGenerateOfflineMapParameters(areaOfInterest: area)
   let directory = offlineDownloadURL(downloadName)
-  let job = task.makeGenerateOfflineMapJob(parameters: parameters, downloadDirectory: directory)
+
+  // Build parameter overrides when the caller supplied an overrides dictionary.
+  var paramOverrides: GenerateOfflineMapParameterOverrides?
+  if let dict = overridesDict {
+    let ovr = try await task.makeGenerateOfflineMapParameterOverrides(parameters: parameters)
+    let minScale = dict["minScale"] as? Double ?? 0
+    let maxScale = dict["maxScale"] as? Double ?? 0
+    // Apply scale window to every ExportTileCacheParameters entry.
+    for (key, tileCacheParams) in ovr.exportTileCacheParameters {
+      applyScaleToTileCacheParams(tileCacheParams, minScale: minScale, maxScale: maxScale)
+      ovr.setExportTileCacheParameterValue(tileCacheParams, forKey: key)
+    }
+    // Note: ExportVectorTilesParameters has no per-entry scale filter in SDK 300.0 — deferred.
+    paramOverrides = ovr
+  }
+
+  let job = task.makeGenerateOfflineMapJob(
+    parameters: parameters,
+    downloadDirectory: directory,
+    overrides: paramOverrides
+  )
   return JobRef(job: job) {
     _ = try await job.result.get()
     return ["path": directory.path]
   }
+}
+
+/// Trims `ExportTileCacheParameters.levelIDs` to the subset within [minScale, maxScale].
+///
+/// Level IDs in ArcGIS tile caches are WMS/WMTS LOD indices (0 = world, N = street-level).
+/// We approximate the level number for a given scale using the standard Web Mercator formula:
+///   `level ≈ log2(591_657_550 / scale)` (valid for WKID 3857 / 102100 tile schemes).
+///
+/// For services that use a different LOD scheme (e.g. 1:1 000 000 at level 0) the cutoff
+/// will be approximate. This is an accepted approximation — see DEFER note in the caller.
+///
+/// - `maxScale > 0`: drop level IDs strictly finer than `maxScaleLevel` (i.e. id > maxScaleLevel).
+/// - `minScale > 0`: drop level IDs strictly coarser than `minScaleLevel` (i.e. id < minScaleLevel).
+private func applyScaleToTileCacheParams(
+  _ params: ExportTileCacheParameters,
+  minScale: Double,
+  maxScale: Double
+) {
+  let levels = params.levelIDs  // read-only; sorted ascending
+  guard !levels.isEmpty, maxScale > 0 || minScale > 0 else { return }
+
+  // Reference scale denominator for level 0 in the standard Web Mercator tile scheme.
+  let level0Scale: Double = 591_657_550
+
+  func scaleToLevel(_ scale: Double) -> Int {
+    guard scale > 0 else { return Int.max }
+    let lvl = log2(level0Scale / scale)
+    return max(0, Int(lvl.rounded()))
+  }
+
+  let maxLevelForScale = maxScale > 0 ? scaleToLevel(maxScale) : Int.max
+  let minLevelForScale = minScale > 0 ? scaleToLevel(minScale) : 0
+
+  let filtered = levels.filter { id in id >= minLevelForScale && id <= maxLevelForScale }
+  guard filtered != levels else { return }
+  params.removeAllLevelIDs()
+  params.addLevelIDs(filtered)
 }
 
 private func offlineMapTask(_ portalItemId: String) -> OfflineMapTask? {

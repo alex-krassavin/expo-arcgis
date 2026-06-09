@@ -13,6 +13,9 @@ import com.arcgismaps.tasks.tilecache.ExportTileCacheTask
 import com.arcgismaps.tasks.tilecache.EstimateTileCacheSizeJob
 import expo.modules.kotlin.AppContext
 import java.io.File
+import kotlin.math.log2
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Free functions backing the JS `offline` namespace — take maps and data offline via the various
@@ -27,13 +30,24 @@ internal fun offlineDownloadDir(baseDir: File, name: String): File {
   return dir
 }
 
-/** Returns a [JobRef] for an on-demand offline-map download (drive it via `result()` + `onProgress`). */
+/**
+ * Returns a [JobRef] for an on-demand offline-map download (drive it via `result()` + `onProgress`).
+ *
+ * When [overrides] is non-null the function builds a `GenerateOfflineMapParameterOverrides` object
+ * via `OfflineMapTask.createGenerateOfflineMapParameterOverrides`, trims the `levelIds` list on
+ * every `ExportTileCacheParameters` entry to the subset that falls within [minScale, maxScale],
+ * and passes the overrides object to `createGenerateOfflineMapJob`.
+ *
+ * **Vector-tile entries** (`ExportVectorTilesParameters`) expose only `maxLevel` (integer); the
+ * SDK provides no minScale/maxScale setter on the override entry — deferred.
+ */
 internal suspend fun generateOfflineMap(
   appContext: AppContext,
   baseDir: File?,
   portalItemId: String,
   areaOfInterest: Map<String, Any?>,
   downloadName: String,
+  overrides: Map<String, Any?>?,
 ): JobRef {
   val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
   baseDir ?: throw IllegalStateException("No download directory available")
@@ -42,11 +56,52 @@ internal suspend fun generateOfflineMap(
   val task = OfflineMapTask(portalItem)
   val parameters = task.createDefaultGenerateOfflineMapParameters(area).getOrThrow()
   val dir = offlineDownloadDir(baseDir, downloadName)
-  val job = task.createGenerateOfflineMapJob(parameters, dir.absolutePath)
+
+  val paramOverrides = overrides?.let {
+    val minScale = (it["minScale"] as? Number)?.toDouble() ?: 0.0
+    val maxScale = (it["maxScale"] as? Number)?.toDouble() ?: 0.0
+    val ovr = task.createGenerateOfflineMapParameterOverrides(parameters).getOrThrow()
+    for ((_, tileCacheParams) in ovr.exportTileCacheParameters) {
+      applyScaleToTileCacheParams(tileCacheParams.levelIds, minScale, maxScale)
+    }
+    // ExportVectorTilesParameters.maxLevel could narrow vector tiles but requires a level number,
+    // not a scale denominator; left as-is (deferred).
+    ovr
+  }
+
+  val job = task.createGenerateOfflineMapJob(parameters, dir.absolutePath, paramOverrides)
   return JobRef(appContext, job) {
     job.result().getOrThrow()
     mapOf("path" to dir.absolutePath)
   }
+}
+
+/**
+ * Mutates [levelIds] in-place to keep only the levels within [minScale]..[maxScale].
+ *
+ * Level numbers are approximated from scale denominators using the standard Web Mercator formula:
+ *   `level ≈ log2(591_657_550 / scale)` (valid for EPSG:3857 / WKID 102100 tile schemes).
+ *
+ * For services using a different LOD origin the cutoff will be approximate — see DEFER note.
+ */
+private fun applyScaleToTileCacheParams(
+  levelIds: MutableList<Int>,
+  minScale: Double,
+  maxScale: Double,
+) {
+  if (levelIds.isEmpty() || (maxScale <= 0 && minScale <= 0)) return
+
+  val level0Scale = 591_657_550.0
+
+  fun scaleToLevel(scale: Double): Int {
+    if (scale <= 0) return Int.MAX_VALUE
+    return max(0, log2(level0Scale / scale).roundToInt())
+  }
+
+  val maxLevelForScale = if (maxScale > 0) scaleToLevel(maxScale) else Int.MAX_VALUE
+  val minLevelForScale = if (minScale > 0) scaleToLevel(minScale) else 0
+
+  levelIds.retainAll { id -> id in minLevelForScale..maxLevelForScale }
 }
 
 private fun offlineMapTask(portalItemId: String): OfflineMapTask =
