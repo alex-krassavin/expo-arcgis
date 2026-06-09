@@ -253,6 +253,14 @@ export type IdentifyResult = {
   features: Feature[];
 };
 
+/** An evaluated popup from `identifyPopups` — a title plus formatted field label/value pairs. */
+export type PopupResult = {
+  /** The popup's (evaluated) title. */
+  title: string;
+  /** Formatted fields, in the layer's popup-definition order. */
+  fields: { label: string; value: string }[];
+};
+
 /** Imperative handle exposed by `<MapView>` via `ref`. */
 export type MapViewHandle = {
   /**
@@ -263,6 +271,14 @@ export type MapViewHandle = {
     screenPoint: { x: number; y: number },
     options?: { tolerance?: number; maxResults?: number }
   ): Promise<IdentifyResult[]>;
+  /**
+   * Identifies popups under a screen point and evaluates them — returns each popup's title and its
+   * formatted fields. Requires the layers to have popups enabled.
+   */
+  identifyPopups(
+    screenPoint: { x: number; y: number },
+    options?: { tolerance?: number; maxResults?: number }
+  ): Promise<PopupResult[]>;
   /** Retries loading the map after a failure (e.g. a network outage). Re-fires `onMapLoaded`/`onMapLoadError`. */
   retryLoad(): Promise<void>;
 };
@@ -274,6 +290,11 @@ export type SceneViewHandle = {
     screenPoint: { x: number; y: number },
     options?: { tolerance?: number; maxResults?: number }
   ): Promise<IdentifyResult[]>;
+  /** Identifies and evaluates popups under a screen point (3D); returns each popup's title + fields. */
+  identifyPopups(
+    screenPoint: { x: number; y: number },
+    options?: { tolerance?: number; maxResults?: number }
+  ): Promise<PopupResult[]>;
   /** Retries loading the scene after a failure (e.g. a network outage). Re-fires `onSceneLoaded`/`onSceneLoadError`. */
   retryLoad(): Promise<void>;
 };

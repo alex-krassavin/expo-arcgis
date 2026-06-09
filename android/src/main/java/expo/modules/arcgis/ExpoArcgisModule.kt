@@ -401,6 +401,10 @@ class ExpoArcgisModule : Module() {
         view.identify(screenPoint, options, promise)
       }
 
+      AsyncFunction("identifyPopups") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+        view.identifyPopups(screenPoint, options, promise)
+      }
+
       AsyncFunction("retryLoad") { view: ExpoArcgisMapView, promise: Promise ->
         view.retryLoad(promise)
       }
@@ -445,6 +449,10 @@ class ExpoArcgisModule : Module() {
 
       AsyncFunction("identify") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
         view.identify(screenPoint, options, promise)
+      }
+
+      AsyncFunction("identifyPopups") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+        view.identifyPopups(screenPoint, options, promise)
       }
     }
   }

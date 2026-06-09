@@ -153,6 +153,21 @@ class ExpoArcgisSceneView: ExpoView {
     return results.map(serializeIdentifyResult)
   }
 
+  /// Identifies popups under a screen point — evaluates each and returns `{ title, fields }`.
+  func identifyPopups(_ screenPoint: [String: Any], _ options: [String: Any]?) async throws -> [[String: Any]] {
+    guard let proxy = model.proxy else { return [] }
+    let point = CGPoint(
+      x: (screenPoint["x"] as? NSNumber)?.doubleValue ?? 0,
+      y: (screenPoint["y"] as? NSNumber)?.doubleValue ?? 0
+    )
+    let tolerance = (options?["tolerance"] as? NSNumber)?.doubleValue ?? 12
+    let maxResults = (options?["maxResults"] as? NSNumber)?.intValue ?? 1
+    let results = try await proxy.identifyLayers(
+      screenPoint: point, tolerance: tolerance, maximumResultsPerLayer: maxResults
+    )
+    return await serializePopups(results)
+  }
+
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
   }

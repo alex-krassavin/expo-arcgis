@@ -196,6 +196,22 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
+  /** Identifies popups under a screen point — evaluates each and returns `{ title, fields }`. */
+  fun identifyPopups(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
+    val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
+    val y = (screenPoint["y"] as? Number)?.toDouble() ?: 0.0
+    val tolerance = (options?.get("tolerance") as? Number)?.toDouble() ?: 12.0
+    val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
+    scope.launch {
+      try {
+        val results = mapView.identifyLayers(ScreenCoordinate(x, y), tolerance, false, maxResults).getOrThrow()
+        promise.resolve(serializePopups(results))
+      } catch (e: Exception) {
+        promise.reject("IDENTIFY_ERROR", e.message ?: "Identify failed", e)
+      }
+    }
+  }
+
   /** Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result. */
   fun retryLoad(promise: Promise) {
     val map = mapView.map ?: run { promise.resolve(null); return }

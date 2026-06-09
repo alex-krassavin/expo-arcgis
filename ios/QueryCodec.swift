@@ -124,3 +124,23 @@ func serializeIdentifyResult(_ result: IdentifyLayerResult) -> [String: Any] {
     "features": result.geoElements.compactMap { $0 as? Feature }.map(serializeFeature),
   ]
 }
+
+/// Evaluates each identified popup and flattens its fields into `{ title, fields: [{label, value}] }`.
+func serializePopups(_ results: [IdentifyLayerResult]) async -> [[String: Any]] {
+  var output: [[String: Any]] = []
+  for result in results {
+    for popup in result.popups {
+      _ = try? await popup.evaluateExpressions()
+      var fields: [[String: Any]] = []
+      for element in popup.evaluatedElements {
+        if let fieldsElement = element as? FieldsPopupElement {
+          for (label, value) in zip(fieldsElement.labels, fieldsElement.formattedValues) {
+            fields.append(["label": label, "value": value])
+          }
+        }
+      }
+      output.append(["title": popup.title, "fields": fields])
+    }
+  }
+  return output
+}

@@ -9,6 +9,7 @@ import com.arcgismaps.data.StatisticDefinition
 import com.arcgismaps.data.StatisticRecord
 import com.arcgismaps.data.StatisticType
 import com.arcgismaps.data.StatisticsQueryParameters
+import com.arcgismaps.mapping.popup.FieldsPopupElement
 import com.arcgismaps.mapping.view.IdentifyLayerResult
 
 /**
@@ -109,3 +110,23 @@ internal fun serializeIdentifyResult(result: IdentifyLayerResult): Map<String, A
   "layerName" to result.layerContent.name,
   "features" to result.geoElements.filterIsInstance<Feature>().map { serializeFeature(it) },
 )
+
+/** Evaluates each identified popup and flattens its fields into `{ title, fields: [{label, value}] }`. */
+internal suspend fun serializePopups(results: List<IdentifyLayerResult>): List<Map<String, Any?>> {
+  val output = mutableListOf<Map<String, Any?>>()
+  for (result in results) {
+    for (popup in result.popups) {
+      popup.evaluateExpressions()
+      val fields = mutableListOf<Map<String, Any?>>()
+      for (element in popup.evaluatedElements) {
+        if (element is FieldsPopupElement) {
+          element.labels.zip(element.formattedValues).forEach { (label, value) ->
+            fields.add(mapOf("label" to label, "value" to value))
+          }
+        }
+      }
+      output.add(mapOf("title" to popup.title, "fields" to fields))
+    }
+  }
+  return output
+}
