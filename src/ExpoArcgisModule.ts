@@ -341,7 +341,7 @@ declare class ExpoArcgisModule extends NativeModule {
   DistanceMeasurementRef: new (
     props: Pick<DistanceMeasurementProps, 'startLocation' | 'endLocation'>
   ) => DistanceMeasurementRef;
-  UtilityNetworkRef: new (props: { serviceGeodatabaseUrl: string }) => UtilityNetworkRef;
+  // UtilityNetworkRef is constructed via the Extras module (main-module 64 KB budget).
 }
 
 export default requireNativeModule<ExpoArcgisModule>('ExpoArcgis');

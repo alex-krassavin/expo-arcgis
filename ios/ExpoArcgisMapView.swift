@@ -173,6 +173,23 @@ class ExpoArcgisMapView: ExpoView {
     }
   }
 
+  /// Returns the names of the displayed map's bookmarks (e.g. those saved in a loaded web map).
+  func getBookmarkNames() async throws -> [String] {
+    guard let map = model.map else { return [] }
+    try await map.load()
+    return map.bookmarks.map { $0.name }
+  }
+
+  /// Navigates to the named bookmark's viewpoint; returns whether a matching bookmark was found.
+  func setBookmark(_ name: String) async throws -> Bool {
+    guard let map = model.map else { return false }
+    try await map.load()
+    guard let bookmark = map.bookmarks.first(where: { $0.name == name }),
+          let viewpoint = bookmark.viewpoint else { return false }
+    model.setViewpoint(viewpoint)
+    return true
+  }
+
   /// Receives the native map (by reference) from the `<Map>` SharedObject.
   func setMap(_ ref: MapRef?) {
     model.setMap(ref?.map)

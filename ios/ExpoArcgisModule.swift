@@ -361,37 +361,8 @@ public class ExpoArcgisModule: Module {
     }
 
     // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
-    Class(UtilityNetworkRef.self) {
-      Constructor { (props: [String: Any]) -> UtilityNetworkRef in
-        UtilityNetworkRef(serviceGeodatabaseUrl: props["serviceGeodatabaseUrl"] as? String ?? "")
-      }
-      AsyncFunction("load") { (ref: UtilityNetworkRef, map: MapRef) in
-        try await ref.load(map)
-      }
-      Function("describeNetwork") { (ref: UtilityNetworkRef) in ref.describeNetwork() }
-      AsyncFunction("trace") { (ref: UtilityNetworkRef, traceType: String, startingLocations: [[String: Any]]) in
-        try await ref.trace(traceType, startingLocations)
-      }
-      AsyncFunction("traceFromQuery") { (ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String) in
-        try await ref.traceFromQuery(tableName, whereClause, traceType)
-      }
-      AsyncFunction("queryNamedTraceConfigurations") { (ref: UtilityNetworkRef) in
-        try await ref.queryNamedTraceConfigurations()
-      }
-      AsyncFunction("traceWithConfiguration") { (ref: UtilityNetworkRef, configGlobalId: String, tableName: String, whereClause: String) in
-        try await ref.traceWithConfiguration(configGlobalId, tableName, whereClause)
-      }
-      AsyncFunction("associations") { (ref: UtilityNetworkRef, tableName: String, whereClause: String) in
-        try await ref.associations(tableName, whereClause)
-      }
-      Function("getTerminalConfigurations") { (ref: UtilityNetworkRef) in
-        ref.getTerminalConfigurations()
-      }
-      AsyncFunction("getState") { (ref: UtilityNetworkRef) in try await ref.getState() }
-      Function("validateNetworkTopology") { (ref: UtilityNetworkRef, extent: [String: Any]) in
-        ref.validateNetworkTopology(extent)
-      }
-    }
+    // UtilityNetworkRef is registered in ExpoArcgisExtras (the main module's definition() hit the
+    // Android 64 KB method-size limit). SharedObjects are global, so it still attaches to a <Map> here.
 
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
     // (no `Events(...)` element on Swift `Class`; SharedObject.emit + JS addListener suffice).
@@ -444,6 +415,14 @@ public class ExpoArcgisModule: Module {
 
       AsyncFunction("retryLoad") { (view: ExpoArcgisMapView) in
         try await view.retryLoad()
+      }
+
+      AsyncFunction("getBookmarkNames") { (view: ExpoArcgisMapView) in
+        try await view.getBookmarkNames()
+      }
+
+      AsyncFunction("setBookmark") { (view: ExpoArcgisMapView, name: String) in
+        try await view.setBookmark(name)
       }
     }
 

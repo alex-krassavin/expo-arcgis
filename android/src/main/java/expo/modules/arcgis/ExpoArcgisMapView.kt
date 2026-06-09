@@ -231,6 +231,32 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
+  /** Returns the names of the displayed map's bookmarks (e.g. those saved in a loaded web map). */
+  fun getBookmarkNames(promise: Promise) {
+    val map = mapView.map ?: run { promise.resolve(emptyList<String>()); return }
+    scope.launch {
+      map.load()
+        .onSuccess { promise.resolve(map.bookmarks.map { it.name }) }
+        .onFailure { e -> promise.reject("BOOKMARK_ERROR", e.message ?: "Failed to load map", e) }
+    }
+  }
+
+  /** Navigates to the named bookmark's viewpoint; resolves whether a matching bookmark was found. */
+  fun setBookmark(name: String, promise: Promise) {
+    val map = mapView.map ?: run { promise.resolve(false); return }
+    scope.launch {
+      try {
+        map.load().getOrThrow()
+        val viewpoint = map.bookmarks.firstOrNull { it.name == name }?.viewpoint
+          ?: run { promise.resolve(false); return@launch }
+        mapView.setViewpointAnimated(viewpoint, 0.5f)
+        promise.resolve(true)
+      } catch (e: Exception) {
+        promise.reject("BOOKMARK_ERROR", e.message ?: "Failed", e)
+      }
+    }
+  }
+
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // The view-based MapView renders only while observing a lifecycle.

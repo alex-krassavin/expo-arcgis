@@ -8,7 +8,7 @@ import type {
   RouteTrackerHandle,
   TileCacheSizeEstimate,
 } from './ExpoArcgis.types';
-import type { FeatureLayerRef, GeodatabaseRef } from './ExpoArcgisModule';
+import type { FeatureLayerRef, GeodatabaseRef, UtilityNetworkRef } from './ExpoArcgisModule';
 
 /**
  * Third native module (`ExpoArcgisExtras`) hosting the heavier operational-layer SharedObject
@@ -18,6 +18,8 @@ import type { FeatureLayerRef, GeodatabaseRef } from './ExpoArcgisModule';
  */
 declare class ExpoArcgisExtrasModule extends NativeModule {
   FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
+  /** Moved here from the main module (main-module 64 KB budget); SharedObjects are global. */
+  UtilityNetworkRef: new (props: { serviceGeodatabaseUrl: string }) => UtilityNetworkRef;
   estimateTileCacheSize(
     tileServiceUrl: string,
     areaOfInterest: Geometry,

@@ -146,5 +146,38 @@ public class ExpoArcgisExtrasModule: Module {
       Function("getFeatureTableNames") { (ref: GeodatabaseRef) in ref.getFeatureTableNames() }
       Function("getFeatureLayer") { (ref: GeodatabaseRef, tableName: String) in try ref.getFeatureLayer(tableName) }
     }
+
+    // Moved from the main module to stay under the Android 64 KB method-size limit on definition().
+    Class(UtilityNetworkRef.self) {
+      Constructor { (props: [String: Any]) -> UtilityNetworkRef in
+        UtilityNetworkRef(serviceGeodatabaseUrl: props["serviceGeodatabaseUrl"] as? String ?? "")
+      }
+      AsyncFunction("load") { (ref: UtilityNetworkRef, map: MapRef) in
+        try await ref.load(map)
+      }
+      Function("describeNetwork") { (ref: UtilityNetworkRef) in ref.describeNetwork() }
+      AsyncFunction("trace") { (ref: UtilityNetworkRef, traceType: String, startingLocations: [[String: Any]]) in
+        try await ref.trace(traceType, startingLocations)
+      }
+      AsyncFunction("traceFromQuery") { (ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String) in
+        try await ref.traceFromQuery(tableName, whereClause, traceType)
+      }
+      AsyncFunction("queryNamedTraceConfigurations") { (ref: UtilityNetworkRef) in
+        try await ref.queryNamedTraceConfigurations()
+      }
+      AsyncFunction("traceWithConfiguration") { (ref: UtilityNetworkRef, configGlobalId: String, tableName: String, whereClause: String) in
+        try await ref.traceWithConfiguration(configGlobalId, tableName, whereClause)
+      }
+      AsyncFunction("associations") { (ref: UtilityNetworkRef, tableName: String, whereClause: String) in
+        try await ref.associations(tableName, whereClause)
+      }
+      Function("getTerminalConfigurations") { (ref: UtilityNetworkRef) in
+        ref.getTerminalConfigurations()
+      }
+      AsyncFunction("getState") { (ref: UtilityNetworkRef) in try await ref.getState() }
+      Function("validateNetworkTopology") { (ref: UtilityNetworkRef, extent: [String: Any]) in
+        ref.validateNetworkTopology(extent)
+      }
+    }
   }
 }

@@ -336,37 +336,8 @@ class ExpoArcgisModule : Module() {
     }
 
     // Utility network — loaded from a feature service, attached to a <Map>; runs traces.
-    Class(UtilityNetworkRef::class) {
-      Constructor { props: Map<String, Any?> ->
-        UtilityNetworkRef(appContext, props["serviceGeodatabaseUrl"] as? String ?: "")
-      }
-      AsyncFunction("load") Coroutine { ref: UtilityNetworkRef, map: MapRef ->
-        ref.load(map)
-      }
-      Function("describeNetwork") { ref: UtilityNetworkRef -> ref.describeNetwork() }
-      AsyncFunction("trace") Coroutine { ref: UtilityNetworkRef, traceType: String, startingLocations: List<Map<String, Any?>> ->
-        ref.trace(traceType, startingLocations)
-      }
-      AsyncFunction("traceFromQuery") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String ->
-        ref.traceFromQuery(tableName, whereClause, traceType)
-      }
-      AsyncFunction("queryNamedTraceConfigurations") Coroutine { ref: UtilityNetworkRef ->
-        ref.queryNamedTraceConfigurations()
-      }
-      AsyncFunction("traceWithConfiguration") Coroutine { ref: UtilityNetworkRef, configGlobalId: String, tableName: String, whereClause: String ->
-        ref.traceWithConfiguration(configGlobalId, tableName, whereClause)
-      }
-      AsyncFunction("associations") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String ->
-        ref.associations(tableName, whereClause)
-      }
-      Function("getTerminalConfigurations") { ref: UtilityNetworkRef ->
-        ref.getTerminalConfigurations()
-      }
-      AsyncFunction("getState") Coroutine { ref: UtilityNetworkRef -> ref.getState() }
-      Function("validateNetworkTopology") { ref: UtilityNetworkRef, extent: Map<String, Any?> ->
-        ref.validateNetworkTopology(extent)
-      }
-    }
+    // UtilityNetworkRef is registered in ExpoArcgisExtras (this module's definition() hit the
+    // Android 64 KB method-size limit). SharedObjects are global, so it still attaches to a <Map> here.
 
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange.
     Class(GeometryEditorRef::class) {
@@ -419,6 +390,14 @@ class ExpoArcgisModule : Module() {
 
       AsyncFunction("retryLoad") { view: ExpoArcgisMapView, promise: Promise ->
         view.retryLoad(promise)
+      }
+
+      AsyncFunction("getBookmarkNames") { view: ExpoArcgisMapView, promise: Promise ->
+        view.getBookmarkNames(promise)
+      }
+
+      AsyncFunction("setBookmark") { view: ExpoArcgisMapView, name: String, promise: Promise ->
+        view.setBookmark(name, promise)
       }
     }
 

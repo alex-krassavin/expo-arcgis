@@ -144,5 +144,38 @@ class ExpoArcgisExtrasModule : Module() {
       Function("getFeatureTableNames") { ref: GeodatabaseRef -> ref.getFeatureTableNames() }
       Function("getFeatureLayer") { ref: GeodatabaseRef, tableName: String -> ref.getFeatureLayer(tableName) }
     }
+
+    // Moved from the main module to stay under the Android 64 KB method-size limit on definition().
+    Class(UtilityNetworkRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        UtilityNetworkRef(appContext, props["serviceGeodatabaseUrl"] as? String ?: "")
+      }
+      AsyncFunction("load") Coroutine { ref: UtilityNetworkRef, map: MapRef ->
+        ref.load(map)
+      }
+      Function("describeNetwork") { ref: UtilityNetworkRef -> ref.describeNetwork() }
+      AsyncFunction("trace") Coroutine { ref: UtilityNetworkRef, traceType: String, startingLocations: List<Map<String, Any?>> ->
+        ref.trace(traceType, startingLocations)
+      }
+      AsyncFunction("traceFromQuery") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String, traceType: String ->
+        ref.traceFromQuery(tableName, whereClause, traceType)
+      }
+      AsyncFunction("queryNamedTraceConfigurations") Coroutine { ref: UtilityNetworkRef ->
+        ref.queryNamedTraceConfigurations()
+      }
+      AsyncFunction("traceWithConfiguration") Coroutine { ref: UtilityNetworkRef, configGlobalId: String, tableName: String, whereClause: String ->
+        ref.traceWithConfiguration(configGlobalId, tableName, whereClause)
+      }
+      AsyncFunction("associations") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String ->
+        ref.associations(tableName, whereClause)
+      }
+      Function("getTerminalConfigurations") { ref: UtilityNetworkRef ->
+        ref.getTerminalConfigurations()
+      }
+      AsyncFunction("getState") Coroutine { ref: UtilityNetworkRef -> ref.getState() }
+      Function("validateNetworkTopology") { ref: UtilityNetworkRef, extent: Map<String, Any?> ->
+        ref.validateNetworkTopology(extent)
+      }
+    }
   }
 }

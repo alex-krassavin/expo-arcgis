@@ -1,7 +1,9 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { UtilityNetworkHandle, UtilityNetworkProps } from './ExpoArcgis.types';
-import ExpoArcgisModule, { type MapRef, type UtilityNetworkRef } from './ExpoArcgisModule';
+import type { MapRef, UtilityNetworkRef } from './ExpoArcgisModule';
+// UtilityNetworkRef is registered in the Extras native module (main-module 64 KB budget).
+import ExtrasModule from './ExpoArcgisExtrasModule';
 import { useGeoModel } from './contexts';
 
 /**
@@ -14,7 +16,7 @@ export const UtilityNetwork = forwardRef<UtilityNetworkHandle, UtilityNetworkPro
     const map = useGeoModel() as MapRef;
     const ref = useRef<UtilityNetworkRef | undefined>(undefined);
     if (!ref.current) {
-      ref.current = new ExpoArcgisModule.UtilityNetworkRef({ serviceGeodatabaseUrl });
+      ref.current = new ExtrasModule.UtilityNetworkRef({ serviceGeodatabaseUrl });
     }
 
     useEffect(() => {

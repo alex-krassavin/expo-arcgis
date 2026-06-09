@@ -459,6 +459,10 @@ export type MapViewHandle = {
   ): Promise<PopupResult[]>;
   /** Retries loading the map after a failure (e.g. a network outage). Re-fires `onMapLoaded`/`onMapLoadError`. */
   retryLoad(): Promise<void>;
+  /** Names of the displayed map's bookmarks (e.g. those saved in a loaded web map). */
+  getBookmarkNames(): Promise<string[]>;
+  /** Navigates to the named bookmark's viewpoint; resolves to whether a matching bookmark was found. */
+  setBookmark(name: string): Promise<boolean>;
 };
 
 /** Imperative handle exposed by `<SceneView>` via `ref`. */
