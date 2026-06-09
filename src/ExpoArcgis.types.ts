@@ -140,6 +140,16 @@ export type MapViewProps = {
   onTap?: (event: { nativeEvent: TapEventPayload }) => void;
   /** Called on each device-location update (requires `locationDisplay`). */
   onLocationChange?: (event: { nativeEvent: LocationEventPayload }) => void;
+  /** Coordinate-grid overlay (MGRS / UTM / USNG / latitude-longitude). `null` / omitted = none. */
+  grid?: GridConfig | null;
+};
+
+/** A coordinate-grid overlay for a `<MapView>` / `<SceneView>`. */
+export type GridConfig = {
+  /** Grid type: military grid (MGRS), UTM, US National Grid, or latitude-longitude. */
+  type: 'mgrs' | 'utm' | 'usng' | 'latitude-longitude';
+  /** Whether the grid is drawn. Defaults to `true`. */
+  visible?: boolean;
 };
 
 /** Common operational-layer props (subset of ArcGIS layer properties). */
@@ -2047,6 +2057,8 @@ export type SceneViewProps = {
    * - `{ type: 'globe' }` — free globe navigation.
    */
   cameraController?: CameraController | null;
+  /** Coordinate-grid overlay (MGRS / UTM / USNG / latitude-longitude). `null` / omitted = none. */
+  grid?: GridConfig | null;
   /** Sun lighting mode (shadows). Defaults to `off`. */
   sunLighting?: SunLighting;
   /** Atmosphere rendering. Defaults to `horizonOnly`. */

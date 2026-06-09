@@ -16,6 +16,7 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var atmosphereEffect: SceneView.AtmosphereEffect = .horizonOnly
   @Published private(set) var sunDate = Date(timeIntervalSince1970: 1_372_683_600)
   @Published private(set) var cameraController: CameraController?
+  @Published private(set) var grid: ArcGIS.Grid?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
 
@@ -44,6 +45,7 @@ final class SceneViewModel: ObservableObject {
   func setAtmosphereEffect(_ value: SceneView.AtmosphereEffect) { atmosphereEffect = value }
   func setSunDate(_ value: Date) { sunDate = value }
   func setCameraController(_ controller: CameraController?) { cameraController = controller }
+  func setGrid(_ grid: ArcGIS.Grid?) { self.grid = grid }
 }
 
 /// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
@@ -65,6 +67,7 @@ struct ExpoArcgisSceneContainer: View {
           // `.cameraController` returns `SceneView` (keeps the chain). A nil prop falls back to a
           // fresh `GlobeCameraController`, which is the SDK's default navigation controller.
           .cameraController(model.cameraController ?? GlobeCameraController())
+          .grid(model.grid)
           .onSingleTapGesture { screenPoint, scenePoint in
             // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
             guard let scenePoint else { return }
@@ -199,6 +202,9 @@ class ExpoArcgisSceneView: ExpoView {
   func setSunTime(_ ms: Double?) {
     if let ms { model.setSunDate(Date(timeIntervalSince1970: ms / 1000)) }
   }
+
+  /// Sets the coordinate grid overlay from JS (nil clears it).
+  func setGrid(_ dict: [String: Any]?) { model.setGrid(buildGrid(dict)) }
 
   /// Builds and assigns the camera controller from the JS dict (`type`, `target`, `distance`).
   func setCameraController(_ c: [String: Any]?) {

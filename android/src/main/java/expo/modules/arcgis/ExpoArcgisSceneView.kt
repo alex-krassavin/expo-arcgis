@@ -167,6 +167,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     }
   }
 
+  /** Sets the coordinate grid overlay from JS (null hides it). */
+  fun setGrid(config: Map<String, Any?>?) {
+    sceneView.grid = buildGrid(config)
+      ?: com.arcgismaps.mapping.view.LatitudeLongitudeGrid().apply { isVisible = false }
+  }
+
   /** Sun lighting mode (shadows). */
   fun setSunLighting(s: String?) {
     sceneView.sunLighting = when (s) {

@@ -405,6 +405,10 @@ class ExpoArcgisModule : Module() {
         view.setGeometryEditor(ref)
       }
 
+      Prop("grid") { view: ExpoArcgisMapView, grid: Map<String, Any?>? ->
+        view.setGrid(grid)
+      }
+
       AsyncFunction("identify") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
         view.identify(screenPoint, options, promise)
       }
@@ -441,6 +445,10 @@ class ExpoArcgisModule : Module() {
 
       Prop("cameraController") { view: ExpoArcgisSceneView, value: Map<String, Any?>? ->
         view.setCameraController(value)
+      }
+
+      Prop("grid") { view: ExpoArcgisSceneView, grid: Map<String, Any?>? ->
+        view.setGrid(grid)
       }
 
       Prop("sunLighting") { view: ExpoArcgisSceneView, value: String? ->

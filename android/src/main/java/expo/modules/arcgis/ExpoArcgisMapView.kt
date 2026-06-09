@@ -140,6 +140,12 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     scope.launch { mapView.setViewpointAnimated(Viewpoint(lat, lon, scale), 0.5f) }
   }
 
+  /** Sets the coordinate grid overlay from JS (null hides it). */
+  fun setGrid(config: Map<String, Any?>?) {
+    mapView.grid = buildGrid(config)
+      ?: com.arcgismaps.mapping.view.LatitudeLongitudeGrid().apply { isVisible = false }
+  }
+
   /** Enables/configures the device location display from JS (null disables it). */
   fun setLocationDisplay(config: Map<String, Any?>?) {
     val locationDisplay = mapView.locationDisplay
@@ -250,4 +256,18 @@ private fun autoPanMode(mode: String?): LocationDisplayAutoPanMode = when (mode)
   "navigation" -> LocationDisplayAutoPanMode.Navigation
   "compassNavigation" -> LocationDisplayAutoPanMode.CompassNavigation
   else -> LocationDisplayAutoPanMode.Off
+}
+
+/// Builds an ArcGIS coordinate grid from a JS config (`{ type, visible? }`); null = no grid.
+/// Shared by `ExpoArcgisMapView` and `ExpoArcgisSceneView`.
+internal fun buildGrid(config: Map<String, Any?>?): com.arcgismaps.mapping.view.Grid? {
+  val type = config?.get("type") as? String ?: return null
+  val grid: com.arcgismaps.mapping.view.Grid = when (type) {
+    "mgrs" -> com.arcgismaps.mapping.view.MgrsGrid()
+    "utm" -> com.arcgismaps.mapping.view.UtmGrid()
+    "usng" -> com.arcgismaps.mapping.view.UsngGrid()
+    else -> com.arcgismaps.mapping.view.LatitudeLongitudeGrid()
+  }
+  (config["visible"] as? Boolean)?.let { grid.isVisible = it }
+  return grid
 }

@@ -15,6 +15,7 @@ final class MapViewModel: ObservableObject {
   /// Bumped on each location config change so the start `.task(id:)` re-runs (e.g. after a source swap).
   @Published private(set) var locationVersion = 0
   @Published private(set) var geometryEditor: GeometryEditor?
+  @Published private(set) var grid: ArcGIS.Grid?
   /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
   var proxy: MapViewProxy?
 
@@ -51,6 +52,25 @@ final class MapViewModel: ObservableObject {
   func setGeometryEditor(_ editor: GeometryEditor?) {
     geometryEditor = editor
   }
+
+  func setGrid(_ grid: ArcGIS.Grid?) {
+    self.grid = grid
+  }
+}
+
+/// Builds an ArcGIS coordinate `Grid` from a JS config (`{ type, visible? }`); nil clears the grid.
+/// Shared by `<MapView>` and `<SceneView>`.
+func buildGrid(_ dict: [String: Any]?) -> ArcGIS.Grid? {
+  guard let dict, let type = dict["type"] as? String else { return nil }
+  let grid: ArcGIS.Grid
+  switch type {
+  case "mgrs": grid = MGRSGrid()
+  case "utm": grid = UTMGrid()
+  case "usng": grid = USNGGrid()
+  default: grid = LatitudeLongitudeGrid()
+  }
+  if let visible = dict["visible"] as? Bool { grid.isVisible = visible }
+  return grid
 }
 
 /// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
@@ -65,6 +85,7 @@ struct ExpoArcgisMapContainer: View {
           // the SwiftUI modifiers below.
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
+          .grid(model.grid)
           .onSingleTapGesture { screenPoint, mapPoint in
             // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
             // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
@@ -172,6 +193,11 @@ class ExpoArcgisMapView: ExpoView {
           let scale = (vp["scale"] as? NSNumber)?.doubleValue
     else { return }
     model.setViewpoint(Viewpoint(latitude: lat, longitude: lon, scale: scale))
+  }
+
+  /// Sets the coordinate grid overlay from JS (nil clears it).
+  func setGrid(_ dict: [String: Any]?) {
+    model.setGrid(buildGrid(dict))
   }
 
   /// Enables/configures the device location display from JS (nil disables it).
