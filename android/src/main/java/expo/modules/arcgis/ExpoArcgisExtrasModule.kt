@@ -44,6 +44,9 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("addFeatureWithTemplate") Coroutine { ref: FeatureLayerRef, templateName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean? ->
         ref.addFeatureWithTemplate(templateName, attributes, geometry, apply)
       }
+      AsyncFunction("addFeatureWithSubtype") Coroutine { ref: FeatureLayerRef, subtypeName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean? ->
+        ref.addFeatureWithSubtype(subtypeName, attributes, geometry, apply)
+      }
       AsyncFunction("updateFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, changes: Map<String, Any?>, apply: Boolean? ->
         ref.updateFeature(objectId, changes, apply)
       }

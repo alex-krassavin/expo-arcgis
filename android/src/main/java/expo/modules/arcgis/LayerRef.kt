@@ -137,6 +137,26 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
   }
 
   /**
+   * Adds a feature created from the named subtype (sets the subtype field and inherits its
+   * default attribute values), then optionally applies [attributes] on top and sets [geometry].
+   * When [apply] is not `false`, pushes the edit and returns the new object id; pass
+   * `apply = false` for a local-only edit.
+   */
+  suspend fun addFeatureWithSubtype(subtypeName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
+    table.load().getOrThrow()
+    val arcGISTable = table as? ArcGISFeatureTable
+      ?: throw IllegalStateException("addFeatureWithSubtype requires an ArcGIS feature table (not a shapefile or WFS table)")
+    val subtype = arcGISTable.featureSubtypes.firstOrNull { it.name == subtypeName }
+      ?: throw IllegalArgumentException("No feature subtype named '$subtypeName' found in the table")
+    val geom = geometry?.let { geometryFromDict(it) }
+    val feature = arcGISTable.createFeature(subtype, geom)
+    if (attributes != null) applyAttributes(feature, attributes)
+    table.addFeature(feature).getOrThrow()
+    if (apply == false) return null
+    return persistEdits()
+  }
+
+  /**
    * Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
    * pass `apply = false` to make a local-only edit (batch with `applyEdits`).
    */

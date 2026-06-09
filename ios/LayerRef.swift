@@ -105,6 +105,30 @@ public final class FeatureLayerRef: LayerRef {
     return try await persistEdits()
   }
 
+  /// Adds a feature created from the named subtype (sets the subtype field and inherits its
+  /// default attribute values), then optionally applies `attributes` on top and sets `geometry`.
+  /// When `apply` is not `false`, pushes the edit and returns the new object id; pass
+  /// `apply: false` for a local-only edit.
+  func addFeatureWithSubtype(_ subtypeName: String, _ attributes: [String: Any]?, _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {
+    try await table.load()
+    guard let arcGISTable = table as? ArcGISFeatureTable else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 6,
+        userInfo: [NSLocalizedDescriptionKey: "addFeatureWithSubtype requires an ArcGIS feature table (not a shapefile or WFS table)"])
+    }
+    guard let subtype = arcGISTable.featureSubtypes.first(where: { $0.name == subtypeName }) else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 7,
+        userInfo: [NSLocalizedDescriptionKey: "No feature subtype named '\(subtypeName)' found in the table"])
+    }
+    let geom = geometry.flatMap(geometryFromDict)
+    let feature = arcGISTable.makeFeature(subtype: subtype, geometry: geom)
+    if let attributes = attributes { applyAttributes(feature, attributes) }
+    try await table.add(feature)
+    if apply == false { return nil }
+    return try await persistEdits()
+  }
+
   /// Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
   /// pass `apply: false` to make a local-only edit (batch with `applyEdits`).
   func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {

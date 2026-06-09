@@ -40,6 +40,9 @@ public class ExpoArcgisExtrasModule: Module {
       AsyncFunction("addFeatureWithTemplate") { (ref: FeatureLayerRef, templateName: String, attributes: [String: Any]?, geometry: [String: Any]?, apply: Bool?) in
         try await ref.addFeatureWithTemplate(templateName, attributes, geometry, apply)
       }
+      AsyncFunction("addFeatureWithSubtype") { (ref: FeatureLayerRef, subtypeName: String, attributes: [String: Any]?, geometry: [String: Any]?, apply: Bool?) in
+        try await ref.addFeatureWithSubtype(subtypeName, attributes, geometry, apply)
+      }
       AsyncFunction("updateFeature") { (ref: FeatureLayerRef, objectId: Int, changes: [String: Any], apply: Bool?) in
         try await ref.updateFeature(objectId, changes, apply)
       }
