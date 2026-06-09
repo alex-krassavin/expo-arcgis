@@ -62,5 +62,8 @@
   { "slug": "analysis/geoelement-viewshed", "category": "Analysis", "title": "GeoElement viewshed", "description": "A viewshed that follows a moving graphic observer." },
   { "slug": "routing/route-tracker", "category": "Routing", "title": "Route tracker", "description": "Turn-by-turn navigation status from tracked locations." },
   { "slug": "real-time/dynamic-entity-changes", "category": "Real-time", "title": "Entity change events", "description": "React to per-entity received / purged stream events." },
-  { "slug": "editing/branch-versioning", "category": "Editing", "title": "Branch versioning", "description": "List, create and switch service-geodatabase versions (ArcGIS Enterprise)." }
+  { "slug": "editing/branch-versioning", "category": "Editing", "title": "Branch versioning", "description": "List, create and switch service-geodatabase versions (ArcGIS Enterprise)." },
+  { "slug": "basics/grid", "category": "Basics", "title": "Coordinate grid", "description": "Overlay an MGRS / UTM / USNG / lat-long coordinate grid." },
+  { "slug": "basics/bookmarks", "category": "Basics", "title": "Bookmarks", "description": "Declare named saved viewpoints and navigate to them." },
+  { "slug": "symbols/multilayer-symbol", "category": "Symbols & rendering", "title": "Multilayer symbol", "description": "A point symbol composed from picture-marker symbol layers." }
 ]
