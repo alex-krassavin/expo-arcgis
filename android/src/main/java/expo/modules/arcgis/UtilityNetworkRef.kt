@@ -121,7 +121,7 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
       mapOf(
         "name" to config.name,
         "terminals" to config.terminals.map { t ->
-          mapOf("name" to t.name, "isUpstream" to t.isUpstreamTerminal())
+          mapOf("name" to t.name, "isUpstream" to t.isUpstreamTerminal)
         },
       )
     }
