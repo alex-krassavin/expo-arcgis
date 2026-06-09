@@ -12,7 +12,6 @@ import type {
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
-  GeoElementLineOfSightProps,
   GeoElementViewshedProps,
   Geometry,
   RelatedFeaturesResult,

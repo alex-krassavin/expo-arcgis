@@ -114,6 +114,10 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   geocode(searchText: string, params: Record<string, unknown>): Promise<GeocodeResult[]>;
   reverseGeocode(point: Geometry, params: Record<string, unknown>): Promise<GeocodeResult[]>;
   suggest(searchText: string, params: Record<string, unknown>): Promise<SuggestResult[]>;
+  geocodeSuggestion(
+    suggestionId: number,
+    params: Record<string, unknown>
+  ): Promise<GeocodeResult[]>;
 
   // Routing — backing function for the `router` namespace (see ./router).
   solveRoute(stops: RouteStop[], params: Record<string, unknown>): Promise<RouteResult>;

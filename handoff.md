@@ -794,7 +794,20 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 - **`geometryEngine.withZ` + `withM`** (geometry-модуль +2, влезло). Swift `GeometryEngine.makeGeometry(from:z:)`/`(from:m:)` (НЕ createWithZ!); Kotlin `createWithZOrNull`/`createWithMOrNull`. DEFER: withZAndM.
 - **Верификация:** TS · Android (clean) · iOS · example tsc · expo export ✅. **Неопубликовано (post-0.1.3): батч №4(4)+№5(4)+№6(3) = 11 фич → 0.1.4.**
 
-**Агенты ИТОГО (6 заходов, 23 фичи интегрировано):** фиксов 2·2·0·0·1·0. Отсев пре-чеком/агентом: 2 дубля (filter, distance-measurement) + 1 SDK-пробел (blendMode). **Вывод: depth-агенты очень эффективны на prop/codec/extend; «лёгкий» чистый depth по сути ВЫЧЕРПАН — остаток требует либо main-модульной возни/64KB-ребаланса, либо нетривиальной нативной логики (UN subnetwork, offline overrides, editing attribute-rules/versioning, observation-history), либо упирается в пробелы SDK 300.**
+**Агенты ИТОГО (6 заходов, 23 фичи интегрировано):** фиксов 2·2·0·0·1·0. Отсев пре-чеком/агентом: 2 дубля (filter, distance-measurement) + 1 SDK-пробел (blendMode). depth-агенты очень эффективны на prop/codec/extend.
+
+## Tier-A батч №7 (фоновые агенты, 6 фич) ✅ — 2 фикса
+Весь оставшийся «лёгкий» Tier-A одним заходом (6 агентов). **64KB выдержал даже main +новый Class +новый AsyncFunction + geometry +2 — ребаланс НЕ понадобился** (cherry-pick всех 6 авто-смержился):
+- **renderer `visualVariables`** (size/color/rotation/opacity по атрибуту). **КЛЮЧЕВОЕ: типизированных VisualVariable-классов НЕТ в SDK 300** (подтвердил §18). Агент → **JSON round-trip**: `renderer.toJSON()` → инъекция `visualVariables` в ArcGIS-REST-формате (`sizeInfo/colorInfo/rotationInfo/opacityInfo`, цвет hex→[R,G,B,A]) → `fromJSON()`/`fromJsonOrNull()` (нативный C++-парсер их понимает). Graceful fallback. Android: `org.json.JSONObject(Map)` shallow → рекурсивные хелперы. Чистый кодек.
+- **GeoElement line-of-sight** (`<LineOfSight observerGraphic={} targetGraphic={}>`). `ExploratoryGeoElementLineOfSight(observer,target)` — Kotlin в `com.arcgismaps.analysis.interactive`! Зеркало GeoElement-viewshed; construction-only; targetVisibility StateFlow/AsyncStream из базы. Новый Class в main (влез).
+- **`geometryEngine.withZAndM`** — geometry +1. Swift `makeGeometry(from:z:m:)`, Kotlin `createWithZAndMOrNull`.
+- **geoprocessing raster-output + local-file dataFile** — `GeoprocessingRaster` extends `GeoprocessingDataFile` (url+inputFilePath); локальный файл Kotlin `create()`+`inputFilePath` / Swift `init(url:fileURLWithPath:)`+`inputFileURL`. `is/as` порядко-зависимы.
+- **`DynamicEntityLayer.queryObservations(entityId, max)`** — `queryDynamicEntities(withTrackIDs:)` → `observations(max)` (снапшот in-memory, newest-first). main +AsyncFn (влез). **Гоча/DEFER: `entityId` тут = track-id СТРОКА (поле entityIdField), а `onDynamicEntityChange` отдаёт числовой `entity.id` — рассинхрон; стоит добавить track-id в payload события.**
+- **geocode SuggestResult round-trip** (`suggest`→`suggestionId`→`geocodeSuggestion(id)`). `SuggestRegistry` (синглтон, сброс на каждый suggest, 0-based id, хранит и URL локатора) → `LocatorTask.geocode(forSuggestResult:)`. geometry +1 (влез).
+- **МОИ 2 ФИКСА:** (1) `geocodeSuggestion` не добавлен в TS-интерфейс `ExpoArcgisGeometryModule` → добавил; (2) лишний импорт `GeoElementLineOfSightProps` в ExpoArcgisModule.ts (LoS-ctor без props) → убрал.
+- **Верификация:** TS · Android (clean, 64KB ок) · iOS · example tsc · expo export ✅. **Неопубликовано (post-0.1.3): №4(4)+№5(4)+№6(3)+№7(6) = 17 фич → 0.1.4.**
+
+**ИТОГ агентов (7 заходов, 29 фич):** фиксов 2·2·0·0·1·0·2. **Tier-A ВЫЧЕРПАН.** Остаток backlog (Tier B/C) — нетривиальная нативная логика (UN subnetwork, offline overrides, editing attribute-rules/versioning/transactions, dictionary renderer, multilayer/CIM) или main-модульные View-фичи (bookmarks, timeExtent, grid) — НЕ агентятся «на потоке», нужен план + ручная работа.
 
 **Наблюдение по агентам (4 захода, 16 фич):** заходы 1-2 — по 2 моих фикса; заходы 3-4 — **0 фиксов**. Чистые prop/codec/extend-depth-фичи (без новых нативных registration'ов) — идеальны для агентов: и сами пишутся верно, и нет 64KB-возни. Сложности остаются мне: выбор/пре-чек (грепнуть native, чтоб не дублировать), 64KB-архитектура, редкие SwiftUI-тонкости.
 
