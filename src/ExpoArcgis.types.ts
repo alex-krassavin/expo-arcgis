@@ -168,6 +168,42 @@ export type FeatureTableSource =
   | { type: 'shapefile'; path: string };
 
 /**
+ * Styles a `<FeatureLayer>` with a `DictionarySymbolStyle` (military / emergency symbology).
+ *
+ * Provide either `styleName` (a web-style name hosted on ArcGIS Online, e.g. `"mil2525d"`) or
+ * `portalItemUrl` (a direct URL whose `id=` query parameter is used as the portal item id).
+ * At least one must be set; `portalItemUrl` takes precedence when both are provided.
+ *
+ * The style is loaded asynchronously via the SDK's `Loadable` mechanism. The layer's renderer is
+ * updated once the load completes. If the load fails the renderer is left unchanged and an error
+ * is printed to the native log.
+ *
+ * @example
+ * ```tsx
+ * // web style by name — resolves against ArcGIS Online (anonymous)
+ * <FeatureLayer url={...} dictionaryRenderer={{ styleName: 'mil2525d' }} />
+ *
+ * // explicit portal item URL (item id extracted automatically)
+ * <FeatureLayer url={...} dictionaryRenderer={{ portalItemUrl: 'https://www.arcgis.com/home/item.html?id=c78b149a1d52414682c86a5feeb13d30' }} />
+ * ```
+ */
+export type DictionaryRendererProp = {
+  /**
+   * Web-style name (e.g. `"mil2525d"`, `"mil2525c"`, `"app6b"`).
+   * Resolved against ArcGIS Online (`https://www.arcgis.com`) as an anonymous portal item.
+   * `portalItemUrl` takes precedence when both are set.
+   */
+  styleName?: string;
+  /**
+   * Full URL to a portal item hosting the dictionary symbol style.
+   * The item id is extracted from the `id=` query-string parameter, e.g.:
+   * `https://www.arcgis.com/home/item.html?id=c78b149a1d52414682c86a5feeb13d30`
+   * Takes precedence over `styleName` when both are provided.
+   */
+  portalItemUrl?: string;
+};
+
+/**
  * Props for a `<FeatureLayer>` — mirror the native `FeatureLayer`. Provide either `url`
  * (feature-service shorthand) or an explicit `source`.
  */
@@ -178,6 +214,12 @@ export type FeatureLayerProps = LayerProps & {
   source?: FeatureTableSource;
   /** Overrides the layer's symbology (simple / unique-value / class-breaks). */
   renderer?: Renderer;
+  /**
+   * Styles the layer with a `DictionarySymbolStyle` for military / emergency symbology
+   * (MIL-STD-2525, APP-6, etc.). Loaded asynchronously; the renderer updates once ready.
+   * Mutually exclusive with `renderer` — set one or the other.
+   */
+  dictionaryRenderer?: DictionaryRendererProp;
   /** Whether the layer's labels are drawn. */
   labelsEnabled?: boolean;
   /** Label rules applied to the layer's features. */

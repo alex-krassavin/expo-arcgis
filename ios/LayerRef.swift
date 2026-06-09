@@ -217,6 +217,13 @@ public final class FeatureLayerRef: LayerRef {
     if changed.keys.contains("renderer") {
       featureLayer.renderer = (changed["renderer"] as? [String: Any]).flatMap(buildRenderer)
     }
+    if changed.keys.contains("dictionaryRenderer") {
+      if let dict = changed["dictionaryRenderer"] as? [String: Any] {
+        applyDictionaryRenderer(featureLayer, dict)
+      } else {
+        featureLayer.renderer = nil
+      }
+    }
     if let labelsEnabled = changed["labelsEnabled"] as? Bool {
       featureLayer.labelsAreEnabled = labelsEnabled
     }
@@ -259,6 +266,51 @@ public final class FeatureLayerRef: LayerRef {
     if changed.keys.contains("refreshInterval") {
       let seconds = (changed["refreshInterval"] as? NSNumber)?.doubleValue ?? 0
       featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil
+    }
+  }
+}
+
+/// Builds a `PortalItem` from a `dictionaryRenderer` prop dict:
+///   - `portalItemUrl`: extract item id from the `id=` query parameter; use the URL's host as portal.
+///   - `styleName`: treat the value as the portal item id on ArcGIS Online (anonymous).
+/// Returns `nil` when neither key is present or the input is unusable.
+private func portalItemFromDictionaryRendererDict(_ dict: [String: Any]) -> PortalItem? {
+  // portalItemUrl takes precedence — extract item id from `id=` query parameter
+  if let portalItemUrl = dict["portalItemUrl"] as? String,
+    let url = URL(string: portalItemUrl),
+    let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+    let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value,
+    let itemIdValue = Item.ID(rawValue: itemId)
+  {
+    // Derive portal base URL from scheme+host (e.g. https://www.arcgis.com)
+    var portalComponents = URLComponents()
+    portalComponents.scheme = url.scheme ?? "https"
+    portalComponents.host = url.host ?? "www.arcgis.com"
+    let portalURL = portalComponents.url ?? URL(string: "https://www.arcgis.com")!
+    let portal = Portal(url: portalURL, connection: .anonymous)
+    return PortalItem(portal: portal, id: itemIdValue)
+  }
+  // styleName: treat as portal item id on ArcGIS Online (anonymous)
+  if let styleName = dict["styleName"] as? String,
+    let itemIdValue = Item.ID(rawValue: styleName)
+  {
+    let portal = Portal(url: URL(string: "https://www.arcgis.com")!, connection: .anonymous)
+    return PortalItem(portal: portal, id: itemIdValue)
+  }
+  return nil
+}
+
+/// Loads a `DictionarySymbolStyle` asynchronously and sets it as the layer's renderer.
+/// If the style fails to load, the layer renderer is left unchanged (error is logged to console).
+private func applyDictionaryRenderer(_ featureLayer: FeatureLayer, _ dict: [String: Any]) {
+  guard let portalItem = portalItemFromDictionaryRendererDict(dict) else { return }
+  let style = DictionarySymbolStyle(portalItem: portalItem)
+  Task { [weak featureLayer] in
+    do {
+      try await style.load()
+      featureLayer?.renderer = DictionaryRenderer(dictionarySymbolStyle: style)
+    } catch {
+      print("[ExpoArcgis] DictionarySymbolStyle load failed: \(error)")
     }
   }
 }

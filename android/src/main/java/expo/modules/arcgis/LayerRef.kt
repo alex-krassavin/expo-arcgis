@@ -17,11 +17,15 @@ import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.data.OgcFeatureCollectionTable
 import com.arcgismaps.data.WfsFeatureTable
+import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.layers.AnnotationLayer
 import com.arcgismaps.mapping.layers.DisplayFilter
 import com.arcgismaps.mapping.layers.ManualDisplayFilterDefinition
 import com.arcgismaps.mapping.layers.ScaleDisplayFilterDefinition
 import com.arcgismaps.mapping.layers.ScaleRangeDisplayFilter
+import com.arcgismaps.mapping.symbology.DictionaryRenderer
+import com.arcgismaps.mapping.symbology.DictionarySymbolStyle
+import com.arcgismaps.portal.Portal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -76,6 +80,7 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
 class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
   private val table: FeatureTable = featureTable(props)
   override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(table)
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
   /** Returns the features matching `query` (all features when null). Loads attributes in full. */
   suspend fun queryFeatures(query: Map<String, Any?>?): List<Map<String, Any?>> {
@@ -230,11 +235,62 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
     return serviceTable.applyEdits().getOrThrow().firstOrNull()?.objectId
   }
 
+  /**
+   * Builds a [PortalItem] from a `dictionaryRenderer` prop dict. Prefers `portalItemUrl`
+   * (item id extracted from the `id=` query parameter) over `styleName` (treated as an item id
+   * on ArcGIS Online). Returns `null` when neither key resolves to a usable item id.
+   */
+  private fun portalItemFromDictionaryRendererDict(dict: Map<*, *>): PortalItem? {
+    // portalItemUrl takes precedence — extract item id from `id=` query parameter
+    val portalItemUrl = dict["portalItemUrl"] as? String
+    if (portalItemUrl != null) {
+      val uri = android.net.Uri.parse(portalItemUrl)
+      val itemId = uri.getQueryParameter("id")
+      if (!itemId.isNullOrEmpty()) {
+        // Derive portal base URL from scheme + authority (e.g. https://www.arcgis.com)
+        val portalBase = "${uri.scheme ?: "https"}://${uri.authority ?: "www.arcgis.com"}"
+        val portal = Portal(portalBase, Portal.Connection.Anonymous)
+        return PortalItem(portal, itemId)
+      }
+    }
+    // styleName: treat as portal item id on ArcGIS Online (anonymous)
+    val styleName = dict["styleName"] as? String
+    if (!styleName.isNullOrEmpty()) {
+      val portal = Portal("https://www.arcgis.com", Portal.Connection.Anonymous)
+      return PortalItem(portal, styleName)
+    }
+    return null
+  }
+
+  /**
+   * Launches an async task that loads [DictionarySymbolStyle] from the provided prop dict and
+   * sets a [DictionaryRenderer] on the layer. If the load fails, the renderer is left unchanged.
+   */
+  private fun applyDictionaryRenderer(dict: Map<*, *>) {
+    val portalItem = portalItemFromDictionaryRendererDict(dict) ?: return
+    val style = DictionarySymbolStyle(portalItem)
+    scope.launch {
+      style.load().onFailure { e ->
+        android.util.Log.e("ExpoArcgis", "DictionarySymbolStyle load failed: $e")
+        return@launch
+      }
+      layer.renderer = DictionaryRenderer(style)
+    }
+  }
+
   override fun applyProps(changed: Map<String, Any?>) {
     applyCommonProps(changed)
     if (changed.containsKey("renderer")) {
       val renderer = (changed["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
       if (renderer != null) layer.renderer = renderer else layer.resetRenderer()
+    }
+    if (changed.containsKey("dictionaryRenderer")) {
+      val dict = changed["dictionaryRenderer"] as? Map<*, *>
+      if (dict != null) {
+        applyDictionaryRenderer(dict)
+      } else {
+        layer.resetRenderer()
+      }
     }
     (changed["labelsEnabled"] as? Boolean)?.let { layer.labelsEnabled = it }
     if (changed.containsKey("labels")) {
