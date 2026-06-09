@@ -5,6 +5,7 @@ module.exports = {
     name: 'expo-arcgis-example',
     slug: 'expo-arcgis-example',
     version: '1.0.0',
+    scheme: 'expoarcgisexample',
     orientation: 'portrait',
     newArchEnabled: true,
     ios: {
@@ -14,6 +15,7 @@ module.exports = {
       package: 'com.example.expoarcgis',
     },
     plugins: [
+      'expo-router',
       [
         'expo-arcgis',
         {

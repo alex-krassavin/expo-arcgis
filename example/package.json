@@ -2,7 +2,7 @@
   "name": "expo-arcgis-example",
   "version": "1.0.0",
   "private": true,
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -12,9 +12,15 @@
   "dependencies": {
     "expo": "^56.0.7",
     "expo-arcgis": "file:..",
+    "expo-constants": "~56.0.17",
+    "expo-linking": "~56.0.13",
+    "expo-router": "~56.2.9",
     "react": "19.2.3",
     "react-native": "0.85.3",
-    "react-native-safe-area-context": "~5.7.0"
+    "react-native-gesture-handler": "~2.31.1",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
