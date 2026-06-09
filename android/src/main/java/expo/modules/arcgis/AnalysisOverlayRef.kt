@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.analysis.interactive.Analysis
+import com.arcgismaps.analysis.interactive.ExploratoryGeoElementViewshed
 import com.arcgismaps.analysis.interactive.ExploratoryLineOfSightTargetVisibility
 import com.arcgismaps.analysis.interactive.ExploratoryLocationDistanceMeasurement
 import com.arcgismaps.analysis.interactive.ExploratoryLocationLineOfSight
@@ -65,6 +66,42 @@ class ViewshedRef(appContext: AppContext, props: Map<String, Any?>) : AnalysisRe
         "location" -> analysisPoint(value)?.let { viewshed.location = it }
         "heading" -> (value as? Number)?.toDouble()?.let { viewshed.heading = it }
         "pitch" -> (value as? Number)?.toDouble()?.let { viewshed.pitch = it }
+        "horizontalAngle" -> (value as? Number)?.toDouble()?.let { viewshed.horizontalAngle = it }
+        "verticalAngle" -> (value as? Number)?.toDouble()?.let { viewshed.verticalAngle = it }
+        "minDistance" -> viewshed.minDistance = (value as? Number)?.toDouble()
+        "maxDistance" -> viewshed.maxDistance = (value as? Number)?.toDouble()
+        "frustumOutlineVisible" -> (value as? Boolean)?.let { viewshed.frustumOutlineVisible = it }
+      }
+    }
+  }
+}
+
+/**
+ * SharedObject wrapping an [ExploratoryGeoElementViewshed] — a viewshed whose observer tracks a
+ * [GraphicRef]'s native [Graphic] (a [GeoElement]) as it moves.
+ */
+class GeoElementViewshedRef(appContext: AppContext, graphic: GraphicRef, props: Map<String, Any?>) : AnalysisRef(appContext) {
+  private val viewshed = ExploratoryGeoElementViewshed(
+    graphic.graphic,
+    numOr(props["horizontalAngle"], 45.0),
+    numOr(props["verticalAngle"], 45.0),
+    numOr(props["headingOffset"], 0.0),
+    numOr(props["pitchOffset"], 0.0),
+    (props["minDistance"] as? Number)?.toDouble(),
+    (props["maxDistance"] as? Number)?.toDouble(),
+  )
+
+  override val analysis: Analysis get() = viewshed
+
+  init {
+    applyProps(props)
+  }
+
+  fun applyProps(changed: Map<String, Any?>) {
+    changed.forEach { (key, value) ->
+      when (key) {
+        "headingOffset" -> (value as? Number)?.toDouble()?.let { viewshed.headingOffset = it }
+        "pitchOffset" -> (value as? Number)?.toDouble()?.let { viewshed.pitchOffset = it }
         "horizontalAngle" -> (value as? Number)?.toDouble()?.let { viewshed.horizontalAngle = it }
         "verticalAngle" -> (value as? Number)?.toDouble()?.let { viewshed.verticalAngle = it }
         "minDistance" -> viewshed.minDistance = (value as? Number)?.toDouble()

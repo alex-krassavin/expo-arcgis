@@ -319,6 +319,16 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: ViewshedRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
+    // GeoElement-anchored viewshed — observer tracks a Graphic as it moves.
+    Class(GeoElementViewshedRef.self) {
+      Constructor { (graphic: GraphicRef, props: [String: Any]) -> GeoElementViewshedRef in
+        GeoElementViewshedRef(graphic: graphic, props: props)
+      }
+      Function("applyProps") { (ref: GeoElementViewshedRef, changed: [String: Any]) in
+        ref.applyProps(changed)
+      }
+    }
+
     // Line of sight — emits onTargetVisibilityChange (SharedObject.emit + JS addListener).
     Class(LineOfSightRef.self) {
       Constructor { (props: [String: Any]) -> LineOfSightRef in LineOfSightRef(props: props) }

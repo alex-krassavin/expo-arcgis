@@ -1130,6 +1130,28 @@ export type ViewshedProps = {
   frustumOutlineVisible?: boolean;
 };
 
+/**
+ * Props for a GeoElement-anchored `<Viewshed>` — the viewshed follows a `<Graphic>` as it moves.
+ * Mirrors the native `ExploratoryGeoElementViewshed`. 3D only (rendered in a `<SceneView>`).
+ * Use instead of `ViewshedProps` when you want the observer to track a graphic's position.
+ */
+export type GeoElementViewshedProps = {
+  /** Horizontal field-of-view angle, in degrees (0–360). */
+  horizontalAngle: number;
+  /** Vertical field-of-view angle, in degrees (0–180). */
+  verticalAngle: number;
+  /** Heading offset from the graphic's heading, in degrees. */
+  headingOffset: number;
+  /** Pitch offset from the graphic's pitch, in degrees. */
+  pitchOffset: number;
+  /** Near clipping distance from the observer, in meters. */
+  minDistance?: number;
+  /** Far clipping distance from the observer, in meters. */
+  maxDistance?: number;
+  /** Whether to draw the viewshed frustum outline. Defaults to `false`. */
+  frustumOutlineVisible?: boolean;
+};
+
 /** Whether a line-of-sight target is visible from the observer. */
 export type TargetVisibility = 'visible' | 'obstructed' | 'unknown';
 

@@ -79,6 +79,50 @@ public final class ViewshedRef: AnalysisRef {
   }
 }
 
+/// SharedObject wrapping an `ExploratoryGeoElementViewshed` — a viewshed whose observer
+/// tracks a `Graphic` (GeoElement) as it moves. Constructed with a `GraphicRef` and view props.
+public final class GeoElementViewshedRef: AnalysisRef {
+  private let viewshed: ExploratoryGeoElementViewshed
+
+  init(graphic: GraphicRef, props: [String: Any]) {
+    let viewshed = ExploratoryGeoElementViewshed(
+      geoElement: graphic.graphic,
+      horizontalAngle: (props["horizontalAngle"] as? NSNumber)?.doubleValue ?? 45,
+      verticalAngle: (props["verticalAngle"] as? NSNumber)?.doubleValue ?? 45,
+      headingOffset: (props["headingOffset"] as? NSNumber)?.doubleValue ?? 0,
+      pitchOffset: (props["pitchOffset"] as? NSNumber)?.doubleValue ?? 0,
+      minDistance: (props["minDistance"] as? NSNumber)?.doubleValue,
+      maxDistance: (props["maxDistance"] as? NSNumber)?.doubleValue
+    )
+    self.viewshed = viewshed
+    super.init(analysis: viewshed)
+    applyProps(props)
+  }
+
+  func applyProps(_ changed: [String: Any]) {
+    for (key, value) in changed {
+      switch key {
+      case "headingOffset":
+        if let n = value as? NSNumber { viewshed.headingOffset = n.doubleValue }
+      case "pitchOffset":
+        if let n = value as? NSNumber { viewshed.pitchOffset = n.doubleValue }
+      case "horizontalAngle":
+        if let n = value as? NSNumber { viewshed.horizontalAngle = n.doubleValue }
+      case "verticalAngle":
+        if let n = value as? NSNumber { viewshed.verticalAngle = n.doubleValue }
+      case "minDistance":
+        viewshed.minDistance = (value as? NSNumber)?.doubleValue
+      case "maxDistance":
+        viewshed.maxDistance = (value as? NSNumber)?.doubleValue
+      case "frustumOutlineVisible":
+        if let b = value as? Bool { viewshed.frustumOutlineIsVisible = b }
+      default:
+        break
+      }
+    }
+  }
+}
+
 /// SharedObject wrapping an `ExploratoryLocationLineOfSight` — observer→target visibility.
 /// Streams the target's visibility back to JS via `onTargetVisibilityChange`.
 public final class LineOfSightRef: AnalysisRef {

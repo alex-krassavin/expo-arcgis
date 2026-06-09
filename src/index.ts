@@ -7,6 +7,7 @@ export type {
   LayerRef,
   GraphicRef,
   GraphicsOverlayRef,
+  GeoElementViewshedRef,
   JobRef,
 } from './ExpoArcgisModule';
 

@@ -11,6 +11,7 @@ import type {
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
+  GeoElementViewshedProps,
   Geometry,
   RelatedFeaturesResult,
   GraphicProps,
@@ -125,6 +126,12 @@ export declare class AnalysisRef<
 
 /** Reference to a native exploratory viewshed (`ExploratoryLocationViewshed`). */
 export declare class ViewshedRef extends AnalysisRef {}
+
+/**
+ * Reference to a native GeoElement-anchored viewshed (`ExploratoryGeoElementViewshed`).
+ * The observer tracks the graphic's position as it moves, so the viewshed follows the graphic.
+ */
+export declare class GeoElementViewshedRef extends AnalysisRef {}
 
 /** Events emitted by a `LineOfSightRef` as the target's visibility from the observer changes. */
 type LineOfSightEvents = {
@@ -276,6 +283,7 @@ declare class ExpoArcgisModule extends NativeModule {
   GeometryEditorRef: new () => GeometryEditorRef;
   AnalysisOverlayRef: new () => AnalysisOverlayRef;
   ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
+  GeoElementViewshedRef: new (graphic: GraphicRef, props: GeoElementViewshedProps) => GeoElementViewshedRef;
   LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
   DistanceMeasurementRef: new (
     props: Pick<DistanceMeasurementProps, 'startLocation' | 'endLocation'>
