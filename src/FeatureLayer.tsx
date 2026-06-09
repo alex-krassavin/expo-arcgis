@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { FeatureLayerHandle, FeatureLayerProps } from './ExpoArcgis.types';
-import ExpoArcgisGeometryModule from './ExpoArcgisGeometryModule';
+import ExpoArcgisExtrasModule from './ExpoArcgisExtrasModule';
 import type { FeatureLayerRef } from './ExpoArcgisModule';
 import { useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
@@ -17,7 +17,7 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
     const model = useGeoModel();
     const ref = useRef<FeatureLayerRef | undefined>(undefined);
     if (!ref.current) {
-      ref.current = new ExpoArcgisGeometryModule.FeatureLayerRef(props);
+      ref.current = new ExpoArcgisExtrasModule.FeatureLayerRef(props);
     }
 
     const prev = usePrevious(props);

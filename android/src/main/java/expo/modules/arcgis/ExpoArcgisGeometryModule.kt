@@ -140,57 +140,8 @@ class ExpoArcgisGeometryModule : Module() {
       Function("addLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.addLayer(layer) }
       Function("removeLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.removeLayer(layer) }
     }
-    // FeatureLayerRef lives here (not on the main module) so neither definition() exceeds the 64 KB limit.
-    Class(FeatureLayerRef::class) {
-      Constructor { props: Map<String, Any?> ->
-        FeatureLayerRef(appContext, props).also { it.applyProps(props) }
-      }
-      Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
-        ref.applyProps(changed)
-      }
-      AsyncFunction("queryFeatures") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryFeatures(query)
-      }
-      AsyncFunction("queryFeatureCount") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryFeatureCount(query)
-      }
-      AsyncFunction("queryExtent") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryExtent(query)
-      }
-      AsyncFunction("queryStatistics") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?> ->
-        ref.queryStatistics(query)
-      }
-      AsyncFunction("queryFeatureTemplates") Coroutine { ref: FeatureLayerRef ->
-        ref.queryFeatureTemplates()
-      }
-      AsyncFunction("addFeature") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?>?, apply: Boolean? ->
-        ref.addFeature(attributes, geometry, apply)
-      }
-      AsyncFunction("updateFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, changes: Map<String, Any?>, apply: Boolean? ->
-        ref.updateFeature(objectId, changes, apply)
-      }
-      AsyncFunction("deleteFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, apply: Boolean? ->
-        ref.deleteFeature(objectId, apply)
-      }
-      AsyncFunction("applyEdits") Coroutine { ref: FeatureLayerRef ->
-        ref.applyEdits()
-      }
-      AsyncFunction("undoLocalEdits") Coroutine { ref: FeatureLayerRef ->
-        ref.undoLocalEdits()
-      }
-      AsyncFunction("queryRelatedFeatures") Coroutine { ref: FeatureLayerRef, objectId: Long ->
-        ref.queryRelatedFeatures(objectId)
-      }
-      AsyncFunction("queryAttachments") Coroutine { ref: FeatureLayerRef, objectId: Long ->
-        ref.queryAttachments(objectId)
-      }
-      AsyncFunction("addAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, name: String, contentType: String, dataBase64: String ->
-        ref.addAttachment(objectId, name, contentType, dataBase64)
-      }
-      AsyncFunction("fetchAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long ->
-        ref.fetchAttachment(objectId, attachmentId)
-      }
-    }
+    // FeatureLayerRef moved to the third module (ExpoArcgisExtras) to keep this module's
+    // definition() under the 64 KB limit. SharedObjects are global, so it stays cross-module.
     // In-memory FeatureCollectionLayer — built from a client-side schema + features (no service).
     Class(FeatureCollectionLayerRef::class) {
       Constructor { props: Map<String, Any?> ->
@@ -212,11 +163,11 @@ class ExpoArcgisGeometryModule : Module() {
 
     // Auth — persistent credential store (survives app restarts via Android encrypted storage).
     // Registered here (not in the main module) because the main module is at the JVM 64 KB limit.
-    AsyncFunction("enablePersistentCredentialStore") Coroutine {
+    AsyncFunction("enablePersistentCredentialStore") Coroutine { ->
       val store = ArcGISCredentialStore.createWithPersistence().getOrThrow()
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore = store
     }
-    AsyncFunction("clearCredentialStore") Coroutine {
+    AsyncFunction("clearCredentialStore") Coroutine { ->
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 

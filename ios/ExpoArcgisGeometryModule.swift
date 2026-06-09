@@ -144,59 +144,8 @@ public class ExpoArcgisGeometryModule: Module {
       Function("addLayer") { (ref: GroupLayerRef, layer: LayerRef) in ref.addLayer(layer) }
       Function("removeLayer") { (ref: GroupLayerRef, layer: LayerRef) in ref.removeLayer(layer) }
     }
-    // FeatureLayerRef lives here (not on the main module) so neither definition() exceeds the 64 KB limit.
-    Class(FeatureLayerRef.self) {
-      Constructor { (props: [String: Any]) -> FeatureLayerRef in
-        let ref = FeatureLayerRef(props: props)
-        ref.applyProps(props)
-        return ref
-      }
-      Function("applyProps") { (ref: FeatureLayerRef, changed: [String: Any]) in
-        ref.applyProps(changed)
-      }
-      AsyncFunction("queryFeatures") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryFeatures(query)
-      }
-      AsyncFunction("queryFeatureCount") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryFeatureCount(query)
-      }
-      AsyncFunction("queryExtent") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryExtent(query)
-      }
-      AsyncFunction("queryStatistics") { (ref: FeatureLayerRef, query: [String: Any]) in
-        try await ref.queryStatistics(query)
-      }
-      AsyncFunction("queryFeatureTemplates") { (ref: FeatureLayerRef) in
-        try await ref.queryFeatureTemplates()
-      }
-      AsyncFunction("addFeature") { (ref: FeatureLayerRef, attributes: [String: Any], geometry: [String: Any]?, apply: Bool?) in
-        try await ref.addFeature(attributes, geometry, apply)
-      }
-      AsyncFunction("updateFeature") { (ref: FeatureLayerRef, objectId: Int, changes: [String: Any], apply: Bool?) in
-        try await ref.updateFeature(objectId, changes, apply)
-      }
-      AsyncFunction("deleteFeature") { (ref: FeatureLayerRef, objectId: Int, apply: Bool?) in
-        try await ref.deleteFeature(objectId, apply)
-      }
-      AsyncFunction("applyEdits") { (ref: FeatureLayerRef) in
-        try await ref.applyEdits()
-      }
-      AsyncFunction("undoLocalEdits") { (ref: FeatureLayerRef) in
-        try await ref.undoLocalEdits()
-      }
-      AsyncFunction("queryRelatedFeatures") { (ref: FeatureLayerRef, objectId: Int) in
-        try await ref.queryRelatedFeatures(objectId)
-      }
-      AsyncFunction("queryAttachments") { (ref: FeatureLayerRef, objectId: Int) in
-        try await ref.queryAttachments(objectId)
-      }
-      AsyncFunction("addAttachment") { (ref: FeatureLayerRef, objectId: Int, name: String, contentType: String, dataBase64: String) in
-        try await ref.addAttachment(objectId, name, contentType, dataBase64)
-      }
-      AsyncFunction("fetchAttachment") { (ref: FeatureLayerRef, objectId: Int, attachmentId: Int) in
-        try await ref.fetchAttachment(objectId, attachmentId)
-      }
-    }
+    // FeatureLayerRef moved to the third module (ExpoArcgisExtras) to keep this module's
+    // definition() under the 64 KB limit. SharedObjects are global, so it stays cross-module.
     // In-memory FeatureCollectionLayer — built from a client-side schema + features (no service).
     Class(FeatureCollectionLayerRef.self) {
       Constructor { (props: [String: Any]) -> FeatureCollectionLayerRef in
