@@ -180,6 +180,19 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
     if let height = (s["height"] as? NSNumber)?.doubleValue { fill.height = height }
     fill.outline = outline(s["outline"])
     return fill
+  case "distance-composite-scene":
+    let composite = DistanceCompositeSceneSymbol()
+    let rangeList = s["ranges"] as? [[String: Any]] ?? []
+    for rd in rangeList {
+      guard let sym = (rd["symbol"] as? [String: Any]).flatMap(buildSymbol) else { continue }
+      let range = DistanceSymbolRange(
+        symbol: sym,
+        minDistance: (rd["minDistance"] as? NSNumber)?.doubleValue,
+        maxDistance: (rd["maxDistance"] as? NSNumber)?.doubleValue
+      )
+      composite.addRange(range)
+    }
+    return composite
   default:
     return nil
   }

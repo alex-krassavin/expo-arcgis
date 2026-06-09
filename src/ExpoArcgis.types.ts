@@ -1289,6 +1289,30 @@ export type PictureFillSymbol = {
   outline?: Stroke;
 };
 
+/**
+ * One range within a `DistanceCompositeSceneSymbol` — the `symbol` rendered while the camera
+ * distance to the graphic falls within `[minDistance, maxDistance]`. Use `0` for `maxDistance`
+ * to make the range unbounded (no far limit). Mirrors the native `DistanceSymbolRange`.
+ */
+export type DistanceSymbolRange = {
+  /** The symbol drawn while within this distance band. */
+  symbol: Symbol;
+  /** Near camera-distance limit, in meters. */
+  minDistance?: number;
+  /** Far camera-distance limit, in meters. `0` / omitted = unbounded. */
+  maxDistance?: number;
+};
+
+/**
+ * A 3D composite symbol that swaps its appearance based on camera distance.
+ * Each range specifies a `symbol` visible within a `[minDistance, maxDistance]` band.
+ * Mirrors the native `DistanceCompositeSceneSymbol`. Only valid in a `<SceneView>`.
+ */
+export type DistanceCompositeSceneSymbol = {
+  type: 'distance-composite-scene';
+  ranges: DistanceSymbolRange[];
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol =
   | SimpleMarkerSymbol
@@ -1297,7 +1321,8 @@ export type Symbol =
   | TextSymbol
   | SimpleMarkerSceneSymbol
   | PictureMarkerSymbol
-  | PictureFillSymbol;
+  | PictureFillSymbol
+  | DistanceCompositeSceneSymbol;
 
 /** A renderer that draws every feature/graphic with the same `symbol`. */
 export type SimpleRenderer = { type: 'simple'; symbol: Symbol };

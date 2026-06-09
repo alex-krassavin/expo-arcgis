@@ -15,6 +15,8 @@ import com.arcgismaps.mapping.symbology.SimpleFillSymbol
 import com.arcgismaps.mapping.symbology.SimpleFillSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
+import com.arcgismaps.mapping.symbology.DistanceCompositeSceneSymbol
+import com.arcgismaps.mapping.symbology.DistanceSymbolRange
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
 import com.arcgismaps.mapping.symbology.PictureFillSymbol
@@ -195,6 +197,21 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
       (s["height"] as? Number)?.toFloat()?.let { height = it }
       outline = outlineOf(s["outline"])
     }
+  }
+  "distance-composite-scene" -> {
+    val composite = DistanceCompositeSceneSymbol()
+    val rangeList = s["ranges"] as? List<*> ?: emptyList<Any>()
+    for (rd in rangeList) {
+      val rdMap = rd as? Map<*, *> ?: continue
+      val sym = (rdMap["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: continue
+      val range = DistanceSymbolRange(
+        sym,
+        (rdMap["minDistance"] as? Number)?.toDouble(),
+        (rdMap["maxDistance"] as? Number)?.toDouble(),
+      )
+      composite.ranges.add(range)
+    }
+    composite
   }
   else -> null
 }
