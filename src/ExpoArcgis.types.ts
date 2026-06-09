@@ -190,6 +190,21 @@ export type FeatureLayerProps = LayerProps & {
    */
   displayFilter?: { whereClause: string; name?: string } | null;
   /**
+   * Activates different where-clause filters at different map scales — client-side, no server
+   * round-trip. Each entry covers a `[minScale, maxScale]` range; `0` means unbounded.
+   * Maps to `ScaleDisplayFilterDefinition` on both platforms.
+   * Set to `null` or omit to show all features.
+   *
+   * @example
+   * ```tsx
+   * scaleDisplayFilter={[
+   *   { minScale: 0, maxScale: 100000, whereClause: "TYPE = 'major'" },  // zoomed out
+   *   { minScale: 100000, maxScale: 0,  whereClause: "1=1" },            // zoomed in
+   * ]}
+   * ```
+   */
+  scaleDisplayFilter?: { minScale?: number; maxScale?: number; whereClause: string }[] | null;
+  /**
    * How often (in seconds) the layer automatically re-fetches its features from the service.
    * `0` or omitted disables auto-refresh. Maps to `refreshInterval` (milliseconds) on Android
    * and `refreshInterval: TimeInterval?` (seconds) on iOS.

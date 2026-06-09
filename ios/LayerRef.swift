@@ -241,6 +241,21 @@ public final class FeatureLayerRef: LayerRef {
         featureLayer.displayFilterDefinition = nil
       }
     }
+    if changed.keys.contains("scaleDisplayFilter") {
+      if let entries = changed["scaleDisplayFilter"] as? [Any], !entries.isEmpty {
+        let scaleFilters: [ScaleRangeDisplayFilter] = entries.compactMap { entry in
+          guard let dict = entry as? [String: Any],
+            let whereClause = dict["whereClause"] as? String
+          else { return nil }
+          let minScale = (dict["minScale"] as? NSNumber).map { $0.doubleValue == 0 ? nil : $0.doubleValue } ?? nil
+          let maxScale = (dict["maxScale"] as? NSNumber).map { $0.doubleValue == 0 ? nil : $0.doubleValue } ?? nil
+          return ScaleRangeDisplayFilter(name: "", whereClause: whereClause, minScale: minScale, maxScale: maxScale)
+        }
+        featureLayer.displayFilterDefinition = ScaleDisplayFilterDefinition(filters: scaleFilters)
+      } else {
+        featureLayer.displayFilterDefinition = nil
+      }
+    }
     if changed.keys.contains("refreshInterval") {
       let seconds = (changed["refreshInterval"] as? NSNumber)?.doubleValue ?? 0
       featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil

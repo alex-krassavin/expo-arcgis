@@ -20,6 +20,8 @@ import com.arcgismaps.data.WfsFeatureTable
 import com.arcgismaps.mapping.layers.AnnotationLayer
 import com.arcgismaps.mapping.layers.DisplayFilter
 import com.arcgismaps.mapping.layers.ManualDisplayFilterDefinition
+import com.arcgismaps.mapping.layers.ScaleDisplayFilterDefinition
+import com.arcgismaps.mapping.layers.ScaleRangeDisplayFilter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -251,6 +253,21 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
         val name = filterDict["name"] as? String ?: ""
         val filter = DisplayFilter.Companion.createWithNameAndWhereClause(name, whereClause)
         layer.displayFilterDefinition = ManualDisplayFilterDefinition(filter, listOf(filter))
+      } else {
+        layer.displayFilterDefinition = null
+      }
+    }
+    if (changed.containsKey("scaleDisplayFilter")) {
+      val entries = changed["scaleDisplayFilter"] as? List<*>
+      if (!entries.isNullOrEmpty()) {
+        val scaleFilters = entries.mapNotNull { entry ->
+          val dict = entry as? Map<*, *> ?: return@mapNotNull null
+          val whereClause = dict["whereClause"] as? String ?: return@mapNotNull null
+          val minScale = (dict["minScale"] as? Number)?.toDouble()?.takeIf { it != 0.0 }
+          val maxScale = (dict["maxScale"] as? Number)?.toDouble()?.takeIf { it != 0.0 }
+          ScaleRangeDisplayFilter("", whereClause, minScale, maxScale)
+        }
+        layer.displayFilterDefinition = ScaleDisplayFilterDefinition(scaleFilters)
       } else {
         layer.displayFilterDefinition = null
       }
