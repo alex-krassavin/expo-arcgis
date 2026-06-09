@@ -219,6 +219,16 @@ public class ExpoArcgisGeometryModule: Module {
       Function("applyProps") { (ref: GeoPackageLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
+    // Auth — persistent credential store (survives app restarts via iOS Keychain).
+    // Registered here (not in the main module) because the main module is at the JVM 64 KB limit.
+    AsyncFunction("enablePersistentCredentialStore") { () -> Void in
+      let store = try await ArcGISCredentialStore.makePersistent(access: .afterFirstUnlock)
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = store
+    }
+    AsyncFunction("clearCredentialStore") { () -> Void in
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
       try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)

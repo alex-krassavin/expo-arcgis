@@ -1,5 +1,7 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.ArcGISEnvironment
+import com.arcgismaps.httpcore.authentication.ArcGISCredentialStore
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -206,6 +208,16 @@ class ExpoArcgisGeometryModule : Module() {
         ).also { it.applyProps(props) }
       }
       Function("applyProps") { ref: GeoPackageLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+
+    // Auth — persistent credential store (survives app restarts via Android encrypted storage).
+    // Registered here (not in the main module) because the main module is at the JVM 64 KB limit.
+    AsyncFunction("enablePersistentCredentialStore") Coroutine {
+      val store = ArcGISCredentialStore.createWithPersistence().getOrThrow()
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = store
+    }
+    AsyncFunction("clearCredentialStore") Coroutine {
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.

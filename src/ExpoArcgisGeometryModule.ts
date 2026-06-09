@@ -151,6 +151,11 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     downloadName: string
   ): Promise<JobRef<OfflineTileResult>>;
 
+  // Auth — persistent credential store.  Registered here (not on the main module) to keep both
+  // native `definition()` methods under the Android JVM 64 KB limit.
+  enablePersistentCredentialStore(): Promise<void>;
+  clearCredentialStore(): Promise<void>;
+
   // Extended operational layers — registered here (not on the main module) to keep both native
   // `definition()` methods under the Android JVM 64 KB limit. SharedObjects cross modules freely.
   AnnotationLayerRef: new (props: AnnotationLayerProps) => LayerRef;

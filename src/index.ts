@@ -16,6 +16,8 @@ export {
   signOut,
   signInWithOAuth,
   setAppCredential,
+  enablePersistentCredentialStore,
+  clearCredentialStore,
   type OpenAuthSession,
 } from './auth';
 export { Map } from './Map';

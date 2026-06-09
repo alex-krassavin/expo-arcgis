@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import Module from './ExpoArcgisModule';
+import GeometryModule from './ExpoArcgisGeometryModule';
 
 /**
  * Stores a login for token-secured services (e.g. a utility-network feature service). Uses the
@@ -71,4 +72,35 @@ export async function signInWithOAuth(
   } else {
     throw new Error('OAuth sign-in was cancelled');
   }
+}
+
+/**
+ * Swaps the in-memory credential store for a **persistent** one backed by the platform secure
+ * storage (iOS Keychain / Android EncryptedSharedPreferences). After this call any credential
+ * added to the store — via `setTokenCredential`, `signInWithOAuth`, `setAppCredential`, or the
+ * automatic challenge-handler — will survive app restarts.
+ *
+ * Call once on app start, before any secured resource is loaded. Awaiting it ensures the swap
+ * is complete before the SDK attempts to make any authenticated request.
+ *
+ * Registered on the geometry module (not the main module) to stay within the Android JVM 64 KB
+ * method-size limit.
+ */
+export function enablePersistentCredentialStore(): Promise<void> {
+  return GeometryModule.enablePersistentCredentialStore();
+}
+
+/**
+ * Removes all credentials from the current store (persistent or in-memory) and resets it to a
+ * fresh in-memory store. Combines the effect of `signOut` (clears runtime credentials) and
+ * additionally discards any credentials persisted on the device. Call this when the user
+ * explicitly logs out and you want to ensure no credentials are left on disk.
+ *
+ * Note: this does **not** revoke OAuth tokens on the server — it only removes them locally.
+ *
+ * Registered on the geometry module (not the main module) to stay within the Android JVM 64 KB
+ * method-size limit.
+ */
+export function clearCredentialStore(): Promise<void> {
+  return GeometryModule.clearCredentialStore();
 }
