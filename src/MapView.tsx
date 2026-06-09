@@ -11,7 +11,12 @@ import {
 } from 'react';
 
 import type { MapViewHandle, MapViewProps } from './ExpoArcgis.types';
-import type { MapRef, GraphicsOverlayRef, GeometryEditorRef } from './ExpoArcgisModule';
+import type {
+  MapRef,
+  GraphicsOverlayRef,
+  GeometryEditorRef,
+  ImageOverlayRef,
+} from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
 
 type NativeMapViewProps = MapViewProps & {
@@ -19,6 +24,8 @@ type NativeMapViewProps = MapViewProps & {
   map: MapRef;
   /** Graphics overlays declared as `<GraphicsOverlay>` children, passed by reference. */
   graphicsOverlays: GraphicsOverlayRef[];
+  /** Image overlays declared as `<ImageOverlay>` children, passed by reference. */
+  imageOverlays: ImageOverlayRef[];
   /** Interactive geometry editor declared as a `<GeometryEditor>` child, passed by reference. */
   geometryEditor?: GeometryEditorRef | null;
   /** Ref to the native view, whose `identify` async function is callable through it. */
@@ -39,11 +46,16 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
     const nativeRef = useRef<any>(null);
 
     const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
+    const [imageOverlays, setImageOverlays] = useState<ImageOverlayRef[]>([]);
     const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
     const host = useMemo<GeoViewHost>(
       () => ({
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
         remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
+        addImageOverlay: (overlay) =>
+          setImageOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
+        removeImageOverlay: (overlay) =>
+          setImageOverlays((prev) => prev.filter((o) => o !== overlay)),
         setGeometryEditor: (editor) => setGeometryEditor(editor),
         // Visual analyses (viewshed / line-of-sight) are 3D only — no-op on a 2D map.
         addAnalysisOverlay: () => {},
@@ -61,6 +73,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         ref={nativeRef}
         map={map}
         graphicsOverlays={overlays}
+        imageOverlays={imageOverlays}
         geometryEditor={geometryEditor}
         {...props}
       >

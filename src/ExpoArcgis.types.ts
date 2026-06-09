@@ -993,6 +993,16 @@ export type Envelope = {
   spatialReference?: SpatialReference;
 };
 
+/** Props for the `<ImageOverlay>` component — a georeferenced image displayed on a `<MapView>`. */
+export type ImageOverlayProps = {
+  /** Local image file path to display (e.g. a downloaded or bundled PNG/JPEG). */
+  imagePath: string;
+  /** The geographic extent (envelope) the image is stretched to fill. */
+  extent: Envelope;
+  /** Overlay opacity, 0–1. Defaults to `1`. */
+  opacity?: number;
+};
+
 /**
  * A geometry value. The `type` discriminator mirrors the ArcGIS web API
  * (`"point"` / `"multipoint"` / `"polyline"` / `"polygon"` / `"envelope"`) and

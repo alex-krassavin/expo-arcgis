@@ -50,6 +50,9 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
           setAnalysisOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
         removeAnalysisOverlay: (overlay) =>
           setAnalysisOverlays((prev) => prev.filter((o) => o !== overlay)),
+        // Image overlays are bound to <MapView> (2D) only.
+        addImageOverlay: () => {},
+        removeImageOverlay: () => {},
       }),
       []
     );

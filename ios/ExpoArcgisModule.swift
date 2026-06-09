@@ -389,6 +389,10 @@ public class ExpoArcgisModule: Module {
         view.setGraphicsOverlays(refs)
       }
 
+      Prop("imageOverlays") { (view: ExpoArcgisMapView, refs: [ImageOverlayRef]) in
+        view.setImageOverlays(refs)
+      }
+
       Prop("viewpoint") { (view: ExpoArcgisMapView, viewpoint: [String: Any]?) in
         view.setViewpoint(viewpoint)
       }

@@ -180,5 +180,14 @@ class ExpoArcgisExtrasModule : Module() {
         ref.validateNetworkTopology(extent)
       }
     }
+
+    // Georeferenced image overlay (added to a <MapView> via <ImageOverlay>).
+    Class(ImageOverlayRef::class) {
+      Constructor { ImageOverlayRef(appContext) }
+      Function("setFrame") { ref: ImageOverlayRef, imagePath: String, extent: Map<String, Any?>, opacity: Double? ->
+        ref.setFrame(imagePath, extent, opacity)
+      }
+      Function("setOpacity") { ref: ImageOverlayRef, opacity: Double -> ref.setOpacity(opacity) }
+    }
   }
 }

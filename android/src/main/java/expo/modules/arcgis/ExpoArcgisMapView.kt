@@ -131,6 +131,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     mapView.graphicsOverlays.addAll(refs.map { it.overlay })
   }
 
+  fun setImageOverlays(refs: List<ImageOverlayRef>) {
+    mapView.imageOverlays.clear()
+    mapView.imageOverlays.addAll(refs.map { it.overlay })
+  }
+
   /** Animates the view to a runtime viewpoint sent from JS. */
   fun setViewpoint(vp: Map<String, Any?>?) {
     vp ?: return

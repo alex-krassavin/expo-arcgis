@@ -7,6 +7,7 @@ import SwiftUI
 final class MapViewModel: ObservableObject {
   @Published private(set) var map: Map?
   @Published private(set) var graphicsOverlays: [GraphicsOverlay] = []
+  @Published private(set) var imageOverlays: [ImageOverlay] = []
   @Published private(set) var viewpoint: Viewpoint?
   /// Bumped on each viewpoint change so the SwiftUI `.task(id:)` re-runs and re-animates.
   @Published private(set) var viewpointVersion = 0
@@ -30,6 +31,10 @@ final class MapViewModel: ObservableObject {
 
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
     graphicsOverlays = overlays
+  }
+
+  func setImageOverlays(_ overlays: [ImageOverlay]) {
+    imageOverlays = overlays
   }
 
   func setViewpoint(_ viewpoint: Viewpoint) {
@@ -80,7 +85,7 @@ struct ExpoArcgisMapContainer: View {
   var body: some View {
     if let map = model.map {
       MapViewReader { proxy in
-        MapView(map: map, graphicsOverlays: model.graphicsOverlays)
+        MapView(map: map, graphicsOverlays: model.graphicsOverlays, imageOverlays: model.imageOverlays)
           // `locationDisplay(_:)` / `geometryEditor(_:)` return `MapView`, so they must precede
           // the SwiftUI modifiers below.
           .locationDisplay(model.locationDisplay)
@@ -200,6 +205,10 @@ class ExpoArcgisMapView: ExpoView {
   /// Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`.
   func setGraphicsOverlays(_ refs: [GraphicsOverlayRef]) {
     model.setGraphicsOverlays(refs.map { $0.overlay })
+  }
+
+  func setImageOverlays(_ refs: [ImageOverlayRef]) {
+    model.setImageOverlays(refs.map { $0.overlay })
   }
 
   /// Animates the view to a runtime viewpoint sent from JS.

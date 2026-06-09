@@ -5,6 +5,7 @@ import type {
   GeoModelRef,
   GeometryEditorRef,
   GraphicsOverlayRef,
+  ImageOverlayRef,
 } from './ExpoArcgisModule';
 
 /**
@@ -39,8 +40,17 @@ export type AnalysisOverlayHost = {
   removeAnalysisOverlay(overlay: AnalysisOverlayRef): void;
 };
 
+/** Lets an `<ImageOverlay>` register itself with the nearest `<MapView>` (no-op on `<SceneView>`). */
+export type ImageOverlayHost = {
+  addImageOverlay(overlay: ImageOverlayRef): void;
+  removeImageOverlay(overlay: ImageOverlayRef): void;
+};
+
 /** What a `<MapView>` / `<SceneView>` exposes to its children. */
-export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost;
+export type GeoViewHost = GraphicsOverlayHost &
+  GeometryEditorHost &
+  AnalysisOverlayHost &
+  ImageOverlayHost;
 
 /** The nearest geo view — a `<MapView>` or `<SceneView>`. Overlays / editors attach here. */
 export const GeoViewContext = createContext<GeoViewHost | undefined>(undefined);

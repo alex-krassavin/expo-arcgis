@@ -10,6 +10,7 @@ import type {
   DynamicEntityLayerProps,
   CreateVersionParams,
   EditResult,
+  Envelope,
   ServiceVersionInfo,
   Feature,
   FeatureLayerProps,
@@ -159,6 +160,12 @@ export declare class GraphicsOverlayRef extends SharedObject {
   addGraphic(graphic: GraphicRef): void;
   removeGraphic(graphic: GraphicRef): void;
   setRenderer(renderer: Renderer | null): void;
+}
+
+/** Reference to a native `ImageOverlay`. Built via the `<ImageOverlay>` component (extras module). */
+export declare class ImageOverlayRef extends SharedObject {
+  setFrame(imagePath: string, extent: Envelope, opacity?: number): void;
+  setOpacity(opacity: number): void;
 }
 
 /** Events emitted by a `GeometryEditorRef` as the user sketches. */
