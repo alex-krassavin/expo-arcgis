@@ -5,6 +5,7 @@ import com.arcgismaps.data.ArcGISFeature
 import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ServiceGeodatabase
+import com.arcgismaps.geometry.Envelope
 import com.arcgismaps.mapping.layers.FeatureLayer
 import com.arcgismaps.mapping.layers.SelectionMode
 import com.arcgismaps.utilitynetworks.UtilityAssociationType
@@ -24,6 +25,7 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  */
 class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUrl: String) :
   SharedObject(appContext) {
+  private val appCtx = appContext
   private var network: UtilityNetwork? = null
 
   /** Operational feature layers created for the network's tables, keyed by table name (for selection). */
@@ -110,6 +112,28 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     val associations = network.getAssociations(element, null).getOrThrow()
     val kinds = associations.map { associationKindName(it.associationType) }.toSet().toList()
     return mapOf("count" to associations.size, "kinds" to kinds)
+  }
+
+  /** Returns the network's topology state — dirty areas, errors, and whether topology is enabled. */
+  suspend fun getState(): Map<String, Any?> {
+    val network = this.network ?: return emptyMap()
+    val state = network.getState().getOrThrow()
+    return mapOf(
+      "hasDirtyAreas" to state.hasDirtyAreas,
+      "hasErrors" to state.hasErrors,
+      "networkTopologyEnabled" to state.isNetworkTopologyEnabled,
+    )
+  }
+
+  /** Validates the network topology over `extent` (an envelope); returns a job to track / cancel. */
+  fun validateNetworkTopology(extent: Map<String, Any?>): JobRef? {
+    val network = this.network ?: return null
+    val envelope = geometryFromDict(extent) as? Envelope ?: return null
+    val job = network.validateNetworkTopology(envelope)
+    return JobRef(appCtx, job) {
+      job.result().getOrThrow()
+      mapOf("validated" to true)
+    }
   }
 
   // region Helpers

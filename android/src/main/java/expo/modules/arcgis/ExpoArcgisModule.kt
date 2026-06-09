@@ -328,6 +328,10 @@ class ExpoArcgisModule : Module() {
       AsyncFunction("associations") Coroutine { ref: UtilityNetworkRef, tableName: String, whereClause: String ->
         ref.associations(tableName, whereClause)
       }
+      AsyncFunction("getState") Coroutine { ref: UtilityNetworkRef -> ref.getState() }
+      Function("validateNetworkTopology") { ref: UtilityNetworkRef, extent: Map<String, Any?> ->
+        ref.validateNetworkTopology(extent)
+      }
     }
 
     // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange.

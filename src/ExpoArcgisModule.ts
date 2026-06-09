@@ -33,6 +33,7 @@ import type {
   UtilityAssociationSummary,
   UtilityElementDescriptor,
   UtilityNamedTraceConfiguration,
+  UtilityNetworkState,
   UtilityTraceResult,
   VectorTileLayerProps,
   ViewshedProps,
@@ -202,6 +203,10 @@ export declare class UtilityNetworkRef extends SharedObject {
   ): Promise<UtilityTraceResult>;
   /** Returns the associations of a queried feature. */
   associations(tableName: string, whereClause: string): Promise<UtilityAssociationSummary>;
+  /** Returns the network's topology state (dirty areas, errors, topology enabled). */
+  getState(): Promise<UtilityNetworkState>;
+  /** Validates the network topology over `extent`; returns a job to run / track / cancel. */
+  validateNetworkTopology(extent: Geometry): JobRef<{ validated: boolean }>;
 }
 
 /** Events emitted by a `JobRef` as a long-running job progresses. */

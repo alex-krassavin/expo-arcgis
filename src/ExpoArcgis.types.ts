@@ -1,5 +1,7 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
+import type { JobRef } from './ExpoArcgisModule';
+
 /**
  * Esri basemap styles available out of the box. These map to the native
  * `BasemapStyle` (Kotlin) / `Basemap.Style` (Swift).
@@ -961,9 +963,27 @@ export type UtilityAssociationSummary = {
 };
 
 /** Imperative handle exposed by `<UtilityNetwork>` via `ref`. */
+/** Topology state of a utility network (from `getState`). */
+export type UtilityNetworkState = {
+  /** Whether the network has dirty areas pending validation. */
+  hasDirtyAreas: boolean;
+  /** Whether the network topology has errors. */
+  hasErrors: boolean;
+  /** Whether network topology is enabled. */
+  networkTopologyEnabled: boolean;
+};
+
 export type UtilityNetworkHandle = {
   /** Returns metadata about the loaded network (its network-source names). */
   describeNetwork(): { networkSources: string[] };
+  /** Returns the network's topology state — dirty areas, errors, and whether topology is enabled. */
+  getState(): Promise<UtilityNetworkState>;
+  /**
+   * Validates the network topology over `extent` (an envelope geometry). Returns a `JobRef` —
+   * call `.result()` to run it (and track `onProgress`), or `.cancel()`. After it completes, read
+   * `getState()` to see whether errors or dirty areas remain.
+   */
+  validateNetworkTopology(extent: Geometry): JobRef<{ validated: boolean }>;
   /** Runs a trace of `traceType` from the given starting locations (explicit element descriptors). */
   trace(
     traceType: UtilityTraceType,

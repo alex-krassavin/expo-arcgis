@@ -96,6 +96,27 @@ public final class UtilityNetworkRef: SharedObject {
     return ["count": associations.count, "kinds": Array(kinds)]
   }
 
+  /// Returns the network's topology state — dirty areas, errors, and whether topology is enabled.
+  func getState() async throws -> [String: Any] {
+    guard let network else { return [:] }
+    let state = try await network.state
+    return [
+      "hasDirtyAreas": state.hasDirtyAreas,
+      "hasErrors": state.hasErrors,
+      "networkTopologyEnabled": state.networkTopologyIsEnabled,
+    ]
+  }
+
+  /// Validates the network topology over `extent` (an envelope); returns a job to track / cancel.
+  func validateNetworkTopology(_ extent: [String: Any]) -> JobRef? {
+    guard let network, let envelope = geometryFromDict(extent) as? Envelope else { return nil }
+    let job = network.validateNetworkTopology(forExtent: envelope)
+    return JobRef(job: job) {
+      _ = try await job.result.get()
+      return ["validated": true]
+    }
+  }
+
   // MARK: - Helpers
 
   private func queryStartElement(_ network: UtilityNetwork, _ tableName: String, _ whereClause: String) async throws -> UtilityElement? {
