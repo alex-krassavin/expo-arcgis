@@ -4,12 +4,15 @@ import com.arcgismaps.data.FeatureCollectionTable
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.tasks.geoprocessing.GeoprocessingTask
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingBoolean
+import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDataFile
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDate
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDouble
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingFeatures
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingLinearUnit
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingLong
+import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingMultiValue
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingParameter
+import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingParameterType
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingString
 import expo.modules.kotlin.AppContext
 import java.time.Instant
@@ -59,6 +62,28 @@ private fun buildGeoprocessingParameter(d: Map<*, *>): GeoprocessingParameter? =
       ?.mapNotNull { (it as? Map<*, *>)?.let { m -> geometryFromDict(m) } }
       ?.map { Graphic().apply { geometry = it } } ?: emptyList()
     GeoprocessingFeatures(FeatureCollectionTable(graphics, emptyList()))
+  }
+  "multiValue" -> {
+    // JS numbers → GeoprocessingDouble, JS strings → GeoprocessingString.
+    val rawValues = d["values"] as? List<*> ?: emptyList<Any>()
+    val elements: List<GeoprocessingParameter> = rawValues.mapNotNull { v ->
+      when (v) {
+        is Number -> GeoprocessingDouble(v.toDouble())
+        is String -> GeoprocessingString(v)
+        else -> null
+      }
+    }
+    // Use the element type of the first item to determine the multiValue's parameterType;
+    // fall back to GeoprocessingParameterType.GeoprocessingString when the list is empty.
+    val paramType = if (elements.firstOrNull() is GeoprocessingDouble)
+      GeoprocessingParameterType.GeoprocessingDouble
+    else
+      GeoprocessingParameterType.GeoprocessingString
+    GeoprocessingMultiValue(paramType, elements)
+  }
+  "dataFile" -> {
+    val url = d["url"] as? String ?: return null
+    GeoprocessingDataFile.Companion.createWithUrl(url)
   }
   else -> null
 }

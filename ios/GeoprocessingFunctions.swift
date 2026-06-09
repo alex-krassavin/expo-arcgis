@@ -58,6 +58,26 @@ private func buildGeoprocessingParameter(_ d: [String: Any]) -> GeoprocessingPar
     let geometries = (d["geometries"] as? [[String: Any]] ?? []).compactMap(geometryFromDict)
     let table = FeatureCollectionTable(geoElements: geometries.map { Graphic(geometry: $0) }, fields: [])
     return GeoprocessingFeatures(features: table)
+  case "multiValue":
+    let rawValues = d["values"] as? [Any] ?? []
+    // Build elements: JS numbers → GeoprocessingDouble, JS strings → GeoprocessingString.
+    // NSNumber coming from the bridge is used for both; Bool is excluded (its objCType is "c").
+    let elements: [GeoprocessingParameter] = rawValues.compactMap { v in
+      if let n = v as? NSNumber, !(v is Bool), String(cString: n.objCType) != "c" {
+        return GeoprocessingDouble(value: n.doubleValue)
+      } else if let s = v as? String {
+        return GeoprocessingString(value: s)
+      }
+      return nil
+    }
+    // `parameterType` is the metatype of the element kind; fall back to GeoprocessingString.
+    let paramType: GeoprocessingParameter.Type = elements.first is GeoprocessingDouble
+      ? GeoprocessingDouble.self
+      : GeoprocessingString.self
+    return GeoprocessingMultiValue(parameterType: paramType, values: elements)
+  case "dataFile":
+    guard let urlStr = d["url"] as? String, let url = URL(string: urlStr) else { return nil }
+    return GeoprocessingDataFile(url: url)
   default:
     return nil
   }

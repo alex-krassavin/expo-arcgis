@@ -1090,7 +1090,11 @@ export type GeoprocessingInput =
   | { type: 'boolean'; value: boolean }
   | { type: 'date'; value: number }
   | { type: 'linearUnit'; value: number; unit?: LinearUnit }
-  | { type: 'features'; geometries: Geometry[] };
+  | { type: 'features'; geometries: Geometry[] }
+  /** An array of homogeneous strings or numbers — maps to `GeoprocessingMultiValue`. */
+  | { type: 'multiValue'; values: (string | number)[] }
+  /** A remote file input (URL) — maps to `GeoprocessingDataFile`. */
+  | { type: 'dataFile'; url: string };
 
 /** Result of `geoprocessor.execute`. Mirrors the native `GeoprocessingResult`. */
 export type GeoprocessingResult = {
