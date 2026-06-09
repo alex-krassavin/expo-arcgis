@@ -5,10 +5,12 @@ import type {
   ConnectionStatus,
   DistanceMeasurementProps,
   DynamicEntityLayerProps,
+  EditResult,
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
   Geometry,
+  RelatedFeaturesResult,
   GraphicProps,
   LineOfSightProps,
   QueryParameters,
@@ -62,9 +64,16 @@ export declare class FeatureLayerRef extends LayerRef {
   queryExtent(query?: QueryParameters): Promise<Geometry | null>;
   queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
   queryFeatureTemplates(): Promise<FeatureTemplate[]>;
-  addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
-  updateFeature(objectId: number, changes: Record<string, unknown>): Promise<void>;
-  deleteFeature(objectId: number): Promise<void>;
+  addFeature(
+    attributes: Record<string, unknown>,
+    geometry?: Geometry,
+    apply?: boolean
+  ): Promise<number | null>;
+  updateFeature(objectId: number, changes: Record<string, unknown>, apply?: boolean): Promise<void>;
+  deleteFeature(objectId: number, apply?: boolean): Promise<void>;
+  applyEdits(): Promise<EditResult[]>;
+  undoLocalEdits(): Promise<void>;
+  queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */

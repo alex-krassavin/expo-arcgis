@@ -68,29 +68,59 @@ public final class FeatureLayerRef: LayerRef {
     }
   }
 
-  /// Adds a feature, pushes the edit to the service, and returns the new object id.
-  func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?) async throws -> Int? {
+  /// Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
+  /// pass `apply: false` to make a local-only edit (batch with `applyEdits`).
+  func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {
     let feature = table.makeFeature()
     applyAttributes(feature, attributes)
     if let geometry = geometry.flatMap(geometryFromDict) { feature.geometry = geometry }
     try await table.add(feature)
+    if apply == false { return nil }
     return try await persistEdits()
   }
 
-  /// Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit.
-  func updateFeature(_ objectId: Int, _ changes: [String: Any]) async throws {
+  /// Updates the feature with `objectId`. Pass `apply: false` for a local-only edit.
+  func updateFeature(_ objectId: Int, _ changes: [String: Any], _ apply: Bool?) async throws {
     guard let feature = try await featureByObjectId(objectId) else { return }
     if let attributes = changes["attributes"] as? [String: Any] { applyAttributes(feature, attributes) }
     if let geometry = (changes["geometry"] as? [String: Any]).flatMap(geometryFromDict) { feature.geometry = geometry }
     try await table.update(feature)
-    _ = try await persistEdits()
+    if apply != false { _ = try await persistEdits() }
   }
 
-  /// Deletes the feature with `objectId` and pushes the edit.
-  func deleteFeature(_ objectId: Int) async throws {
+  /// Deletes the feature with `objectId`. Pass `apply: false` for a local-only edit.
+  func deleteFeature(_ objectId: Int, _ apply: Bool?) async throws {
     guard let feature = try await featureByObjectId(objectId) else { return }
     try await table.delete(feature)
-    _ = try await persistEdits()
+    if apply != false { _ = try await persistEdits() }
+  }
+
+  /// Pushes all pending local edits to the service in one batch; returns each edit's result.
+  func applyEdits() async throws -> [[String: Any]] {
+    guard let serviceTable = table as? ServiceFeatureTable else { return [] }
+    return try await serviceTable.applyEdits().map {
+      ["objectId": $0.objectID, "completedWithErrors": $0.didCompleteWithErrors]
+    }
+  }
+
+  /// Discards all pending local edits (since the last `applyEdits`).
+  func undoLocalEdits() async throws {
+    guard let serviceTable = table as? ServiceFeatureTable else { return }
+    try await serviceTable.undoLocalEdits()
+  }
+
+  /// Queries features related to `objectId` (across all relationships); returns groups by relationship.
+  func queryRelatedFeatures(_ objectId: Int) async throws -> [[String: Any]] {
+    guard let arcgisTable = table as? ArcGISFeatureTable,
+      let feature = try await featureByObjectId(objectId) as? ArcGISFeature
+    else { return [] }
+    let results = try await arcgisTable.queryRelatedFeatures(to: feature)
+    return results.map { result in
+      [
+        "relationshipId": result.relationshipInfo?.id ?? -1,
+        "features": Array(result.features()).map(serializeFeature),
+      ]
+    }
   }
 
   private func featureByObjectId(_ objectId: Int) async throws -> Feature? {

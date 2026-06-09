@@ -93,40 +93,8 @@ public class ExpoArcgisModule: Module {
     }
 
     // Operational layers — SharedObjects the JS <FeatureLayer>/<TileLayer> construct.
-    Class(FeatureLayerRef.self) {
-      Constructor { (props: [String: Any]) -> FeatureLayerRef in
-        let ref = FeatureLayerRef(props: props)
-        ref.applyProps(props)
-        return ref
-      }
-      Function("applyProps") { (ref: FeatureLayerRef, changed: [String: Any]) in
-        ref.applyProps(changed)
-      }
-      AsyncFunction("queryFeatures") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryFeatures(query)
-      }
-      AsyncFunction("queryFeatureCount") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryFeatureCount(query)
-      }
-      AsyncFunction("queryExtent") { (ref: FeatureLayerRef, query: [String: Any]?) in
-        try await ref.queryExtent(query)
-      }
-      AsyncFunction("queryStatistics") { (ref: FeatureLayerRef, query: [String: Any]) in
-        try await ref.queryStatistics(query)
-      }
-      AsyncFunction("queryFeatureTemplates") { (ref: FeatureLayerRef) in
-        try await ref.queryFeatureTemplates()
-      }
-      AsyncFunction("addFeature") { (ref: FeatureLayerRef, attributes: [String: Any], geometry: [String: Any]?) in
-        try await ref.addFeature(attributes, geometry)
-      }
-      AsyncFunction("updateFeature") { (ref: FeatureLayerRef, objectId: Int, changes: [String: Any]) in
-        try await ref.updateFeature(objectId, changes)
-      }
-      AsyncFunction("deleteFeature") { (ref: FeatureLayerRef, objectId: Int) in
-        try await ref.deleteFeature(objectId)
-      }
-    }
+    // FeatureLayerRef is registered on the ExpoArcgisGeometry module to keep this module's
+    // definition() under the Android JVM 64 KB method-size limit (SharedObjects cross modules).
 
     Class(TiledLayerRef.self) {
       Constructor { (props: [String: Any]) -> TiledLayerRef in

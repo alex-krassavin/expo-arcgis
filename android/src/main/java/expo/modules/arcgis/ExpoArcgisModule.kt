@@ -96,38 +96,8 @@ class ExpoArcgisModule : Module() {
     }
 
     // Operational layers — SharedObjects the JS <FeatureLayer>/<TileLayer> construct.
-    Class(FeatureLayerRef::class) {
-      Constructor { props: Map<String, Any?> ->
-        FeatureLayerRef(appContext, props).also { it.applyProps(props) }
-      }
-      Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
-        ref.applyProps(changed)
-      }
-      AsyncFunction("queryFeatures") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryFeatures(query)
-      }
-      AsyncFunction("queryFeatureCount") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryFeatureCount(query)
-      }
-      AsyncFunction("queryExtent") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
-        ref.queryExtent(query)
-      }
-      AsyncFunction("queryStatistics") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?> ->
-        ref.queryStatistics(query)
-      }
-      AsyncFunction("queryFeatureTemplates") Coroutine { ref: FeatureLayerRef ->
-        ref.queryFeatureTemplates()
-      }
-      AsyncFunction("addFeature") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?>? ->
-        ref.addFeature(attributes, geometry)
-      }
-      AsyncFunction("updateFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, changes: Map<String, Any?> ->
-        ref.updateFeature(objectId, changes)
-      }
-      AsyncFunction("deleteFeature") Coroutine { ref: FeatureLayerRef, objectId: Long ->
-        ref.deleteFeature(objectId)
-      }
-    }
+    // FeatureLayerRef is registered on the ExpoArcgisGeometry module to keep this module's
+    // definition() under the Android JVM 64 KB method-size limit (SharedObjects cross modules).
 
     Class(TiledLayerRef::class) {
       Constructor { props: Map<String, Any?> ->

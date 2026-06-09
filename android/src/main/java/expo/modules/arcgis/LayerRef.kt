@@ -1,5 +1,6 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.data.ArcGISFeature
 import com.arcgismaps.data.ArcGISFeatureTable
 import com.arcgismaps.data.Feature
 import com.arcgismaps.data.FeatureRequestMode
@@ -87,29 +88,58 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
     }
   }
 
-  /** Adds a feature, pushes the edit to the service, and returns the new object id. */
-  suspend fun addFeature(attributes: Map<String, Any?>, geometry: Map<String, Any?>?): Long? {
+  /**
+   * Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
+   * pass `apply = false` to make a local-only edit (batch with `applyEdits`).
+   */
+  suspend fun addFeature(attributes: Map<String, Any?>, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
     val feature = table.createFeature()
     applyAttributes(feature, attributes)
     geometry?.let { dict -> geometryFromDict(dict)?.let { feature.geometry = it } }
     table.addFeature(feature).getOrThrow()
+    if (apply == false) return null
     return persistEdits()
   }
 
-  /** Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit. */
-  suspend fun updateFeature(objectId: Long, changes: Map<String, Any?>) {
+  /** Updates the feature with `objectId`. Pass `apply = false` for a local-only edit. */
+  suspend fun updateFeature(objectId: Long, changes: Map<String, Any?>, apply: Boolean?) {
     val feature = featureByObjectId(objectId) ?: return
     (changes["attributes"] as? Map<*, *>)?.let { applyAttributes(feature, it) }
     (changes["geometry"] as? Map<*, *>)?.let { geometryFromDict(it)?.let { g -> feature.geometry = g } }
     table.updateFeature(feature).getOrThrow()
-    persistEdits()
+    if (apply != false) persistEdits()
   }
 
-  /** Deletes the feature with `objectId` and pushes the edit. */
-  suspend fun deleteFeature(objectId: Long) {
+  /** Deletes the feature with `objectId`. Pass `apply = false` for a local-only edit. */
+  suspend fun deleteFeature(objectId: Long, apply: Boolean?) {
     val feature = featureByObjectId(objectId) ?: return
     table.deleteFeature(feature).getOrThrow()
-    persistEdits()
+    if (apply != false) persistEdits()
+  }
+
+  /** Pushes all pending local edits to the service in one batch; returns each edit's result. */
+  suspend fun applyEdits(): List<Map<String, Any?>> {
+    val serviceTable = table as? ServiceFeatureTable ?: return emptyList()
+    return serviceTable.applyEdits().getOrThrow().map {
+      mapOf("objectId" to it.objectId, "completedWithErrors" to it.completedWithErrors)
+    }
+  }
+
+  /** Discards all pending local edits (since the last `applyEdits`). */
+  suspend fun undoLocalEdits() {
+    (table as? ServiceFeatureTable)?.undoLocalEdits()?.getOrThrow()
+  }
+
+  /** Queries features related to `objectId` (across all relationships); returns groups by relationship. */
+  suspend fun queryRelatedFeatures(objectId: Long): List<Map<String, Any?>> {
+    val arcgisTable = table as? ArcGISFeatureTable ?: return emptyList()
+    val feature = featureByObjectId(objectId) as? ArcGISFeature ?: return emptyList()
+    return arcgisTable.queryRelatedFeatures(feature).getOrThrow().map { result ->
+      mapOf(
+        "relationshipId" to (result.relationshipInfo?.id ?: -1L),
+        "features" to result.map { serializeFeature(it) },
+      )
+    }
   }
 
   private suspend fun featureByObjectId(objectId: Long): Feature? {

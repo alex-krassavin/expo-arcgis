@@ -138,6 +138,48 @@ class ExpoArcgisGeometryModule : Module() {
       Function("addLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.addLayer(layer) }
       Function("removeLayer") { ref: GroupLayerRef, layer: LayerRef -> ref.removeLayer(layer) }
     }
+    // FeatureLayerRef lives here (not on the main module) so neither definition() exceeds the 64 KB limit.
+    Class(FeatureLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        FeatureLayerRef(appContext, props).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: FeatureLayerRef, changed: Map<String, Any?> ->
+        ref.applyProps(changed)
+      }
+      AsyncFunction("queryFeatures") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryFeatures(query)
+      }
+      AsyncFunction("queryFeatureCount") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryFeatureCount(query)
+      }
+      AsyncFunction("queryExtent") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?>? ->
+        ref.queryExtent(query)
+      }
+      AsyncFunction("queryStatistics") Coroutine { ref: FeatureLayerRef, query: Map<String, Any?> ->
+        ref.queryStatistics(query)
+      }
+      AsyncFunction("queryFeatureTemplates") Coroutine { ref: FeatureLayerRef ->
+        ref.queryFeatureTemplates()
+      }
+      AsyncFunction("addFeature") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, geometry: Map<String, Any?>?, apply: Boolean? ->
+        ref.addFeature(attributes, geometry, apply)
+      }
+      AsyncFunction("updateFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, changes: Map<String, Any?>, apply: Boolean? ->
+        ref.updateFeature(objectId, changes, apply)
+      }
+      AsyncFunction("deleteFeature") Coroutine { ref: FeatureLayerRef, objectId: Long, apply: Boolean? ->
+        ref.deleteFeature(objectId, apply)
+      }
+      AsyncFunction("applyEdits") Coroutine { ref: FeatureLayerRef ->
+        ref.applyEdits()
+      }
+      AsyncFunction("undoLocalEdits") Coroutine { ref: FeatureLayerRef ->
+        ref.undoLocalEdits()
+      }
+      AsyncFunction("queryRelatedFeatures") Coroutine { ref: FeatureLayerRef, objectId: Long ->
+        ref.queryRelatedFeatures(objectId)
+      }
+    }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->

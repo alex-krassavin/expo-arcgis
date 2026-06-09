@@ -1,10 +1,11 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import type { GroupLayerRef, JobRef, LayerRef } from './ExpoArcgisModule';
+import type { FeatureLayerRef, GroupLayerRef, JobRef, LayerRef } from './ExpoArcgisModule';
 import type {
   AnnotationLayerProps,
   BuildingSceneLayerProps,
   DimensionLayerProps,
+  FeatureLayerProps,
   LayerProps,
   OrientedImageryLayerProps,
   SubtypeFeatureLayerProps,
@@ -156,6 +157,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   OrientedImageryLayerRef: new (props: OrientedImageryLayerProps) => LayerRef;
   SubtypeFeatureLayerRef: new (props: SubtypeFeatureLayerProps) => LayerRef;
   GroupLayerRef: new (props: LayerProps) => GroupLayerRef;
+  FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

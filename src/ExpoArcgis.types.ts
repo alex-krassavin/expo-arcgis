@@ -308,6 +308,22 @@ export type FeatureTemplate = {
   prototypeAttributes: Record<string, unknown>;
 };
 
+/** Result of one edit applied via `applyEdits`. */
+export type EditResult = {
+  /** Object id of the edited feature. */
+  objectId: number;
+  /** Whether the server reported an error for this edit. */
+  completedWithErrors: boolean;
+};
+
+/** A group of features related to a source feature through one relationship. */
+export type RelatedFeaturesResult = {
+  /** Id of the relationship these features belong to. */
+  relationshipId: number;
+  /** The related features. */
+  features: Feature[];
+};
+
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */
   queryFeatures(query?: QueryParameters): Promise<Feature[]>;
@@ -320,17 +336,29 @@ export type FeatureLayerHandle = {
   /** Returns the table's editing templates (name + prototype attributes), for building edit UIs. */
   queryFeatureTemplates(): Promise<FeatureTemplate[]>;
   /**
-   * Adds a feature (attributes + optional geometry) to the layer's table and pushes the edit to
-   * the feature service. Resolves to the new feature's object id (or `null` for non-service tables).
+   * Adds a feature (attributes + optional geometry) to the layer's table. By default pushes the
+   * edit to the service and resolves to the new object id; pass `apply: false` to make a local-only
+   * edit, then batch with `applyEdits`. Resolves to `null` for non-service tables or local edits.
    */
-  addFeature(attributes: Record<string, unknown>, geometry?: Geometry): Promise<number | null>;
-  /** Updates the feature with `objectId` (changed attributes and/or geometry) and pushes the edit. */
+  addFeature(
+    attributes: Record<string, unknown>,
+    geometry?: Geometry,
+    apply?: boolean
+  ): Promise<number | null>;
+  /** Updates the feature with `objectId`. Pass `apply: false` for a local-only edit. */
   updateFeature(
     objectId: number,
-    changes: { attributes?: Record<string, unknown>; geometry?: Geometry }
+    changes: { attributes?: Record<string, unknown>; geometry?: Geometry },
+    apply?: boolean
   ): Promise<void>;
-  /** Deletes the feature with `objectId` and pushes the edit. */
-  deleteFeature(objectId: number): Promise<void>;
+  /** Deletes the feature with `objectId`. Pass `apply: false` for a local-only edit. */
+  deleteFeature(objectId: number, apply?: boolean): Promise<void>;
+  /** Pushes all pending local edits to the service in one batch; resolves to each edit's result. */
+  applyEdits(): Promise<EditResult[]>;
+  /** Discards all pending local edits made since the last `applyEdits`. */
+  undoLocalEdits(): Promise<void>;
+  /** Queries features related to `objectId` across all relationships, grouped by relationship. */
+  queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */
