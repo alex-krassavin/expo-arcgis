@@ -238,3 +238,86 @@ func geScale(_ g: [String: Any], _ factorX: Double, _ factorY: Double, _ origin:
   guard let geometry = parseGeo(g) else { return nil }
   return encode(GeometryEngine.scale(geometry, factorX: factorX, factorY: factorY, relativeTo: parsePoint(origin)))
 }
+
+// MARK: - Geodesic construction
+
+func geEllipseGeodesic(_ params: [String: Any]) -> [String: Any]? {
+  guard let centerDict = params["center"] as? [String: Any],
+        let center = parsePoint(centerDict) else { return nil }
+
+  let semiAxis1Length = (params["semiAxis1Length"] as? NSNumber)?.doubleValue ?? 0
+  let semiAxis2Length = (params["semiAxis2Length"] as? NSNumber)?.doubleValue ?? 0
+  let axisDirection   = (params["axisDirection"] as? NSNumber)?.doubleValue ?? 0
+  let angUnit         = angularUnit(params["angularUnit"] as? String)
+  let linUnit         = linearUnit(params["linearUnit"] as? String)
+  let maxSegLen       = (params["maxSegmentLength"] as? NSNumber)?.doubleValue ?? 0
+  let maxPtCount      = (params["maxPointCount"] as? NSNumber)?.intValue ?? 10
+  let geoType         = params["geometryType"] as? String
+
+  switch geoType {
+  case "polyline":
+    var p = GeodesicEllipseParameters<ArcGIS.Polyline>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length
+    )
+    return encode(GeometryEngine.geodesicEllipse(parameters: p))
+  case "multipoint":
+    var p = GeodesicEllipseParameters<ArcGIS.Multipoint>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length
+    )
+    return encode(GeometryEngine.geodesicEllipse(parameters: p))
+  default: // "polygon" or omitted
+    var p = GeodesicEllipseParameters<ArcGIS.Polygon>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length
+    )
+    return encode(GeometryEngine.geodesicEllipse(parameters: p))
+  }
+}
+
+func geSectorGeodesic(_ params: [String: Any]) -> [String: Any]? {
+  guard let centerDict = params["center"] as? [String: Any],
+        let center = parsePoint(centerDict) else { return nil }
+
+  let semiAxis1Length = (params["semiAxis1Length"] as? NSNumber)?.doubleValue ?? 0
+  let semiAxis2Length = (params["semiAxis2Length"] as? NSNumber)?.doubleValue ?? 0
+  let axisDirection   = (params["axisDirection"] as? NSNumber)?.doubleValue ?? 0
+  let sectorAngle     = (params["sectorAngle"] as? NSNumber)?.doubleValue ?? 0
+  let startDirection  = (params["startDirection"] as? NSNumber)?.doubleValue ?? 0
+  let angUnit         = angularUnit(params["angularUnit"] as? String)
+  let linUnit         = linearUnit(params["linearUnit"] as? String)
+  let maxSegLen       = (params["maxSegmentLength"] as? NSNumber)?.doubleValue ?? 0
+  let maxPtCount      = (params["maxPointCount"] as? NSNumber)?.intValue ?? 10
+  let geoType         = params["geometryType"] as? String
+
+  switch geoType {
+  case "polyline":
+    var p = GeodesicSectorParameters<ArcGIS.Polyline>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      sectorAngle: sectorAngle, semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length,
+      startDirection: startDirection
+    )
+    return encode(GeometryEngine.geodesicSector(parameters: p))
+  case "multipoint":
+    var p = GeodesicSectorParameters<ArcGIS.Multipoint>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      sectorAngle: sectorAngle, semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length,
+      startDirection: startDirection
+    )
+    return encode(GeometryEngine.geodesicSector(parameters: p))
+  default: // "polygon" or omitted
+    var p = GeodesicSectorParameters<ArcGIS.Polygon>(
+      axisDirection: axisDirection, angularUnit: angUnit, center: center,
+      linearUnit: linUnit, maxPointCount: maxPtCount, maxSegmentLength: maxSegLen,
+      sectorAngle: sectorAngle, semiAxis1Length: semiAxis1Length, semiAxis2Length: semiAxis2Length,
+      startDirection: startDirection
+    )
+    return encode(GeometryEngine.geodesicSector(parameters: p))
+  }
+}

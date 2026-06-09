@@ -706,6 +706,58 @@ export type GeodeticCurveType =
 /** Join style for `geometryEngine.offset`. Defaults to `mitered`. */
 export type GeometryOffsetType = 'mitered' | 'bevelled' | 'rounded' | 'squared';
 
+/**
+ * Angular unit for geodesic ellipse / sector construction. Defaults to `degrees`.
+ * Maps to the native `AngularUnit`.
+ */
+export type AngularUnit = 'degrees' | 'radians';
+
+/**
+ * Output geometry type for `geometryEngine.ellipseGeodesic` / `sectorGeodesic`.
+ * Defaults to `polygon`. Maps to the native `GeometryType`.
+ */
+export type GeodesicGeometryType = 'polygon' | 'polyline' | 'multipoint';
+
+/**
+ * Parameters for `geometryEngine.ellipseGeodesic`. Mirrors the native
+ * `GeodesicEllipseParameters` (Swift) / `com.arcgismaps.geometry.GeodesicEllipseParameters` (Kotlin).
+ */
+export type GeodesicEllipseParams = {
+  /** Center point of the ellipse. */
+  center: PointGeometry;
+  /** Length of the semi-major axis. */
+  semiAxis1Length: number;
+  /** Length of the semi-minor axis. */
+  semiAxis2Length: number;
+  /**
+   * Direction of the major axis, in `angularUnit` clockwise from north. Defaults to `0`.
+   */
+  axisDirection?: number;
+  /** Unit for `axisDirection`. Defaults to `degrees`. */
+  angularUnit?: AngularUnit;
+  /** Unit for `semiAxis1Length` / `semiAxis2Length`. Defaults to `meters`. */
+  linearUnit?: LinearUnit;
+  /**
+   * Maximum segment length on the output geometry. `0` / omitted lets the SDK choose.
+   */
+  maxSegmentLength?: number;
+  /** Maximum number of vertices on the output geometry. Defaults to `10` (SDK default). */
+  maxPointCount?: number;
+  /** Output geometry type. Defaults to `polygon`. */
+  geometryType?: GeodesicGeometryType;
+};
+
+/**
+ * Parameters for `geometryEngine.sectorGeodesic`. Extends `GeodesicEllipseParams` with
+ * the sector angle and start direction. Mirrors the native `GeodesicSectorParameters`.
+ */
+export type GeodesicSectorParams = GeodesicEllipseParams & {
+  /** The angular size of the sector, in `angularUnit`. */
+  sectorAngle: number;
+  /** The direction from which the sector opens, in `angularUnit` clockwise from north. */
+  startDirection: number;
+};
+
 /** Result of `geometryEngine.geodesicDistance` — distance plus the two azimuths (degrees). */
 export type GeodeticDistanceResult = {
   distance: number;

@@ -13,6 +13,8 @@ import type {
   GeocodeResult,
   GeodeticDistanceResult,
   Geometry,
+  GeodesicEllipseParams,
+  GeodesicSectorParams,
   GeoprocessingInput,
   GeoprocessingResult,
   OfflineGeodatabaseResult,
@@ -92,6 +94,8 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   geMove(g: Geometry, deltaX: number, deltaY: number): Geometry | null;
   geRotate(g: Geometry, angle: number, origin: Geometry | null): Geometry | null;
   geScale(g: Geometry, factorX: number, factorY: number, origin: Geometry | null): Geometry | null;
+  geEllipseGeodesic(params: GeodesicEllipseParams): Geometry | null;
+  geSectorGeodesic(params: GeodesicSectorParams): Geometry | null;
 
   // CoordinateFormatter — backing functions for the `coordinateFormatter` namespace.
   cfToLatLong(p: Geometry, format: string | null, decimalPlaces: number): string | null;

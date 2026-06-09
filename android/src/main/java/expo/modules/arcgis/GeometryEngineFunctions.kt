@@ -1,6 +1,8 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.geometry.Envelope
+import com.arcgismaps.geometry.GeodesicEllipseParameters
+import com.arcgismaps.geometry.GeodesicSectorParameters
 import com.arcgismaps.geometry.Geometry
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Multipart
@@ -255,4 +257,70 @@ internal fun geScale(
     if (pivot != null) GeometryEngine.scale(geometry, factorX, factorY, pivot)
     else GeometryEngine.scale(geometry, factorX, factorY),
   )
+}
+
+// region Geodesic construction
+
+internal fun geEllipseGeodesic(params: Map<String, Any?>): Map<String, Any?>? {
+  val centerDict = params["center"] as? Map<String, Any?> ?: return null
+  val center = parsePoint(centerDict) ?: return null
+
+  val semiAxis1Length = (params["semiAxis1Length"] as? Number)?.toDouble() ?: 0.0
+  val semiAxis2Length = (params["semiAxis2Length"] as? Number)?.toDouble() ?: 0.0
+  val axisDirection   = (params["axisDirection"] as? Number)?.toDouble() ?: 0.0
+  val angUnit         = angularUnit(params["angularUnit"] as? String)
+  val linUnit         = linearUnit(params["linearUnit"] as? String)
+  val maxSegLen       = (params["maxSegmentLength"] as? Number)?.toDouble() ?: 0.0
+  val maxPtCount      = (params["maxPointCount"] as? Number)?.toLong() ?: 10L
+  val geoType         = params["geometryType"] as? String
+
+  val p: GeodesicEllipseParameters = when (geoType) {
+    "polyline"   -> GeodesicEllipseParameters.Companion.createForPolyline()
+    "multipoint" -> GeodesicEllipseParameters.Companion.createForMultipoint()
+    else         -> GeodesicEllipseParameters.Companion.createForPolygon()
+  }
+  p.center = center
+  p.semiAxis1Length = semiAxis1Length
+  p.semiAxis2Length = semiAxis2Length
+  p.axisDirection = axisDirection
+  p.angularUnit = angUnit
+  p.linearUnit = linUnit
+  p.maxSegmentLength = maxSegLen
+  p.maxPointCount = maxPtCount
+
+  return encode(GeometryEngine.ellipseGeodesicOrNull(p))
+}
+
+internal fun geSectorGeodesic(params: Map<String, Any?>): Map<String, Any?>? {
+  val centerDict = params["center"] as? Map<String, Any?> ?: return null
+  val center = parsePoint(centerDict) ?: return null
+
+  val semiAxis1Length = (params["semiAxis1Length"] as? Number)?.toDouble() ?: 0.0
+  val semiAxis2Length = (params["semiAxis2Length"] as? Number)?.toDouble() ?: 0.0
+  val axisDirection   = (params["axisDirection"] as? Number)?.toDouble() ?: 0.0
+  val sectorAngle     = (params["sectorAngle"] as? Number)?.toDouble() ?: 0.0
+  val startDirection  = (params["startDirection"] as? Number)?.toDouble() ?: 0.0
+  val angUnit         = angularUnit(params["angularUnit"] as? String)
+  val linUnit         = linearUnit(params["linearUnit"] as? String)
+  val maxSegLen       = (params["maxSegmentLength"] as? Number)?.toDouble() ?: 0.0
+  val maxPtCount      = (params["maxPointCount"] as? Number)?.toLong() ?: 10L
+  val geoType         = params["geometryType"] as? String
+
+  val p: GeodesicSectorParameters = when (geoType) {
+    "polyline"   -> GeodesicSectorParameters.Companion.createForPolyline()
+    "multipoint" -> GeodesicSectorParameters.Companion.createForMultipoint()
+    else         -> GeodesicSectorParameters.Companion.createForPolygon()
+  }
+  p.center = center
+  p.semiAxis1Length = semiAxis1Length
+  p.semiAxis2Length = semiAxis2Length
+  p.axisDirection = axisDirection
+  p.sectorAngle = sectorAngle
+  p.startDirection = startDirection
+  p.angularUnit = angUnit
+  p.linearUnit = linUnit
+  p.maxSegmentLength = maxSegLen
+  p.maxPointCount = maxPtCount
+
+  return encode(GeometryEngine.sectorGeodesicOrNull(p))
 }

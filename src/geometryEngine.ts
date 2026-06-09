@@ -5,6 +5,8 @@ import type {
   GeodeticDistanceResult,
   Geometry,
   GeometryOffsetType,
+  GeodesicEllipseParams,
+  GeodesicSectorParams,
   LinearUnit,
   PointGeometry,
   ProximityResult,
@@ -181,4 +183,20 @@ export const geometryEngine = {
     factorY: number,
     origin?: PointGeometry
   ): Geometry | null => Module.geScale(geometry, factorX, factorY, origin ?? null),
+
+  /**
+   * Constructs a geodesic ellipse as a polygon, polyline, or multipoint from the given params.
+   * Mirrors `GeometryEngine.geodesicEllipse(parameters:)` (Swift) /
+   * `GeometryEngine.ellipseGeodesicOrNull(parameters)` (Kotlin).
+   */
+  ellipseGeodesic: (params: GeodesicEllipseParams): Geometry | null =>
+    Module.geEllipseGeodesic(params),
+
+  /**
+   * Constructs a geodesic sector (pie slice) from the given params.
+   * Mirrors `GeometryEngine.geodesicSector(parameters:)` (Swift) /
+   * `GeometryEngine.sectorGeodesicOrNull(parameters)` (Kotlin).
+   */
+  sectorGeodesic: (params: GeodesicSectorParams): Geometry | null =>
+    Module.geSectorGeodesic(params),
 };
