@@ -63,6 +63,12 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("fetchAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long ->
         ref.fetchAttachment(objectId, attachmentId)
       }
+      AsyncFunction("deleteAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long ->
+        ref.deleteAttachment(objectId, attachmentId)
+      }
+      AsyncFunction("updateAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long, name: String, contentType: String, dataBase64: String ->
+        ref.updateAttachment(objectId, attachmentId, name, contentType, dataBase64)
+      }
     }
   }
 }

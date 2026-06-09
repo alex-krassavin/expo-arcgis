@@ -61,6 +61,12 @@ public class ExpoArcgisExtrasModule: Module {
       AsyncFunction("fetchAttachment") { (ref: FeatureLayerRef, objectId: Int, attachmentId: Int) in
         try await ref.fetchAttachment(objectId, attachmentId)
       }
+      AsyncFunction("deleteAttachment") { (ref: FeatureLayerRef, objectId: Int, attachmentId: Int) in
+        try await ref.deleteAttachment(objectId, attachmentId)
+      }
+      AsyncFunction("updateAttachment") { (ref: FeatureLayerRef, objectId: Int, attachmentId: Int, name: String, contentType: String, dataBase64: String) in
+        try await ref.updateAttachment(objectId, attachmentId, name, contentType, dataBase64)
+      }
     }
   }
 }

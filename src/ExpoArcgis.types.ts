@@ -421,6 +421,15 @@ export type FeatureLayerHandle = {
    * and returns it as a base64 string.
    */
   fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
+  /** Deletes the attachment with `attachmentId` from the feature with `objectId` and persists. */
+  deleteAttachment(objectId: number, attachmentId: number): Promise<void>;
+  /**
+   * Updates the attachment with `attachmentId` on the feature with `objectId` and persists.
+   * @param name New file name (e.g. `"photo.jpg"`).
+   * @param contentType New MIME type (e.g. `"image/jpeg"`).
+   * @param dataBase64 New base64-encoded file contents.
+   */
+  updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

@@ -79,6 +79,8 @@ export declare class FeatureLayerRef extends LayerRef {
   queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
   addAttachment(objectId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
   fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
+  deleteAttachment(objectId: number, attachmentId: number): Promise<void>;
+  updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */

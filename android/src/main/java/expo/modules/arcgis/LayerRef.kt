@@ -186,6 +186,32 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
     return Base64.encodeToString(bytes, Base64.NO_WRAP)
   }
 
+  /** Deletes the attachment with `attachmentId` from the feature with `objectId`, then persists. */
+  suspend fun deleteAttachment(objectId: Long, attachmentId: Long) {
+    val feature = featureByObjectId(objectId) as? ArcGISFeature
+      ?: error("Feature not found: $objectId")
+    val attachment = feature.fetchAttachments().getOrThrow()
+      .firstOrNull { it.id == attachmentId }
+      ?: error("Attachment not found: $attachmentId")
+    feature.deleteAttachment(attachment).getOrThrow()
+    persistEdits()
+  }
+
+  /** Decodes `dataBase64` and updates the attachment with `attachmentId`, then persists. */
+  suspend fun updateAttachment(
+    objectId: Long, attachmentId: Long,
+    name: String, contentType: String, dataBase64: String,
+  ) {
+    val feature = featureByObjectId(objectId) as? ArcGISFeature
+      ?: error("Feature not found: $objectId")
+    val attachment = feature.fetchAttachments().getOrThrow()
+      .firstOrNull { it.id == attachmentId }
+      ?: error("Attachment not found: $attachmentId")
+    val bytes = Base64.decode(dataBase64, Base64.NO_WRAP)
+    feature.updateAttachment(attachment, name, contentType, bytes).getOrThrow()
+    persistEdits()
+  }
+
   private suspend fun featureByObjectId(objectId: Long): Feature? {
     val params = QueryParameters().apply { objectIds.add(objectId) }
     return table.queryFeatures(params).getOrThrow().firstOrNull()

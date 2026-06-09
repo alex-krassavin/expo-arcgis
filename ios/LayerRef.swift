@@ -161,6 +161,39 @@ public final class FeatureLayerRef: LayerRef {
     return data.base64EncodedString()
   }
 
+  /// Deletes the attachment with `attachmentId` from the feature with `objectId`, then persists.
+  func deleteAttachment(_ objectId: Int, _ attachmentId: Int) async throws {
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else {
+      throw NSError(domain: "ExpoArcgis", code: 2, userInfo: [NSLocalizedDescriptionKey: "Feature not found"])
+    }
+    let attachments = try await feature.attachments
+    guard let attachment = attachments.first(where: { $0.id == attachmentId }) else {
+      throw NSError(domain: "ExpoArcgis", code: 3, userInfo: [NSLocalizedDescriptionKey: "Attachment not found"])
+    }
+    try await feature.deleteAttachment(attachment)
+    _ = try await persistEdits()
+  }
+
+  /// Updates the attachment with `attachmentId` on the feature with `objectId`, then persists.
+  /// Decodes `dataBase64` and calls `updateAttachment(_:name:contentType:data:)`.
+  func updateAttachment(
+    _ objectId: Int, _ attachmentId: Int,
+    _ name: String, _ contentType: String, _ dataBase64: String
+  ) async throws {
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else {
+      throw NSError(domain: "ExpoArcgis", code: 2, userInfo: [NSLocalizedDescriptionKey: "Feature not found"])
+    }
+    let attachments = try await feature.attachments
+    guard let attachment = attachments.first(where: { $0.id == attachmentId }) else {
+      throw NSError(domain: "ExpoArcgis", code: 3, userInfo: [NSLocalizedDescriptionKey: "Attachment not found"])
+    }
+    guard let data = Data(base64Encoded: dataBase64) else {
+      throw NSError(domain: "ExpoArcgis", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid base64 data"])
+    }
+    try await feature.updateAttachment(attachment, name: name, contentType: contentType, data: data)
+    _ = try await persistEdits()
+  }
+
   private func featureByObjectId(_ objectId: Int) async throws -> Feature? {
     let params = QueryParameters()
     params.addObjectIDs([objectId])
