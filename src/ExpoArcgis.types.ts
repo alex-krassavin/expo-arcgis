@@ -1900,10 +1900,6 @@ export type CompositeSymbolType = {
  * NOTE: `size` sets a uniform size (overrides `width`/`height` when all three are supplied).
  * `width` and `height` are applied in order, so supplying both sets size to the last one;
  * use `size` for a uniform value. `offsetX`/`offsetY` shift the layer in points.
- *
- * DEFER: `VectorMarkerSymbolLayer` (the vector-marker kind) requires constructing
- * `VectorMarkerSymbolElement` objects from geometry + symbol objects, which cannot be
- * expressed as a plain flat dict. It is not yet implemented.
  */
 export type PictureMarkerSymbolLayerSpec = {
   type: 'picture-marker';
@@ -1921,18 +1917,73 @@ export type PictureMarkerSymbolLayerSpec = {
   offsetY?: number;
 };
 
-/** Union of all supported symbol layer kinds within a `MultilayerPointSymbolType`. */
-export type SymbolLayerSpec = PictureMarkerSymbolLayerSpec;
-
 /**
- * A multilayer point symbol composed of one or more symbol layers.
- * Mirrors the native `MultilayerPointSymbol`. Useful for rich point icons built from stacked
- * picture images (e.g. a pin body + a badge overlay at different offsets).
+ * One vector-marker symbol layer within a `MultilayerPointSymbolType`.
+ * Mirrors the native `VectorMarkerSymbolLayer` (a shape drawn from a geometry with fill/stroke,
+ * requiring no image). The geometry is defined by a `polygon` (for a filled shape) or a
+ * `polyline` (for a stroked shape); polygon is the common case for icons.
+ *
+ * Internally the codec builds a `VectorMarkerSymbolElement(geometry, MultilayerPolygonSymbol)`
+ * and wraps it in a `VectorMarkerSymbolLayer`.
+ *
+ * NOTE: `polyline` and `multipoint` element geometries are DEFERRED — only `polygon` is
+ * currently supported. Supplying a non-polygon `geometry` type results in the layer being
+ * skipped gracefully.
  *
  * @example
  * ```ts
  * { type: 'multilayer-point', symbolLayers: [
+ *   { type: 'vector-marker', size: 24,
+ *     geometry: { type: 'polygon', points: [
+ *       { x: -1, y: -1 }, { x: 0, y: 1 }, { x: 1, y: -1 },
+ *     ] },
+ *     fillColor: '#e63946', outlineColor: '#1d3557', outlineWidth: 1 },
+ * ] }
+ * ```
+ */
+export type VectorMarkerSymbolLayerSpec = {
+  type: 'vector-marker';
+  /**
+   * The geometry that defines the marker shape. Only `polygon` is supported; other geometry
+   * types are ignored. The polygon is defined in a local coordinate space (not geographic) —
+   * use small integer-scale coordinates (e.g. `x` / `y` in the range `[-1, 1]`).
+   */
+  geometry: Geometry;
+  /** Overall size of the marker, in points. Scales the geometry uniformly. Defaults to 12. */
+  size?: number;
+  /** Fill color as a `#RRGGBB` / `#RRGGBBAA` hex string. Defaults to red. */
+  fillColor?: string;
+  /** Outline stroke color as a `#RRGGBB` / `#RRGGBBAA` hex string. Omit to suppress outline. */
+  outlineColor?: string;
+  /** Outline stroke width in points. Defaults to 1. */
+  outlineWidth?: number;
+};
+
+/** Union of all supported symbol layer kinds within a `MultilayerPointSymbolType`. */
+export type SymbolLayerSpec = PictureMarkerSymbolLayerSpec | VectorMarkerSymbolLayerSpec;
+
+/**
+ * A multilayer point symbol composed of one or more symbol layers.
+ * Mirrors the native `MultilayerPointSymbol`. Useful for rich point icons built from stacked
+ * picture images or vector shapes (e.g. a filled triangle marker, or a pin body + badge).
+ *
+ * Supported layer kinds: `picture-marker` and `vector-marker`.
+ *
+ * @example — picture marker
+ * ```ts
+ * { type: 'multilayer-point', symbolLayers: [
  *   { type: 'picture-marker', url: 'https://example.com/pin.png', width: 30, height: 30 },
+ * ] }
+ * ```
+ *
+ * @example — vector marker (filled triangle)
+ * ```ts
+ * { type: 'multilayer-point', symbolLayers: [
+ *   { type: 'vector-marker', size: 24,
+ *     geometry: { type: 'polygon', points: [
+ *       { x: 0, y: 1 }, { x: 1, y: -1 }, { x: -1, y: -1 },
+ *     ] },
+ *     fillColor: '#e63946', outlineColor: '#1d3557', outlineWidth: 1.5 },
  * ] }
  * ```
  */

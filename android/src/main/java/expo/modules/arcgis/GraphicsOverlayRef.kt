@@ -21,9 +21,14 @@ import com.arcgismaps.mapping.symbology.DistanceSymbolRange
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
 import com.arcgismaps.mapping.symbology.MultilayerPointSymbol
+import com.arcgismaps.mapping.symbology.MultilayerPolygonSymbol
 import com.arcgismaps.mapping.symbology.PictureFillSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbolLayer
+import com.arcgismaps.mapping.symbology.SolidFillSymbolLayer
+import com.arcgismaps.mapping.symbology.SolidStrokeSymbolLayer
+import com.arcgismaps.mapping.symbology.VectorMarkerSymbolElement
+import com.arcgismaps.mapping.symbology.VectorMarkerSymbolLayer
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
@@ -375,10 +380,8 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     CompositeSymbol(symbolList)
   }
   "multilayer-point" -> {
-    // Build each picture-marker symbol layer and assemble a MultilayerPointSymbol.
+    // Build each symbol layer and assemble a MultilayerPointSymbol.
     // symbolLayers on MultilayerSymbol is a mutable List — populated via the constructor.
-    // DEFER: vector-marker layers (VectorMarkerSymbolLayer) require VectorMarkerSymbolElement
-    //   from geometry+symbol objects and cannot be cleanly constructed from a plain dict; skip.
     val layerDicts = s["symbolLayers"] as? List<*> ?: emptyList<Any>()
     val symbolLayers = layerDicts.mapNotNull { ld ->
       val ldMap = ld as? Map<*, *> ?: return@mapNotNull null
@@ -391,6 +394,25 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
             (ldMap["height"] as? Number)?.toDouble()?.let { size = it }
             (ldMap["offsetX"] as? Number)?.toDouble()?.let { offsetX = it }
             (ldMap["offsetY"] as? Number)?.toDouble()?.let { offsetY = it }
+          }
+        }
+        "vector-marker" -> {
+          // DEFER: polyline / multipoint element geometries are not yet supported — only polygon.
+          val geomMap = ldMap["geometry"] as? Map<*, *> ?: return@mapNotNull null
+          if (geomMap["type"] != "polygon") return@mapNotNull null
+          val geom = geometryFromDict(geomMap) ?: return@mapNotNull null
+          val fillColor = colorOf(ldMap["fillColor"]) ?: Color.fromRgba(255, 0, 0, 255)
+          val elementLayers = buildList {
+            add(SolidFillSymbolLayer(fillColor))
+            colorOf(ldMap["outlineColor"])?.let { outlineColor ->
+              val outlineWidth = (ldMap["outlineWidth"] as? Number)?.toDouble() ?: 1.0
+              add(SolidStrokeSymbolLayer(outlineWidth, outlineColor))
+            }
+          }
+          val fillSymbol = MultilayerPolygonSymbol(elementLayers)
+          val element = VectorMarkerSymbolElement(geom, fillSymbol)
+          VectorMarkerSymbolLayer(listOf(element)).apply {
+            (ldMap["size"] as? Number)?.toDouble()?.let { size = it }
           }
         }
         else -> null

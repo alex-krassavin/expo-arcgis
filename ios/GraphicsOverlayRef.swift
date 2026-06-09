@@ -296,10 +296,8 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
     let builtSymbols = symbolDicts.compactMap(buildSymbol)
     return CompositeSymbol(symbols: builtSymbols)
   case "multilayer-point":
-    // Build each picture-marker symbol layer and assemble a MultilayerPointSymbol.
+    // Build each symbol layer and assemble a MultilayerPointSymbol.
     // symbolLayers on MultilayerSymbol is get-only — pass layers through the constructor.
-    // DEFER: vector-marker layers (VectorMarkerSymbolLayer) require VectorMarkerSymbolElement
-    //   from geometry+symbol objects and cannot be cleanly constructed from a plain dict; skip.
     let layerDicts = s["symbolLayers"] as? [[String: Any]] ?? []
     let symbolLayers: [SymbolLayer] = layerDicts.compactMap { ld -> SymbolLayer? in
       switch ld["type"] as? String {
@@ -312,6 +310,22 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
         if let offsetX = (ld["offsetX"] as? NSNumber).map({ CGFloat($0.doubleValue) }) { layer.offsetX = offsetX }
         if let offsetY = (ld["offsetY"] as? NSNumber).map({ CGFloat($0.doubleValue) }) { layer.offsetY = offsetY }
         return layer
+      case "vector-marker":
+        // DEFER: polyline / multipoint element geometries are not yet supported — only polygon.
+        guard let geomDict = ld["geometry"] as? [String: Any],
+              (geomDict["type"] as? String) == "polygon",
+              let geom = geometryFromDict(geomDict) else { return nil }
+        let fillColor = color(ld["fillColor"]) ?? .red
+        var layerList: [SymbolLayer] = [SolidFillSymbolLayer(color: fillColor)]
+        if let outlineColor = color(ld["outlineColor"]) {
+          let outlineWidth = (ld["outlineWidth"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 1.0
+          layerList.append(SolidStrokeSymbolLayer(width: outlineWidth, color: outlineColor))
+        }
+        let fillSymbol = MultilayerPolygonSymbol(symbolLayers: layerList)
+        let element = VectorMarkerSymbolElement(geometry: geom, multilayerSymbol: fillSymbol)
+        let vmLayer = VectorMarkerSymbolLayer(vectorMarkerSymbolElements: [element])
+        if let size = (ld["size"] as? NSNumber)?.doubleValue { vmLayer.size = size }
+        return vmLayer
       default:
         return nil
       }
