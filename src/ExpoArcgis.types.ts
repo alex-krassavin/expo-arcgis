@@ -1618,8 +1618,84 @@ export type Symbol =
   | DistanceCompositeSceneSymbol
   | CompositeSymbolType;
 
+// ─── Visual Variables ────────────────────────────────────────────────────────
+
+/** One stop in a `SizeVisualVariable` stops array. */
+export type SizeStop = { value: number; size: number };
+
+/** One stop in a `ColorVisualVariable` stops array. Color is a `#RRGGBB` / `#RRGGBBAA` hex string. */
+export type ColorStop = { value: number; color: string };
+
+/** One stop in an `OpacityVisualVariable` stops array. */
+export type OpacityStop = { value: number; opacity: number };
+
+/**
+ * Data-driven marker size: feature attribute values in [`minDataValue`, `maxDataValue`] are
+ * mapped linearly to symbol sizes in [`minSize`, `maxSize`] (device-independent pixels).
+ * Alternatively, supply `stops` for arbitrary breakpoints.
+ * Exactly one of `field` or `valueExpression` (Arcade) must be provided.
+ */
+export type SizeVisualVariable = {
+  type: 'size';
+  field?: string;
+  valueExpression?: string;
+  minDataValue?: number;
+  maxDataValue?: number;
+  minSize?: number;
+  maxSize?: number;
+  stops?: SizeStop[];
+};
+
+/**
+ * Data-driven color: each stop maps a feature attribute value to a `#RRGGBB`/`#RRGGBBAA` color.
+ * Exactly one of `field` or `valueExpression` (Arcade) must be provided.
+ */
+export type ColorVisualVariable = {
+  type: 'color';
+  field?: string;
+  valueExpression?: string;
+  stops: ColorStop[];
+};
+
+/**
+ * Data-driven rotation: the feature attribute value (degrees) rotates the symbol.
+ * `rotationType`: `'geographic'` (0 = north, clockwise) or `'arithmetic'` (0 = east, counter-clockwise).
+ * Exactly one of `field` or `valueExpression` (Arcade) must be provided.
+ */
+export type RotationVisualVariable = {
+  type: 'rotation';
+  field?: string;
+  valueExpression?: string;
+  rotationType?: 'geographic' | 'arithmetic';
+};
+
+/**
+ * Data-driven opacity: each stop maps a feature attribute value to an opacity in [0, 1].
+ * Exactly one of `field` or `valueExpression` (Arcade) must be provided.
+ */
+export type OpacityVisualVariable = {
+  type: 'opacity';
+  field?: string;
+  valueExpression?: string;
+  stops: OpacityStop[];
+};
+
+/** Union of all supported visual variable types for data-driven symbology. */
+export type VisualVariable =
+  | SizeVisualVariable
+  | ColorVisualVariable
+  | RotationVisualVariable
+  | OpacityVisualVariable;
+
+// ─── Renderers ───────────────────────────────────────────────────────────────
+
 /** A renderer that draws every feature/graphic with the same `symbol`. */
-export type SimpleRenderer = { type: 'simple'; symbol: Symbol };
+export type SimpleRenderer = {
+  type: 'simple';
+  symbol: Symbol;
+  /** Optional data-driven size, color, rotation, or opacity overrides. */
+  visualVariables?: VisualVariable[];
+};
 
 /** One category of a `UniqueValueRenderer` — the `symbol` for features whose field(s) equal `values`. */
 export type UniqueValueInfo = {
@@ -1640,6 +1716,8 @@ export type UniqueValueRenderer = {
   /** Symbol for features that match no category. */
   defaultSymbol?: Symbol;
   defaultLabel?: string;
+  /** Optional data-driven size, color, rotation, or opacity overrides. */
+  visualVariables?: VisualVariable[];
 };
 
 /** One range of a `ClassBreaksRenderer` — the `symbol` for `min < value ≤ max`. */
@@ -1659,6 +1737,8 @@ export type ClassBreaksRenderer = {
   /** Symbol for features outside all breaks. */
   defaultSymbol?: Symbol;
   defaultLabel?: string;
+  /** Optional data-driven size, color, rotation, or opacity overrides. */
+  visualVariables?: VisualVariable[];
 };
 
 /**

@@ -58,36 +58,188 @@ class GraphicsOverlayRef(appContext: AppContext) : SharedObject(appContext) {
 /**
  * Builds a [Renderer] (simple / unique-value / class-breaks) from a JS renderer dict.
  * Shared by [GraphicsOverlayRef.setRenderer] and [FeatureLayerRef.applyProps].
+ *
+ * When `visualVariables` is present, round-trips through [Renderer.toJson] /
+ * [Renderer.Companion.fromJsonOrNull] so the native C++ engine applies data-driven
+ * size/color/rotation/opacity — typed Kotlin wrappers do not expose `VisualVariable` classes
+ * in SDK 300.0.0.
  */
-internal fun buildRenderer(r: Map<*, *>): Renderer? = when (r["type"]) {
-  "simple" -> (r["symbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { SimpleRenderer(it) }
-  "unique-value" -> {
-    val fields = (r["fields"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-    val values = (r["uniqueValues"] as? List<*>)?.mapNotNull { uv ->
-      (uv as? Map<*, *>)?.let {
-        val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
-        UniqueValue(it["label"] as? String ?: "", "", symbol, rendererValues(it["values"]))
+internal fun buildRenderer(r: Map<*, *>): Renderer? {
+  val typed: Renderer? = when (r["type"]) {
+    "simple" -> (r["symbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { SimpleRenderer(it) }
+    "unique-value" -> {
+      val fields = (r["fields"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+      val values = (r["uniqueValues"] as? List<*>)?.mapNotNull { uv ->
+        (uv as? Map<*, *>)?.let {
+          val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
+          UniqueValue(it["label"] as? String ?: "", "", symbol, rendererValues(it["values"]))
+        }
+      } ?: emptyList()
+      UniqueValueRenderer(
+        fields,
+        values,
+        r["defaultLabel"] as? String ?: "",
+        (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol) ?: transparentMarker(),
+      )
+    }
+    "class-breaks" -> {
+      val breaks = (r["classBreaks"] as? List<*>)?.mapNotNull { cb ->
+        (cb as? Map<*, *>)?.let {
+          val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
+          ClassBreak(it["label"] as? String ?: "", "", num(it["min"]), num(it["max"]), symbol)
+        }
+      } ?: emptyList()
+      ClassBreaksRenderer(r["field"] as? String ?: "", breaks).apply {
+        (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { defaultSymbol = it }
       }
-    } ?: emptyList()
-    UniqueValueRenderer(
-      fields,
-      values,
-      r["defaultLabel"] as? String ?: "",
-      (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol) ?: transparentMarker(),
-    )
+    }
+    else -> null
   }
-  "class-breaks" -> {
-    val breaks = (r["classBreaks"] as? List<*>)?.mapNotNull { cb ->
-      (cb as? Map<*, *>)?.let {
-        val symbol = (it["symbol"] as? Map<*, *>)?.let(::buildSymbol) ?: return@mapNotNull null
-        ClassBreak(it["label"] as? String ?: "", "", num(it["min"]), num(it["max"]), symbol)
-      }
-    } ?: emptyList()
-    ClassBreaksRenderer(r["field"] as? String ?: "", breaks).apply {
-      (r["defaultSymbol"] as? Map<*, *>)?.let(::buildSymbol)?.let { defaultSymbol = it }
+  // If visualVariables are present, inject them into the renderer JSON and reconstruct.
+  val vvRaw = (r["visualVariables"] as? List<*>)?.mapNotNull { it as? Map<*, *> }
+  if (vvRaw.isNullOrEmpty() || typed == null) return typed
+  return applyVisualVariables(vvRaw, typed) ?: typed
+}
+
+/**
+ * Builds the ArcGIS REST JSON representation of [vvRaw], injects it into [renderer]'s own JSON,
+ * and reconstructs the renderer so the native C++ engine applies data-driven symbology.
+ * Returns `null` if JSON manipulation fails; the caller falls back to [renderer].
+ */
+private fun applyVisualVariables(vvRaw: List<Map<*, *>>, renderer: Renderer): Renderer? {
+  val vvJson = vvRaw.mapNotNull(::buildVisualVariableJson)
+  if (vvJson.isEmpty()) return null
+  return try {
+    val rendererJson = renderer.toJson()
+    val rendererMap = jsonObjToMap(org.json.JSONObject(rendererJson))
+    rendererMap["visualVariables"] = vvJson
+    val modifiedJson = mapToJsonObject(rendererMap).toString()
+    Renderer.fromJsonOrNull(modifiedJson)
+  } catch (e: Exception) {
+    null
+  }
+}
+
+/** Converts an [org.json.JSONObject] to a mutable [Map] recursively (for round-trip JSON mutation). */
+private fun jsonObjToMap(obj: org.json.JSONObject): MutableMap<String, Any?> {
+  val map = mutableMapOf<String, Any?>()
+  for (key in obj.keys()) {
+    map[key] = when (val v = obj.get(key)) {
+      is org.json.JSONObject -> jsonObjToMap(v)
+      is org.json.JSONArray -> jsonArrToList(v)
+      org.json.JSONObject.NULL -> null
+      else -> v
     }
   }
-  else -> null
+  return map
+}
+
+private fun jsonArrToList(arr: org.json.JSONArray): List<Any?> =
+  (0 until arr.length()).map { i ->
+    when (val v = arr.get(i)) {
+      is org.json.JSONObject -> jsonObjToMap(v)
+      is org.json.JSONArray -> jsonArrToList(v)
+      org.json.JSONObject.NULL -> null
+      else -> v
+    }
+  }
+
+/** Recursively converts a [Map] to a [org.json.JSONObject]. */
+private fun mapToJsonObject(map: Map<*, *>): org.json.JSONObject {
+  val obj = org.json.JSONObject()
+  for ((k, v) in map) {
+    val key = k?.toString() ?: continue
+    when (v) {
+      null -> obj.put(key, org.json.JSONObject.NULL)
+      is Map<*, *> -> obj.put(key, mapToJsonObject(v))
+      is List<*> -> obj.put(key, listToJsonArray(v))
+      else -> obj.put(key, v)
+    }
+  }
+  return obj
+}
+
+/** Recursively converts a [List] to a [org.json.JSONArray]. */
+private fun listToJsonArray(list: List<*>): org.json.JSONArray {
+  val arr = org.json.JSONArray()
+  for (v in list) {
+    when (v) {
+      null -> arr.put(org.json.JSONObject.NULL)
+      is Map<*, *> -> arr.put(mapToJsonObject(v))
+      is List<*> -> arr.put(listToJsonArray(v))
+      else -> arr.put(v)
+    }
+  }
+  return arr
+}
+
+/**
+ * Converts one JS `VisualVariable` map to the ArcGIS REST JSON map understood by the native
+ * renderer engine. Hex color strings (`#RRGGBB`/`#RRGGBBAA`, alpha-last) are converted to
+ * `[R, G, B, A]` integer lists as required by the REST spec.
+ */
+private fun buildVisualVariableJson(vv: Map<*, *>): Map<String, Any?>? = when (vv["type"]) {
+  "size" -> buildMap {
+    put("type", "sizeInfo")
+    (vv["field"] as? String)?.let { put("field", it) }
+    (vv["valueExpression"] as? String)?.let { put("valueExpression", it) }
+    (vv["minDataValue"] as? Number)?.toDouble()?.let { put("minDataValue", it) }
+    (vv["maxDataValue"] as? Number)?.toDouble()?.let { put("maxDataValue", it) }
+    (vv["minSize"] as? Number)?.toDouble()?.let { put("minSize", it) }
+    (vv["maxSize"] as? Number)?.toDouble()?.let { put("maxSize", it) }
+    (vv["stops"] as? List<*>)?.mapNotNull { s ->
+      (s as? Map<*, *>)?.let {
+        val value = (it["value"] as? Number)?.toDouble() ?: return@mapNotNull null
+        val size = (it["size"] as? Number)?.toDouble() ?: return@mapNotNull null
+        mapOf("value" to value, "size" to size)
+      }
+    }?.takeIf { it.isNotEmpty() }?.let { put("stops", it) }
+  }
+  "color" -> buildMap {
+    put("type", "colorInfo")
+    (vv["field"] as? String)?.let { put("field", it) }
+    (vv["valueExpression"] as? String)?.let { put("valueExpression", it) }
+    (vv["stops"] as? List<*>)?.mapNotNull { s ->
+      (s as? Map<*, *>)?.let {
+        val value = (it["value"] as? Number)?.toDouble() ?: return@mapNotNull null
+        val colorArr = restColor(it["color"]) ?: return@mapNotNull null
+        mapOf("value" to value, "color" to colorArr)
+      }
+    }?.takeIf { it.isNotEmpty() }?.let { put("stops", it) }
+  }
+  "rotation" -> buildMap {
+    put("type", "rotationInfo")
+    (vv["field"] as? String)?.let { put("field", it) }
+    (vv["valueExpression"] as? String)?.let { put("valueExpression", it) }
+    (vv["rotationType"] as? String)?.let { put("rotationType", it) }
+  }
+  "opacity" -> buildMap {
+    put("type", "opacityInfo")
+    (vv["field"] as? String)?.let { put("field", it) }
+    (vv["valueExpression"] as? String)?.let { put("valueExpression", it) }
+    (vv["stops"] as? List<*>)?.mapNotNull { s ->
+      (s as? Map<*, *>)?.let {
+        val value = (it["value"] as? Number)?.toDouble() ?: return@mapNotNull null
+        val opacity = (it["opacity"] as? Number)?.toDouble() ?: return@mapNotNull null
+        mapOf("value" to value, "opacity" to opacity)
+      }
+    }?.takeIf { it.isNotEmpty() }?.let { put("stops", it) }
+  }
+  else -> null // skip unknown visual variable types gracefully
+}
+
+/**
+ * Converts a hex color string (`#RRGGBB` / `#RRGGBBAA`, alpha-last) to an
+ * `[R, G, B, A]` integer list as required by the ArcGIS REST renderer JSON spec.
+ */
+private fun restColor(value: Any?): List<Int>? {
+  val hex = (value as? String)?.trim()?.removePrefix("#") ?: return null
+  val v = hex.toLongOrNull(16) ?: return null
+  return when (hex.length) {
+    6 -> listOf(((v shr 16) and 0xff).toInt(), ((v shr 8) and 0xff).toInt(), (v and 0xff).toInt(), 255)
+    8 -> listOf(((v shr 24) and 0xff).toInt(), ((v shr 16) and 0xff).toInt(), ((v shr 8) and 0xff).toInt(), (v and 0xff).toInt())
+    else -> null
+  }
 }
 
 /** Converts JS unique values to comparable scalars (whole numbers → Int, else Double/String). */

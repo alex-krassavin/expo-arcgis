@@ -42,10 +42,14 @@ public final class GraphicRef: SharedObject {
 
 /// Builds a `Renderer` (simple / unique-value / class-breaks) from a JS renderer dict.
 /// Shared by `GraphicsOverlayRef.setRenderer` and `FeatureLayerRef.applyProps`.
+/// When `visualVariables` is present, round-trips through `Renderer.toJSON` / `Renderer.fromJSON`
+/// so the native C++ engine applies data-driven size/color/rotation/opacity — typed Swift wrappers
+/// do not expose `VisualVariable` classes in SDK 300.0.0.
 func buildRenderer(_ r: [String: Any]) -> Renderer? {
+  let typed: Renderer?
   switch r["type"] as? String {
   case "simple":
-    return (r["symbol"] as? [String: Any]).flatMap(buildSymbol).map(SimpleRenderer.init(symbol:))
+    typed = (r["symbol"] as? [String: Any]).flatMap(buildSymbol).map(SimpleRenderer.init(symbol:))
   case "unique-value":
     let values = (r["uniqueValues"] as? [[String: Any]] ?? []).compactMap { uv -> UniqueValue? in
       guard let symbol = (uv["symbol"] as? [String: Any]).flatMap(buildSymbol) else { return nil }
@@ -53,7 +57,7 @@ func buildRenderer(_ r: [String: Any]) -> Renderer? {
         label: uv["label"] as? String ?? "", symbol: symbol, values: rendererValues(uv["values"])
       )
     }
-    return UniqueValueRenderer(
+    typed = UniqueValueRenderer(
       fieldNames: r["fields"] as? [String] ?? [],
       uniqueValues: values,
       defaultLabel: r["defaultLabel"] as? String ?? "",
@@ -67,9 +71,103 @@ func buildRenderer(_ r: [String: Any]) -> Renderer? {
         minValue: rendererNumber(cb["min"]), maxValue: rendererNumber(cb["max"]), symbol: symbol
       )
     }
-    let renderer = ClassBreaksRenderer(fieldName: r["field"] as? String ?? "", classBreaks: breaks)
-    renderer.defaultSymbol = (r["defaultSymbol"] as? [String: Any]).flatMap(buildSymbol)
-    return renderer
+    let cbr = ClassBreaksRenderer(fieldName: r["field"] as? String ?? "", classBreaks: breaks)
+    cbr.defaultSymbol = (r["defaultSymbol"] as? [String: Any]).flatMap(buildSymbol)
+    typed = cbr
+  default:
+    typed = nil
+  }
+  // If visualVariables are present, inject them into the renderer JSON and reconstruct.
+  guard let vvRaw = r["visualVariables"] as? [[String: Any]], !vvRaw.isEmpty,
+        let renderer = typed else {
+    return typed
+  }
+  return applyVisualVariables(vvRaw, to: renderer) ?? renderer
+}
+
+/// Builds the ArcGIS REST JSON representation of `visualVariables` from the JS dict array,
+/// injects it into the renderer's own JSON, and reconstructs the renderer so the native
+/// C++ engine applies data-driven symbology (size / color / rotation / opacity).
+/// Returns `nil` if JSON manipulation fails; the caller falls back to the unmodified renderer.
+private func applyVisualVariables(_ vvRaw: [[String: Any]], to renderer: Renderer) -> Renderer? {
+  let vvJson = vvRaw.compactMap(buildVisualVariableJson)
+  guard !vvJson.isEmpty else { return nil }
+  // Round-trip: typed renderer → JSON dict → inject visualVariables → reconstruct.
+  let rendererData = renderer.toJSON()
+  guard var rendererDict = try? JSONSerialization.jsonObject(with: rendererData) as? [String: Any] else { return nil }
+  rendererDict["visualVariables"] = vvJson
+  guard let modifiedData = try? JSONSerialization.data(withJSONObject: rendererDict) else { return nil }
+  return try? Renderer.fromJSON(modifiedData)
+}
+
+/// Converts one JS `VisualVariable` dict to the ArcGIS REST JSON dictionary understood by the
+/// native renderer engine. Hex color strings (`#RRGGBB`/`#RRGGBBAA`) are converted to
+/// `[R, G, B, A]` integer arrays as required by the REST spec.
+private func buildVisualVariableJson(_ vv: [String: Any]) -> [String: Any]? {
+  guard let type = vv["type"] as? String else { return nil }
+  switch type {
+  case "size":
+    var d: [String: Any] = ["type": "sizeInfo"]
+    if let field = vv["field"] as? String { d["field"] = field }
+    if let expr = vv["valueExpression"] as? String { d["valueExpression"] = expr }
+    if let v = (vv["minDataValue"] as? NSNumber)?.doubleValue { d["minDataValue"] = v }
+    if let v = (vv["maxDataValue"] as? NSNumber)?.doubleValue { d["maxDataValue"] = v }
+    if let v = (vv["minSize"] as? NSNumber)?.doubleValue { d["minSize"] = v }
+    if let v = (vv["maxSize"] as? NSNumber)?.doubleValue { d["maxSize"] = v }
+    if let stops = vv["stops"] as? [[String: Any]] {
+      d["stops"] = stops.compactMap { s -> [String: Any]? in
+        guard let value = (s["value"] as? NSNumber)?.doubleValue,
+              let size = (s["size"] as? NSNumber)?.doubleValue else { return nil }
+        return ["value": value, "size": size]
+      }
+    }
+    return d
+  case "color":
+    var d: [String: Any] = ["type": "colorInfo"]
+    if let field = vv["field"] as? String { d["field"] = field }
+    if let expr = vv["valueExpression"] as? String { d["valueExpression"] = expr }
+    if let stops = vv["stops"] as? [[String: Any]] {
+      d["stops"] = stops.compactMap { s -> [String: Any]? in
+        guard let value = (s["value"] as? NSNumber)?.doubleValue,
+              let colorArr = restColor(s["color"]) else { return nil }
+        return ["value": value, "color": colorArr]
+      }
+    }
+    return d
+  case "rotation":
+    var d: [String: Any] = ["type": "rotationInfo"]
+    if let field = vv["field"] as? String { d["field"] = field }
+    if let expr = vv["valueExpression"] as? String { d["valueExpression"] = expr }
+    if let rt = vv["rotationType"] as? String { d["rotationType"] = rt }
+    return d
+  case "opacity":
+    var d: [String: Any] = ["type": "opacityInfo"]
+    if let field = vv["field"] as? String { d["field"] = field }
+    if let expr = vv["valueExpression"] as? String { d["valueExpression"] = expr }
+    if let stops = vv["stops"] as? [[String: Any]] {
+      d["stops"] = stops.compactMap { s -> [String: Any]? in
+        guard let value = (s["value"] as? NSNumber)?.doubleValue,
+              let opacity = (s["opacity"] as? NSNumber)?.doubleValue else { return nil }
+        return ["value": value, "opacity": opacity]
+      }
+    }
+    return d
+  default:
+    return nil // skip unknown visual variable types gracefully
+  }
+}
+
+/// Converts a hex color string (`#RRGGBB` / `#RRGGBBAA`, alpha-last) to an
+/// `[R, G, B, A]` integer array as required by the ArcGIS REST renderer JSON spec.
+private func restColor(_ value: Any?) -> [Int]? {
+  guard var s = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
+  if s.hasPrefix("#") { s.removeFirst() }
+  guard let v = UInt64(s, radix: 16) else { return nil }
+  switch s.count {
+  case 6:
+    return [Int((v >> 16) & 0xff), Int((v >> 8) & 0xff), Int(v & 0xff), 255]
+  case 8:
+    return [Int((v >> 24) & 0xff), Int((v >> 16) & 0xff), Int((v >> 8) & 0xff), Int(v & 0xff)]
   default:
     return nil
   }
