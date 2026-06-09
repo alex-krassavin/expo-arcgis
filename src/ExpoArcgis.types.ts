@@ -43,6 +43,20 @@ export type PortalItem = {
 export type MapProps = {
   /** Basemap style. Defaults to `arcGISTopographic`. Ignored when `portalItem` is set. */
   basemap?: BasemapStyle;
+  /**
+   * Language for basemap place-name labels. Only applies when `basemap` is a built-in style string.
+   * Special values: `"global"` — English worldwide; `"local"` — local place names;
+   * `"default"` — SDK default; `"applicationLocale"` — device locale.
+   * Any other value is treated as a BCP-47 language tag (e.g. `"fr"`, `"ar"`, `"zh-Hans"`).
+   * Corresponds to `BasemapStyleParameters.language` on both platforms.
+   */
+  basemapLanguage?: string;
+  /**
+   * Worldview code for disputed-boundary rendering. Only applies when `basemap` is a built-in style.
+   * Known codes: `"CN"`, `"IN"`, `"IL"`, `"JP"`, `"MA"`, `"PK"`, `"KR"`, `"AE"`, `"US"`, `"VN"`.
+   * Corresponds to `BasemapStyleParameters.worldview` on both platforms.
+   */
+  basemapWorldview?: string;
   /** Center + scale applied when the map first loads. */
   initialViewpoint?: Viewpoint;
   /** Load the map from an ArcGIS web map. Construction-only (set once; remount to change). */
@@ -1647,6 +1661,18 @@ export type Surface = {
 export type SceneProps = {
   /** Basemap style. Defaults to `arcGISImagery` (3D-appropriate). */
   basemap?: BasemapStyle;
+  /**
+   * Language for basemap place-name labels. Only applies when `basemap` is a built-in style string.
+   * Special values: `"global"` — English worldwide; `"local"` — local place names;
+   * `"default"` — SDK default; `"applicationLocale"` — device locale.
+   * Any other value is treated as a BCP-47 language tag (e.g. `"fr"`, `"ar"`, `"zh-Hans"`).
+   */
+  basemapLanguage?: string;
+  /**
+   * Worldview code for disputed-boundary rendering. Only applies when `basemap` is a built-in style.
+   * Known codes: `"CN"`, `"IN"`, `"IL"`, `"JP"`, `"MA"`, `"PK"`, `"KR"`, `"AE"`, `"US"`, `"VN"`.
+   */
+  basemapWorldview?: string;
   /** Center + scale applied when the scene first loads. */
   initialViewpoint?: Viewpoint;
   /** 3D camera for the initial view (preferred over `initialViewpoint` for scenes). */

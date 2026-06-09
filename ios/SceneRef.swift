@@ -9,6 +9,11 @@ public final class SceneRef: SharedObject {
   /// Called when `scene` is replaced asynchronously (e.g. after a mobile scene package loads).
   var onSceneChanged: ((ArcGIS.Scene) -> Void)?
 
+  /// Tracks the last applied basemap style name so we can rebuild when language/worldview changes.
+  private var currentBasemapStyle: String?
+  private var currentBasemapLanguage: String?
+  private var currentBasemapWorldview: String?
+
   /// Builds the scene from a portal item (web scene) when provided, otherwise an empty scene.
   init(portalItem: [String: Any]?) {
     if let portalItem,
@@ -28,12 +33,30 @@ public final class SceneRef: SharedObject {
   }
 
   func applyProps(_ changed: [String: Any]) {
+    // Collect basemap-related prop changes before iterating so we can rebuild once.
+    var basemapDirty = false
+    if let name = changed["basemap"] as? String {
+      currentBasemapStyle = name
+      basemapDirty = true
+    }
+    if let lang = changed["basemapLanguage"] as? String {
+      currentBasemapLanguage = lang
+      basemapDirty = true
+    }
+    if changed.keys.contains("basemapWorldview") {
+      currentBasemapWorldview = changed["basemapWorldview"] as? String
+      basemapDirty = true
+    }
+    if basemapDirty, let styleName = currentBasemapStyle {
+      scene.basemap = buildBasemap(styleName: styleName,
+                                   language: currentBasemapLanguage,
+                                   worldview: currentBasemapWorldview)
+    }
+
     for (key, value) in changed {
       switch key {
-      case "basemap":
-        if let name = value as? String {
-          scene.basemap = Basemap(style: basemapStyle(from: name))
-        }
+      case "basemap", "basemapLanguage", "basemapWorldview":
+        break // already handled above
       case "initialViewpoint":
         if let vp = value as? [String: Any],
            let lat = (vp["latitude"] as? NSNumber)?.doubleValue,

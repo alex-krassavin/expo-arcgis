@@ -5,6 +5,7 @@ import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.ArcGISTiledElevationSource
 import com.arcgismaps.mapping.Basemap
+import com.arcgismaps.mapping.BasemapStyle
 import com.arcgismaps.mapping.MobileScenePackage
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Surface
@@ -27,12 +28,37 @@ class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : 
   var onSceneChanged: ((ArcGISScene) -> Unit)? = null
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+  /** Tracks the last applied basemap style/language/worldview to rebuild when any of them changes. */
+  private var currentBasemapStyle: String? = null
+  private var currentBasemapLanguage: String? = null
+  private var currentBasemapWorldview: String? = null
+
   fun applyProps(changed: Map<String, Any?>) {
+    // Collect basemap-related changes first, then rebuild once if any changed.
+    var basemapDirty = false
+    if (changed.containsKey("basemap")) {
+      currentBasemapStyle = changed["basemap"] as? String
+      basemapDirty = true
+    }
+    if (changed.containsKey("basemapLanguage")) {
+      currentBasemapLanguage = changed["basemapLanguage"] as? String
+      basemapDirty = true
+    }
+    if (changed.containsKey("basemapWorldview")) {
+      currentBasemapWorldview = changed["basemapWorldview"] as? String
+      basemapDirty = true
+    }
+    if (basemapDirty) {
+      currentBasemapStyle?.let { styleName ->
+        basemapStyleFromString(styleName)?.let { style ->
+          scene.setBasemap(buildBasemap(style, currentBasemapLanguage, currentBasemapWorldview))
+        }
+      }
+    }
+
     changed.forEach { (key, value) ->
       when (key) {
-        "basemap" -> (value as? String)?.let { name ->
-          basemapStyleFromString(name)?.let { style -> scene.setBasemap(Basemap(style)) }
-        }
+        "basemap", "basemapLanguage", "basemapWorldview" -> Unit // already handled above
         "initialViewpoint" -> (value as? Map<*, *>)?.let { vp ->
           val lat = (vp["latitude"] as? Number)?.toDouble()
           val lon = (vp["longitude"] as? Number)?.toDouble()
