@@ -25,9 +25,19 @@ private fun locatorTask(params: Map<String, Any?>): LocatorTask {
   return locators.getOrPut(url) { LocatorTask(url) }
 }
 
-internal suspend fun geocode(searchText: String, params: Map<String, Any?>): List<Map<String, Any?>> =
-  locatorTask(params).geocode(searchText, buildGeocodeParameters(params)).getOrThrow()
-    .map { serializeGeocodeResult(it) }
+internal suspend fun geocode(searchText: String, params: Map<String, Any?>): List<Map<String, Any?>> {
+  val locator = locatorTask(params)
+  val parameters = buildGeocodeParameters(params)
+  @Suppress("UNCHECKED_CAST")
+  val searchValues = (params["searchValues"] as? Map<*, *>)
+    ?.mapNotNull { (k, v) -> if (k is String && v is String) k to v else null }
+    ?.toMap()
+  return if (!searchValues.isNullOrEmpty()) {
+    locator.geocode(searchValues, parameters).getOrThrow()
+  } else {
+    locator.geocode(searchText, parameters).getOrThrow()
+  }.map { serializeGeocodeResult(it) }
+}
 
 internal suspend fun reverseGeocode(point: Map<String, Any?>, params: Map<String, Any?>): List<Map<String, Any?>> {
   val location = geometryFromDict(point) as? Point ?: return emptyList()

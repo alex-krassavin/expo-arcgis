@@ -26,7 +26,15 @@ private final class LocatorCache: @unchecked Sendable {
 
 func geocode(_ searchText: String, _ params: [String: Any]) async throws -> [[String: Any]] {
   guard let locator = LocatorCache.shared.task(for: locatorURL(params)) else { return [] }
-  let results = try await locator.geocode(forSearchText: searchText, using: buildGeocodeParameters(params))
+  let geocodeParameters = buildGeocodeParameters(params)
+  let results: [GeocodeResult]
+  if let raw = params["searchValues"] as? [String: Any],
+     !raw.isEmpty,
+     let searchValues = raw as? [String: String] {
+    results = try await locator.geocode(forSearchValues: searchValues, using: geocodeParameters)
+  } else {
+    results = try await locator.geocode(forSearchText: searchText, using: geocodeParameters)
+  }
   return results.map(serializeGeocodeResult)
 }
 

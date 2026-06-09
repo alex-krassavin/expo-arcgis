@@ -760,6 +760,15 @@ export type GeocodeResult = {
 
 /** Parameters for `geocoder.geocode`. Mirrors the native `GeocodeParameters`. */
 export type GeocodeParameters = {
+  /**
+   * Structured address fields for multi-field geocoding (e.g.
+   * `{ Address: "380 New York St", City: "Redlands", Region: "CA", Postal: "92373" }`).
+   * When provided, the SDK's multi-field overload is used instead of the single-line text
+   * search. Field names must match the locator's input fields (the World Geocoder accepts
+   * `Address`, `Address2`, `Address3`, `City`, `Region`, `Postal`, `PostalExt`, `CountryCode`).
+   * If both `searchValues` and `searchText` are supplied, `searchValues` takes precedence.
+   */
+  searchValues?: Record<string, string>;
   /** Maximum number of matches to return. */
   maxResults?: number;
   /** Two/three-letter country code to constrain the search. */
