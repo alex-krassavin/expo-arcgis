@@ -55,6 +55,11 @@ private func buildGeocodeParameters(_ params: [String: Any]) -> GeocodeParameter
   if let maxResults = params["maxResults"] as? NSNumber { parameters.maxResults = maxResults.intValue }
   if let countryCode = params["countryCode"] as? String { parameters.countryCode = countryCode }
   if let categories = params["categories"] as? [String] { parameters.addCategories(categories) }
+  if let names = params["resultAttributeNames"] as? [String] { parameters.addResultAttributeNames(names) }
+  if let wkid = params["outputSpatialReference"] as? NSNumber,
+     let sr = SpatialReference(wkid: WKID(wkid.intValue)!) {
+    parameters.outputSpatialReference = sr
+  }
   if let location = (params["preferredSearchLocation"] as? [String: Any]).flatMap(geometryFromDict) as? Point {
     parameters.preferredSearchLocation = location
   }

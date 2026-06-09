@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.geometry.Point
+import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.tasks.geocode.GeocodeParameters
 import com.arcgismaps.tasks.geocode.GeocodeResult
 import com.arcgismaps.tasks.geocode.LocatorTask
@@ -49,6 +50,8 @@ private fun buildGeocodeParameters(params: Map<String, Any?>): GeocodeParameters
   (params["maxResults"] as? Number)?.toInt()?.let { maxResults = it }
   (params["countryCode"] as? String)?.let { countryCode = it }
   (params["categories"] as? List<*>)?.filterIsInstance<String>()?.let { categories.addAll(it) }
+  (params["resultAttributeNames"] as? List<*>)?.filterIsInstance<String>()?.let { resultAttributeNames.addAll(it) }
+  (params["outputSpatialReference"] as? Number)?.toInt()?.let { outputSpatialReference = SpatialReference(it) }
   ((params["preferredSearchLocation"] as? Map<*, *>)?.let { geometryFromDict(it) } as? Point)
     ?.let { preferredSearchLocation = it }
 }

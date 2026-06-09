@@ -896,6 +896,17 @@ export type GeocodeParameters = {
   searchValues?: Record<string, string>;
   /** Maximum number of matches to return. */
   maxResults?: number;
+  /**
+   * Attribute names to include on each result (e.g. `['*']` for all, or
+   * `['Match_addr', 'City', 'Region']` for a specific subset). When omitted the locator
+   * returns its default set.
+   */
+  resultAttributeNames?: string[];
+  /**
+   * WKID of the spatial reference for returned locations (e.g. `3857` for Web Mercator,
+   * `4326` for WGS84). When omitted the locator returns coordinates in its own SR.
+   */
+  outputSpatialReference?: number;
   /** Two/three-letter country code to constrain the search. */
   countryCode?: string;
   /** Place categories to filter by (e.g. `['Coffee shop']`). */
