@@ -52,5 +52,7 @@
   {"slug":"symbols/multilayer-symbol","category":"Symbols & rendering","title":"Multilayer symbol","description":"A point symbol composed from picture-marker symbol layers."},
   {"slug":"three-d/orbit-camera","category":"3D","title":"Orbit camera","description":"An orbit camera that follows a moving graphic (orbitGeoElement)."},
   {"slug":"editing/geodatabase-transactions","category":"Editing","title":"Geodatabase transactions","description":"Begin/commit/rollback edits on a local mobile geodatabase."},
-  {"slug":"layers/image-overlay","category":"Layers","title":"Image overlay","description":"Display a georeferenced local image stretched to a map extent."}
+  {"slug":"layers/image-overlay","category":"Layers","title":"Image overlay","description":"Display a georeferenced local image stretched to a map extent."},
+  {"slug":"basics/portal-search","category":"Basics","title":"Portal search","description":"Search ArcGIS Online for items (web maps) anonymously."},
+  {"slug":"layers/kml-tree","category":"Layers","title":"KML node tree","description":"Read a KML document's node hierarchy via the layer ref."}
 ]
