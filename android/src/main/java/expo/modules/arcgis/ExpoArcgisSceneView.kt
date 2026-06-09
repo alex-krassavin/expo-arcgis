@@ -9,7 +9,9 @@ import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.view.AtmosphereEffect
 import com.arcgismaps.mapping.view.Camera
+import com.arcgismaps.mapping.view.GlobeCameraController
 import com.arcgismaps.mapping.view.LightingMode
+import com.arcgismaps.mapping.view.OrbitLocationCameraController
 import com.arcgismaps.mapping.view.SceneView
 import com.arcgismaps.mapping.view.ScreenCoordinate
 import expo.modules.kotlin.AppContext
@@ -145,6 +147,24 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
       (c["roll"] as? Number)?.toDouble() ?: 0.0,
     )
     scope.launch { sceneView.setViewpointCameraAnimated(camera, 0.5f) }
+  }
+
+  /** Sets or clears the scene's camera controller (orbit/globe). `null` restores the SDK default. */
+  fun setCameraController(c: Map<String, Any?>?) {
+    sceneView.cameraController = when (c?.get("type") as? String) {
+      "orbitLocation" -> {
+        val target = c["target"] as? Map<*, *>
+        val x = (target?.get("x") as? Number)?.toDouble() ?: 0.0
+        val y = (target?.get("y") as? Number)?.toDouble() ?: 0.0
+        val z = (target?.get("z") as? Number)?.toDouble()
+        val point = if (z != null) Point(x, y, z, SpatialReference.wgs84())
+                    else Point(x, y, SpatialReference.wgs84())
+        val distance = (c["distance"] as? Number)?.toDouble() ?: 1500.0
+        OrbitLocationCameraController(point, distance)
+      }
+      "globe" -> GlobeCameraController()
+      else -> GlobeCameraController() // null/absent → restore SDK default (GlobeCameraController)
+    }
   }
 
   /** Sun lighting mode (shadows). */

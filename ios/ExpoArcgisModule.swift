@@ -432,6 +432,10 @@ public class ExpoArcgisModule: Module {
         view.setCamera(camera)
       }
 
+      Prop("cameraController") { (view: ExpoArcgisSceneView, value: [String: Any]?) in
+        view.setCameraController(value)
+      }
+
       Prop("sunLighting") { (view: ExpoArcgisSceneView, value: String?) in
         view.setSunLighting(value)
       }

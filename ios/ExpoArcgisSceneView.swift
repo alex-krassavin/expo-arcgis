@@ -15,6 +15,7 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var sunLighting: SceneView.SunLighting = .off
   @Published private(set) var atmosphereEffect: SceneView.AtmosphereEffect = .horizonOnly
   @Published private(set) var sunDate = Date(timeIntervalSince1970: 1_372_683_600)
+  @Published private(set) var cameraController: CameraController?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
 
@@ -42,6 +43,7 @@ final class SceneViewModel: ObservableObject {
   func setSunLighting(_ value: SceneView.SunLighting) { sunLighting = value }
   func setAtmosphereEffect(_ value: SceneView.AtmosphereEffect) { atmosphereEffect = value }
   func setSunDate(_ value: Date) { sunDate = value }
+  func setCameraController(_ controller: CameraController?) { cameraController = controller }
 }
 
 /// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
@@ -60,6 +62,8 @@ struct ExpoArcgisSceneContainer: View {
           .sunLighting(model.sunLighting)
           .atmosphereEffect(model.atmosphereEffect)
           .sunDate(model.sunDate)
+          // Apply camera controller only when explicitly set; nil restores the SDK default.
+          .modifier(OptionalCameraControllerModifier(controller: model.cameraController))
           .onSingleTapGesture { screenPoint, scenePoint in
             // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
             guard let scenePoint else { return }
@@ -193,6 +197,38 @@ class ExpoArcgisSceneView: ExpoView {
   func setAtmosphereEffect(_ s: String?) { model.setAtmosphereEffect(atmosphereEffectMode(s)) }
   func setSunTime(_ ms: Double?) {
     if let ms { model.setSunDate(Date(timeIntervalSince1970: ms / 1000)) }
+  }
+
+  /// Builds and assigns the camera controller from the JS dict (`type`, `target`, `distance`).
+  func setCameraController(_ c: [String: Any]?) {
+    guard let type = c?["type"] as? String else {
+      model.setCameraController(nil)
+      return
+    }
+    switch type {
+    case "orbitLocation":
+      let targetDict = c?["target"] as? [String: Any] ?? [:]
+      let target = scenePoint(targetDict)
+      let distance = (c?["distance"] as? NSNumber)?.doubleValue ?? 1500.0
+      model.setCameraController(OrbitLocationCameraController(target: target, distance: distance))
+    case "globe":
+      model.setCameraController(GlobeCameraController())
+    default:
+      model.setCameraController(nil)
+    }
+  }
+}
+
+/// Conditionally applies `.cameraController(...)` — a no-op when `controller` is nil so the SDK
+/// default (`GlobeCameraController`) remains active.
+struct OptionalCameraControllerModifier: ViewModifier {
+  let controller: CameraController?
+  func body(content: Content) -> some View {
+    if let controller {
+      content.cameraController(controller)
+    } else {
+      content
+    }
   }
 }
 

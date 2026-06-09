@@ -1539,11 +1539,32 @@ export type SunLighting = 'off' | 'light' | 'lightAndShadows';
 /** Atmosphere rendering for a 3D scene view. */
 export type AtmosphereEffect = 'off' | 'horizonOnly' | 'realistic';
 
+/**
+ * Camera controller for a `<SceneView>`.
+ * - `orbitLocation` — orbits around a fixed target point (`OrbitLocationCameraController`).
+ * - `globe` — free globe navigation (`GlobeCameraController`).
+ */
+export type CameraController =
+  | {
+      type: 'orbitLocation';
+      /** The point the camera orbits around (WGS84 longitude/latitude, optional altitude). */
+      target: Point;
+      /** Initial camera distance from the target, in meters. */
+      distance: number;
+    }
+  | { type: 'globe' };
+
 /** Props for the `<SceneView>` host component. */
 export type SceneViewProps = {
   style?: StyleProp<ViewStyle>;
   /** Animates the view to this 3D camera whenever the value changes (runtime camera control). */
   camera?: Camera;
+  /**
+   * Swaps the scene's camera-control mode. Omit (or pass `null`) to use the SDK default.
+   * - `{ type: 'orbitLocation', target, distance }` — orbit around a fixed point.
+   * - `{ type: 'globe' }` — free globe navigation.
+   */
+  cameraController?: CameraController | null;
   /** Sun lighting mode (shadows). Defaults to `off`. */
   sunLighting?: SunLighting;
   /** Atmosphere rendering. Defaults to `horizonOnly`. */
