@@ -239,6 +239,18 @@ func geScale(_ g: [String: Any], _ factorX: Double, _ factorY: Double, _ origin:
   return encode(GeometryEngine.scale(geometry, factorX: factorX, factorY: factorY, relativeTo: parsePoint(origin)))
 }
 
+// MARK: - Z / M builders
+
+func geWithZ(_ g: [String: Any], _ z: Double) -> [String: Any]? {
+  guard let geometry = parseGeo(g) else { return nil }
+  return encode(GeometryEngine.makeGeometry(from: geometry, z: z))
+}
+
+func geWithM(_ g: [String: Any], _ m: Double) -> [String: Any]? {
+  guard let geometry = parseGeo(g) else { return nil }
+  return encode(GeometryEngine.makeGeometry(from: geometry, m: m))
+}
+
 // MARK: - Geodesic construction
 
 func geEllipseGeodesic(_ params: [String: Any]) -> [String: Any]? {

@@ -259,6 +259,14 @@ internal fun geScale(
   )
 }
 
+// region Z / M builders
+
+internal fun geWithZ(g: Map<String, Any?>, z: Double): Map<String, Any?>? =
+  parseGeo(g)?.let { encode(GeometryEngine.createWithZOrNull(it, z)) }
+
+internal fun geWithM(g: Map<String, Any?>, m: Double): Map<String, Any?>? =
+  parseGeo(g)?.let { encode(GeometryEngine.createWithMOrNull(it, m)) }
+
 // region Geodesic construction
 
 internal fun geEllipseGeodesic(params: Map<String, Any?>): Map<String, Any?>? {

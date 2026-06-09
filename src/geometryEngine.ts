@@ -199,4 +199,20 @@ export const geometryEngine = {
    */
   sectorGeodesic: (params: GeodesicSectorParams): Geometry | null =>
     Module.geSectorGeodesic(params),
+
+  /**
+   * Returns a copy of the geometry with `z` set as the Z (elevation) value on all vertices.
+   * Mirrors `GeometryEngine.makeGeometry(from:z:)` (Swift) /
+   * `GeometryEngine.createWithZOrNull(geometry, z)` (Kotlin).
+   */
+  withZ: (geometry: Geometry, z: number): Geometry | null =>
+    Module.geWithZ(geometry, z),
+
+  /**
+   * Returns a copy of the geometry with `m` set as the M (measure) value on all vertices.
+   * Mirrors `GeometryEngine.makeGeometry(from:m:)` (Swift) /
+   * `GeometryEngine.createWithMOrNull(geometry, m)` (Kotlin).
+   */
+  withM: (geometry: Geometry, m: number): Geometry | null =>
+    Module.geWithM(geometry, m),
 };

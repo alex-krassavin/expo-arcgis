@@ -96,6 +96,8 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   geScale(g: Geometry, factorX: number, factorY: number, origin: Geometry | null): Geometry | null;
   geEllipseGeodesic(params: GeodesicEllipseParams): Geometry | null;
   geSectorGeodesic(params: GeodesicSectorParams): Geometry | null;
+  geWithZ(g: Geometry, z: number): Geometry | null;
+  geWithM(g: Geometry, m: number): Geometry | null;
 
   // CoordinateFormatter — backing functions for the `coordinateFormatter` namespace.
   cfToLatLong(p: Geometry, format: string | null, decimalPlaces: number): string | null;

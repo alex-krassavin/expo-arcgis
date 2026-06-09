@@ -54,6 +54,8 @@ public class ExpoArcgisGeometryModule: Module {
     Function("geScale", geScale)
     Function("geEllipseGeodesic", geEllipseGeodesic)
     Function("geSectorGeodesic", geSectorGeodesic)
+    Function("geWithZ", geWithZ)
+    Function("geWithM", geWithM)
 
     // CoordinateFormatter — point <-> notation strings, exposed as the JS `coordinateFormatter` namespace.
     Function("cfToLatLong", cfToLatLong)
