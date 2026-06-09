@@ -78,6 +78,11 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("suggest") { (searchText: String, params: [String: Any]) in
       try await suggest(searchText, params)
     }
+    // FLAG: ExpoArcgisGeometry is approaching 64 KB; if the module's definition() grows further,
+    // relocate geocodeSuggestion (and the other geocoder AsyncFunctions) to ExpoArcgisExtrasModule.
+    AsyncFunction("geocodeSuggestion") { (suggestionId: Int, params: [String: Any]) in
+      try await geocodeSuggestion(suggestionId, params)
+    }
 
     // Routing — solve a route between stops, exposed as the JS `router` namespace.
     AsyncFunction("solveRoute") { (stops: [[String: Any]], params: [String: Any]) in

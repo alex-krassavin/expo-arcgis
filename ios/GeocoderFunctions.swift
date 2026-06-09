@@ -3,6 +3,38 @@ import Foundation
 
 /// Free functions backing the JS `geocoder` namespace — forward / reverse geocoding via a
 /// `LocatorTask`. Registered as `AsyncFunction`s in `ExpoArcgisGeometryModule`.
+///
+/// SuggestResult round-trip
+/// ─────────────────────────
+/// `suggest(...)` attaches a `suggestionId` (Int) to each returned item and stashes the native
+/// `SuggestResult` (and its locator URL) in `SuggestRegistry`. The registry is REPLACED on each
+/// new `suggest` call (ids restart from 0) so memory never grows unboundedly.
+/// `geocodeSuggestion(suggestionId, locatorUrl?)` looks up the held result and calls
+/// `LocatorTask.geocode(forSuggestResult:)` — the SDK's precise overload that avoids a text
+/// re-search.
+
+/// Holds the native `SuggestResult`s from the most recent `suggest` call.
+private final class SuggestRegistry: @unchecked Sendable {
+  static let shared = SuggestRegistry()
+  private let lock = NSLock()
+  private var results: [Int: SuggestResult] = [:]
+  private var locatorUrl: String = ""
+
+  /// Replaces the registry with a fresh set of results (called at the start of each `suggest`).
+  func reset(url: String, results: [(Int, SuggestResult)]) {
+    lock.lock()
+    defer { lock.unlock() }
+    self.locatorUrl = url
+    self.results = Dictionary(uniqueKeysWithValues: results)
+  }
+
+  func lookup(_ id: Int) -> (result: SuggestResult, locatorUrl: String)? {
+    lock.lock()
+    defer { lock.unlock() }
+    guard let r = results[id] else { return nil }
+    return (r, locatorUrl)
+  }
+}
 
 private let worldGeocoderURL = "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer"
 
@@ -74,9 +106,33 @@ private func buildReverseGeocodeParameters(_ params: [String: Any]) -> ReverseGe
 }
 
 func suggest(_ searchText: String, _ params: [String: Any]) async throws -> [[String: Any]] {
-  guard let locator = LocatorCache.shared.task(for: locatorURL(params)) else { return [] }
+  let url = locatorURL(params)
+  guard let locator = LocatorCache.shared.task(for: url) else { return [] }
   let results = try await locator.suggest(forSearchText: searchText, parameters: buildSuggestParameters(params))
-  return results.map(serializeSuggestResult)
+  // Assign a stable id to each result and stash in the registry (replaces any prior batch).
+  let indexed = results.enumerated().map { (id: $0.offset, result: $0.element) }
+  SuggestRegistry.shared.reset(url: url, results: indexed.map { ($0.id, $0.result) })
+  return indexed.map { entry in
+    var dict = serializeSuggestResult(entry.result)
+    dict["suggestionId"] = entry.id
+    return dict
+  }
+}
+
+func geocodeSuggestion(_ suggestionId: Int, _ params: [String: Any]) async throws -> [[String: Any]] {
+  // Allow the caller to override the locator URL, but fall back to the one stored by suggest().
+  let overrideUrl = params["locatorUrl"] as? String
+  guard let (suggestResult, storedUrl) = SuggestRegistry.shared.lookup(suggestionId) else {
+    throw NSError(
+      domain: "ExpoArcgis",
+      code: 1,
+      userInfo: [NSLocalizedDescriptionKey: "suggestionId \(suggestionId) not found — call suggest() first"]
+    )
+  }
+  let url = overrideUrl ?? storedUrl
+  guard let locator = LocatorCache.shared.task(for: url) else { return [] }
+  let results = try await locator.geocode(forSuggestResult: suggestResult)
+  return results.map(serializeGeocodeResult)
 }
 
 private func buildSuggestParameters(_ params: [String: Any]) -> SuggestParameters {

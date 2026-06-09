@@ -85,6 +85,11 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("suggest") Coroutine { searchText: String, params: Map<String, Any?> ->
       suggest(searchText, params)
     }
+    // FLAG: ExpoArcgisGeometry is approaching 64 KB; if the module's definition() grows further,
+    // relocate geocodeSuggestion (and the other geocoder AsyncFunctions) to ExpoArcgisExtrasModule.
+    AsyncFunction("geocodeSuggestion") Coroutine { suggestionId: Int, params: Map<String, Any?> ->
+      geocodeSuggestion(suggestionId, params)
+    }
 
     // Routing — solve a route between stops, exposed as the JS `router` namespace.
     AsyncFunction("solveRoute") Coroutine { stops: List<Map<String, Any?>>, params: Map<String, Any?> ->

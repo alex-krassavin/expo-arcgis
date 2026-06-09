@@ -998,6 +998,14 @@ export type SuggestResult = {
   label: string;
   /** True when the suggestion is a category/collection rather than a single place. */
   isCollection: boolean;
+  /**
+   * Opaque integer key that identifies the native `SuggestResult` held in the module registry.
+   * Pass to `geocoder.geocodeSuggestion(suggestionId)` to resolve the selection precisely —
+   * the SDK's `geocode(forSuggestResult:)` / `geocode(suggestResult)` overload avoids a text
+   * re-search and returns the exact match the user picked.
+   * The registry is replaced on each new `suggest` call; ids from a prior call are no longer valid.
+   */
+  suggestionId: number;
 };
 
 /** Parameters for `geocoder.suggest`. Mirrors the native `SuggestParameters`. */

@@ -13,7 +13,30 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Free functions backing the JS `geocoder` namespace — forward / reverse geocoding via a
  * [LocatorTask]. Registered as `AsyncFunction`s in `ExpoArcgisGeometryModule`.
+ *
+ * SuggestResult round-trip
+ * ─────────────────────────
+ * [suggest] attaches a `suggestionId` (Int) to each returned item and stashes the native
+ * [SuggestResult] (and its locator URL) in [SuggestRegistry]. The registry is REPLACED on each
+ * new [suggest] call (ids restart from 0) so memory never grows unboundedly.
+ * [geocodeSuggestion] looks up the held result and calls `LocatorTask.geocode(suggestResult)` —
+ * the SDK's precise overload that avoids a text re-search.
  */
+
+/** Holds the native [SuggestResult]s from the most recent [suggest] call. */
+private object SuggestRegistry {
+  @Volatile private var locatorUrl: String = ""
+  @Volatile private var results: Map<Int, SuggestResult> = emptyMap()
+
+  /** Replaces the registry with a fresh set of results (called at the start of each [suggest]). */
+  @Synchronized fun reset(url: String, items: List<SuggestResult>) {
+    locatorUrl = url
+    results = items.mapIndexed { id, r -> id to r }.toMap()
+  }
+
+  @Synchronized fun lookup(id: Int): Pair<SuggestResult, String>? =
+    results[id]?.let { it to locatorUrl }
+}
 
 private const val WORLD_GEOCODER =
   "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer"
@@ -62,9 +85,25 @@ private fun buildReverseGeocodeParameters(params: Map<String, Any?>): ReverseGeo
     (params["maxDistance"] as? Number)?.toDouble()?.let { maxDistance = it }
   }
 
-internal suspend fun suggest(searchText: String, params: Map<String, Any?>): List<Map<String, Any?>> =
-  locatorTask(params).suggest(searchText, buildSuggestParameters(params)).getOrThrow()
-    .map { serializeSuggestResult(it) }
+internal suspend fun suggest(searchText: String, params: Map<String, Any?>): List<Map<String, Any?>> {
+  val url = params["locatorUrl"] as? String ?: WORLD_GEOCODER
+  val results = locatorTask(params).suggest(searchText, buildSuggestParameters(params)).getOrThrow()
+  // Stash all results in the registry (replaces any prior batch; ids restart from 0).
+  SuggestRegistry.reset(url, results)
+  return results.mapIndexed { id, r ->
+    serializeSuggestResult(r) + mapOf("suggestionId" to id)
+  }
+}
+
+internal suspend fun geocodeSuggestion(suggestionId: Int, params: Map<String, Any?>): List<Map<String, Any?>> {
+  val (suggestResult, storedUrl) = SuggestRegistry.lookup(suggestionId)
+    ?: error("suggestionId $suggestionId not found — call suggest() first")
+  // Allow the caller to override the locator URL, but fall back to the one stored by suggest().
+  val url = params["locatorUrl"] as? String ?: storedUrl
+  return locators.getOrPut(url) { LocatorTask(url) }
+    .geocode(suggestResult).getOrThrow()
+    .map { serializeGeocodeResult(it) }
+}
 
 private fun buildSuggestParameters(params: Map<String, Any?>): SuggestParameters = SuggestParameters().apply {
   (params["maxResults"] as? Number)?.toInt()?.let { maxResults = it }
