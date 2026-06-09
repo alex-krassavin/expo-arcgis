@@ -49,6 +49,16 @@ view — add or remove them by rendering them conditionally.
 Composition is wired through React Context — a child finds its parent `<Map>` / `<MapView>` and
 attaches itself. You don't pass handles around manually.
 
+A `<GroupLayer>` is itself a layer **and** a layer host: any layers you nest inside it join the
+group as a single unit instead of attaching to the map directly.
+
+```tsx
+<GroupLayer opacity={0.85}>
+  <MapImageLayer url={MAP_SERVICE} />
+  <FeatureLayer url={FEATURE_SERVICE} />
+</GroupLayer>
+```
+
 ## Refs for imperative operations
 
 Some operations act on a specific object at runtime — querying a layer, editing features, identifying
@@ -61,6 +71,12 @@ const layer = useRef<FeatureLayerHandle>(null);
 // ...
 const count = await layer.current?.queryFeatureCount({ whereClause: 'POP > 5000000' });
 ```
+
+A handle exposes the object's full runtime surface. On a `<FeatureLayer>` that includes batch
+editing — make several edits with `apply: false`, then push them at once with `applyEdits()` (or
+discard with `undoLocalEdits()`) — and `queryRelatedFeatures(objectId)`. A `<MapView>` / `<SceneView>`
+handle adds `identifyPopups(screenPoint)`, which returns each tapped feature's evaluated popup title
+and fields. A `<UtilityNetwork>` handle adds `validateNetworkTopology(extent)` and `getState()`.
 
 ## Namespaces (no view needed)
 

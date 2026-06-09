@@ -1203,7 +1203,7 @@ export type PictureFillSymbol = {
   /** Tile height in points (defaults to the image's intrinsic size). */
   height?: number;
   /** Optional outline stroke. */
-  outline?: SimpleLineSymbol;
+  outline?: Stroke;
 };
 
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */

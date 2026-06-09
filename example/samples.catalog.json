@@ -14,6 +14,7 @@
   { "slug": "symbols/labels", "category": "Symbols & rendering", "title": "Labels", "description": "Label a feature layer with an Arcade expression." },
   { "slug": "symbols/clustering", "category": "Symbols & rendering", "title": "Clustering", "description": "Reduce dense features into clusters." },
   { "slug": "symbols/text-symbol", "category": "Symbols & rendering", "title": "Text symbol", "description": "Draw a labeled point with a text symbol." },
+  { "slug": "symbols/picture-fill", "category": "Symbols & rendering", "title": "Picture fill", "description": "Fill a polygon by tiling an image." },
 
   { "slug": "three-d/scene", "category": "3D", "title": "Display a scene", "description": "A 3D scene with terrain and a camera." },
   { "slug": "three-d/web-scene", "category": "3D", "title": "Web scene", "description": "Load a 3D web scene from a portal item." },
@@ -23,6 +24,7 @@
   { "slug": "query/query-features", "category": "Query", "title": "Query features", "description": "Count features matching a SQL where clause." },
   { "slug": "query/query-statistics", "category": "Query", "title": "Query statistics", "description": "Compute an aggregate statistic over a layer." },
   { "slug": "query/identify", "category": "Query", "title": "Identify", "description": "Identify the feature under a tap." },
+  { "slug": "query/popups", "category": "Query", "title": "Popups", "description": "Read an evaluated popup (title + fields) under a tap." },
 
   { "slug": "editing/edit-features", "category": "Editing", "title": "Edit features", "description": "Add, move and delete features on an editable service." },
   { "slug": "editing/geometry-editor", "category": "Editing", "title": "Geometry editor", "description": "Interactively sketch geometry and measure it." },
