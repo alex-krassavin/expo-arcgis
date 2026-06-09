@@ -39,6 +39,11 @@ export {
   KmlLayer,
   WfsLayer,
   OgcFeatureLayer,
+  AnnotationLayer,
+  DimensionLayer,
+  BuildingSceneLayer,
+  OrientedImageryLayer,
+  SubtypeFeatureLayer,
 } from './layers';
 export { DynamicEntityLayer } from './DynamicEntityLayer';
 export { GraphicsOverlay, type GraphicsOverlayProps } from './GraphicsOverlay';

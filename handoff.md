@@ -730,8 +730,10 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 ## Платформенные пробелы SDK (не делаем, пока нет в SDK)
 - 3D-редактирование геометрии (нет `geometryEditor` у SceneView), Local scene + `BuildingSceneLayer` (нет `LocalSceneView` в Swift), AR tabletop (нужен toolkit + ARKit/ARCore).
 
-## Прочее (нишевые типы данных — по запросу)
-- Слои: ENC, Annotation, Dimension, GroupLayer, FeatureCollection, ImageOverlay (frames). Камеры: orbit/globe cameraControllers. Все — точечно при необходимости.
+## Слои — расширенный набор ✅ (проход по SDK layer-классам)
+Прошёл все `com.arcgismaps.mapping.layers.*Layer` из jar. **Добавлено 5 URL-конструируемых слоёв:** `<AnnotationLayer>`, `<DimensionLayer>`, `<BuildingSceneLayer>` (3D), `<OrientedImageryLayer>`, `<SubtypeFeatureLayer>` (последний через `ServiceFeatureTable(url)` — нет прямого url-ctor). Паттерн как у простых слоёв (`LayerRef`-подкласс + url-ctor). **Верификация:** TS/Android(clean)/iOS ✅.
+- **🔴 ГОЧА (важно для будущих слоёв):** добавление 5 `Class(...)` в **главный** `ExpoArcgisModule` дало **`MethodTooLargeException` (JVM 64 КБ на `definition()`)** — главный модуль уже у лимита. Решение: новые слои регистрируются в **`ExpoArcgisGeometryModule`** (оба натива), а в JS их компоненты строятся через `ExpoArcgisGeometryModule.XxxLayerRef` (SharedObject'ы глобальны → кросс-модульно attach к `<MapView>` главного модуля без проблем). **Все будущие слои/Class'ы → во второй модуль** (главный переполнен).
+- **DEFER (нужен особый setup):** `GroupLayer` (контейнер — дочерний layer-контекст), `BingMapsLayer` (Swift `BingKey`-wrapper + Bing Maps API ретайрится), `EncLayer` (ENC exchange set/cell), `FeatureCollectionLayer` (построить `FeatureCollection`), GeoPackage-слой (async-load → swap), `CustomWebTiledLayer`/`ImageTiledLayer`/`ServiceImageTiledLayer`/`CustomTiledLayer` (tile-info/abstract), `MobileBasemapLayer`/`Unknown`/`Unsupported` (internal). Камеры: orbit/globe cameraControllers. Все — точечно при необходимости.
 
 ## Подготовка к npm-публикации (нативно под Expo; TanStack Config НЕ берём)
 **Почему не TanStack Config:** он под Vite/ESM web-либы; у нас Expo-модуль (CJS-ish `build/` через `expo-module-scripts` + нативные исходники + автолинковка + config-plugin). Конфликт build-движка; взяли только отдельные валидаторы `publint`+`attw`.

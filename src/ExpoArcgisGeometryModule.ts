@@ -1,7 +1,12 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import type { JobRef } from './ExpoArcgisModule';
+import type { JobRef, LayerRef } from './ExpoArcgisModule';
 import type {
+  AnnotationLayerProps,
+  BuildingSceneLayerProps,
+  DimensionLayerProps,
+  OrientedImageryLayerProps,
+  SubtypeFeatureLayerProps,
   GeocodeResult,
   GeodeticDistanceResult,
   Geometry,
@@ -135,6 +140,14 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     areaOfInterest: Geometry,
     downloadName: string
   ): Promise<JobRef<OfflineTileResult>>;
+
+  // Extended operational layers — registered here (not on the main module) to keep both native
+  // `definition()` methods under the Android JVM 64 KB limit. SharedObjects cross modules freely.
+  AnnotationLayerRef: new (props: AnnotationLayerProps) => LayerRef;
+  DimensionLayerRef: new (props: DimensionLayerProps) => LayerRef;
+  BuildingSceneLayerRef: new (props: BuildingSceneLayerProps) => LayerRef;
+  OrientedImageryLayerRef: new (props: OrientedImageryLayerProps) => LayerRef;
+  SubtypeFeatureLayerRef: new (props: SubtypeFeatureLayerProps) => LayerRef;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

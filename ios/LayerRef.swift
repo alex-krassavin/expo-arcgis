@@ -256,3 +256,30 @@ public final class OgcFeatureLayerRef: LayerRef {
     super.init(layer: FeatureLayer(featureTable: table))
   }
 }
+
+/// Operational annotation layer (map text stored as annotation features) from a feature service URL.
+public final class AnnotationLayerRef: LayerRef {
+  init(url: String) { super.init(layer: AnnotationLayer(url: URL(string: url)!)) }
+}
+
+/// Operational dimension layer (engineering/measurement dimensions) from a feature service URL.
+public final class DimensionLayerRef: LayerRef {
+  init(url: String) { super.init(layer: DimensionLayer(url: URL(string: url)!)) }
+}
+
+/// Operational 3D building scene layer (disciplines + building levels) from a scene service URL.
+public final class BuildingSceneLayerRef: LayerRef {
+  init(url: String) { super.init(layer: BuildingSceneLayer(url: URL(string: url)!)) }
+}
+
+/// Operational oriented imagery layer (photos with position/orientation) from a feature service URL.
+public final class OrientedImageryLayerRef: LayerRef {
+  init(url: String) { super.init(layer: OrientedImageryLayer(url: URL(string: url)!)) }
+}
+
+/// Operational subtype feature layer (one sublayer per subtype) from a feature service URL.
+public final class SubtypeFeatureLayerRef: LayerRef {
+  init(url: String) {
+    super.init(layer: SubtypeFeatureLayer(featureTable: ServiceFeatureTable(url: URL(string: url)!)))
+  }
+}

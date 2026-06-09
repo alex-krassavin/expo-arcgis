@@ -1,11 +1,16 @@
 import type {
+  AnnotationLayerProps,
+  BuildingSceneLayerProps,
+  DimensionLayerProps,
   IntegratedMeshLayerProps,
   KmlLayerProps,
   Ogc3DTilesLayerProps,
   OgcFeatureLayerProps,
   OpenStreetMapLayerProps,
+  OrientedImageryLayerProps,
   PointCloudLayerProps,
   RasterLayerProps,
+  SubtypeFeatureLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
   WfsLayerProps,
@@ -13,6 +18,7 @@ import type {
   WmtsLayerProps,
 } from './ExpoArcgis.types';
 import ExpoArcgisModule from './ExpoArcgisModule';
+import ExpoArcgisGeometryModule from './ExpoArcgisGeometryModule';
 import { createLayerComponent } from './createLayerComponent';
 
 /** Declarative `ArcGISVectorTiledLayer` (vector tile service / style). 2D (and 3D). */
@@ -73,4 +79,31 @@ export const WfsLayer = createLayerComponent<WfsLayerProps>(
 /** Declarative OGC API - Features layer (landing-page URL + collection id). */
 export const OgcFeatureLayer = createLayerComponent<OgcFeatureLayerProps>(
   (props) => new ExpoArcgisModule.OgcFeatureLayerRef(props)
+);
+
+// Annotation / dimension / building-scene / oriented-imagery / subtype layers are registered on the
+// secondary native module (ExpoArcgisGeometry) to keep the main module under the JVM 64 KB limit.
+/** Declarative annotation layer (map text as annotation features) from a feature service URL. */
+export const AnnotationLayer = createLayerComponent<AnnotationLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.AnnotationLayerRef(props)
+);
+
+/** Declarative dimension layer (engineering/measurement dimensions) from a feature service URL. */
+export const DimensionLayer = createLayerComponent<DimensionLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.DimensionLayerRef(props)
+);
+
+/** Declarative 3D building scene layer from a scene service URL. */
+export const BuildingSceneLayer = createLayerComponent<BuildingSceneLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.BuildingSceneLayerRef(props)
+);
+
+/** Declarative oriented imagery layer (positioned/oriented photos) from a feature service URL. */
+export const OrientedImageryLayer = createLayerComponent<OrientedImageryLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.OrientedImageryLayerRef(props)
+);
+
+/** Declarative subtype feature layer (one sublayer per subtype) from a feature service URL. */
+export const SubtypeFeatureLayer = createLayerComponent<SubtypeFeatureLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.SubtypeFeatureLayerRef(props)
 );

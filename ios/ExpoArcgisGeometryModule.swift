@@ -84,6 +84,50 @@ public class ExpoArcgisGeometryModule: Module {
       AsyncFunction("cancel") { (ref: JobRef) in await ref.cancel() }
     }
 
+    // Extended operational layers from a service URL — registered here (not in the main module) to
+    // keep ExpoArcgisModule's definition under the JVM 64 KB method limit. SharedObjects are global,
+    // so a layer constructed via this module attaches to a `<MapView>` from the main module fine.
+    Class(AnnotationLayerRef.self) {
+      Constructor { (props: [String: Any]) -> AnnotationLayerRef in
+        let ref = AnnotationLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: AnnotationLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+    Class(DimensionLayerRef.self) {
+      Constructor { (props: [String: Any]) -> DimensionLayerRef in
+        let ref = DimensionLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: DimensionLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+    Class(BuildingSceneLayerRef.self) {
+      Constructor { (props: [String: Any]) -> BuildingSceneLayerRef in
+        let ref = BuildingSceneLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: BuildingSceneLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+    Class(OrientedImageryLayerRef.self) {
+      Constructor { (props: [String: Any]) -> OrientedImageryLayerRef in
+        let ref = OrientedImageryLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: OrientedImageryLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+    Class(SubtypeFeatureLayerRef.self) {
+      Constructor { (props: [String: Any]) -> SubtypeFeatureLayerRef in
+        let ref = SubtypeFeatureLayerRef(url: props["url"] as? String ?? "")
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: SubtypeFeatureLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in
       try await generateOfflineMap(portalItemId, areaOfInterest, downloadName)

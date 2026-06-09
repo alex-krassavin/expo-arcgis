@@ -90,6 +90,40 @@ class ExpoArcgisGeometryModule : Module() {
       AsyncFunction("cancel") Coroutine { ref: JobRef -> ref.cancel() }
     }
 
+    // Extended operational layers from a service URL — registered here (not in the main module) to
+    // keep ExpoArcgisModule's definition under the JVM 64 KB method limit. SharedObjects are global,
+    // so a layer constructed via this module attaches to a `<MapView>` from the main module fine.
+    Class(AnnotationLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        AnnotationLayerRef(appContext, props["url"] as? String ?: "").also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: AnnotationLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+    Class(DimensionLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        DimensionLayerRef(appContext, props["url"] as? String ?: "").also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: DimensionLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+    Class(BuildingSceneLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        BuildingSceneLayerRef(appContext, props["url"] as? String ?: "").also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: BuildingSceneLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+    Class(OrientedImageryLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        OrientedImageryLayerRef(appContext, props["url"] as? String ?: "").also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: OrientedImageryLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+    Class(SubtypeFeatureLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        SubtypeFeatureLayerRef(appContext, props["url"] as? String ?: "").also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: SubtypeFeatureLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
       generateOfflineMap(appContext, appContext.reactContext?.filesDir, portalItemId, areaOfInterest, downloadName)

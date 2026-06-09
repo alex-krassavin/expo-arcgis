@@ -10,13 +10,18 @@ import com.arcgismaps.data.ServiceFeatureTable
 import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.data.OgcFeatureCollectionTable
 import com.arcgismaps.data.WfsFeatureTable
+import com.arcgismaps.mapping.layers.AnnotationLayer
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISSceneLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
 import com.arcgismaps.mapping.layers.ArcGISVectorTiledLayer
+import com.arcgismaps.mapping.layers.BuildingSceneLayer
+import com.arcgismaps.mapping.layers.DimensionLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
 import com.arcgismaps.mapping.layers.IntegratedMeshLayer
 import com.arcgismaps.mapping.layers.Layer
+import com.arcgismaps.mapping.layers.OrientedImageryLayer
+import com.arcgismaps.mapping.layers.SubtypeFeatureLayer
 import com.arcgismaps.mapping.layers.Ogc3DTilesLayer
 import com.arcgismaps.mapping.layers.OpenStreetMapLayer
 import com.arcgismaps.mapping.layers.PointCloudLayer
@@ -257,5 +262,35 @@ class OgcFeatureLayerRef(appContext: AppContext, url: String, collectionId: Stri
     OgcFeatureCollectionTable(url, collectionId).apply { featureRequestMode = FeatureRequestMode.OnInteractionCache }
   )
 
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational annotation layer (map text stored as annotation features) from a feature service URL. */
+class AnnotationLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Layer = AnnotationLayer(url)
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational dimension layer (engineering/measurement dimensions) from a feature service URL. */
+class DimensionLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Layer = DimensionLayer(url)
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational 3D building scene layer (disciplines + building levels) from a scene service URL. */
+class BuildingSceneLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Layer = BuildingSceneLayer(url)
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational oriented imagery layer (photos with position/orientation) from a feature service URL. */
+class OrientedImageryLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Layer = OrientedImageryLayer(url)
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/** Operational subtype feature layer (one sublayer per subtype) from a feature service URL. */
+class SubtypeFeatureLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
+  override val layer: Layer = SubtypeFeatureLayer(ServiceFeatureTable(url))
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }

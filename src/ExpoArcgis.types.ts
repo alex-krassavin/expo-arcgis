@@ -378,6 +378,21 @@ export type RasterLayerProps = LayerProps & { source: RasterSource };
 /** Props for a `<KmlLayer>` — mirror `KMLLayer` (remote `.kml`/`.kmz` URL or local file). */
 export type KmlLayerProps = LayerProps & { url: string };
 
+/** Annotation layer (map text stored as annotation features) from a feature service URL. */
+export type AnnotationLayerProps = LayerProps & { url: string };
+
+/** Dimension layer (engineering/measurement dimensions) from a feature service URL. */
+export type DimensionLayerProps = LayerProps & { url: string };
+
+/** 3D building scene layer (disciplines + building levels) from a scene service URL. */
+export type BuildingSceneLayerProps = LayerProps & { url: string };
+
+/** Oriented imagery layer (photos with position/orientation) from a feature service URL. */
+export type OrientedImageryLayerProps = LayerProps & { url: string };
+
+/** Subtype feature layer (one sublayer per subtype) from a feature service URL. */
+export type SubtypeFeatureLayerProps = LayerProps & { url: string };
+
 /** WFS (Web Feature Service) layer — a feature layer over `WFSFeatureTable`. */
 export type WfsLayerProps = LayerProps & {
   /** WFS service URL. */
