@@ -39,6 +39,18 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
         emit("onConnectionStatusChange", mapOf("status" to connectionStatusString(status)))
       }
     }
+    // Emit entity-received events (new/updated observation arrived for an entity).
+    scope.launch {
+      dataSource.dynamicEntityReceivedEvent.collect { info ->
+        emit("onDynamicEntityChange", dynamicEntityPayload("received", info.dynamicEntity))
+      }
+    }
+    // Emit entity-purged events (entity evicted by purge rules).
+    scope.launch {
+      dataSource.dynamicEntityPurgedEvent.collect { info ->
+        emit("onDynamicEntityChange", dynamicEntityPayload("purged", info.dynamicEntity))
+      }
+    }
   }
 
   /** Pushes an observation into a custom data source (no-op for a stream service). */
@@ -95,6 +107,24 @@ fun connectionStatusString(status: ConnectionStatus): String = when (status) {
   is ConnectionStatus.Connecting -> "connecting"
   is ConnectionStatus.Connected -> "connected"
   is ConnectionStatus.Failed -> "failed"
+}
+
+/**
+ * Builds a compact payload for the `onDynamicEntityChange` event.
+ * Only `received` and `purged` change types are emitted (observation-only updates are
+ * captured within `dynamicEntityReceivedEvent` which fires per-entity arrival, not per
+ * observation, so the event rate is bounded to entity lifecycle changes).
+ * Geometry is serialized only when present; attributes are passed as-is (the map returned
+ * by the SDK is a shallow snapshot of the current entity attributes).
+ */
+private fun dynamicEntityPayload(changeType: String, entity: com.arcgismaps.realtime.DynamicEntity): Map<String, Any?> {
+  val payload = mutableMapOf<String, Any?>(
+    "changeType" to changeType,
+    "entityId" to entity.id,
+    "attributes" to entity.attributes.toMap(),
+  )
+  entity.geometry?.let { payload["geometry"] = dictFromGeometry(it) }
+  return payload
 }
 
 /** Builds the real-time data source: a custom feed (push from JS) or a stream service. */

@@ -234,12 +234,13 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: OgcFeatureLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
-    // Real-time DynamicEntityLayer (stream service) — emits onConnectionStatusChange.
+    // Real-time DynamicEntityLayer (stream service) — emits onConnectionStatusChange +
+    // onDynamicEntityChange (received/purged entity events).
     Class(DynamicEntityLayerRef::class) {
       Constructor { props: Map<String, Any?> ->
         DynamicEntityLayerRef(appContext, props).also { it.applyProps(props) }
       }
-      Events("onConnectionStatusChange")
+      Events("onConnectionStatusChange", "onDynamicEntityChange")
       Function("applyProps") { ref: DynamicEntityLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
       }

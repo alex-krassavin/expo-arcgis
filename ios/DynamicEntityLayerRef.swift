@@ -7,6 +7,7 @@ public final class DynamicEntityLayerRef: LayerRef {
   let dataSource: DynamicEntityDataSource
   private let pushFeed: PushFeed?
   private var statusTask: Task<Void, Never>?
+  private var entityChangeTask: Task<Void, Never>?
 
   init(props: [String: Any]) {
     let source: DynamicEntityDataSource
@@ -26,6 +27,7 @@ public final class DynamicEntityLayerRef: LayerRef {
     self.dataSource = source
     super.init(layer: DynamicEntityLayer(dataSource: source))
     observeConnectionStatus()
+    observeEntityChanges()
   }
 
   /// Pushes an observation into a custom data source (no-op for a stream service).
@@ -41,6 +43,34 @@ public final class DynamicEntityLayerRef: LayerRef {
       guard let self else { return }
       for await status in self.dataSource.$connectionStatus {
         self.emit(event: "onConnectionStatusChange", payload: ["status": connectionStatusString(status)])
+      }
+    }
+  }
+
+  /// Observes `receivedEntities` and `purgedEntities` streams from the data source and emits
+  /// `onDynamicEntityChange`. Only entity-lifecycle events are surfaced (`received`/`purged`);
+  /// observation-only updates are not forwarded to keep the event rate manageable.
+  private func observeEntityChanges() {
+    entityChangeTask = Task { [weak self] in
+      guard let self else { return }
+      // Merge received + purged by spawning two child tasks inside a task group.
+      await withTaskGroup(of: Void.self) { group in
+        group.addTask { [weak self] in
+          guard let self else { return }
+          for await info in self.dataSource.receivedEntities {
+            guard !Task.isCancelled else { return }
+            self.emit(event: "onDynamicEntityChange",
+                      payload: dynamicEntityPayload(changeType: "received", entity: info.dynamicEntity))
+          }
+        }
+        group.addTask { [weak self] in
+          guard let self else { return }
+          for await info in self.dataSource.purgedEntities {
+            guard !Task.isCancelled else { return }
+            self.emit(event: "onDynamicEntityChange",
+                      payload: dynamicEntityPayload(changeType: "purged", entity: info.dynamicEntity))
+          }
+        }
       }
     }
   }
@@ -78,8 +108,24 @@ public final class DynamicEntityLayerRef: LayerRef {
 
   override public func sharedObjectWillRelease() {
     statusTask?.cancel()
+    entityChangeTask?.cancel()
     super.sharedObjectWillRelease()
   }
+}
+
+/// Builds a compact payload for the `onDynamicEntityChange` event.
+/// Serializes the entity's current attributes snapshot and geometry (if present).
+/// Only `received` and `purged` change types are emitted — observation-only attribute
+/// updates are skipped; the data source's `receivedEntities` / `purgedEntities` streams
+/// fire once per entity lifecycle event, keeping the event rate bounded.
+private func dynamicEntityPayload(changeType: String, entity: DynamicEntity) -> [String: Any] {
+  var payload: [String: Any] = [
+    "changeType": changeType,
+    "entityId": entity.id,
+    "attributes": entity.attributes.mapValues { $0 as Any },
+  ]
+  if let geometry = entity.geometry { payload["geometry"] = dictFromGeometry(geometry) }
+  return payload
 }
 
 /// Maps `ConnectionStatus` to the JS string union.

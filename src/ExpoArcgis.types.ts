@@ -546,6 +546,29 @@ export type OgcFeatureLayerProps = LayerProps & {
 /** Connection state of a real-time `DynamicEntityDataSource`. Mirrors `ConnectionStatus`. */
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'failed';
 
+/**
+ * The kind of entity lifecycle event emitted by `onDynamicEntityChange`.
+ * - `received` — a new or updated entity observation arrived (fires once per entity, not per
+ *   observation, so attribute-only updates within the same entity are collapsed).
+ * - `purged` — the entity was evicted by the data source's purge rules.
+ */
+export type DynamicEntityChangeType = 'received' | 'purged';
+
+/**
+ * Payload for the `<DynamicEntityLayer onDynamicEntityChange>` event.
+ * Contains the entity's current attribute snapshot and geometry at the time of the event.
+ */
+export type DynamicEntityChange = {
+  /** Whether the entity arrived/updated (`received`) or was evicted (`purged`). */
+  changeType: DynamicEntityChangeType;
+  /** The entity's unique numeric id (from the data source's `entityIDField`). */
+  entityId: number;
+  /** The entity's current attribute values (snapshot at event time). */
+  attributes: Record<string, unknown>;
+  /** The entity's current geometry, or `undefined` when unavailable. */
+  geometry?: Geometry;
+};
+
 /** Track display options for a `<DynamicEntityLayer>` (history of past observations). */
 export type TrackDisplay = {
   /** How many past observations to keep per track. */
@@ -581,6 +604,12 @@ export type DynamicEntityLayerProps = LayerProps & {
   filter?: { whereClause?: string; geometry?: Geometry };
   /** Fired as the data source connects / disconnects. */
   onConnectionStatusChange?: (status: ConnectionStatus) => void;
+  /**
+   * Fired when a dynamic entity is received (new/updated) or purged. High-frequency on busy
+   * stream services — only entity lifecycle events are emitted (one per entity arrival or purge),
+   * not per-observation attribute updates.
+   */
+  onDynamicEntityChange?: (event: { nativeEvent: DynamicEntityChange }) => void;
 };
 
 /** A live dynamic entity returned by `queryDynamicEntities`. */

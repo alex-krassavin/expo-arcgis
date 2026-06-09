@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type {
   ConnectionStatus,
+  DynamicEntityChange,
   DynamicEntityLayerHandle,
   DynamicEntityLayerProps,
 } from './ExpoArcgis.types';
@@ -18,7 +19,7 @@ import { getPropsDiffs } from './utils/getPropsDiffs';
  * `pushObservation` through a `ref`.
  */
 export const DynamicEntityLayer = forwardRef<DynamicEntityLayerHandle, DynamicEntityLayerProps>(
-  function DynamicEntityLayer({ onConnectionStatusChange, ...layerProps }, handle) {
+  function DynamicEntityLayer({ onConnectionStatusChange, onDynamicEntityChange, ...layerProps }, handle) {
     const model = useGeoModel();
     const ref = useRef<DynamicEntityLayerRef | undefined>(undefined);
     if (!ref.current) {
@@ -46,6 +47,16 @@ export const DynamicEntityLayer = forwardRef<DynamicEntityLayerHandle, DynamicEn
       );
       return () => sub.remove();
     }, [onConnectionStatusChange]);
+
+    // The entity-change callback is wired as an event listener.
+    useEffect(() => {
+      if (!onDynamicEntityChange) return;
+      const sub = ref.current!.addListener(
+        'onDynamicEntityChange',
+        (event: DynamicEntityChange) => onDynamicEntityChange({ nativeEvent: event })
+      );
+      return () => sub.remove();
+    }, [onDynamicEntityChange]);
 
     useUpdateEffect(() => {
       const diffs = getPropsDiffs(prev, layerProps);
