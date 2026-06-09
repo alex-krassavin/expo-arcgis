@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import com.arcgismaps.analysis.interactive.Analysis
+import com.arcgismaps.analysis.interactive.ExploratoryGeoElementLineOfSight
 import com.arcgismaps.analysis.interactive.ExploratoryGeoElementViewshed
 import com.arcgismaps.analysis.interactive.ExploratoryLineOfSightTargetVisibility
 import com.arcgismaps.analysis.interactive.ExploratoryLocationDistanceMeasurement
@@ -185,6 +186,34 @@ class DistanceMeasurementRef(appContext: AppContext, props: Map<String, Any?>) :
         "endLocation" -> analysisPoint(value)?.let { measurement.endLocation = it }
       }
     }
+  }
+}
+
+/**
+ * SharedObject wrapping an [ExploratoryGeoElementLineOfSight] — a line of sight whose observer
+ * and target both track a [GraphicRef]'s native [Graphic] (a [GeoElement]) as it moves.
+ * Streams the target's visibility back to JS via `onTargetVisibilityChange`.
+ */
+class GeoElementLineOfSightRef(appContext: AppContext, observer: GraphicRef, target: GraphicRef) : AnalysisRef(appContext) {
+  private val lineOfSight = ExploratoryGeoElementLineOfSight(
+    observer.graphic,
+    target.graphic,
+  )
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+  override val analysis: Analysis get() = lineOfSight
+
+  init {
+    scope.launch {
+      lineOfSight.targetVisibility.collect { visibility ->
+        emit("onTargetVisibilityChange", mapOf("visibility" to visibilityString(visibility)))
+      }
+    }
+  }
+
+  override fun deallocate() {
+    scope.cancel()
+    super.deallocate()
   }
 }
 

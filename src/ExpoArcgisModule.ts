@@ -11,6 +11,7 @@ import type {
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
+  GeoElementLineOfSightProps,
   GeoElementViewshedProps,
   Geometry,
   RelatedFeaturesResult,
@@ -133,13 +134,19 @@ export declare class ViewshedRef extends AnalysisRef {}
  */
 export declare class GeoElementViewshedRef extends AnalysisRef {}
 
-/** Events emitted by a `LineOfSightRef` as the target's visibility from the observer changes. */
+/** Events emitted by a `LineOfSightRef` or `GeoElementLineOfSightRef` as target visibility changes. */
 type LineOfSightEvents = {
   onTargetVisibilityChange(payload: { visibility: TargetVisibility }): void;
 };
 
 /** Reference to a native exploratory line of sight (`ExploratoryLocationLineOfSight`). */
 export declare class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
+
+/**
+ * Reference to a native GeoElement-anchored line of sight (`ExploratoryGeoElementLineOfSight`).
+ * Both the observer and target track their respective graphics as they move.
+ */
+export declare class GeoElementLineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
 
 /** Events emitted by a `DistanceMeasurementRef` as the measured distances change. */
 type DistanceMeasurementEvents = {
@@ -285,6 +292,7 @@ declare class ExpoArcgisModule extends NativeModule {
   ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
   GeoElementViewshedRef: new (graphic: GraphicRef, props: GeoElementViewshedProps) => GeoElementViewshedRef;
   LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
+  GeoElementLineOfSightRef: new (observer: GraphicRef, target: GraphicRef) => GeoElementLineOfSightRef;
   DistanceMeasurementRef: new (
     props: Pick<DistanceMeasurementProps, 'startLocation' | 'endLocation'>
   ) => DistanceMeasurementRef;

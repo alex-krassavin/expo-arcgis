@@ -1203,6 +1203,17 @@ export type LineOfSightProps = {
   onTargetVisibilityChange?: (visibility: TargetVisibility) => void;
 };
 
+/**
+ * Props for a GeoElement-anchored `<LineOfSight>` — both the observer and the target follow
+ * `<Graphic>`s as they move. Mirrors the native `ExploratoryGeoElementLineOfSight`. 3D only
+ * (rendered in a `<SceneView>`). Use instead of `LineOfSightProps` when both endpoints track
+ * graphics rather than fixed points.
+ */
+export type GeoElementLineOfSightProps = {
+  /** Called when the target's visibility from the observer changes. */
+  onTargetVisibilityChange?: (visibility: TargetVisibility) => void;
+};
+
 /** Direct / horizontal / vertical distance (in the measurement's unit, default meters). */
 export type DistanceMeasurementResult = {
   directDistance: number;

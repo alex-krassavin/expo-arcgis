@@ -217,6 +217,36 @@ public final class DistanceMeasurementRef: AnalysisRef {
   }
 }
 
+/// SharedObject wrapping an `ExploratoryGeoElementLineOfSight` — a line of sight whose observer
+/// and target both track `Graphic`s (GeoElements) as they move.
+/// Streams the target's visibility back to JS via `onTargetVisibilityChange`.
+public final class GeoElementLineOfSightRef: AnalysisRef {
+  private let lineOfSight: ExploratoryGeoElementLineOfSight
+  private var observation: Task<Void, Never>?
+
+  init(observer: GraphicRef, target: GraphicRef) {
+    let lineOfSight = ExploratoryGeoElementLineOfSight(
+      observer: observer.graphic,
+      target: target.graphic
+    )
+    self.lineOfSight = lineOfSight
+    super.init(analysis: lineOfSight)
+    observation = Task { [weak self] in
+      guard let stream = self?.lineOfSight.$targetVisibility else { return }
+      for await visibility in stream {
+        guard let self else { break }
+        self.emit(event: "onTargetVisibilityChange", payload: ["visibility": visibilityString(visibility)])
+      }
+    }
+  }
+
+  override public func sharedObjectWillRelease() {
+    observation?.cancel()
+    observation = nil
+    super.sharedObjectWillRelease()
+  }
+}
+
 /// Maps the native line-of-sight visibility enum to the JS `TargetVisibility` union.
 private func visibilityString(_ v: ExploratoryLineOfSight.TargetVisibility) -> String {
   switch v {

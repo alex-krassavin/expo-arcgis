@@ -309,6 +309,15 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: LineOfSightRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
+    // GeoElement-anchored line of sight — observer and target each track a Graphic as it moves.
+    // FLAG: added to the main module — integrator may need to relocate for the 64 KB budget.
+    Class(GeoElementLineOfSightRef::class) {
+      Constructor { observer: GraphicRef, target: GraphicRef ->
+        GeoElementLineOfSightRef(appContext, observer, target)
+      }
+      Events("onTargetVisibilityChange")
+    }
+
     Class(DistanceMeasurementRef::class) {
       Constructor { props: Map<String, Any?> -> DistanceMeasurementRef(appContext, props) }
       Events("onMeasurementChange")
