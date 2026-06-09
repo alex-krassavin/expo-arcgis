@@ -42,6 +42,15 @@ public final class GeodatabaseRef: SharedObject {
     try await table.add(feature)
   }
 
+  /// Returns a `<FeatureLayer layer>`-attachable handle for `tableName`, so its edits (within a
+  /// transaction) are displayed and persisted on commit.
+  func getFeatureLayer(_ tableName: String) throws -> FeatureLayerRef {
+    guard let table = table(named: tableName) else {
+      throw NSError(domain: "ExpoArcgis", code: 8, userInfo: [NSLocalizedDescriptionKey: "No feature table named \(tableName)"])
+    }
+    return FeatureLayerRef(table: table)
+  }
+
   private func table(named name: String) -> GeodatabaseFeatureTable? {
     geodatabase.featureTables.first { $0.tableName == name }
   }

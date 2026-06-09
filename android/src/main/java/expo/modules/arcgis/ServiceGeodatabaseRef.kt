@@ -49,6 +49,15 @@ class ServiceGeodatabaseRef(appContext: AppContext, private val geodatabase: Ser
   fun getVersionName(): String = geodatabase.versionName
   fun getDefaultVersionName(): String = geodatabase.defaultVersionName
   fun supportsBranchVersioning(): Boolean = geodatabase.supportsBranchVersioning
+
+  /** Returns a `<FeatureLayer layer>`-attachable handle for the service table with [layerId], bound
+   *  to this geodatabase's active version (so its edits join the version's local edits). */
+  fun getFeatureLayer(layerId: Long): FeatureLayerRef {
+    val ctx = appContext ?: throw IllegalStateException("No app context")
+    val table = geodatabase.getTable(layerId)
+      ?: throw IllegalStateException("No table with layer id $layerId")
+    return FeatureLayerRef(ctx, table)
+  }
 }
 
 /** Serializes a [ServiceVersionInfo] to a JS-friendly map. */

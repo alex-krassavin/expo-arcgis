@@ -16,8 +16,13 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
   function FeatureLayer(props, handle) {
     const model = useGeoModel();
     const ref = useRef<FeatureLayerRef | undefined>(undefined);
+    // An externally-provided `layer` (e.g. from a geodatabase/version) is owned by its producer, so
+    // it's used as-is and never released here; otherwise build one from `url` / `source`.
+    const isExternal = useRef(props.layer != null);
     if (!ref.current) {
-      ref.current = new ExpoArcgisExtrasModule.FeatureLayerRef(props);
+      ref.current =
+        (props.layer as unknown as FeatureLayerRef) ??
+        new ExpoArcgisExtrasModule.FeatureLayerRef(props);
     }
 
     const prev = usePrevious(props);
@@ -27,7 +32,7 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
       model.addLayer(layer);
       return () => {
         model.removeLayer(layer);
-        layer.release();
+        if (!isExternal.current) layer.release();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -37,9 +42,10 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
       if (diffs.length === 0) return;
       const changed: Record<string, unknown> = {};
       diffs.forEach((key) => {
-        changed[key] = props[key];
+        // `layer` is the ref itself (construction-only), not a native prop to apply.
+        if (key !== 'layer') changed[key] = props[key];
       });
-      ref.current?.applyProps(changed);
+      if (Object.keys(changed).length > 0) ref.current?.applyProps(changed);
     }, [props]);
 
     // The native ref already exposes the query methods (typed to match FeatureLayerHandle), so

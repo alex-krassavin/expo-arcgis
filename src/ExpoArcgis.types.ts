@@ -228,6 +228,13 @@ export type FeatureLayerProps = LayerProps & {
   url?: string;
   /** Explicit feature-table source (service or local shapefile). */
   source?: FeatureTableSource;
+  /**
+   * Display a pre-built layer handle instead of constructing one from `url` / `source` — e.g. a
+   * table from `ServiceGeodatabaseHandle.getFeatureLayer` (branch versioning) or
+   * `GeodatabaseHandle.getFeatureLayer` (local geodatabase transactions). When set, `url` / `source`
+   * are ignored; other props (`renderer`, `visible`, …) still apply.
+   */
+  layer?: FeatureLayerHandle;
   /** Overrides the layer's symbology (simple / unique-value / class-breaks). */
   renderer?: Renderer;
   /**
@@ -626,6 +633,11 @@ export type ServiceGeodatabaseHandle = {
   getDefaultVersionName(): string;
   /** Whether the service supports branch versioning. */
   supportsBranchVersioning(): boolean;
+  /**
+   * Returns a `<FeatureLayer layer>`-attachable handle for the service table with `layerId`, bound to
+   * the active version — its edits join the version's local edits (pushed by `applyEdits`).
+   */
+  getFeatureLayer(layerId: number): FeatureLayerHandle;
 };
 
 /**
@@ -652,6 +664,11 @@ export type GeodatabaseHandle = {
     attributes: Record<string, unknown>,
     geometry?: Geometry
   ): Promise<void>;
+  /**
+   * Returns a `<FeatureLayer layer>`-attachable handle for `tableName` — display and edit the table
+   * on a map; edits join the open transaction.
+   */
+  getFeatureLayer(tableName: string): FeatureLayerHandle;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

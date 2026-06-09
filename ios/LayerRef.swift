@@ -40,6 +40,13 @@ public final class FeatureLayerRef: LayerRef {
     super.init(layer: FeatureLayer(featureTable: table))
   }
 
+  /// Wraps an existing feature table (e.g. one from a `ServiceGeodatabase` version or a local
+  /// `Geodatabase`) so it can be displayed via `<FeatureLayer layer>` and edited.
+  init(table: FeatureTable) {
+    self.table = table
+    super.init(layer: FeatureLayer(featureTable: table))
+  }
+
   /// Returns the features matching `query` (all features when nil). Loads attributes in full.
   func queryFeatures(_ query: [String: Any]?) async throws -> [[String: Any]] {
     let params = buildQueryParameters(query)

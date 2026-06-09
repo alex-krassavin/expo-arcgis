@@ -47,6 +47,15 @@ public final class ServiceGeodatabaseRef: SharedObject {
   func getVersionName() -> String { geodatabase.versionName }
   func getDefaultVersionName() -> String { geodatabase.defaultVersionName }
   func supportsBranchVersioning() -> Bool { geodatabase.supportsBranchVersioning }
+
+  /// Returns a `<FeatureLayer layer>`-attachable handle for the service table with `layerId`, bound
+  /// to this geodatabase's active version (so its edits join the version's local edits).
+  func getFeatureLayer(_ layerId: Int) throws -> FeatureLayerRef {
+    guard let table = geodatabase.table(withLayerID: layerId) else {
+      throw NSError(domain: "ExpoArcgis", code: 7, userInfo: [NSLocalizedDescriptionKey: "No table with layer id \(layerId)"])
+    }
+    return FeatureLayerRef(table: table)
+  }
 }
 
 /// Serializes a `ServiceVersionInfo` to a JS-friendly dict.

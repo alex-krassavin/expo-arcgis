@@ -39,6 +39,14 @@ class GeodatabaseRef(appContext: AppContext, private val geodatabase: Geodatabas
     table.addFeature(feature).getOrThrow()
   }
 
+  /** Returns a `<FeatureLayer layer>`-attachable handle for [tableName], so its edits (within a
+   *  transaction) are displayed and persisted on commit. */
+  fun getFeatureLayer(tableName: String): FeatureLayerRef {
+    val table = tableNamed(tableName) ?: throw IllegalStateException("No feature table named $tableName")
+    val ctx = appContext ?: throw IllegalStateException("No app context")
+    return FeatureLayerRef(ctx, table)
+  }
+
   private fun tableNamed(name: String): GeodatabaseFeatureTable? =
     geodatabase.featureTables.firstOrNull { it.tableName == name }
 }

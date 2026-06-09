@@ -105,6 +105,7 @@ export declare class ServiceGeodatabaseRef extends SharedObject {
   getVersionName(): string;
   getDefaultVersionName(): string;
   supportsBranchVersioning(): boolean;
+  getFeatureLayer(layerId: number): FeatureLayerRef;
 }
 
 /**
@@ -123,6 +124,7 @@ export declare class GeodatabaseRef extends SharedObject {
     attributes: Record<string, unknown>,
     geometry?: Geometry
   ): Promise<void>;
+  getFeatureLayer(tableName: string): FeatureLayerRef;
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */

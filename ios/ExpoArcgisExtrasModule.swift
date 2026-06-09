@@ -125,6 +125,7 @@ public class ExpoArcgisExtrasModule: Module {
       Function("getVersionName") { (ref: ServiceGeodatabaseRef) in ref.getVersionName() }
       Function("getDefaultVersionName") { (ref: ServiceGeodatabaseRef) in ref.getDefaultVersionName() }
       Function("supportsBranchVersioning") { (ref: ServiceGeodatabaseRef) in ref.supportsBranchVersioning() }
+      Function("getFeatureLayer") { (ref: ServiceGeodatabaseRef, layerId: Int) in try ref.getFeatureLayer(layerId) }
     }
 
     // Local mobile geodatabase with transactional editing.
@@ -143,6 +144,7 @@ public class ExpoArcgisExtrasModule: Module {
       }
       Function("isInTransaction") { (ref: GeodatabaseRef) in ref.isInTransaction() }
       Function("getFeatureTableNames") { (ref: GeodatabaseRef) in ref.getFeatureTableNames() }
+      Function("getFeatureLayer") { (ref: GeodatabaseRef, tableName: String) in try ref.getFeatureLayer(tableName) }
     }
   }
 }

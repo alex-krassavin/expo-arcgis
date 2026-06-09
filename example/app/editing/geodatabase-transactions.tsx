@@ -1,4 +1,11 @@
-import { Map, MapView, offline, type GeodatabaseHandle } from 'expo-arcgis';
+import {
+  FeatureLayer,
+  Map,
+  MapView,
+  offline,
+  type FeatureLayerHandle,
+  type GeodatabaseHandle,
+} from 'expo-arcgis';
 import { useRef, useState } from 'react';
 import { Button } from 'react-native';
 
@@ -15,6 +22,7 @@ const GEODATABASE_PATH = '/path/to/local.geodatabase';
  */
 export default function GeodatabaseTransactions() {
   const gdb = useRef<GeodatabaseHandle | null>(null);
+  const [layer, setLayer] = useState<FeatureLayerHandle | null>(null);
   const [status, setStatus] = useState('Tap “Open” (needs a real .geodatabase path).');
 
   const run = (fn: () => Promise<void>) => () => {
@@ -27,7 +35,10 @@ export default function GeodatabaseTransactions() {
 
   const open = run(async () => {
     gdb.current = await offline.openGeodatabase(GEODATABASE_PATH);
-    setStatus(`Tables: ${gdb.current.getFeatureTableNames().join(', ') || '—'}`);
+    const names = gdb.current.getFeatureTableNames();
+    // Display the first table on the map (its edits within a transaction are shown live).
+    if (names[0]) setLayer(gdb.current.getFeatureLayer(names[0]));
+    setStatus(`Tables: ${names.join(', ') || '—'}`);
   });
   const begin = run(async () => {
     await requireGdb().beginTransaction();
@@ -61,6 +72,7 @@ export default function GeodatabaseTransactions() {
       }
     >
       <Map basemap="arcGISTopographic" initialViewpoint={{ latitude: 34.05, longitude: -118.24, scale: 5_000_000 }}>
+        {layer && <FeatureLayer layer={layer} />}
         <MapView style={{ flex: 1 }} />
       </Map>
     </SampleScreen>

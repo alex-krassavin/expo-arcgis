@@ -77,10 +77,12 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
 }
 
 /** Operational FeatureLayer from a feature service URL or a local shapefile. */
-class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
-  private val table: FeatureTable = featureTable(props)
+class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) : LayerRef(appContext) {
   override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(table)
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+  /** Builds the layer from declarative props (a feature-service URL or a local shapefile). */
+  constructor(appContext: AppContext, props: Map<String, Any?>) : this(appContext, featureTable(props))
 
   /** Lazily-built branch-versioning handle for this layer's service geodatabase (cached). */
   private var cachedServiceGeodatabase: ServiceGeodatabaseRef? = null
