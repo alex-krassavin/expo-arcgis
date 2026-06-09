@@ -311,18 +311,36 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
         if let offsetY = (ld["offsetY"] as? NSNumber).map({ CGFloat($0.doubleValue) }) { layer.offsetY = offsetY }
         return layer
       case "vector-marker":
-        // DEFER: polyline / multipoint element geometries are not yet supported — only polygon.
         guard let geomDict = ld["geometry"] as? [String: Any],
-              (geomDict["type"] as? String) == "polygon",
               let geom = geometryFromDict(geomDict) else { return nil }
-        let fillColor = color(ld["fillColor"]) ?? .red
-        var layerList: [SymbolLayer] = [SolidFillSymbolLayer(color: fillColor)]
-        if let outlineColor = color(ld["outlineColor"]) {
-          let outlineWidth = (ld["outlineWidth"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 1.0
-          layerList.append(SolidStrokeSymbolLayer(width: outlineWidth, color: outlineColor))
+        let geomType = geomDict["type"] as? String
+        let elementSymbol: MultilayerSymbol?
+        switch geomType {
+        case "polygon":
+          let fillColor = color(ld["fillColor"]) ?? .red
+          var layerList: [SymbolLayer] = [SolidFillSymbolLayer(color: fillColor)]
+          if let outlineColor = color(ld["outlineColor"]) {
+            let outlineWidth = (ld["outlineWidth"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 1.0
+            layerList.append(SolidStrokeSymbolLayer(width: outlineWidth, color: outlineColor))
+          }
+          elementSymbol = MultilayerPolygonSymbol(symbolLayers: layerList)
+        case "polyline":
+          let strokeColor = color(ld["fillColor"]) ?? color(ld["outlineColor"]) ?? .red
+          let strokeWidth = (ld["outlineWidth"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 1.0
+          elementSymbol = MultilayerPolylineSymbol(symbolLayers: [SolidStrokeSymbolLayer(width: strokeWidth, color: strokeColor)])
+        case "multipoint":
+          let fillColor = color(ld["fillColor"]) ?? .red
+          var layerList: [SymbolLayer] = [SolidFillSymbolLayer(color: fillColor)]
+          if let outlineColor = color(ld["outlineColor"]) {
+            let outlineWidth = (ld["outlineWidth"] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 1.0
+            layerList.append(SolidStrokeSymbolLayer(width: outlineWidth, color: outlineColor))
+          }
+          elementSymbol = MultilayerPointSymbol(symbolLayers: layerList)
+        default:
+          return nil // unsupported geometry type — skip gracefully
         }
-        let fillSymbol = MultilayerPolygonSymbol(symbolLayers: layerList)
-        let element = VectorMarkerSymbolElement(geometry: geom, multilayerSymbol: fillSymbol)
+        guard let sym = elementSymbol else { return nil }
+        let element = VectorMarkerSymbolElement(geometry: geom, multilayerSymbol: sym)
         let vmLayer = VectorMarkerSymbolLayer(vectorMarkerSymbolElements: [element])
         if let size = (ld["size"] as? NSNumber)?.doubleValue { vmLayer.size = size }
         return vmLayer

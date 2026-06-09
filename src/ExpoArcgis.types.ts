@@ -1953,17 +1953,21 @@ export type PictureMarkerSymbolLayerSpec = {
 /**
  * One vector-marker symbol layer within a `MultilayerPointSymbolType`.
  * Mirrors the native `VectorMarkerSymbolLayer` (a shape drawn from a geometry with fill/stroke,
- * requiring no image). The geometry is defined by a `polygon` (for a filled shape) or a
- * `polyline` (for a stroked shape); polygon is the common case for icons.
+ * requiring no image).
  *
- * Internally the codec builds a `VectorMarkerSymbolElement(geometry, MultilayerPolygonSymbol)`
- * and wraps it in a `VectorMarkerSymbolLayer`.
+ * Supported `geometry` types and how they are symbolised:
+ * - `polygon` — `MultilayerPolygonSymbol([SolidFillSymbolLayer, SolidStrokeSymbolLayer?])`;
+ *   `fillColor` is the fill, `outlineColor`/`outlineWidth` add an optional stroke.
+ * - `polyline` — `MultilayerPolylineSymbol([SolidStrokeSymbolLayer])`; `fillColor` is used as the
+ *   stroke color (falls back to `outlineColor`, then red), `outlineWidth` sets the stroke width.
+ * - `multipoint` — `MultilayerPointSymbol([SolidFillSymbolLayer, SolidStrokeSymbolLayer?])`;
+ *   same color/width props as `polygon`.
  *
- * NOTE: `polyline` and `multipoint` element geometries are DEFERRED — only `polygon` is
- * currently supported. Supplying a non-polygon `geometry` type results in the layer being
- * skipped gracefully.
+ * Any other `geometry` type is silently skipped (the layer is omitted from the symbol).
+ * Geometries use a local coordinate space (not geographic) — use small integer-scale coordinates
+ * (e.g. `x` / `y` in the range `[-1, 1]`).
  *
- * @example
+ * @example — filled triangle (polygon)
  * ```ts
  * { type: 'multilayer-point', symbolLayers: [
  *   { type: 'vector-marker', size: 24,
@@ -1977,9 +1981,10 @@ export type PictureMarkerSymbolLayerSpec = {
 export type VectorMarkerSymbolLayerSpec = {
   type: 'vector-marker';
   /**
-   * The geometry that defines the marker shape. Only `polygon` is supported; other geometry
-   * types are ignored. The polygon is defined in a local coordinate space (not geographic) —
-   * use small integer-scale coordinates (e.g. `x` / `y` in the range `[-1, 1]`).
+   * The geometry that defines the marker shape. Supported types: `polygon`, `polyline`,
+   * `multipoint`. Unsupported types are silently skipped. The geometry is defined in a local
+   * coordinate space (not geographic) — use small integer-scale coordinates
+   * (e.g. `x` / `y` in the range `[-1, 1]`).
    */
   geometry: Geometry;
   /** Overall size of the marker, in points. Scales the geometry uniformly. Defaults to 12. */

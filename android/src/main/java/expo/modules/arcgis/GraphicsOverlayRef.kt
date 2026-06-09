@@ -22,6 +22,7 @@ import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
 import com.arcgismaps.mapping.symbology.MultilayerPointSymbol
 import com.arcgismaps.mapping.symbology.MultilayerPolygonSymbol
+import com.arcgismaps.mapping.symbology.MultilayerPolylineSymbol
 import com.arcgismaps.mapping.symbology.PictureFillSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbolLayer
@@ -397,20 +398,39 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
           }
         }
         "vector-marker" -> {
-          // DEFER: polyline / multipoint element geometries are not yet supported — only polygon.
           val geomMap = ldMap["geometry"] as? Map<*, *> ?: return@mapNotNull null
-          if (geomMap["type"] != "polygon") return@mapNotNull null
           val geom = geometryFromDict(geomMap) ?: return@mapNotNull null
-          val fillColor = colorOf(ldMap["fillColor"]) ?: Color.fromRgba(255, 0, 0, 255)
-          val elementLayers = buildList {
-            add(SolidFillSymbolLayer(fillColor))
-            colorOf(ldMap["outlineColor"])?.let { outlineColor ->
-              val outlineWidth = (ldMap["outlineWidth"] as? Number)?.toDouble() ?: 1.0
-              add(SolidStrokeSymbolLayer(outlineWidth, outlineColor))
+          val elementSymbol = when (geomMap["type"]) {
+            "polygon" -> {
+              val fillColor = colorOf(ldMap["fillColor"]) ?: Color.fromRgba(255, 0, 0, 255)
+              val elementLayers = buildList {
+                add(SolidFillSymbolLayer(fillColor))
+                colorOf(ldMap["outlineColor"])?.let { outlineColor ->
+                  val outlineWidth = (ldMap["outlineWidth"] as? Number)?.toDouble() ?: 1.0
+                  add(SolidStrokeSymbolLayer(outlineWidth, outlineColor))
+                }
+              }
+              MultilayerPolygonSymbol(elementLayers)
             }
+            "polyline" -> {
+              val strokeColor = colorOf(ldMap["fillColor"]) ?: colorOf(ldMap["outlineColor"]) ?: Color.fromRgba(255, 0, 0, 255)
+              val strokeWidth = (ldMap["outlineWidth"] as? Number)?.toDouble() ?: 1.0
+              MultilayerPolylineSymbol(listOf(SolidStrokeSymbolLayer(strokeWidth, strokeColor)))
+            }
+            "multipoint" -> {
+              val fillColor = colorOf(ldMap["fillColor"]) ?: Color.fromRgba(255, 0, 0, 255)
+              val elementLayers = buildList {
+                add(SolidFillSymbolLayer(fillColor))
+                colorOf(ldMap["outlineColor"])?.let { outlineColor ->
+                  val outlineWidth = (ldMap["outlineWidth"] as? Number)?.toDouble() ?: 1.0
+                  add(SolidStrokeSymbolLayer(outlineWidth, outlineColor))
+                }
+              }
+              MultilayerPointSymbol(elementLayers)
+            }
+            else -> return@mapNotNull null // unsupported geometry type — skip gracefully
           }
-          val fillSymbol = MultilayerPolygonSymbol(elementLayers)
-          val element = VectorMarkerSymbolElement(geom, fillSymbol)
+          val element = VectorMarkerSymbolElement(geom, elementSymbol)
           VectorMarkerSymbolLayer(listOf(element)).apply {
             (ldMap["size"] as? Number)?.toDouble()?.let { size = it }
           }
