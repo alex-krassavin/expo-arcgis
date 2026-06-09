@@ -59,6 +59,12 @@ group as a single unit instead of attaching to the map directly.
 </GroupLayer>
 ```
 
+Layers and graphics carry the full symbology model: simple, picture, text, 3D scene and
+**composite** symbols; simple, unique-value and class-breaks **renderers** with optional
+**visual variables** (data-driven size / colour / rotation / opacity) and **dictionary
+renderers** for military / utility symbology; plus client-side and scale-dependent display
+filters, and per-layer `minScale` / `maxScale` visibility.
+
 ## Refs for imperative operations
 
 Some operations act on a specific object at runtime — querying a layer, editing features, identifying
@@ -74,14 +80,19 @@ const count = await layer.current?.queryFeatureCount({ whereClause: 'POP > 50000
 
 A handle exposes the object's full runtime surface. On a `<FeatureLayer>` that includes batch
 editing — make several edits with `apply: false`, then push them at once with `applyEdits()` (or
-discard with `undoLocalEdits()`) — and `queryRelatedFeatures(objectId)`. A `<MapView>` / `<SceneView>`
-handle adds `identifyPopups(screenPoint)`, which returns each tapped feature's evaluated popup title
-and fields. A `<UtilityNetwork>` handle adds `validateNetworkTopology(extent)` and `getState()`.
+discard with `undoLocalEdits()`) — `queryRelatedFeatures(objectId)`, and attachment CRUD
+(`queryAttachments` / `addAttachment` / `fetchAttachment` / `deleteAttachment`). A `<MapView>` /
+`<SceneView>` handle adds `identifyPopups(screenPoint)`, which returns each tapped feature's
+evaluated popup title and fields. A `<DynamicEntityLayer>` handle adds `queryObservations(id)` for an
+entity's recent track. A `<UtilityNetwork>` handle adds `validateNetworkTopology(extent)`,
+`getState()` and `getTerminalConfigurations()`.
 
 ## Namespaces (no view needed)
 
 Service operations that don't belong to a view live on namespaces you can call from anywhere:
-`geometryEngine`, `coordinateFormatter`, `geocoder`, `router`, `geoprocessor`, `offline`.
+`geometryEngine`, `coordinateFormatter`, `geocoder` (including `suggest` → `geocodeSuggestion` for a
+precise suggestion round-trip), `router`, `geoprocessor`, `offline`, and `auth` (API key, token /
+per-service / OAuth credentials, and sign-out).
 
 ```ts
 const buffered = geometryEngine.geodesicBuffer(point, 500, 'meters');
