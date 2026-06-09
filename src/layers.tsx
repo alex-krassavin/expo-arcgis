@@ -5,6 +5,7 @@ import type {
   GeoPackageLayerProps,
   IntegratedMeshLayerProps,
   KmlLayerProps,
+  KmlLayerHandle,
   Ogc3DTilesLayerProps,
   OgcFeatureLayerProps,
   OpenStreetMapLayerProps,
@@ -69,7 +70,7 @@ export const RasterLayer = createLayerComponent<RasterLayerProps>(
 );
 
 /** Declarative `KmlLayer` from a remote `.kml`/`.kmz` URL or a local file. */
-export const KmlLayer = createLayerComponent<KmlLayerProps>(
+export const KmlLayer = createLayerComponent<KmlLayerProps, KmlLayerHandle>(
   (props) => new ExpoArcgisModule.KmlLayerRef(props)
 );
 

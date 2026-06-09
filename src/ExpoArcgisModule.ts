@@ -26,6 +26,7 @@ import type {
   StatisticsQueryParameters,
   IntegratedMeshLayerProps,
   KmlLayerProps,
+  KmlNodeInfo,
   OgcFeatureLayerProps,
   WfsLayerProps,
   MapImageLayerProps,
@@ -62,6 +63,11 @@ export declare class LayerRef<
 export declare class GroupLayerRef extends LayerRef {
   addLayer(layer: LayerRef<any>): void;
   removeLayer(layer: LayerRef<any>): void;
+}
+
+/** Reference to a native `KmlLayer` — a `LayerRef` plus `getNodes` (mirrors `KmlLayerHandle`). */
+export declare class KmlLayerRef extends LayerRef {
+  getNodes(): Promise<KmlNodeInfo[]>;
 }
 
 /**
@@ -353,7 +359,7 @@ declare class ExpoArcgisModule extends NativeModule {
   WmsLayerRef: new (props: WmsLayerProps) => LayerRef;
   WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
   RasterLayerRef: new (props: RasterLayerProps) => LayerRef;
-  KmlLayerRef: new (props: KmlLayerProps) => LayerRef;
+  KmlLayerRef: new (props: KmlLayerProps) => KmlLayerRef;
   WfsLayerRef: new (props: WfsLayerProps) => LayerRef;
   OgcFeatureLayerRef: new (props: OgcFeatureLayerProps) => LayerRef;
   DynamicEntityLayerRef: new (props: DynamicEntityLayerProps) => DynamicEntityLayerRef;

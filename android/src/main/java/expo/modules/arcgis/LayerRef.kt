@@ -54,7 +54,9 @@ import com.arcgismaps.mapping.layers.WebTiledLayer
 import com.arcgismaps.mapping.layers.KmlLayer
 import com.arcgismaps.mapping.layers.WmsLayer
 import com.arcgismaps.mapping.layers.WmtsLayer
+import com.arcgismaps.mapping.kml.KmlContainer
 import com.arcgismaps.mapping.kml.KmlDataset
+import com.arcgismaps.mapping.kml.KmlNode
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.raster.ImageServiceRaster
 import com.arcgismaps.raster.Raster
@@ -548,9 +550,29 @@ private fun rasterFromSource(s: Map<String, Any?>): Raster =
 
 /** Operational KML layer from a remote .kml/.kmz URL or local file. */
 class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
-  override val layer: KmlLayer = KmlLayer(KmlDataset(url))
+  private val dataset = KmlDataset(url)
+  override val layer: KmlLayer = KmlLayer(dataset)
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+
+  /** Loads the KML and returns its node tree (recursing into container nodes like documents / folders). */
+  suspend fun getNodes(): List<Map<String, Any?>> {
+    dataset.load().getOrThrow()
+    return dataset.rootNodes.map { serializeKmlNode(it) }
+  }
+}
+
+/** Serializes a KML node, recursing into container nodes (documents / folders). */
+private fun serializeKmlNode(node: KmlNode): Map<String, Any?> {
+  val dict = mutableMapOf<String, Any?>(
+    "name" to node.name,
+    "visible" to node.isVisible,
+    "type" to (node::class.simpleName ?: "KmlNode"),
+  )
+  if (node is KmlContainer) {
+    dict["children"] = node.childNodes.map { serializeKmlNode(it) }
+  }
+  return dict
 }
 
 /** Operational WFS layer — a [FeatureLayer] over a [WfsFeatureTable] (Web Feature Service). */

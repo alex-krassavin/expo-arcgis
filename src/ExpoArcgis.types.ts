@@ -1075,6 +1075,24 @@ export type ImageOverlayProps = {
   opacity?: number;
 };
 
+/** A node in a KML document tree, returned by `KmlLayerHandle.getNodes()`. */
+export type KmlNodeInfo = {
+  /** Node display name. */
+  name: string;
+  /** Whether the node is currently visible. */
+  visible: boolean;
+  /** Node class name (e.g. `KMLDocument` / `KMLFolder` / `KMLPlacemark` / `KMLNetworkLink` / `KMLTour`). */
+  type: string;
+  /** Child nodes, present for container nodes (documents / folders). */
+  children?: KmlNodeInfo[];
+};
+
+/** Imperative handle exposed by `<KmlLayer>` via `ref`. */
+export type KmlLayerHandle = {
+  /** Loads the KML and returns its node tree (recursing into container nodes). */
+  getNodes(): Promise<KmlNodeInfo[]>;
+};
+
 /**
  * A geometry value. The `type` discriminator mirrors the ArcGIS web API
  * (`"point"` / `"multipoint"` / `"polyline"` / `"polygon"` / `"envelope"`) and

@@ -557,9 +557,32 @@ func rasterFromSource(_ s: [String: Any]) -> Raster {
 
 /// Operational KML layer from a remote `.kml`/`.kmz` URL or local file.
 public final class KmlLayerRef: LayerRef {
+  private let dataset: KMLDataset
   init(url: String) {
-    super.init(layer: KMLLayer(dataset: KMLDataset(url: URL(string: url)!)))
+    let dataset = KMLDataset(url: URL(string: url)!)
+    self.dataset = dataset
+    super.init(layer: KMLLayer(dataset: dataset))
   }
+
+  /// Loads the KML and returns its node tree (`{ name, visible, type, children? }`, recursing into
+  /// container nodes like documents / folders).
+  func getNodes() async throws -> [[String: Any]] {
+    try await dataset.load()
+    return dataset.rootNodes.map { serializeKmlNode($0) }
+  }
+}
+
+/// Serializes a KML node, recursing into container nodes (documents / folders).
+func serializeKmlNode(_ node: KMLNode) -> [String: Any] {
+  var dict: [String: Any] = [
+    "name": node.name,
+    "visible": node.isVisible,
+    "type": String(describing: type(of: node)),
+  ]
+  if let container = node as? KMLContainer {
+    dict["children"] = container.childNodes.map { serializeKmlNode($0) }
+  }
+  return dict
 }
 
 /// Operational WFS layer — a `FeatureLayer` over a `WFSFeatureTable` (Web Feature Service).

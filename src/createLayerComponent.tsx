@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { LayerRef } from './ExpoArcgisModule';
 import { useGeoModel } from './contexts';
@@ -9,10 +9,15 @@ import { getPropsDiffs } from './utils/getPropsDiffs';
 /**
  * Builds a declarative operational-layer component from a native `LayerRef` factory.
  * Mirrors `<TileLayer>` / `<MapImageLayer>`: creates the ref once, attaches it to the nearest
- * `<Map>` / `<Scene>` via `useGeoModel`, and reconciles prop changes via `applyProps`.
+ * `<Map>` / `<Scene>` via `useGeoModel`, reconciles prop changes via `applyProps`, and forwards the
+ * native ref (typed `H`) so a layer's inspection/query methods are callable through a `ref`.
  */
-export function createLayerComponent<P extends object>(makeRef: (props: P) => LayerRef) {
-  return function Layer(props: P) {
+export function createLayerComponent<P extends object, H = unknown>(
+  makeRef: (props: P) => LayerRef
+) {
+  return forwardRef<H, P>(function Layer(rawProps, handle) {
+    // forwardRef types props as `PropsWithoutRef<P>`; our `P` has no ref prop, so treat it as `P`.
+    const props = rawProps as P;
     const model = useGeoModel();
     const ref = useRef<LayerRef | undefined>(undefined);
     if (!ref.current) {
@@ -41,6 +46,9 @@ export function createLayerComponent<P extends object>(makeRef: (props: P) => La
       ref.current?.applyProps(changed);
     }, [props]);
 
+    // Expose the native ref so layers with extra methods (e.g. KmlLayer.getNodes) are callable.
+    useImperativeHandle(handle, () => ref.current as H, []);
+
     return null;
-  };
+  });
 }
