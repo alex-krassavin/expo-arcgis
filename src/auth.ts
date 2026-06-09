@@ -9,9 +9,15 @@ import ExtrasModule from './ExpoArcgisExtrasModule';
  * recommended challenge-handler pattern: the SDK requests credentials when it actually hits a
  * secured resource, and a `TokenCredential` is minted for that exact resource — so there's no
  * service URL to match and no need to call this before the content loads. Call once after launch.
+ *
+ * `tokenExpirationMinutes` sets the lifetime of generated tokens; omit to use the server's default.
  */
-export function setTokenCredential(username: string, password: string): void {
-  Module.setTokenCredential(username, password);
+export function setTokenCredential(
+  username: string,
+  password: string,
+  tokenExpirationMinutes?: number
+): void {
+  Module.setTokenCredential(username, password, tokenExpirationMinutes ?? null);
 }
 
 /** Clears the stored login and all cached credentials (token + OAuth). */

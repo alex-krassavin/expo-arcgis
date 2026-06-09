@@ -22,11 +22,17 @@ import kotlinx.coroutines.launch
 object AuthChallengeHandler : ArcGISAuthenticationChallengeHandler {
   private var username: String? = null
   private var password: String? = null
+  private var tokenExpirationMinutes: Int? = null
 
-  /** Stores (or clears, when null) the login the handler uses to mint token credentials on demand. */
-  fun setCredentials(username: String?, password: String?) {
+  /**
+   * Stores (or clears, when null) the login the handler uses to mint token credentials on demand.
+   * [tokenExpirationMinutes] is forwarded to [TokenCredential.createWithChallenge]; pass null to
+   * use the server's default expiry.
+   */
+  fun setCredentials(username: String?, password: String?, tokenExpirationMinutes: Int? = null) {
     this.username = username
     this.password = password
+    this.tokenExpirationMinutes = tokenExpirationMinutes
   }
 
   override suspend fun handleArcGISAuthenticationChallenge(
@@ -34,7 +40,7 @@ object AuthChallengeHandler : ArcGISAuthenticationChallengeHandler {
   ): ArcGISAuthenticationChallengeResponse {
     val user = username ?: return ArcGISAuthenticationChallengeResponse.ContinueAndFail
     val pass = password ?: return ArcGISAuthenticationChallengeResponse.ContinueAndFail
-    return TokenCredential.create(challenge.requestUrl, user, pass)
+    return TokenCredential.createWithChallenge(challenge, user, pass, tokenExpirationMinutes)
       .map { ArcGISAuthenticationChallengeResponse.ContinueWithCredential(it) }
       .getOrElse { ArcGISAuthenticationChallengeResponse.ContinueAndFail }
   }

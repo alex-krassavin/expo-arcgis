@@ -254,8 +254,9 @@ declare class ExpoArcgisModule extends NativeModule {
    * Stores a login used to authenticate token-secured services (e.g. a utility-network feature
    * service). The challenge handler mints a `TokenCredential` for the exact resource the SDK
    * challenges for — no service URL or up-front timing needed.
+   * `tokenExpirationMinutes` sets the token lifetime; pass `null` to use the server's default.
    */
-  setTokenCredential(username: string, password: string): void;
+  setTokenCredential(username: string, password: string, tokenExpirationMinutes: number | null): void;
   /** Clears the stored login and all cached credentials (token + OAuth). */
   signOut(): Promise<void>;
   /** iOS-only OAuth sign-in: the SDK presents the auth browser, then caches the credential. */

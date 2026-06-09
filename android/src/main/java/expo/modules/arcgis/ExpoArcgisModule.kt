@@ -4,6 +4,7 @@ import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
 import com.arcgismaps.httpcore.authentication.OAuthApplicationCredential
+import com.arcgismaps.httpcore.authentication.OAuthUserCredential
 import com.arcgismaps.httpcore.authentication.TokenCredential
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
@@ -34,14 +35,21 @@ class ExpoArcgisModule : Module() {
 
     // Token auth for secured services (e.g. utility-network feature services) — store the login;
     // the challenge handler mints a TokenCredential for the exact challenged resource on demand.
-    Function("setTokenCredential") { username: String, password: String ->
-      AuthChallengeHandler.setCredentials(username, password)
+    // `tokenExpirationMinutes` is optional; the server's default expiry is used when omitted.
+    Function("setTokenCredential") { username: String, password: String, tokenExpirationMinutes: Int? ->
+      AuthChallengeHandler.setCredentials(username, password, tokenExpirationMinutes)
     }
 
-    // Clears the stored login and all cached credentials (token + OAuth).
+    // Revokes any OAuth user credentials on the server, then clears all cached credentials.
     AsyncFunction("signOut") Coroutine { ->
+      val store = ArcGISEnvironment.authenticationManager.arcGISCredentialStore
+      for (credential in store.getCredentials()) {
+        if (credential is OAuthUserCredential) {
+          credential.revokeToken()
+        }
+      }
       AuthChallengeHandler.setCredentials(null, null)
-      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
+      store.removeAll()
     }
 
     // OAuth user sign-in (Android): JS opens the browser between these two steps.

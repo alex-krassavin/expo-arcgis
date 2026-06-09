@@ -9,11 +9,15 @@ final class AuthChallengeHandler: ArcGISAuthenticationChallengeHandler, @uncheck
 
   private var username: String?
   private var password: String?
+  private var tokenExpirationMinutes: Int?
 
   /// Stores (or clears, when nil) the login the handler uses to mint token credentials on demand.
-  func setCredentials(username: String?, password: String?) {
+  /// `tokenExpirationMinutes` is forwarded to `TokenCredential.credential(for:username:password:tokenExpirationMinutes:)`;
+  /// pass `nil` to use the server's default expiry.
+  func setCredentials(username: String?, password: String?, tokenExpirationMinutes: Int? = nil) {
     self.username = username
     self.password = password
+    self.tokenExpirationMinutes = tokenExpirationMinutes
   }
 
   func handleArcGISAuthenticationChallenge(
@@ -23,7 +27,8 @@ final class AuthChallengeHandler: ArcGISAuthenticationChallengeHandler, @uncheck
       return .continueWithoutCredential
     }
     let credential = try await TokenCredential.credential(
-      for: challenge, username: username, password: password
+      for: challenge, username: username, password: password,
+      tokenExpirationMinutes: tokenExpirationMinutes
     )
     return .continueWithCredential(credential)
   }

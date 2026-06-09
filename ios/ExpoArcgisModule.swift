@@ -21,14 +21,23 @@ public class ExpoArcgisModule: Module {
 
     // Token auth for secured services (e.g. utility-network feature services) — store the login;
     // the challenge handler mints a TokenCredential for the exact challenged resource on demand.
-    Function("setTokenCredential") { (username: String, password: String) in
-      AuthChallengeHandler.shared.setCredentials(username: username, password: password)
+    // `tokenExpirationMinutes` is optional; the server's default expiry is used when omitted.
+    Function("setTokenCredential") { (username: String, password: String, tokenExpirationMinutes: Int?) in
+      AuthChallengeHandler.shared.setCredentials(
+        username: username, password: password, tokenExpirationMinutes: tokenExpirationMinutes
+      )
     }
 
-    // Clears the stored login and all cached credentials (token + OAuth).
+    // Revokes any OAuth user credentials on the server, then clears all cached credentials.
     AsyncFunction("signOut") {
+      let store = ArcGISEnvironment.authenticationManager.arcGISCredentialStore
+      for credential in store.credentials {
+        if let oauthCred = credential as? OAuthUserCredential {
+          try? await oauthCred.revokeToken()
+        }
+      }
       AuthChallengeHandler.shared.setCredentials(username: nil, password: nil)
-      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
+      store.removeAll()
     }
 
     // OAuth user sign-in. On iOS the SDK presents the auth browser (ASWebAuthenticationSession)
