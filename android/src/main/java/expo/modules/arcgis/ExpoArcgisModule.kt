@@ -454,6 +454,10 @@ class ExpoArcgisModule : Module() {
         view.retryLoad(promise)
       }
 
+      AsyncFunction("getElevation") { view: ExpoArcgisSceneView, point: Map<String, Any?>, promise: Promise ->
+        view.getElevation(point, promise)
+      }
+
       AsyncFunction("identify") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
         view.identify(screenPoint, options, promise)
       }

@@ -146,6 +146,12 @@ class ExpoArcgisSceneView: ExpoView {
     }
   }
 
+  /// Returns the terrain elevation (meters) at a point on the scene's base surface, or nil.
+  func getElevation(_ point: [String: Any]) async throws -> Double? {
+    guard let scene = model.scene, let point = geometryFromDict(point) as? Point else { return nil }
+    return try await scene.baseSurface.elevation(at: point)
+  }
+
   /// Identifies the features under a screen point (3D). Mirrors `MapView.identify`.
   func identify(_ screenPoint: [String: Any], _ options: [String: Any]?) async throws -> [[String: Any]] {
     guard let proxy = model.proxy else { return [] }

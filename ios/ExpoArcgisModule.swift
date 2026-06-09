@@ -480,6 +480,10 @@ public class ExpoArcgisModule: Module {
         try await view.retryLoad()
       }
 
+      AsyncFunction("getElevation") { (view: ExpoArcgisSceneView, point: [String: Any]) in
+        try await view.getElevation(point)
+      }
+
       AsyncFunction("identify") { (view: ExpoArcgisSceneView, screenPoint: [String: Any], options: [String: Any]?) in
         try await view.identify(screenPoint, options)
       }

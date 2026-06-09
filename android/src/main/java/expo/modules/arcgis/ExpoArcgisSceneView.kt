@@ -132,6 +132,17 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     }
   }
 
+  /** Returns the terrain elevation (meters) at a point on the scene's base surface, or null. */
+  fun getElevation(point: Map<String, Any?>, promise: Promise) {
+    val scene = sceneView.scene ?: run { promise.resolve(null); return }
+    val p = geometryFromDict(point) as? Point ?: run { promise.resolve(null); return }
+    scope.launch {
+      scene.baseSurface.getElevation(p)
+        .onSuccess { promise.resolve(it) }
+        .onFailure { e -> promise.reject("ELEVATION_ERROR", e.message ?: "Elevation query failed", e) }
+    }
+  }
+
   /** Animates the view to a runtime camera sent from JS. */
   fun setCamera(c: Map<String, Any?>?) {
     val position = c?.get("position") as? Map<*, *> ?: return

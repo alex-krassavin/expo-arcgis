@@ -479,6 +479,11 @@ export type SceneViewHandle = {
   ): Promise<PopupResult[]>;
   /** Retries loading the scene after a failure (e.g. a network outage). Re-fires `onSceneLoaded`/`onSceneLoadError`. */
   retryLoad(): Promise<void>;
+  /**
+   * The terrain elevation (in meters) on the scene's base surface at a geographic point, or `null`
+   * if no surface/elevation is available there.
+   */
+  getElevation(point: Point): Promise<number | null>;
 };
 
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
