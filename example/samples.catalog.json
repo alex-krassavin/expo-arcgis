@@ -50,5 +50,12 @@
 
   { "slug": "real-time/dynamic-entity-layer", "category": "Real-time", "title": "Dynamic entity layer", "description": "Stream live moving entities from a stream service." },
 
-  { "slug": "auth/authentication", "category": "Authentication", "title": "Authentication", "description": "Token login, OAuth sign-in and sign-out." }
+  { "slug": "auth/authentication", "category": "Authentication", "title": "Authentication", "description": "Token login, OAuth sign-in and sign-out." },
+
+  { "slug": "symbols/visual-variables", "category": "Symbols & rendering", "title": "Visual variables", "description": "Data-driven marker size and color from a feature attribute." },
+  { "slug": "symbols/composite-symbol", "category": "Symbols & rendering", "title": "Composite symbol", "description": "Stack several symbols into one." },
+  { "slug": "layers/display-filter", "category": "Layers", "title": "Display filter", "description": "Hide features client-side with a where-clause, no re-query." },
+  { "slug": "geometry/geodesic-shapes", "category": "Geometry", "title": "Geodesic shapes", "description": "Build a geodesic ellipse and sector on the spheroid." },
+  { "slug": "three-d/camera-controller", "category": "3D", "title": "Camera controller", "description": "Orbit a fixed target with an orbit camera controller." },
+  { "slug": "geocode/suggestion-roundtrip", "category": "Geocoding", "title": "Suggestion round-trip", "description": "Geocode a chosen autocomplete suggestion precisely via its id." }
 ]
