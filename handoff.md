@@ -787,6 +787,15 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 
 **Агенты (5 заходов, 20 фич):** фиксов 2·2·0·0·1. Чистые prop/codec/extend — почти всегда 0 фиксов; редкие фиксы — на cross-ref (GeoElement) и SwiftUI. Пре-чек (греп native перед батчем) обязателен — отсёк 2 дубля (filter, distance-measurement).
 
+## Depth-батч №6 (фоновые агенты) ✅ — 0 фиксов
+**4 запущено, 1 — пробел SDK (не дубль, а ОТСУТСТВИЕ API):** `Layer.blendMode` **нет в SDK 300.0.0** (агент исчерпывающе проверил оба нативных API — есть только `BlendRenderer` для растров; в web-SDK есть, в native нет). Закомментил, не интегрировал. **Урок: пре-чек проверяет «не сделано ли», но НЕ «есть ли API» — агент ловит пробел при surfing'е.** 3 реальные фичи — cherry-pick без конфликтов, geometry +2 влезло (64KB ок):
+- **`<Map referenceScale>` + `<Map maxExtent>`** (applyProps). `referenceScale` Swift `Double?`(0→nil)/Kotlin `Double`(0=сентинел); `maxExtent`→`Envelope`.
+- **scale-based display filter** (`<FeatureLayer scaleDisplayFilter={[{minScale,maxScale,whereClause}]}>`, applyProps). `ScaleRangeDisplayFilter(name,whereClause,minScale?,maxScale?)`+`ScaleDisplayFilterDefinition(filters)`; пишет то же `displayFilterDefinition` что и `displayFilter` (юзать по одному).
+- **`geometryEngine.withZ` + `withM`** (geometry-модуль +2, влезло). Swift `GeometryEngine.makeGeometry(from:z:)`/`(from:m:)` (НЕ createWithZ!); Kotlin `createWithZOrNull`/`createWithMOrNull`. DEFER: withZAndM.
+- **Верификация:** TS · Android (clean) · iOS · example tsc · expo export ✅. **Неопубликовано (post-0.1.3): батч №4(4)+№5(4)+№6(3) = 11 фич → 0.1.4.**
+
+**Агенты ИТОГО (6 заходов, 23 фичи интегрировано):** фиксов 2·2·0·0·1·0. Отсев пре-чеком/агентом: 2 дубля (filter, distance-measurement) + 1 SDK-пробел (blendMode). **Вывод: depth-агенты очень эффективны на prop/codec/extend; «лёгкий» чистый depth по сути ВЫЧЕРПАН — остаток требует либо main-модульной возни/64KB-ребаланса, либо нетривиальной нативной логики (UN subnetwork, offline overrides, editing attribute-rules/versioning, observation-history), либо упирается в пробелы SDK 300.**
+
 **Наблюдение по агентам (4 захода, 16 фич):** заходы 1-2 — по 2 моих фикса; заходы 3-4 — **0 фиксов**. Чистые prop/codec/extend-depth-фичи (без новых нативных registration'ов) — идеальны для агентов: и сами пишутся верно, и нет 64KB-возни. Сложности остаются мне: выбор/пре-чек (грепнуть native, чтоб не дублировать), 64KB-архитектура, редкие SwiftUI-тонкости.
 
 ## Symbols + GeometryEngine — easy-wins добивка ✅
