@@ -7,6 +7,7 @@ import type {
   DimensionLayerProps,
   FeatureCollectionLayerProps,
   FeatureLayerProps,
+  GeoPackageLayerProps,
   LayerProps,
   OrientedImageryLayerProps,
   SubtypeFeatureLayerProps,
@@ -160,6 +161,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   GroupLayerRef: new (props: LayerProps) => GroupLayerRef;
   FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
   FeatureCollectionLayerRef: new (props: FeatureCollectionLayerProps) => LayerRef;
+  GeoPackageLayerRef: new (props: GeoPackageLayerProps) => LayerRef;
 }
 
 export default requireNativeModule<ExpoArcgisGeometryModule>('ExpoArcgisGeometry');

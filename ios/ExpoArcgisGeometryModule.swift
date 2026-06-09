@@ -206,6 +206,18 @@ public class ExpoArcgisGeometryModule: Module {
       }
       Function("applyProps") { (ref: FeatureCollectionLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
+    // GeoPackage layer — async-loads a local .gpkg, picks the feature table, wraps it in a FeatureLayer.
+    Class(GeoPackageLayerRef.self) {
+      Constructor { (props: [String: Any]) -> GeoPackageLayerRef in
+        let ref = GeoPackageLayerRef(
+          path: props["path"] as? String ?? "",
+          tableName: props["tableName"] as? String
+        )
+        ref.applyProps(props)
+        return ref
+      }
+      Function("applyProps") { (ref: GeoPackageLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
+    }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String) in

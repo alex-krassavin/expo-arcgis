@@ -10,6 +10,7 @@ import com.arcgismaps.data.FeatureRequestMode
 import com.arcgismaps.data.FeatureTable
 import com.arcgismaps.data.Field
 import com.arcgismaps.data.FieldType
+import com.arcgismaps.data.GeoPackage
 import com.arcgismaps.data.QueryFeatureFields
 import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.ServiceFeatureTable
@@ -17,6 +18,10 @@ import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.data.OgcFeatureCollectionTable
 import com.arcgismaps.data.WfsFeatureTable
 import com.arcgismaps.mapping.layers.AnnotationLayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import com.arcgismaps.mapping.layers.ArcGISMapImageLayer
 import com.arcgismaps.mapping.layers.ArcGISSceneLayer
 import com.arcgismaps.mapping.layers.ArcGISTiledLayer
@@ -411,6 +416,37 @@ class FeatureCollectionLayerRef(appContext: AppContext, props: Map<String, Any?>
       table.renderer = (changed["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
     }
   }
+}
+
+/**
+ * Operational layer loaded from a local GeoPackage (`.gpkg`) file. Opens the GeoPackage
+ * asynchronously, picks the feature table by [tableName] (or the first when null), wraps it in a
+ * [FeatureLayer], and attaches it to the placeholder [GroupLayer] once ready.
+ */
+class GeoPackageLayerRef(appContext: AppContext, path: String, tableName: String?) :
+  LayerRef(appContext) {
+
+  private val group = GroupLayer(emptyList())
+  override val layer: Layer = group
+  private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+  init {
+    scope.launch {
+      val pkg = GeoPackage(path)
+      pkg.load().onFailure { return@launch }
+      val tables = pkg.geoPackageFeatureTables
+      if (tables.isEmpty()) return@launch
+      val table = if (tableName != null) {
+        tables.firstOrNull { it.tableName == tableName } ?: return@launch
+      } else {
+        tables[0]
+      }
+      val featureLayer = FeatureLayer.createWithFeatureTable(table)
+      group.layers.add(featureLayer)
+    }
+  }
+
+  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }
 
 private fun makeFeatureCollectionField(d: Map<*, *>): Field {

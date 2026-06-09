@@ -419,3 +419,44 @@ private func featureCollectionFieldType(_ value: String?) -> ArcGIS.FieldType {
   default: return .text
   }
 }
+
+/// Operational layer loaded from a local GeoPackage (`.gpkg`) file. Opens the GeoPackage
+/// asynchronously, picks the feature table by `tableName` (or the first table when omitted),
+/// wraps it in a `FeatureLayer`, and attaches it to the placeholder `GroupLayer` once ready.
+public final class GeoPackageLayerRef: LayerRef {
+  private let group: GroupLayer
+  private let path: String
+  private let tableName: String?
+
+  init(path: String, tableName: String?) {
+    self.path = path
+    self.tableName = tableName
+    let group = GroupLayer()
+    self.group = group
+    super.init(layer: group)
+    loadAsync()
+  }
+
+  private func loadAsync() {
+    Task { [weak self] in
+      guard let self else { return }
+      let pkg = GeoPackage(fileURL: URL(fileURLWithPath: self.path))
+      do {
+        try await pkg.load()
+      } catch {
+        return
+      }
+      let tables = pkg.featureTables
+      guard !tables.isEmpty else { return }
+      let table: GeoPackageFeatureTable
+      if let name = self.tableName {
+        guard let found = tables.first(where: { $0.tableName == name }) else { return }
+        table = found
+      } else {
+        table = tables[0]
+      }
+      let featureLayer = FeatureLayer(featureTable: table)
+      self.group.addLayer(featureLayer)
+    }
+  }
+}

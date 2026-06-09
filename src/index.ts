@@ -45,6 +45,7 @@ export {
   OrientedImageryLayer,
   SubtypeFeatureLayer,
 } from './layers';
+export { GeoPackageLayer } from './layers';
 export { DynamicEntityLayer } from './DynamicEntityLayer';
 export { GroupLayer } from './GroupLayer';
 export { FeatureCollectionLayer } from './layers';

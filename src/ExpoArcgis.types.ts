@@ -504,6 +504,20 @@ export type OrientedImageryLayerProps = LayerProps & { url: string };
 /** Subtype feature layer (one sublayer per subtype) from a feature service URL. */
 export type SubtypeFeatureLayerProps = LayerProps & { url: string };
 
+/**
+ * Props for a `<GeoPackageLayer>` — displays a feature table from a local `.gpkg` file.
+ * The GeoPackage is opened asynchronously; the layer appears once the load completes.
+ */
+export type GeoPackageLayerProps = LayerProps & {
+  /** Absolute path to the local `.gpkg` file. */
+  path: string;
+  /**
+   * Name of the feature table to display. When omitted, the first table in the GeoPackage is used.
+   * Construction-only — remount to change.
+   */
+  tableName?: string;
+};
+
 /** WFS (Web Feature Service) layer — a feature layer over `WFSFeatureTable`. */
 export type WfsLayerProps = LayerProps & {
   /** WFS service URL. */

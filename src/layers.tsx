@@ -2,6 +2,7 @@ import type {
   AnnotationLayerProps,
   BuildingSceneLayerProps,
   DimensionLayerProps,
+  GeoPackageLayerProps,
   IntegratedMeshLayerProps,
   KmlLayerProps,
   Ogc3DTilesLayerProps,
@@ -112,4 +113,13 @@ export const SubtypeFeatureLayer = createLayerComponent<SubtypeFeatureLayerProps
 /** In-memory `FeatureCollectionLayer` — built from a client-side `fields` schema + `features`. */
 export const FeatureCollectionLayer = createLayerComponent<FeatureCollectionLayerProps>(
   (props) => new ExpoArcgisGeometryModule.FeatureCollectionLayerRef(props)
+);
+
+/**
+ * Declarative layer from a local GeoPackage (`.gpkg`) file. Opens the file asynchronously,
+ * picks the feature table by `tableName` (or the first table when omitted), and displays it
+ * once loaded. `path` and `tableName` are construction-only; remount to change.
+ */
+export const GeoPackageLayer = createLayerComponent<GeoPackageLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.GeoPackageLayerRef(props)
 );
