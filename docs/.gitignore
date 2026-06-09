@@ -4,6 +4,8 @@ dist/
 .astro/
 # generated TypeDoc API reference (regenerated on every build)
 src/content/docs/api/
+# generated sample pages (from example/samples.catalog.json, regenerated on every build)
+src/content/docs/samples/
 
 # dependencies
 node_modules/

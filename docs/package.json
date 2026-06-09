@@ -3,8 +3,10 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "predev": "node scripts/gen-sample-pages.mjs",
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "node scripts/gen-sample-pages.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
