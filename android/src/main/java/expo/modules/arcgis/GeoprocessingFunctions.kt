@@ -6,6 +6,7 @@ import com.arcgismaps.tasks.geoprocessing.GeoprocessingTask
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingBoolean
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDataFile
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDate
+import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingRaster
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingDouble
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingFeatures
 import com.arcgismaps.tasks.geoprocessing.geoprocessingparameters.GeoprocessingLinearUnit
@@ -82,8 +83,16 @@ private fun buildGeoprocessingParameter(d: Map<*, *>): GeoprocessingParameter? =
     GeoprocessingMultiValue(paramType, elements)
   }
   "dataFile" -> {
-    val url = d["url"] as? String ?: return null
-    GeoprocessingDataFile.Companion.createWithUrl(url)
+    val filePath = d["filePath"] as? String
+    if (filePath != null) {
+      // Local-file path — use GeoprocessingDataFile.inputFilePath (a settable property).
+      val df = GeoprocessingDataFile.Companion.create()
+      df.inputFilePath = filePath
+      df
+    } else {
+      val url = d["url"] as? String ?: return null
+      GeoprocessingDataFile.Companion.createWithUrl(url)
+    }
   }
   else -> null
 }
@@ -104,6 +113,13 @@ private suspend fun serializeGeoprocessingParameter(param: GeoprocessingParamete
   is GeoprocessingFeatures -> {
     if (param.canFetchOutputFeatures) param.fetchOutputFeatures().getOrThrow()
     param.features?.map { serializeFeature(it) } ?: emptyList<Map<String, Any?>>()
+  }
+  // GeoprocessingRaster extends GeoprocessingDataFile — must come before any GeoprocessingDataFile branch.
+  is GeoprocessingRaster -> {
+    val result = mutableMapOf<String, Any?>("type" to "raster")
+    param.url?.let { result["url"] = it }
+    param.inputFilePath?.let { result["filePath"] = it }
+    result
   }
   else -> null
 }

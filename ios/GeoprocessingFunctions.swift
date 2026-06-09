@@ -76,6 +76,14 @@ private func buildGeoprocessingParameter(_ d: [String: Any]) -> GeoprocessingPar
       : GeoprocessingString.self
     return GeoprocessingMultiValue(parameterType: paramType, values: elements)
   case "dataFile":
+    if let filePath = d["filePath"] as? String {
+      // Local-file path — create with the file URL so the SDK routes it through the
+      // local-file code path (GeoprocessingDataFile.inputFileURL).
+      let fileURL = URL(fileURLWithPath: filePath)
+      let df = GeoprocessingDataFile(url: fileURL)
+      df.inputFileURL = fileURL
+      return df
+    }
     guard let urlStr = d["url"] as? String, let url = URL(string: urlStr) else { return nil }
     return GeoprocessingDataFile(url: url)
   default:
@@ -102,6 +110,12 @@ private func serializeGeoprocessingParameter(_ param: GeoprocessingParameter) as
   case let p as GeoprocessingFeatures:
     if p.canFetchOutputFeatures { try await p.fetchOutputFeatures() }
     return p.features?.features().map(serializeFeature) ?? []
+  case let p as GeoprocessingRaster:
+    // Return the raster URL (remote service URL) or local file path, whichever is set.
+    var result: [String: Any] = ["type": "raster"]
+    if let url = p.url?.absoluteString { result["url"] = url }
+    if let fileURL = p.inputFileURL?.path { result["filePath"] = fileURL }
+    return result
   default:
     return NSNull()
   }

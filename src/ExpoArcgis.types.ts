@@ -1229,14 +1229,28 @@ export type GeoprocessingInput =
   | { type: 'features'; geometries: Geometry[] }
   /** An array of homogeneous strings or numbers — maps to `GeoprocessingMultiValue`. */
   | { type: 'multiValue'; values: (string | number)[] }
-  /** A remote file input (URL) — maps to `GeoprocessingDataFile`. */
-  | { type: 'dataFile'; url: string };
+  /**
+   * A data-file input — maps to `GeoprocessingDataFile`.
+   * Provide exactly one of `url` (remote service URL) or `filePath` (absolute local path).
+   */
+  | { type: 'dataFile'; url: string; filePath?: never }
+  | { type: 'dataFile'; filePath: string; url?: never };
+
+/** A raster output from a geoprocessing tool. Mirrors `GeoprocessingRaster`. */
+export type GeoprocessingRasterOutput = {
+  type: 'raster';
+  /** Remote raster URL (set by the service for output rasters). */
+  url?: string;
+  /** Absolute local file path (set when the output raster is a local file). */
+  filePath?: string;
+};
 
 /** Result of `geoprocessor.execute`. Mirrors the native `GeoprocessingResult`. */
 export type GeoprocessingResult = {
   /**
    * Output parameters keyed by name. Scalars (`string`/`double`/`long`/`boolean`) come back as
-   * their JS value; feature outputs come back as `Feature[]`. (Raster outputs are not serialized.)
+   * their JS value; feature outputs come back as `Feature[]`; raster outputs come back as
+   * `GeoprocessingRasterOutput`.
    */
   outputs: Record<string, unknown>;
 };
