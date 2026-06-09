@@ -255,6 +255,10 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
         layer.displayFilterDefinition = null
       }
     }
+    if (changed.containsKey("refreshInterval")) {
+      val seconds = (changed["refreshInterval"] as? Number)?.toLong() ?: 0L
+      layer.refreshInterval = if (seconds > 0L) seconds * 1000L else null
+    }
   }
 }
 

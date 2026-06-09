@@ -241,6 +241,10 @@ public final class FeatureLayerRef: LayerRef {
         featureLayer.displayFilterDefinition = nil
       }
     }
+    if changed.keys.contains("refreshInterval") {
+      let seconds = (changed["refreshInterval"] as? NSNumber)?.doubleValue ?? 0
+      featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil
+    }
   }
 }
 

@@ -163,6 +163,12 @@ export type FeatureLayerProps = LayerProps & {
    * Set to `null` or omit to clear the filter and show all features.
    */
   displayFilter?: { whereClause: string; name?: string } | null;
+  /**
+   * How often (in seconds) the layer automatically re-fetches its features from the service.
+   * `0` or omitted disables auto-refresh. Maps to `refreshInterval` (milliseconds) on Android
+   * and `refreshInterval: TimeInterval?` (seconds) on iOS.
+   */
+  refreshInterval?: number;
 };
 
 /** One field in a `<FeatureCollectionLayer>` schema. */
