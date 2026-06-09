@@ -57,5 +57,9 @@
   { "slug": "layers/display-filter", "category": "Layers", "title": "Display filter", "description": "Hide features client-side with a where-clause, no re-query." },
   { "slug": "geometry/geodesic-shapes", "category": "Geometry", "title": "Geodesic shapes", "description": "Build a geodesic ellipse and sector on the spheroid." },
   { "slug": "three-d/camera-controller", "category": "3D", "title": "Camera controller", "description": "Orbit a fixed target with an orbit camera controller." },
-  { "slug": "geocode/suggestion-roundtrip", "category": "Geocoding", "title": "Suggestion round-trip", "description": "Geocode a chosen autocomplete suggestion precisely via its id." }
+  { "slug": "geocode/suggestion-roundtrip", "category": "Geocoding", "title": "Suggestion round-trip", "description": "Geocode a chosen autocomplete suggestion precisely via its id." },
+  { "slug": "layers/scale-display-filter", "category": "Layers", "title": "Scale display filter", "description": "Swap the active where-clause as the map scale changes." },
+  { "slug": "analysis/geoelement-viewshed", "category": "Analysis", "title": "GeoElement viewshed", "description": "A viewshed that follows a moving graphic observer." },
+  { "slug": "routing/route-tracker", "category": "Routing", "title": "Route tracker", "description": "Turn-by-turn navigation status from tracked locations." },
+  { "slug": "real-time/dynamic-entity-changes", "category": "Real-time", "title": "Entity change events", "description": "React to per-entity received / purged stream events." }
 ]

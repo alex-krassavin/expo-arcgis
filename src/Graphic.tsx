@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { GraphicProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicRef } from './ExpoArcgisModule';
@@ -7,13 +7,18 @@ import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
 
-/** Declarative point graphic. Draws itself on the nearest `<GraphicsOverlay>`. */
-export function Graphic(props: GraphicProps) {
+/**
+ * Declarative point graphic. Draws itself on the nearest `<GraphicsOverlay>`. Forwards its native
+ * `GraphicRef` so the graphic can be handed to a GeoElement-anchored analysis — e.g.
+ * `<Viewshed graphic={ref}>` / `<LineOfSight observerGraphic={ref}>`.
+ */
+export const Graphic = forwardRef<GraphicRef, GraphicProps>(function Graphic(props, fwdRef) {
   const overlay = useGraphicsOverlay();
   const ref = useRef<GraphicRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.GraphicRef(props);
   }
+  useImperativeHandle(fwdRef, () => ref.current!, []);
 
   const prev = usePrevious(props);
 
@@ -38,4 +43,4 @@ export function Graphic(props: GraphicProps) {
   }, [props]);
 
   return null;
-}
+});
