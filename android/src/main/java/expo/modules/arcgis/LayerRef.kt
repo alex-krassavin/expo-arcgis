@@ -18,6 +18,8 @@ import com.arcgismaps.data.ShapefileFeatureTable
 import com.arcgismaps.data.OgcFeatureCollectionTable
 import com.arcgismaps.data.WfsFeatureTable
 import com.arcgismaps.mapping.layers.AnnotationLayer
+import com.arcgismaps.mapping.layers.DisplayFilter
+import com.arcgismaps.mapping.layers.ManualDisplayFilterDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -238,6 +240,17 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
     }
     if (changed.containsKey("featureReduction")) {
       layer.featureReduction = (changed["featureReduction"] as? Map<*, *>)?.let { buildFeatureReduction(it) }
+    }
+    if (changed.containsKey("displayFilter")) {
+      val filterDict = changed["displayFilter"] as? Map<*, *>
+      if (filterDict != null) {
+        val whereClause = filterDict["whereClause"] as? String ?: ""
+        val name = filterDict["name"] as? String ?: ""
+        val filter = DisplayFilter.Companion.createWithNameAndWhereClause(name, whereClause)
+        layer.displayFilterDefinition = ManualDisplayFilterDefinition(filter, listOf(filter))
+      } else {
+        layer.displayFilterDefinition = null
+      }
     }
   }
 }

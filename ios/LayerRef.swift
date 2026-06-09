@@ -224,6 +224,18 @@ public final class FeatureLayerRef: LayerRef {
     if changed.keys.contains("featureReduction") {
       featureLayer.featureReduction = (changed["featureReduction"] as? [String: Any]).flatMap(buildFeatureReduction)
     }
+    if changed.keys.contains("displayFilter") {
+      if let filterDict = changed["displayFilter"] as? [String: Any],
+        let whereClause = filterDict["whereClause"] as? String
+      {
+        let name = filterDict["name"] as? String ?? ""
+        let filter = DisplayFilter(name: name, whereClause: whereClause)
+        featureLayer.displayFilterDefinition = ManualDisplayFilterDefinition(
+          activeFilter: filter, availableFilters: [filter])
+      } else {
+        featureLayer.displayFilterDefinition = nil
+      }
+    }
   }
 }
 

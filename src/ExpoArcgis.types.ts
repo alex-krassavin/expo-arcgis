@@ -146,6 +146,11 @@ export type FeatureLayerProps = LayerProps & {
   labels?: LabelDefinition[];
   /** Aggregates dense features into clusters (feature reduction). */
   featureReduction?: FeatureReduction;
+  /**
+   * Hides features not matching a where-clause on the client — no server round-trip.
+   * Set to `null` or omit to clear the filter and show all features.
+   */
+  displayFilter?: { whereClause: string; name?: string } | null;
 };
 
 /** One field in a `<FeatureCollectionLayer>` schema. */
