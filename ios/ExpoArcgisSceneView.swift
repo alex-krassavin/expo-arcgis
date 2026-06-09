@@ -62,8 +62,9 @@ struct ExpoArcgisSceneContainer: View {
           .sunLighting(model.sunLighting)
           .atmosphereEffect(model.atmosphereEffect)
           .sunDate(model.sunDate)
-          // Apply camera controller only when explicitly set; nil restores the SDK default.
-          .modifier(OptionalCameraControllerModifier(controller: model.cameraController))
+          // `.cameraController` returns `SceneView` (keeps the chain). A nil prop falls back to a
+          // fresh `GlobeCameraController`, which is the SDK's default navigation controller.
+          .cameraController(model.cameraController ?? GlobeCameraController())
           .onSingleTapGesture { screenPoint, scenePoint in
             // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
             guard let scenePoint else { return }
@@ -215,19 +216,6 @@ class ExpoArcgisSceneView: ExpoView {
       model.setCameraController(GlobeCameraController())
     default:
       model.setCameraController(nil)
-    }
-  }
-}
-
-/// Conditionally applies `.cameraController(...)` — a no-op when `controller` is nil so the SDK
-/// default (`GlobeCameraController`) remains active.
-struct OptionalCameraControllerModifier: ViewModifier {
-  let controller: CameraController?
-  func body(content: Content) -> some View {
-    if let controller {
-      content.cameraController(controller)
-    } else {
-      content
     }
   }
 }

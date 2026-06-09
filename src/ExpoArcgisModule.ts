@@ -4,6 +4,7 @@ import { SharedObject } from 'expo-modules-core';
 import type {
   AttachmentInfo,
   ConnectionStatus,
+  DynamicEntityChange,
   DistanceMeasurementProps,
   DynamicEntityLayerProps,
   EditResult,
@@ -86,6 +87,7 @@ export declare class FeatureLayerRef extends LayerRef {
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */
 type DynamicEntityLayerEvents = {
   onConnectionStatusChange: (event: { status: ConnectionStatus }) => void;
+  onDynamicEntityChange: (event: DynamicEntityChange) => void;
 };
 
 /** Reference to a native real-time `DynamicEntityLayer` (stream service / custom feed). */
