@@ -1823,6 +1823,55 @@ export type CompositeSymbolType = {
   symbols: Symbol[];
 };
 
+/**
+ * One picture-marker symbol layer within a `MultilayerPointSymbolType`.
+ * Mirrors the native `PictureMarkerSymbolLayer`.
+ *
+ * NOTE: `size` sets a uniform size (overrides `width`/`height` when all three are supplied).
+ * `width` and `height` are applied in order, so supplying both sets size to the last one;
+ * use `size` for a uniform value. `offsetX`/`offsetY` shift the layer in points.
+ *
+ * DEFER: `VectorMarkerSymbolLayer` (the vector-marker kind) requires constructing
+ * `VectorMarkerSymbolElement` objects from geometry + symbol objects, which cannot be
+ * expressed as a plain flat dict. It is not yet implemented.
+ */
+export type PictureMarkerSymbolLayerSpec = {
+  type: 'picture-marker';
+  /** Image URL (remote `http(s)` or a local file URL). */
+  url: string;
+  /** Uniform size in points (sets both width and height). */
+  size?: number;
+  /** Display width in points. */
+  width?: number;
+  /** Display height in points. */
+  height?: number;
+  /** Horizontal offset of the layer, in points. */
+  offsetX?: number;
+  /** Vertical offset of the layer, in points. */
+  offsetY?: number;
+};
+
+/** Union of all supported symbol layer kinds within a `MultilayerPointSymbolType`. */
+export type SymbolLayerSpec = PictureMarkerSymbolLayerSpec;
+
+/**
+ * A multilayer point symbol composed of one or more symbol layers.
+ * Mirrors the native `MultilayerPointSymbol`. Useful for rich point icons built from stacked
+ * picture images (e.g. a pin body + a badge overlay at different offsets).
+ *
+ * @example
+ * ```ts
+ * { type: 'multilayer-point', symbolLayers: [
+ *   { type: 'picture-marker', url: 'https://example.com/pin.png', width: 30, height: 30 },
+ * ] }
+ * ```
+ */
+export type MultilayerPointSymbolType = {
+  type: 'multilayer-point';
+  /** The symbol layers to compose, rendered in list order. */
+  symbolLayers: SymbolLayerSpec[];
+};
+
 /** Any symbol usable by a `<Graphic>`. Mirrors the native `Symbol` hierarchy. */
 export type Symbol =
   | SimpleMarkerSymbol
@@ -1833,7 +1882,8 @@ export type Symbol =
   | PictureMarkerSymbol
   | PictureFillSymbol
   | DistanceCompositeSceneSymbol
-  | CompositeSymbolType;
+  | CompositeSymbolType
+  | MultilayerPointSymbolType;
 
 // ─── Visual Variables ────────────────────────────────────────────────────────
 

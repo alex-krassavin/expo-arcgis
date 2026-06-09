@@ -295,6 +295,28 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
     let symbolDicts = s["symbols"] as? [[String: Any]] ?? []
     let builtSymbols = symbolDicts.compactMap(buildSymbol)
     return CompositeSymbol(symbols: builtSymbols)
+  case "multilayer-point":
+    // Build each picture-marker symbol layer and assemble a MultilayerPointSymbol.
+    // symbolLayers on MultilayerSymbol is get-only — pass layers through the constructor.
+    // DEFER: vector-marker layers (VectorMarkerSymbolLayer) require VectorMarkerSymbolElement
+    //   from geometry+symbol objects and cannot be cleanly constructed from a plain dict; skip.
+    let layerDicts = s["symbolLayers"] as? [[String: Any]] ?? []
+    let symbolLayers: [SymbolLayer] = layerDicts.compactMap { ld -> SymbolLayer? in
+      switch ld["type"] as? String {
+      case "picture-marker":
+        guard let urlString = ld["url"] as? String, let url = URL(string: urlString) else { return nil }
+        let layer = PictureMarkerSymbolLayer(url: url)
+        if let size = (ld["size"] as? NSNumber)?.doubleValue { layer.size = size }
+        if let width = (ld["width"] as? NSNumber)?.doubleValue { layer.size = width }
+        if let height = (ld["height"] as? NSNumber)?.doubleValue { layer.size = height }
+        if let offsetX = (ld["offsetX"] as? NSNumber).map({ CGFloat($0.doubleValue) }) { layer.offsetX = offsetX }
+        if let offsetY = (ld["offsetY"] as? NSNumber).map({ CGFloat($0.doubleValue) }) { layer.offsetY = offsetY }
+        return layer
+      default:
+        return nil
+      }
+    }
+    return MultilayerPointSymbol(symbolLayers: symbolLayers)
   default:
     return nil
   }

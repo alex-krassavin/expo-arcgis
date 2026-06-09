@@ -20,8 +20,10 @@ import com.arcgismaps.mapping.symbology.DistanceCompositeSceneSymbol
 import com.arcgismaps.mapping.symbology.DistanceSymbolRange
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
+import com.arcgismaps.mapping.symbology.MultilayerPointSymbol
 import com.arcgismaps.mapping.symbology.PictureFillSymbol
 import com.arcgismaps.mapping.symbology.PictureMarkerSymbol
+import com.arcgismaps.mapping.symbology.PictureMarkerSymbolLayer
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSymbolStyle
 import com.arcgismaps.mapping.symbology.SimpleRenderer
@@ -371,6 +373,30 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
       (item as? Map<*, *>)?.let(::buildSymbol)
     }
     CompositeSymbol(symbolList)
+  }
+  "multilayer-point" -> {
+    // Build each picture-marker symbol layer and assemble a MultilayerPointSymbol.
+    // symbolLayers on MultilayerSymbol is a mutable List — populated via the constructor.
+    // DEFER: vector-marker layers (VectorMarkerSymbolLayer) require VectorMarkerSymbolElement
+    //   from geometry+symbol objects and cannot be cleanly constructed from a plain dict; skip.
+    val layerDicts = s["symbolLayers"] as? List<*> ?: emptyList<Any>()
+    val symbolLayers = layerDicts.mapNotNull { ld ->
+      val ldMap = ld as? Map<*, *> ?: return@mapNotNull null
+      when (ldMap["type"]) {
+        "picture-marker" -> {
+          val url = ldMap["url"] as? String ?: return@mapNotNull null
+          PictureMarkerSymbolLayer(url).apply {
+            (ldMap["size"] as? Number)?.toDouble()?.let { size = it }
+            (ldMap["width"] as? Number)?.toDouble()?.let { size = it }
+            (ldMap["height"] as? Number)?.toDouble()?.let { size = it }
+            (ldMap["offsetX"] as? Number)?.toDouble()?.let { offsetX = it }
+            (ldMap["offsetY"] as? Number)?.toDouble()?.let { offsetY = it }
+          }
+        }
+        else -> null
+      }
+    }
+    MultilayerPointSymbol(symbolLayers)
   }
   else -> null
 }
