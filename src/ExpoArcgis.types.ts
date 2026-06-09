@@ -1724,6 +1724,63 @@ export type UtilityNetworkHandle = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Portal — search a Portal and list basemaps via the `portal` namespace.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Parameters for `portal.findItems`. */
+export type PortalQuery = {
+  /**
+   * ArcGIS portal search query string (e.g. `'type:"Web Map" owner:esri'`).
+   * Forwarded directly to `PortalQueryParameters(query:limit:)` on both platforms.
+   */
+  query: string;
+  /** Maximum number of items to return (default 10). */
+  max?: number;
+  /** Portal URL (default `https://www.arcgis.com`). */
+  portalUrl?: string;
+};
+
+/** One portal item returned by `portal.findItems`. */
+export type PortalItemInfo = {
+  /** Portal item id (pass to `<Map portalItem={{ itemId }}>` to display the web map). */
+  id: string;
+  /** Human-readable title. */
+  title: string;
+  /**
+   * Human-readable type string (e.g. `"Web Map"`, `"Feature Service"`).
+   * Maps to `PortalItem.typeName` on both platforms.
+   */
+  type: string;
+  /** Short description / abstract. */
+  snippet: string;
+  /** Portal username of the item owner. */
+  owner: string;
+  /**
+   * Absolute HTTPS URL of the item's thumbnail, or `null` when none is available.
+   * Constructed as `<portalUrl>/sharing/rest/content/items/<id>/info/thumbnail`.
+   * Load it in an `<Image>` component; no auth is required for public items.
+   */
+  thumbnailUrl: string | null;
+};
+
+/** Parameters for `portal.fetchBasemaps`. */
+export type BasemapQuery = {
+  /** Portal URL (default `https://www.arcgis.com`). */
+  portalUrl?: string;
+};
+
+/** One basemap returned by `portal.fetchBasemaps`. */
+export type BasemapInfo = {
+  /** Human-readable basemap name (e.g. `"World Topographic Map"`). */
+  name: string;
+  /**
+   * Portal item id of the underlying basemap item, or `null` when the basemap has no item.
+   * Pass to `<Map portalItem={{ itemId }}>` to use it as the map's basemap.
+   */
+  itemId: string | null;
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // Offline — take maps and data offline (downloads to disk) via the `offline` namespace.
 // ────────────────────────────────────────────────────────────────────────────
 

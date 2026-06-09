@@ -3,12 +3,16 @@ import { NativeModule, requireNativeModule } from 'expo';
 import type { GroupLayerRef, JobRef, LayerRef } from './ExpoArcgisModule';
 import type {
   AnnotationLayerProps,
+  BasemapInfo,
+  BasemapQuery,
   BuildingSceneLayerProps,
   DimensionLayerProps,
   FeatureCollectionLayerProps,
   GeoPackageLayerProps,
   LayerProps,
   OrientedImageryLayerProps,
+  PortalItemInfo,
+  PortalQuery,
   SubtypeFeatureLayerProps,
   GeocodeResult,
   GeodeticDistanceResult,
@@ -128,6 +132,10 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     serviceUrl: string,
     inputs: Record<string, GeoprocessingInput>
   ): Promise<JobRef<GeoprocessingResult>>;
+
+  // Portal — backing functions for the `portal` namespace (see ./portal).
+  portalFindItems(params: PortalQuery): Promise<PortalItemInfo[]>;
+  portalFetchBasemaps(params: BasemapQuery): Promise<BasemapInfo[]>;
 
   // Offline — backing functions for the `offline` namespace (see ./offline).
   generateOfflineMap(

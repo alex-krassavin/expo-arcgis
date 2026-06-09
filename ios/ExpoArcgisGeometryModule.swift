@@ -188,6 +188,14 @@ public class ExpoArcgisGeometryModule: Module {
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
     }
 
+    // Portal — search a Portal and fetch basemaps, exposed as the JS `portal` namespace.
+    AsyncFunction("portalFindItems") { (params: [String: Any]) in
+      try await portalFindItems(params)
+    }
+    AsyncFunction("portalFetchBasemaps") { (params: [String: Any]) in
+      try await portalFetchBasemaps(params)
+    }
+
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") { (portalItemId: String, areaOfInterest: [String: Any], downloadName: String, overrides: [String: Any]?) in
       try await generateOfflineMap(portalItemId, areaOfInterest, downloadName, overrides)
