@@ -775,7 +775,17 @@ Namespace `offline` (`generateOfflineMap`/`preplannedMapAreas`/`downloadPreplann
 - **`<FeatureLayer displayFilter={{whereClause, name?}}>`** — client-side фильтр (в `applyProps`). Kotlin `DisplayFilter` абстрактный → `createWithNameAndWhereClause`; `ManualDisplayFilterDefinition(active, available)`; null чистит. DEFER: scale-based фильтры.
 - **query `orderByFields` + `outFields`** (QueryCodec). `orderByFields` нативно (`OrderBy`+`addOrderByFields`, парсит "FIELD DESC"). **`outFields` — НЕТ нативного свойства на `QueryParameters`** (ни Swift, ни Kotlin internal) → реализован как **client-side пост-фильтр атрибутов в `serializeFeature(outFields:)`** (JS получает только запрошенные поля, без экономии трафика).
 - **geocode `resultAttributeNames` + `outputSpatialReference`** (`maxResults` уже был). Swift `SpatialReference(wkid: WKID(...)!)` (typed wrapper, failable), `addResultAttributeNames` (get-only коллекция).
-- **Верификация:** TS · Android (clean) · iOS · example tsc · expo export ✅. **Неопубликовано (post-0.1.3): батч №4 (4 фичи) → следующий релиз 0.1.4.**
+- **Верификация:** TS · Android (clean) · iOS · example tsc · expo export ✅.
+
+## Depth-батч №5 (фоновые агенты) ✅ — 1 фикс
+Пре-чек снова грепнул native (все 4 реально неделанные). cherry-pick без конфликтов (LayerRef авто-смерж для #1+#2), **64KB-ребаланс НЕ понадобился** (GeoElementViewshed-Class влез в main):
+- **Layer `minScale`/`maxScale`** (видимость по зуму, ВСЕ слои — в базовом `applyCommonProps`). Гоча: натив `null`/`nil` = «без лимита» (Kotlin nullable `Double`, Swift `Double?`); JS `0` → `null`.
+- **`<FeatureLayer refreshInterval>`** (авто-обновление, сек). **Гоча: Kotlin — миллисекунды (nullable `Long`, `Refreshable`), Swift — секунды (`TimeInterval?`)**; JS в секундах → Kotlin `*1000`; `0`→null/nil.
+- **basemap `language`/`worldview`** (`<Map>`+`<Scene>`, BasemapStyleParameters). Гочи: язык НЕ String → Swift `BasemapStyleLanguage.specific(Locale.Language)` / Kotlin `BasemapStyleLanguageStrategy.Specific(Locale)` + алиасы global/local/default/applicationLocale; `Worldview(code)`; stateful (хранит current style/lang/worldview, ребилдит basemap). Swift BasemapStyleParameters под `#if $NonescapableTypes` (iOS17+, ок).
+- **GeoElement-viewshed** (`<Viewshed graphic={ref}>` — обзор следует за `<Graphic>`). `ExploratoryGeoElementViewshed(geoElement:horizontalAngle:verticalAngle:headingOffset:pitchOffset:minDistance:maxDistance:)`. **Cross-ref:** агент протянул `GraphicRef` через типизированный Expo-Constructor-аргумент (`new GeoElementViewshedRef(graphicRef, props)`) — как `GroupLayerRef.addLayer(LayerRef)`. `<Viewshed>` дискриминирует по наличию `graphic`; `graphic` construction-only. **Новый Class в main-модуле — влез.** **МОЙ ФИКС:** TS2367 в Viewshed.tsx (`key !== 'graphic'` — TS не моделит graphic как diff-ключ) → каст `(key as string)`.
+- **Верификация:** TS · Android (clean) · iOS · example tsc · expo export ✅. **Неопубликовано (post-0.1.3): батч №4 (4) + №5 (4) = 8 фич → следующий релиз 0.1.4.**
+
+**Агенты (5 заходов, 20 фич):** фиксов 2·2·0·0·1. Чистые prop/codec/extend — почти всегда 0 фиксов; редкие фиксы — на cross-ref (GeoElement) и SwiftUI. Пре-чек (греп native перед батчем) обязателен — отсёк 2 дубля (filter, distance-measurement).
 
 **Наблюдение по агентам (4 захода, 16 фич):** заходы 1-2 — по 2 моих фикса; заходы 3-4 — **0 фиксов**. Чистые prop/codec/extend-depth-фичи (без новых нативных registration'ов) — идеальны для агентов: и сами пишутся верно, и нет 64KB-возни. Сложности остаются мне: выбор/пре-чек (грепнуть native, чтоб не дублировать), 64KB-архитектура, редкие SwiftUI-тонкости.
 

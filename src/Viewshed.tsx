@@ -55,8 +55,9 @@ export function Viewshed(
     // `graphic` is construction-only — skip it (remount to change the tracked graphic).
     const changed: Record<string, unknown> = {};
     diffs.forEach((key) => {
-      if (key !== 'graphic') {
-        changed[key] = (props as Record<string, unknown>)[key];
+      // `graphic` is construction-only — skip it (TS doesn't model it as a diff key here).
+      if ((key as string) !== 'graphic') {
+        changed[key as string] = (props as Record<string, unknown>)[key as string];
       }
     });
     if (Object.keys(changed).length > 0) {
