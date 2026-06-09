@@ -1,6 +1,6 @@
 {
   "name": "expo-arcgis",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "ArcGIS Maps SDK for React Native — native Android (Kotlin) & iOS (Swift) map rendering as an Expo module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
