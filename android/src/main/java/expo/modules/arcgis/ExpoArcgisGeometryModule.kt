@@ -180,6 +180,13 @@ class ExpoArcgisGeometryModule : Module() {
         ref.queryRelatedFeatures(objectId)
       }
     }
+    // In-memory FeatureCollectionLayer — built from a client-side schema + features (no service).
+    Class(FeatureCollectionLayerRef::class) {
+      Constructor { props: Map<String, Any?> ->
+        FeatureCollectionLayerRef(appContext, props).also { it.applyProps(props) }
+      }
+      Function("applyProps") { ref: FeatureCollectionLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
+    }
 
     // Offline — take maps/data offline, exposed as the JS `offline` namespace.
     AsyncFunction("generateOfflineMap") Coroutine { portalItemId: String, areaOfInterest: Map<String, Any?>, downloadName: String ->

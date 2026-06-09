@@ -148,6 +148,40 @@ export type FeatureLayerProps = LayerProps & {
   featureReduction?: FeatureReduction;
 };
 
+/** One field in a `<FeatureCollectionLayer>` schema. */
+export type FeatureCollectionField = {
+  /** Field name (used as the attribute key). */
+  name: string;
+  /** Field data type. */
+  type: 'text' | 'int16' | 'integer' | 'long' | 'double' | 'date';
+  /** Display alias (defaults to `name`). */
+  alias?: string;
+  /** Maximum length for `text` fields (default 255). */
+  length?: number;
+};
+
+/** One in-memory feature for a `<FeatureCollectionLayer>`. */
+export type FeatureCollectionFeatureSpec = {
+  /** Attribute values keyed by field name. */
+  attributes?: Record<string, unknown>;
+  /** The feature's geometry. */
+  geometry?: Geometry;
+};
+
+/**
+ * Props for `<FeatureCollectionLayer>` — an in-memory layer built from a client-side schema and
+ * features (no feature service). `fields` and `features` are read once at construction; `opacity`,
+ * `visible` and `renderer` update reactively.
+ */
+export type FeatureCollectionLayerProps = LayerProps & {
+  /** The collection's field schema. */
+  fields: FeatureCollectionField[];
+  /** The features (attributes + geometry) to display. */
+  features: FeatureCollectionFeatureSpec[];
+  /** Optional renderer to symbolize the features. */
+  renderer?: Renderer;
+};
+
 /** Clustering feature reduction — aggregates nearby features into a single symbol. */
 export type ClusterReduction = {
   type: 'cluster';

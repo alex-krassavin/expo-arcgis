@@ -11,6 +11,7 @@ import type {
   PointCloudLayerProps,
   RasterLayerProps,
   SubtypeFeatureLayerProps,
+  FeatureCollectionLayerProps,
   VectorTileLayerProps,
   WebTiledLayerProps,
   WfsLayerProps,
@@ -106,4 +107,9 @@ export const OrientedImageryLayer = createLayerComponent<OrientedImageryLayerPro
 /** Declarative subtype feature layer (one sublayer per subtype) from a feature service URL. */
 export const SubtypeFeatureLayer = createLayerComponent<SubtypeFeatureLayerProps>(
   (props) => new ExpoArcgisGeometryModule.SubtypeFeatureLayerRef(props)
+);
+
+/** In-memory `FeatureCollectionLayer` — built from a client-side `fields` schema + `features`. */
+export const FeatureCollectionLayer = createLayerComponent<FeatureCollectionLayerProps>(
+  (props) => new ExpoArcgisGeometryModule.FeatureCollectionLayerRef(props)
 );

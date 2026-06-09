@@ -3,8 +3,12 @@ package expo.modules.arcgis
 import com.arcgismaps.data.ArcGISFeature
 import com.arcgismaps.data.ArcGISFeatureTable
 import com.arcgismaps.data.Feature
+import com.arcgismaps.data.FeatureCollection
+import com.arcgismaps.data.FeatureCollectionTable
 import com.arcgismaps.data.FeatureRequestMode
 import com.arcgismaps.data.FeatureTable
+import com.arcgismaps.data.Field
+import com.arcgismaps.data.FieldType
 import com.arcgismaps.data.QueryFeatureFields
 import com.arcgismaps.data.QueryParameters
 import com.arcgismaps.data.ServiceFeatureTable
@@ -18,6 +22,7 @@ import com.arcgismaps.mapping.layers.ArcGISTiledLayer
 import com.arcgismaps.mapping.layers.ArcGISVectorTiledLayer
 import com.arcgismaps.mapping.layers.BuildingSceneLayer
 import com.arcgismaps.mapping.layers.DimensionLayer
+import com.arcgismaps.mapping.layers.FeatureCollectionLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
 import com.arcgismaps.mapping.layers.GroupLayer
 import com.arcgismaps.mapping.layers.IntegratedMeshLayer
@@ -33,6 +38,7 @@ import com.arcgismaps.mapping.layers.KmlLayer
 import com.arcgismaps.mapping.layers.WmsLayer
 import com.arcgismaps.mapping.layers.WmtsLayer
 import com.arcgismaps.mapping.kml.KmlDataset
+import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.raster.ImageServiceRaster
 import com.arcgismaps.raster.Raster
 import expo.modules.kotlin.AppContext
@@ -343,4 +349,55 @@ class GroupLayerRef(appContext: AppContext) : LayerRef(appContext) {
   }
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+}
+
+/**
+ * In-memory [FeatureCollectionLayer] — a layer built from a client-side schema (`fields`) and
+ * `features` (no service). Features become graphics in a [FeatureCollectionTable].
+ */
+class FeatureCollectionLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerRef(appContext) {
+  private val table: FeatureCollectionTable = run {
+    val fields = (props["fields"] as? List<*> ?: emptyList<Any?>())
+      .mapNotNull { (it as? Map<*, *>)?.let(::makeFeatureCollectionField) }
+    val graphics = (props["features"] as? List<*> ?: emptyList<Any?>()).mapNotNull { spec ->
+      val s = spec as? Map<*, *> ?: return@mapNotNull null
+      Graphic().apply {
+        geometry = (s["geometry"] as? Map<*, *>)?.let { geometryFromDict(it) }
+        (s["attributes"] as? Map<*, *>)?.forEach { (k, v) -> attributes[k.toString()] = v }
+      }
+    }
+    FeatureCollectionTable(graphics, fields).apply {
+      renderer = (props["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
+    }
+  }
+  override val layer: Layer = FeatureCollectionLayer(FeatureCollection().apply { tables.add(table) })
+
+  override fun applyProps(changed: Map<String, Any?>) {
+    applyCommonProps(changed)
+    if (changed.containsKey("renderer")) {
+      table.renderer = (changed["renderer"] as? Map<*, *>)?.let { buildRenderer(it) }
+    }
+  }
+}
+
+private fun makeFeatureCollectionField(d: Map<*, *>): Field {
+  val name = d["name"] as? String ?: ""
+  return Field(
+    featureCollectionFieldType(d["type"] as? String),
+    name,
+    d["alias"] as? String ?: name,
+    (d["length"] as? Number)?.toInt() ?: 255,
+    null,
+    true,
+    true,
+  )
+}
+
+private fun featureCollectionFieldType(value: String?): FieldType = when (value) {
+  "int16" -> FieldType.Int16
+  "integer" -> FieldType.Int32
+  "long" -> FieldType.Int64
+  "double" -> FieldType.Float64
+  "date" -> FieldType.Date
+  else -> FieldType.Text
 }

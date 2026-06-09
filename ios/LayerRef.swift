@@ -329,3 +329,55 @@ public final class GroupLayerRef: LayerRef {
 
   func removeLayer(_ ref: LayerRef) { group.removeLayer(ref.layer) }
 }
+
+/// In-memory `FeatureCollectionLayer` — a layer built from a client-side schema (`fields`) and
+/// `features` (no service). Features become graphics in a `FeatureCollectionTable`.
+public final class FeatureCollectionLayerRef: LayerRef {
+  private let table: FeatureCollectionTable
+
+  init(props: [String: Any]) {
+    let fields = (props["fields"] as? [[String: Any]] ?? []).map(makeFeatureCollectionField)
+    let graphics = (props["features"] as? [[String: Any]] ?? []).map { spec -> Graphic in
+      let geometry = (spec["geometry"] as? [String: Any]).flatMap(geometryFromDict)
+      let graphic = Graphic(geometry: geometry)
+      for (key, value) in spec["attributes"] as? [String: Any] ?? [:] {
+        graphic.setAttributeValue(sendableValue(value), forKey: key)
+      }
+      return graphic
+    }
+    let table = FeatureCollectionTable(geoElements: graphics, fields: fields)
+    table.renderer = (props["renderer"] as? [String: Any]).flatMap(buildRenderer)
+    self.table = table
+    super.init(
+      layer: FeatureCollectionLayer(featureCollection: FeatureCollection(featureCollectionTables: [table]))
+    )
+  }
+
+  override func applyProps(_ changed: [String: Any]) {
+    super.applyProps(changed)
+    if changed.keys.contains("renderer") {
+      table.renderer = (changed["renderer"] as? [String: Any]).flatMap(buildRenderer)
+    }
+  }
+}
+
+private func makeFeatureCollectionField(_ d: [String: Any]) -> ArcGIS.Field {
+  let name = d["name"] as? String ?? ""
+  return ArcGIS.Field(
+    type: featureCollectionFieldType(d["type"] as? String),
+    name: name,
+    alias: d["alias"] as? String ?? name,
+    length: (d["length"] as? NSNumber)?.intValue ?? 255
+  )
+}
+
+private func featureCollectionFieldType(_ value: String?) -> ArcGIS.FieldType {
+  switch value {
+  case "int16": return .int16
+  case "integer": return .int32
+  case "long": return .int64
+  case "double": return .float64
+  case "date": return .date
+  default: return .text
+  }
+}

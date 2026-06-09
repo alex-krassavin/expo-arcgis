@@ -104,7 +104,7 @@ func applyAttributes(_ feature: Feature, _ attributes: [String: Any]) {
   }
 }
 
-private func sendableValue(_ value: Any) -> (any Sendable)? {
+func sendableValue(_ value: Any) -> (any Sendable)? {
   switch value {
   case let bool as Bool: return bool
   case let int as Int: return int

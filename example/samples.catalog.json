@@ -9,6 +9,7 @@
   { "slug": "layers/wms-layer", "category": "Layers", "title": "WMS layer", "description": "Add an OGC WMS layer by service URL and layer name." },
   { "slug": "layers/kml-layer", "category": "Layers", "title": "KML layer", "description": "Add a KML layer from a remote feed." },
   { "slug": "layers/group-layer", "category": "Layers", "title": "Group layer", "description": "Group child layers into a single unit." },
+  { "slug": "layers/feature-collection", "category": "Layers", "title": "Feature collection", "description": "Build an in-memory layer from a schema + features." },
 
   { "slug": "symbols/class-breaks-renderer", "category": "Symbols & rendering", "title": "Class-breaks renderer", "description": "Style a feature layer with graduated symbols by a field." },
   { "slug": "symbols/labels", "category": "Symbols & rendering", "title": "Labels", "description": "Label a feature layer with an Arcade expression." },
