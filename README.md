@@ -6,6 +6,8 @@ SDK-faithful component API to JS/TS — `<MapView>` / `<SceneView>` with layers,
 editing, query, analysis, geocoding, routing, geoprocessing, utility networks, offline, real-time and
 authentication.
 
+📖 **[Documentation & samples →](https://alex-krassavin.github.io/expo-arcgis)**
+
 > **Status — early / pre-1.0.** The full surface below is implemented and **compile-verified** on both
 > platforms (TypeScript · Android `compileDebugKotlin` · iOS pod build). On-device **runtime** validation
 > (rendering, network calls, device sensors) should be done in your own app. The API may still change
