@@ -77,6 +77,12 @@ export declare class FeatureLayerRef extends LayerRef {
     geometry?: Geometry,
     apply?: boolean
   ): Promise<number | null>;
+  addFeatureWithTemplate(
+    templateName: string,
+    attributes?: Record<string, unknown>,
+    geometry?: Geometry,
+    apply?: boolean
+  ): Promise<number | null>;
   updateFeature(objectId: number, changes: Record<string, unknown>, apply?: boolean): Promise<void>;
   deleteFeature(objectId: number, apply?: boolean): Promise<void>;
   applyEdits(): Promise<EditResult[]>;

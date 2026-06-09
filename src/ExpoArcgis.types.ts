@@ -539,6 +539,29 @@ export type FeatureLayerHandle = {
     geometry?: Geometry,
     apply?: boolean
   ): Promise<number | null>;
+  /**
+   * Creates a feature from the named editing template (so the new feature inherits the template's
+   * prototype attributes), then optionally overrides `attributes` on top and sets `geometry`.
+   * By default pushes the edit to the service and resolves to the new object id; pass
+   * `apply: false` to make a local-only edit. Rejects if no template with that name exists.
+   * Requires an ArcGIS feature table (service or mobile geodatabase) — rejects for shapefiles
+   * and WFS tables, which do not expose editing templates.
+   *
+   * @example
+   * ```ts
+   * const id = await layer.current.addFeatureWithTemplate(
+   *   'Residential',
+   *   { ADDRESS: '1 Main St' },
+   *   { type: 'point', x: -117.19, y: 34.05 }
+   * );
+   * ```
+   */
+  addFeatureWithTemplate(
+    templateName: string,
+    attributes?: Record<string, unknown>,
+    geometry?: Geometry,
+    apply?: boolean
+  ): Promise<number | null>;
   /** Updates the feature with `objectId`. Pass `apply: false` for a local-only edit. */
   updateFeature(
     objectId: number,

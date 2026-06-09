@@ -118,6 +118,25 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
   }
 
   /**
+   * Adds a feature created from the named template (inheriting its prototype attributes), then
+   * optionally applies [attributes] on top and sets [geometry]. When [apply] is not `false`,
+   * pushes the edit and returns the new object id; pass `apply = false` for a local-only edit.
+   */
+  suspend fun addFeatureWithTemplate(templateName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
+    table.load().getOrThrow()
+    val arcGISTable = table as? ArcGISFeatureTable
+      ?: throw IllegalStateException("addFeatureWithTemplate requires an ArcGIS feature table (not a shapefile or WFS table)")
+    val template = arcGISTable.getFeatureTemplate(templateName)
+      ?: throw IllegalArgumentException("No feature template named '$templateName' found in the table")
+    val geom = geometry?.let { geometryFromDict(it) }
+    val feature = arcGISTable.createFeature(template, geom)
+    if (attributes != null) applyAttributes(feature, attributes)
+    table.addFeature(feature).getOrThrow()
+    if (apply == false) return null
+    return persistEdits()
+  }
+
+  /**
    * Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
    * pass `apply = false` to make a local-only edit (batch with `applyEdits`).
    */
