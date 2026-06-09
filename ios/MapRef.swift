@@ -64,6 +64,18 @@ public final class MapRef: SharedObject {
            let scale = (vp["scale"] as? NSNumber)?.doubleValue {
           map.initialViewpoint = Viewpoint(latitude: lat, longitude: lon, scale: scale)
         }
+      case "bookmarks":
+        if let entries = value as? [[String: Any]] {
+          map.removeAllBookmarks()
+          for entry in entries {
+            guard let name = entry["name"] as? String,
+                  let vp = entry["viewpoint"] as? [String: Any],
+                  let lat = (vp["latitude"] as? NSNumber)?.doubleValue,
+                  let lon = (vp["longitude"] as? NSNumber)?.doubleValue,
+                  let scale = (vp["scale"] as? NSNumber)?.doubleValue else { continue }
+            map.addBookmark(Bookmark(name: name, viewpoint: Viewpoint(latitude: lat, longitude: lon, scale: scale)))
+          }
+        }
       case "mobileMapPackagePath":
         if let path = value as? String { loadMobileMapPackage(path) }
       case "referenceScale":

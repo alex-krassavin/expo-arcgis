@@ -4,6 +4,7 @@ import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.ArcGISTiledElevationSource
+import com.arcgismaps.mapping.Bookmark
 import com.arcgismaps.mapping.Basemap
 import com.arcgismaps.mapping.BasemapStyle
 import com.arcgismaps.mapping.MobileScenePackage
@@ -78,6 +79,18 @@ class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : 
               (c["roll"] as? Number)?.toDouble() ?: 0.0,
             )
             scene.initialViewpoint = Viewpoint(point, camera)
+          }
+        }
+        "bookmarks" -> (value as? List<*>)?.let { entries ->
+          scene.bookmarks.clear()
+          for (entry in entries) {
+            val e = entry as? Map<*, *> ?: continue
+            val name = e["name"] as? String ?: continue
+            val vp = e["viewpoint"] as? Map<*, *> ?: continue
+            val lat = (vp["latitude"] as? Number)?.toDouble() ?: continue
+            val lon = (vp["longitude"] as? Number)?.toDouble() ?: continue
+            val scale = (vp["scale"] as? Number)?.toDouble() ?: continue
+            scene.bookmarks.add(Bookmark(name, Viewpoint(lat, lon, scale)))
           }
         }
         "mobileScenePackagePath" -> (value as? String)?.let { loadMobileScenePackage(it) }

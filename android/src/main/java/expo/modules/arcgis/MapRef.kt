@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import com.arcgismaps.geometry.Envelope
 import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.Basemap
+import com.arcgismaps.mapping.Bookmark
 import com.arcgismaps.mapping.BasemapStyle
 import com.arcgismaps.mapping.BasemapStyleLanguageStrategy
 import com.arcgismaps.mapping.BasemapStyleParameters
@@ -69,6 +70,18 @@ class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : Sh
           val scale = (vp["scale"] as? Number)?.toDouble()
           if (lat != null && lon != null && scale != null) {
             map.initialViewpoint = Viewpoint(lat, lon, scale)
+          }
+        }
+        "bookmarks" -> (value as? List<*>)?.let { entries ->
+          map.bookmarks.clear()
+          for (entry in entries) {
+            val e = entry as? Map<*, *> ?: continue
+            val name = e["name"] as? String ?: continue
+            val vp = e["viewpoint"] as? Map<*, *> ?: continue
+            val lat = (vp["latitude"] as? Number)?.toDouble() ?: continue
+            val lon = (vp["longitude"] as? Number)?.toDouble() ?: continue
+            val scale = (vp["scale"] as? Number)?.toDouble() ?: continue
+            map.bookmarks.add(Bookmark(name, Viewpoint(lat, lon, scale)))
           }
         }
         "mobileMapPackagePath" -> (value as? String)?.let { loadMobileMapPackage(it) }

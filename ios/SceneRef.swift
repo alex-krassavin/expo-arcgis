@@ -79,6 +79,18 @@ public final class SceneRef: SharedObject {
           )
           scene.initialViewpoint = Viewpoint(boundingGeometry: point, camera: camera)
         }
+      case "bookmarks":
+        if let entries = value as? [[String: Any]] {
+          scene.removeAllBookmarks()
+          for entry in entries {
+            guard let name = entry["name"] as? String,
+                  let vp = entry["viewpoint"] as? [String: Any],
+                  let lat = (vp["latitude"] as? NSNumber)?.doubleValue,
+                  let lon = (vp["longitude"] as? NSNumber)?.doubleValue,
+                  let scale = (vp["scale"] as? NSNumber)?.doubleValue else { continue }
+            scene.addBookmark(Bookmark(name: name, viewpoint: Viewpoint(latitude: lat, longitude: lon, scale: scale)))
+          }
+        }
       case "mobileScenePackagePath":
         if let path = value as? String { loadMobileScenePackage(path) }
       default:

@@ -79,6 +79,12 @@ export type MapProps = {
    * map appears once ready.
    */
   mobileMapPackagePath?: string;
+  /**
+   * Named saved viewpoints stored on the map. Replaces the map's bookmark list each time the prop
+   * changes. Each entry creates a native `Bookmark(name, Viewpoint(latitude, longitude, scale))`.
+   * Navigation to a bookmark is done separately via the `<MapView viewpoint>` prop.
+   */
+  bookmarks?: { name: string; viewpoint: { latitude: number; longitude: number; scale: number } }[];
 };
 
 export type MapLoadedEventPayload = {
@@ -2023,6 +2029,12 @@ export type SceneProps = {
   portalItem?: PortalItem;
   /** Local path to a mobile scene package (`.mspk`); its first scene is shown when loaded. */
   mobileScenePackagePath?: string;
+  /**
+   * Named saved viewpoints stored on the scene. Replaces the scene's bookmark list each time the
+   * prop changes. Each entry creates a native `Bookmark(name, Viewpoint(latitude, longitude, scale))`.
+   * Navigation to a bookmark is done separately via the `<SceneView camera>` prop.
+   */
+  bookmarks?: { name: string; viewpoint: { latitude: number; longitude: number; scale: number } }[];
 };
 
 /** Sun lighting mode for a 3D scene view (controls shadows). */
