@@ -122,6 +122,18 @@ export type LayerProps = {
   opacity?: number;
   /** Whether the layer is visible. */
   visible?: boolean;
+  /**
+   * The map scale denominator at which the layer becomes hidden when zooming out (larger number =
+   * more zoomed out). A value of `0` means no minimum-scale limit. Example: `2_000_000` hides the
+   * layer when the map shows a country-level view.
+   */
+  minScale?: number;
+  /**
+   * The map scale denominator at which the layer becomes hidden when zooming in (smaller number =
+   * more zoomed in). A value of `0` means no maximum-scale limit. Example: `5_000` hides the layer
+   * at street-level zoom.
+   */
+  maxScale?: number;
 };
 
 /** Source for a `<FeatureLayer>`'s feature table — a feature service or a local shapefile. */

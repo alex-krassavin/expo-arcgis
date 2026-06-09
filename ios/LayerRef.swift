@@ -17,6 +17,10 @@ public class LayerRef: SharedObject {
         if let n = value as? NSNumber { layer.opacity = n.floatValue }
       case "visible":
         if let b = value as? Bool { layer.isVisible = b }
+      case "minScale":
+        if let n = value as? NSNumber { layer.minScale = n.doubleValue == 0 ? nil : n.doubleValue }
+      case "maxScale":
+        if let n = value as? NSNumber { layer.maxScale = n.doubleValue == 0 ? nil : n.doubleValue }
       default:
         break
       }

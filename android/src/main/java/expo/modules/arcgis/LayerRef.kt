@@ -63,6 +63,8 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
       when (key) {
         "opacity" -> (value as? Number)?.toFloat()?.let { layer.opacity = it }
         "visible" -> (value as? Boolean)?.let { layer.isVisible = it }
+        "minScale" -> layer.minScale = (value as? Number)?.toDouble()?.takeIf { it != 0.0 }
+        "maxScale" -> layer.maxScale = (value as? Number)?.toDouble()?.takeIf { it != 0.0 }
       }
     }
   }
