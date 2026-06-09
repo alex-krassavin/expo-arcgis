@@ -215,4 +215,12 @@ export const geometryEngine = {
    */
   withM: (geometry: Geometry, m: number): Geometry | null =>
     Module.geWithM(geometry, m),
+
+  /**
+   * Returns a copy of the geometry with both `z` (elevation) and `m` (measure) set on all vertices.
+   * Mirrors `GeometryEngine.makeGeometry(from:z:m:)` (Swift) /
+   * `GeometryEngine.createWithZAndMOrNull(geometry, z, m)` (Kotlin).
+   */
+  withZAndM: (geometry: Geometry, z: number, m: number): Geometry | null =>
+    Module.geWithZAndM(geometry, z, m),
 };

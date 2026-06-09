@@ -251,6 +251,11 @@ func geWithM(_ g: [String: Any], _ m: Double) -> [String: Any]? {
   return encode(GeometryEngine.makeGeometry(from: geometry, m: m))
 }
 
+func geWithZAndM(_ g: [String: Any], _ z: Double, _ m: Double) -> [String: Any]? {
+  guard let geometry = parseGeo(g) else { return nil }
+  return encode(GeometryEngine.makeGeometry(from: geometry, z: z, m: m))
+}
+
 // MARK: - Geodesic construction
 
 func geEllipseGeodesic(_ params: [String: Any]) -> [String: Any]? {
