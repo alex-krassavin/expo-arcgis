@@ -57,6 +57,18 @@ export type MapProps = {
    * Corresponds to `BasemapStyleParameters.worldview` on both platforms.
    */
   basemapWorldview?: string;
+  /**
+   * The scale at which feature symbols and text are drawn at their authored size. Features scale
+   * relative to this value as the user zooms in and out. Set to `0` (or omit) to disable reference
+   * scaling. Maps to `referenceScale` on both platforms.
+   */
+  referenceScale?: number;
+  /**
+   * Constrains panning to this envelope — the user cannot scroll the map outside this extent.
+   * Must be an `envelope` geometry. Omit (or pass `undefined`) to remove the constraint.
+   * Maps to `maxExtent` on both platforms.
+   */
+  maxExtent?: Geometry;
   /** Center + scale applied when the map first loads. */
   initialViewpoint?: Viewpoint;
   /** Load the map from an ArcGIS web map. Construction-only (set once; remount to change). */

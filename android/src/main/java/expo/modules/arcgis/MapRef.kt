@@ -1,5 +1,6 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.geometry.Envelope
 import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.Basemap
 import com.arcgismaps.mapping.BasemapStyle
@@ -71,6 +72,10 @@ class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : Sh
           }
         }
         "mobileMapPackagePath" -> (value as? String)?.let { loadMobileMapPackage(it) }
+        "referenceScale" -> (value as? Number)?.let { map.referenceScale = it.toDouble() }
+        "maxExtent" -> (value as? Map<*, *>)?.let { dict ->
+          (geometryFromDict(dict) as? Envelope)?.let { map.maxExtent = it }
+        }
       }
     }
   }

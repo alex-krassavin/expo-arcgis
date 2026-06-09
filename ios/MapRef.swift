@@ -66,6 +66,16 @@ public final class MapRef: SharedObject {
         }
       case "mobileMapPackagePath":
         if let path = value as? String { loadMobileMapPackage(path) }
+      case "referenceScale":
+        if let n = value as? NSNumber {
+          let v = n.doubleValue
+          // 0 means "no reference scale" — pass nil to the SDK
+          map.referenceScale = v == 0 ? nil : v
+        }
+      case "maxExtent":
+        if let dict = value as? [String: Any] {
+          map.maxExtent = geometryFromDict(dict) as? Envelope
+        }
       default:
         break
       }
