@@ -721,10 +721,21 @@ export type DynamicEntityInfo = {
   geometry: Geometry | null;
 };
 
+/** A single historical observation returned by `queryObservations`. */
+export type DynamicEntityObservationInfo = {
+  attributes: Record<string, unknown>;
+  geometry?: Geometry;
+};
+
 /** Imperative handle exposed by `<DynamicEntityLayer>` via `ref`. */
 export type DynamicEntityLayerHandle = {
   /** Returns the data source's currently-tracked dynamic entities. */
   queryDynamicEntities(): Promise<{ count: number; entities: DynamicEntityInfo[] }>;
+  /**
+   * Returns the observation history for the entity with the given track id, newest first,
+   * capped at `max` entries (default 100). Returns an empty array if the entity is not found.
+   */
+  queryObservations(entityId: string, max?: number): Promise<DynamicEntityObservationInfo[]>;
   /** Pushes an observation into a `customSource` (attributes + geometry). */
   pushObservation(attributes: Record<string, unknown>, geometry: Geometry): void;
 };

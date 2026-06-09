@@ -5,6 +5,7 @@ import type {
   AttachmentInfo,
   ConnectionStatus,
   DynamicEntityChange,
+  DynamicEntityObservationInfo,
   DistanceMeasurementProps,
   DynamicEntityLayerProps,
   EditResult,
@@ -98,6 +99,7 @@ export declare class DynamicEntityLayerRef extends LayerRef<DynamicEntityLayerEv
     count: number;
     entities: { attributes: Record<string, unknown>; geometry: Geometry | null }[];
   }>;
+  queryObservations(entityId: string, max?: number): Promise<DynamicEntityObservationInfo[]>;
   pushObservation(attributes: Record<string, unknown>, geometry: Geometry): void;
 }
 

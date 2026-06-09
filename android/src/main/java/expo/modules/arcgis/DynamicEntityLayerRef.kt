@@ -60,6 +60,24 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
     flow.tryEmit(CustomDynamicEntityDataSource.FeedEvent.NewObservation(geom, attributes))
   }
 
+  /**
+   * Returns the observation history for the entity with the given track id, newest first,
+   * capped at [max] entries (default 100). Each observation carries its own `attributes` and
+   * `geometry` snapshot at the time it was received.
+   */
+  suspend fun queryObservations(entityId: String, max: Int = 100): List<Map<String, Any?>> {
+    val result = dataSource.queryDynamicEntities(listOf(entityId)).getOrThrow()
+    val entity = result.toList().firstOrNull()
+      ?: return emptyList()
+    return entity.getObservations(max).map { obs ->
+      val entry = mutableMapOf<String, Any?>(
+        "attributes" to obs.attributes.toMap(),
+      )
+      obs.geometry?.let { entry["geometry"] = dictFromGeometry(it) }
+      entry
+    }
+  }
+
   /** Returns the data source's currently-tracked dynamic entities (attributes + geometry). */
   suspend fun queryDynamicEntities(): Map<String, Any?> {
     val result = dataSource.queryDynamicEntities(DynamicEntityQueryParameters()).getOrThrow()

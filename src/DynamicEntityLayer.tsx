@@ -16,7 +16,7 @@ import { getPropsDiffs } from './utils/getPropsDiffs';
  * Declarative real-time `DynamicEntityLayer`. Adds itself to the nearest `<Map>` / `<Scene>`, shows
  * live moving entities from a `streamServiceUrl` (or a `customSource` you feed via the ref), reports
  * connection state through `onConnectionStatusChange`, and exposes `queryDynamicEntities` /
- * `pushObservation` through a `ref`.
+ * `queryObservations` / `pushObservation` through a `ref`.
  */
 export const DynamicEntityLayer = forwardRef<DynamicEntityLayerHandle, DynamicEntityLayerProps>(
   function DynamicEntityLayer({ onConnectionStatusChange, onDynamicEntityChange, ...layerProps }, handle) {
@@ -68,7 +68,7 @@ export const DynamicEntityLayer = forwardRef<DynamicEntityLayerHandle, DynamicEn
       ref.current?.applyProps(changed);
     }, [layerProps]);
 
-    // The native ref exposes queryDynamicEntities / pushObservation — hand it over directly.
+    // The native ref exposes queryDynamicEntities / queryObservations / pushObservation — hand it over directly.
     useImperativeHandle(handle, () => ref.current!, []);
 
     return null;

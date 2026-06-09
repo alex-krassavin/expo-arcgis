@@ -75,6 +75,19 @@ public final class DynamicEntityLayerRef: LayerRef {
     }
   }
 
+  /// Returns the observation history for the entity with the given track id, newest first,
+  /// capped at `max` entries (default 100). Each observation carries its own `attributes` and
+  /// `geometry` snapshot at the time it was received.
+  func queryObservations(_ entityId: String, _ max: Int = 100) async throws -> [[String: Any]] {
+    let result = try await dataSource.queryDynamicEntities(withTrackIDs: [entityId])
+    guard let entity = Array(result.entities()).first else { return [] }
+    return entity.observations(maximumObservations: max).map { obs -> [String: Any] in
+      var entry: [String: Any] = ["attributes": obs.attributes.mapValues { $0 as Any }]
+      if let geometry = obs.geometry { entry["geometry"] = dictFromGeometry(geometry) }
+      return entry
+    }
+  }
+
   /// Returns the data source's currently-tracked dynamic entities (attributes + geometry).
   func queryDynamicEntities() async throws -> [String: Any] {
     let result = try await dataSource.queryDynamicEntities(using: DynamicEntityQueryParameters())

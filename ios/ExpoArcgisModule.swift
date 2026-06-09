@@ -272,6 +272,9 @@ public class ExpoArcgisModule: Module {
       AsyncFunction("queryDynamicEntities") { (ref: DynamicEntityLayerRef) in
         try await ref.queryDynamicEntities()
       }
+      AsyncFunction("queryObservations") { (ref: DynamicEntityLayerRef, entityId: String, max: Int) in
+        try await ref.queryObservations(entityId, max)
+      }
       Function("pushObservation") { (ref: DynamicEntityLayerRef, attributes: [String: Any], geometry: [String: Any]) in
         ref.pushObservation(attributes, geometry)
       }
