@@ -179,6 +179,15 @@ class ExpoArcgisGeometryModule : Module() {
       AsyncFunction("queryRelatedFeatures") Coroutine { ref: FeatureLayerRef, objectId: Long ->
         ref.queryRelatedFeatures(objectId)
       }
+      AsyncFunction("queryAttachments") Coroutine { ref: FeatureLayerRef, objectId: Long ->
+        ref.queryAttachments(objectId)
+      }
+      AsyncFunction("addAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, name: String, contentType: String, dataBase64: String ->
+        ref.addAttachment(objectId, name, contentType, dataBase64)
+      }
+      AsyncFunction("fetchAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long ->
+        ref.fetchAttachment(objectId, attachmentId)
+      }
     }
     // In-memory FeatureCollectionLayer — built from a client-side schema + features (no service).
     Class(FeatureCollectionLayerRef::class) {

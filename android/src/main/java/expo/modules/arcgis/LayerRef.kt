@@ -1,5 +1,6 @@
 package expo.modules.arcgis
 
+import android.util.Base64
 import com.arcgismaps.data.ArcGISFeature
 import com.arcgismaps.data.ArcGISFeatureTable
 import com.arcgismaps.data.Feature
@@ -146,6 +147,38 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
         "features" to result.map { serializeFeature(it) },
       )
     }
+  }
+
+  /** Queries the attachments for the feature with `objectId`; returns `[{id, name, contentType, size}]`. */
+  suspend fun queryAttachments(objectId: Long): List<Map<String, Any?>> {
+    val feature = featureByObjectId(objectId) as? ArcGISFeature ?: return emptyList()
+    return feature.fetchAttachments().getOrThrow().map { attachment ->
+      mapOf(
+        "id" to attachment.id,
+        "name" to attachment.name,
+        "contentType" to attachment.contentType,
+        "size" to attachment.size,
+      )
+    }
+  }
+
+  /** Decodes `dataBase64`, adds it as an attachment to the feature, then persists the edit. */
+  suspend fun addAttachment(objectId: Long, name: String, contentType: String, dataBase64: String) {
+    val feature = featureByObjectId(objectId) as? ArcGISFeature ?: return
+    val bytes = Base64.decode(dataBase64, Base64.NO_WRAP)
+    feature.addAttachment(name, contentType, bytes).getOrThrow()
+    persistEdits()
+  }
+
+  /** Fetches the binary data for the attachment with `attachmentId` and returns it as base64. */
+  suspend fun fetchAttachment(objectId: Long, attachmentId: Long): String {
+    val feature = featureByObjectId(objectId) as? ArcGISFeature
+      ?: error("Feature not found: $objectId")
+    val attachment = feature.fetchAttachments().getOrThrow()
+      .firstOrNull { it.id == attachmentId }
+      ?: error("Attachment not found: $attachmentId")
+    val bytes = attachment.fetchData().getOrThrow()
+    return Base64.encodeToString(bytes, Base64.NO_WRAP)
   }
 
   private suspend fun featureByObjectId(objectId: Long): Feature? {

@@ -2,6 +2,7 @@ import { NativeModule, requireNativeModule } from 'expo';
 import { SharedObject } from 'expo-modules-core';
 
 import type {
+  AttachmentInfo,
   ConnectionStatus,
   DistanceMeasurementProps,
   DynamicEntityLayerProps,
@@ -75,6 +76,9 @@ export declare class FeatureLayerRef extends LayerRef {
   applyEdits(): Promise<EditResult[]>;
   undoLocalEdits(): Promise<void>;
   queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
+  queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
+  addAttachment(objectId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+  fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */

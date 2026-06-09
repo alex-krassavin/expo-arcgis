@@ -360,6 +360,18 @@ export type RelatedFeaturesResult = {
   features: Feature[];
 };
 
+/** Metadata for a single attachment on an `ArcGISFeature`. */
+export type AttachmentInfo = {
+  /** Unique identifier for this attachment on the feature. */
+  id: number;
+  /** File name of the attachment (e.g. `"photo.jpg"`). */
+  name: string;
+  /** MIME type (e.g. `"image/jpeg"`). */
+  contentType: string;
+  /** Size in bytes. */
+  size: number;
+};
+
 export type FeatureLayerHandle = {
   /** Returns the features matching `query` (all features when omitted). */
   queryFeatures(query?: QueryParameters): Promise<Feature[]>;
@@ -395,6 +407,20 @@ export type FeatureLayerHandle = {
   undoLocalEdits(): Promise<void>;
   /** Queries features related to `objectId` across all relationships, grouped by relationship. */
   queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
+  /** Returns the metadata for all attachments on the feature with `objectId`. */
+  queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
+  /**
+   * Adds an attachment to the feature with `objectId` and immediately persists the edit.
+   * @param name File name (e.g. `"photo.jpg"`).
+   * @param contentType MIME type (e.g. `"image/jpeg"`).
+   * @param dataBase64 Base64-encoded file contents.
+   */
+  addAttachment(objectId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+  /**
+   * Fetches the binary data for the attachment with `attachmentId` on the feature with `objectId`
+   * and returns it as a base64 string.
+   */
+  fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
 };
 
 /** A label rule for a `<FeatureLayer>` — mirrors the native `LabelDefinition`. */

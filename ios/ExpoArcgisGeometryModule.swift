@@ -187,6 +187,15 @@ public class ExpoArcgisGeometryModule: Module {
       AsyncFunction("queryRelatedFeatures") { (ref: FeatureLayerRef, objectId: Int) in
         try await ref.queryRelatedFeatures(objectId)
       }
+      AsyncFunction("queryAttachments") { (ref: FeatureLayerRef, objectId: Int) in
+        try await ref.queryAttachments(objectId)
+      }
+      AsyncFunction("addAttachment") { (ref: FeatureLayerRef, objectId: Int, name: String, contentType: String, dataBase64: String) in
+        try await ref.addAttachment(objectId, name, contentType, dataBase64)
+      }
+      AsyncFunction("fetchAttachment") { (ref: FeatureLayerRef, objectId: Int, attachmentId: Int) in
+        try await ref.fetchAttachment(objectId, attachmentId)
+      }
     }
     // In-memory FeatureCollectionLayer — built from a client-side schema + features (no service).
     Class(FeatureCollectionLayerRef.self) {

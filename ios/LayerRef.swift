@@ -123,6 +123,44 @@ public final class FeatureLayerRef: LayerRef {
     }
   }
 
+  /// Queries the attachments for the feature with `objectId`; returns `[{id, name, contentType, size}]`.
+  func queryAttachments(_ objectId: Int) async throws -> [[String: Any]] {
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else { return [] }
+    return try await feature.attachments.map { attachment in
+      [
+        "id": attachment.id,
+        "name": attachment.name,
+        "contentType": attachment.contentType,
+        "size": attachment.size,
+      ]
+    }
+  }
+
+  /// Decodes `dataBase64`, adds it as an attachment to the feature, then persists the edit.
+  func addAttachment(
+    _ objectId: Int, _ name: String, _ contentType: String, _ dataBase64: String
+  ) async throws {
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else { return }
+    guard let data = Data(base64Encoded: dataBase64) else {
+      throw NSError(domain: "ExpoArcgis", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid base64 data"])
+    }
+    _ = try await feature.addAttachment(named: name, contentType: contentType, data: data)
+    _ = try await persistEdits()
+  }
+
+  /// Fetches the binary data for the attachment with `attachmentId` and returns it as base64.
+  func fetchAttachment(_ objectId: Int, _ attachmentId: Int) async throws -> String {
+    guard let feature = try await featureByObjectId(objectId) as? ArcGISFeature else {
+      throw NSError(domain: "ExpoArcgis", code: 2, userInfo: [NSLocalizedDescriptionKey: "Feature not found"])
+    }
+    let attachments = try await feature.attachments
+    guard let attachment = attachments.first(where: { $0.id == attachmentId }) else {
+      throw NSError(domain: "ExpoArcgis", code: 3, userInfo: [NSLocalizedDescriptionKey: "Attachment not found"])
+    }
+    let data = try await attachment.data
+    return data.base64EncodedString()
+  }
+
   private func featureByObjectId(_ objectId: Int) async throws -> Feature? {
     let params = QueryParameters()
     params.addObjectIDs([objectId])
