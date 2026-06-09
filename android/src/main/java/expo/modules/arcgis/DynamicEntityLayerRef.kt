@@ -93,6 +93,11 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
       }
       (dataSource as? ArcGISStreamService)?.filter = filter
     }
+    (changed["purgeOptions"] as? Map<*, *>)?.let { purgeDict ->
+      val opts = dataSource.purgeOptions
+      (purgeDict["maximumObservations"] as? Number)?.let { opts.maximumObservations = it.toLong() }
+      (purgeDict["maximumDuration"] as? Number)?.let { opts.maximumDuration = it.toDouble() }
+    }
   }
 
   override fun deallocate() {

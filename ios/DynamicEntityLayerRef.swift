@@ -104,6 +104,15 @@ public final class DynamicEntityLayerRef: LayerRef {
       if let geometry = (filterDict["geometry"] as? [String: Any]).flatMap(geometryFromDict) { filter.geometry = geometry }
       (dataSource as? ArcGISStreamService)?.filter = filter
     }
+    if let purgeDict = changed["purgeOptions"] as? [String: Any] {
+      let opts = dataSource.purgeOptions
+      if let maxObs = purgeDict["maximumObservations"] as? NSNumber {
+        opts.maximumObservations = maxObs.intValue
+      }
+      if let maxDur = purgeDict["maximumDuration"] as? NSNumber {
+        opts.maximumDuration = maxDur.doubleValue
+      }
+    }
   }
 
   override public func sharedObjectWillRelease() {

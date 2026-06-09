@@ -592,6 +592,27 @@ export type CustomDynamicSource = {
   fields: DynamicEntityField[];
 };
 
+/**
+ * Purge-options for a `<DynamicEntityLayer>` data source — bounds the observation history kept in
+ * memory. Mirrors the native `DynamicEntityDataSource.PurgeOptions` (Swift) /
+ * `DynamicEntityDataSourcePurgeOptions` (Kotlin).
+ *
+ * Both fields are optional; omit a field to leave that limit unset (the SDK default is no limit).
+ */
+export type DynamicEntityPurgeOptions = {
+  /**
+   * Maximum total number of observations retained across **all** entities.
+   * When exceeded, the oldest observations are evicted globally.
+   */
+  maximumObservations?: number;
+  /**
+   * Maximum age of observations to retain, in **seconds**.
+   * Observations older than this value are evicted automatically.
+   * Maps to `maximumDuration` on the native `PurgeOptions` object.
+   */
+  maximumDuration?: number;
+};
+
 /** Props for `<DynamicEntityLayer>` — real-time moving entities from a stream service or custom feed. */
 export type DynamicEntityLayerProps = LayerProps & {
   /** Stream service URL (a real-time WebSocket feed of moving entities). */
@@ -602,6 +623,11 @@ export type DynamicEntityLayerProps = LayerProps & {
   trackDisplay?: TrackDisplay;
   /** Stream-service filter — only entities matching `whereClause` (and/or within `geometry`) stream in. */
   filter?: { whereClause?: string; geometry?: Geometry };
+  /**
+   * Bounds the observation history kept in memory by the data source. Set either field to limit how
+   * many total observations or how much elapsed time the stream retains across all dynamic entities.
+   */
+  purgeOptions?: DynamicEntityPurgeOptions;
   /** Fired as the data source connects / disconnects. */
   onConnectionStatusChange?: (status: ConnectionStatus) => void;
   /**
