@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 
 import Module from './ExpoArcgisModule';
 import GeometryModule from './ExpoArcgisGeometryModule';
+import ExtrasModule from './ExpoArcgisExtrasModule';
 
 /**
  * Stores a login for token-secured services (e.g. a utility-network feature service). Uses the
@@ -103,4 +104,26 @@ export function enablePersistentCredentialStore(): Promise<void> {
  */
 export function clearCredentialStore(): Promise<void> {
   return GeometryModule.clearCredentialStore();
+}
+
+/**
+ * Pre-generates a `TokenCredential` for a **specific** service URL and adds it directly to the
+ * credential store, so that service uses a dedicated login independently of any other challenge-
+ * handler credential. Use this when different services require different logins.
+ *
+ * The token is minted eagerly (the call suspends until the server responds), then stored scoped
+ * to `serviceUrl`. If a credential for that URL already exists in the store it is **replaced**
+ * (the SDK's `add(for:)` / `add(credential, url)` overload updates the entry for that origin).
+ *
+ * `tokenExpirationMinutes` is optional; the server's default expiry is used when omitted.
+ *
+ * Registered on the extras module to stay within the Android JVM 64 KB method-size limit.
+ */
+export function setServiceCredential(
+  serviceUrl: string,
+  username: string,
+  password: string,
+  tokenExpirationMinutes?: number
+): Promise<void> {
+  return ExtrasModule.setServiceCredential(serviceUrl, username, password, tokenExpirationMinutes ?? null);
 }

@@ -1,5 +1,7 @@
 package expo.modules.arcgis
 
+import com.arcgismaps.ArcGISEnvironment
+import com.arcgismaps.httpcore.authentication.TokenCredential
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -69,6 +71,14 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("updateAttachment") Coroutine { ref: FeatureLayerRef, objectId: Long, attachmentId: Long, name: String, contentType: String, dataBase64: String ->
         ref.updateAttachment(objectId, attachmentId, name, contentType, dataBase64)
       }
+    }
+
+    // Per-service token credential — mint a token for a specific URL and add it to the store.
+    AsyncFunction("setServiceCredential") Coroutine { serviceUrl: String, username: String, password: String, tokenExpirationMinutes: Int? ->
+      val credential = TokenCredential.create(serviceUrl, username, password, tokenExpirationMinutes)
+        .getOrThrow()
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential, serviceUrl)
+        .getOrThrow()
     }
 
     // Tile-cache size estimation — quick estimate before committing to a download.

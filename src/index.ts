@@ -18,6 +18,7 @@ export {
   setAppCredential,
   enablePersistentCredentialStore,
   clearCredentialStore,
+  setServiceCredential,
   type OpenAuthSession,
 } from './auth';
 export { Map } from './Map';

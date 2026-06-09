@@ -24,6 +24,16 @@ declare class ExpoArcgisExtrasModule extends NativeModule {
     options?: Record<string, unknown>
   ): Promise<TileCacheSizeEstimate>;
   createRouteTracker(stops: RouteStop[], params: RouteParameters): Promise<RouteTrackerHandle>;
+  /**
+   * Pre-generates a `TokenCredential` for the given service URL and adds it to the credential
+   * store scoped to that URL. Pass `null` for `tokenExpirationMinutes` to use the server default.
+   */
+  setServiceCredential(
+    serviceUrl: string,
+    username: string,
+    password: string,
+    tokenExpirationMinutes: number | null
+  ): Promise<void>;
 }
 
 export default requireNativeModule<ExpoArcgisExtrasModule>('ExpoArcgisExtras');

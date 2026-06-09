@@ -69,6 +69,20 @@ public class ExpoArcgisExtrasModule: Module {
       }
     }
 
+    // Per-service token credential — mint a token for a specific URL and add it to the store.
+    AsyncFunction("setServiceCredential") { (serviceUrl: String, username: String, password: String, tokenExpirationMinutes: Int?) in
+      guard let url = URL(string: serviceUrl) else {
+        throw NSError(domain: "ExpoArcgis", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid service URL: \(serviceUrl)"])
+      }
+      let credential = try await TokenCredential.credential(
+        for: url,
+        username: username,
+        password: password,
+        tokenExpirationMinutes: tokenExpirationMinutes
+      )
+      try ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential, for: url)
+    }
+
     // Tile-cache size estimation — quick estimate before committing to a download.
     AsyncFunction("estimateTileCacheSize") { (tileServiceUrl: String, areaOfInterest: [String: Any], options: [String: Any]?) in
       try await estimateTileCacheSize(tileServiceUrl, areaOfInterest, options)
