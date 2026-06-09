@@ -10,6 +10,7 @@ import com.arcgismaps.mapping.MobileMapPackage
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapSyncTask
 import com.arcgismaps.tasks.offlinemaptask.OfflineMapTask
 import com.arcgismaps.tasks.tilecache.ExportTileCacheTask
+import com.arcgismaps.tasks.tilecache.EstimateTileCacheSizeJob
 import expo.modules.kotlin.AppContext
 import java.io.File
 
@@ -149,6 +150,24 @@ internal suspend fun exportTileCache(
     job.result().getOrThrow()
     mapOf("path" to file.absolutePath)
   }
+}
+
+/**
+ * Estimates the on-disk file size and tile count for an [exportTileCache] download WITHOUT
+ * downloading. Runs the [EstimateTileCacheSizeJob] to completion and returns `{fileSize, tileCount}`.
+ */
+internal suspend fun estimateTileCacheSize(
+  tileServiceUrl: String,
+  areaOfInterest: Map<String, Any?>,
+  @Suppress("UNUSED_PARAMETER") options: Map<String, Any?>?,
+): Map<String, Any?> {
+  val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
+  val task = ExportTileCacheTask(tileServiceUrl)
+  val parameters = task.createDefaultExportTileCacheParameters(area, 0.0, 0.0).getOrThrow()
+  val job = task.createEstimateTileCacheSizeJob(parameters)
+  job.start()
+  val estimate = job.result().getOrThrow()
+  return mapOf("fileSize" to estimate.fileSize, "tileCount" to estimate.tileCount)
 }
 
 internal suspend fun exportVectorTiles(

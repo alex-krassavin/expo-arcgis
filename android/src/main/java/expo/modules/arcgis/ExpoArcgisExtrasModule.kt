@@ -71,6 +71,11 @@ class ExpoArcgisExtrasModule : Module() {
       }
     }
 
+    // Tile-cache size estimation — quick estimate before committing to a download.
+    AsyncFunction("estimateTileCacheSize") Coroutine { tileServiceUrl: String, areaOfInterest: Map<String, Any?>, options: Map<String, Any?>? ->
+      estimateTileCacheSize(tileServiceUrl, areaOfInterest, options)
+    }
+
     // Turn-by-turn navigation — solve a route and track device locations against it.
     AsyncFunction("createRouteTracker") Coroutine { stops: List<Map<String, Any?>>, params: Map<String, Any?> ->
       createRouteTracker(appContext, stops, params)

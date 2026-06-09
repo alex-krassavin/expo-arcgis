@@ -69,6 +69,11 @@ public class ExpoArcgisExtrasModule: Module {
       }
     }
 
+    // Tile-cache size estimation — quick estimate before committing to a download.
+    AsyncFunction("estimateTileCacheSize") { (tileServiceUrl: String, areaOfInterest: [String: Any], options: [String: Any]?) in
+      try await estimateTileCacheSize(tileServiceUrl, areaOfInterest, options)
+    }
+
     // Turn-by-turn navigation — solve a route and track device locations against it.
     AsyncFunction("createRouteTracker") { (stops: [[String: Any]], params: [String: Any]) in
       try await createRouteTracker(stops, params)

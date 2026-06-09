@@ -117,6 +117,20 @@ func exportTileCache(_ tileServiceUrl: String, _ areaOfInterest: [String: Any], 
   }
 }
 
+/// Estimates the on-disk file size and tile count for an `exportTileCache` download WITHOUT
+/// downloading. Runs the `EstimateTileCacheSizeJob` to completion and returns `{fileSize, tileCount}`.
+func estimateTileCacheSize(_ tileServiceUrl: String, _ areaOfInterest: [String: Any], _ options: [String: Any]?) async throws -> [String: Any] {
+  guard let url = URL(string: tileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
+    throw OfflineError.invalidParameters
+  }
+  let task = ExportTileCacheTask(url: url)
+  let parameters = try await task.makeDefaultExportTileCacheParameters(areaOfInterest: area)
+  let job = task.makeEstimateTileCacheSizeJob(parameters: parameters)
+  job.start()
+  let estimate = try await job.result.get()
+  return ["fileSize": estimate.fileSize, "tileCount": estimate.tileCount]
+}
+
 func exportVectorTiles(_ vectorTileServiceUrl: String, _ areaOfInterest: [String: Any], _ downloadName: String) async throws -> JobRef {
   guard let url = URL(string: vectorTileServiceUrl), let area = geometryFromDict(areaOfInterest) else {
     throw OfflineError.invalidParameters

@@ -1,4 +1,5 @@
 import Module from './ExpoArcgisGeometryModule';
+import ExtrasModule from './ExpoArcgisExtrasModule';
 import type { JobRef } from './ExpoArcgisModule';
 import type {
   Geometry,
@@ -6,6 +7,7 @@ import type {
   OfflineMapResult,
   OfflineTileResult,
   PreplannedMapAreaInfo,
+  TileCacheSizeEstimate,
 } from './ExpoArcgis.types';
 
 /**
@@ -82,4 +84,16 @@ export const offline = {
     downloadName: string
   ): Promise<JobRef<OfflineTileResult>> =>
     Module.exportVectorTiles(vectorTileServiceUrl, areaOfInterest, downloadName),
+
+  /**
+   * Estimates the on-disk file size and tile count for an `exportTileCache` download WITHOUT
+   * downloading. Useful for showing the user a preview before committing to a potentially large
+   * download. Returns `{ fileSize: number, tileCount: number }` (fileSize in bytes).
+   */
+  estimateTileCacheSize: (
+    tileServiceUrl: string,
+    areaOfInterest: Geometry,
+    options?: Record<string, unknown>
+  ): Promise<TileCacheSizeEstimate> =>
+    ExtrasModule.estimateTileCacheSize(tileServiceUrl, areaOfInterest, options),
 };

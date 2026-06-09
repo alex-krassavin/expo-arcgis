@@ -2,9 +2,11 @@ import { NativeModule, requireNativeModule } from 'expo';
 
 import type {
   FeatureLayerProps,
+  Geometry,
   RouteParameters,
   RouteStop,
   RouteTrackerHandle,
+  TileCacheSizeEstimate,
 } from './ExpoArcgis.types';
 import type { FeatureLayerRef } from './ExpoArcgisModule';
 
@@ -16,6 +18,11 @@ import type { FeatureLayerRef } from './ExpoArcgisModule';
  */
 declare class ExpoArcgisExtrasModule extends NativeModule {
   FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
+  estimateTileCacheSize(
+    tileServiceUrl: string,
+    areaOfInterest: Geometry,
+    options?: Record<string, unknown>
+  ): Promise<TileCacheSizeEstimate>;
   createRouteTracker(stops: RouteStop[], params: RouteParameters): Promise<RouteTrackerHandle>;
 }
 
