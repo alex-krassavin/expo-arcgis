@@ -239,10 +239,23 @@ export type QueryParameters = {
   returnGeometry?: boolean;
   /** Restrict the query to these object ids. */
   objectIds?: number[];
-  /** Sort order of the results. */
+  /** Sort order of the results (object form with explicit `ascending` flag). */
   orderBy?: OrderByField[];
+  /**
+   * Sort order of the results as `"FIELD [ASC|DESC]"` strings, e.g. `['POP DESC', 'NAME ASC']`.
+   * Parsed into native `OrderBy` objects; appended after any `orderBy` entries.
+   * Omitting the direction defaults to ascending.
+   */
+  orderByFields?: string[];
   /** Skip this many results (paging). */
   resultOffset?: number;
+  /**
+   * Restrict which attribute fields are returned, e.g. `['NAME', 'POP']`.
+   * Pass `['*']` or omit to include all fields (the default).
+   * Implemented as a post-query client-side filter on both platforms (the native
+   * `QueryParameters` does not expose per-field selection for `queryFeatures`).
+   */
+  outFields?: string[];
 };
 
 /** A feature returned by a query — its attributes plus (optionally) its geometry. */

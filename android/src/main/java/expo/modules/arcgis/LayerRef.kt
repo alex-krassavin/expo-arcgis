@@ -76,12 +76,13 @@ class FeatureLayerRef(appContext: AppContext, props: Map<String, Any?>) : LayerR
   /** Returns the features matching `query` (all features when null). Loads attributes in full. */
   suspend fun queryFeatures(query: Map<String, Any?>?): List<Map<String, Any?>> {
     val params = buildQueryParameters(query)
+    val outFields = outFieldsFromQuery(query)
     val result = if (table is ServiceFeatureTable) {
       table.queryFeatures(params, QueryFeatureFields.LoadAll).getOrThrow()
     } else {
       table.queryFeatures(params).getOrThrow()
     }
-    return result.map { serializeFeature(it) }
+    return result.map { serializeFeature(it, outFields) }
   }
 
   suspend fun queryFeatureCount(query: Map<String, Any?>?): Long =

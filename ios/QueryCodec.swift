@@ -17,7 +17,21 @@ func buildQueryParameters(_ dict: [String: Any]?) -> QueryParameters {
   if let resultOffset = dict["resultOffset"] as? NSNumber { params.resultOffset = resultOffset.intValue }
   if let objectIds = dict["objectIds"] as? [NSNumber] { params.addObjectIDs(objectIds.map(\.intValue)) }
   params.addOrderByFields(buildOrderBy(dict["orderBy"]))
+  params.addOrderByFields(parseOrderByFields(dict["orderByFields"]))
   return params
+}
+
+/// Parses `["POP DESC", "NAME ASC"]` strings into `OrderBy` objects.
+/// Each token is split on the last whitespace; the optional trailing word selects the sort order.
+private func parseOrderByFields(_ value: Any?) -> [OrderBy] {
+  guard let strings = value as? [String] else { return [] }
+  return strings.compactMap { token -> OrderBy? in
+    let parts = token.split(separator: " ", maxSplits: 1).map { String($0) }
+    guard !parts.isEmpty else { return nil }
+    let fieldName = parts[0]
+    let ascending = parts.count < 2 || parts[1].uppercased() != "DESC"
+    return OrderBy(fieldName: fieldName, sortOrder: ascending ? .ascending : .descending)
+  }
 }
 
 private func buildOrderBy(_ value: Any?) -> [OrderBy] {
@@ -45,6 +59,17 @@ private func querySpatialRelationship(_ value: String) -> SpatialRelationship {
 func serializeFeature(_ feature: Feature) -> [String: Any] {
   var result: [String: Any] = ["attributes": serializeAttributes(feature.attributes)]
   if let geometry = feature.geometry { result["geometry"] = dictFromGeometry(geometry) }
+  return result
+}
+
+/// Serializes a feature, restricting attributes to `outFields` when provided (non-empty).
+/// Pass `["*"]` or an empty array to include all fields.
+func serializeFeature(_ feature: Feature, outFields: [String]) -> [String: Any] {
+  var result = serializeFeature(feature)
+  if !outFields.isEmpty, outFields != ["*"] {
+    let filtered = (result["attributes"] as? [String: Any] ?? [:]).filter { outFields.contains($0.key) }
+    result["attributes"] = filtered
+  }
   return result
 }
 

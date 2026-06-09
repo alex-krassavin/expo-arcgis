@@ -37,13 +37,14 @@ public final class FeatureLayerRef: LayerRef {
   /// Returns the features matching `query` (all features when nil). Loads attributes in full.
   func queryFeatures(_ query: [String: Any]?) async throws -> [[String: Any]] {
     let params = buildQueryParameters(query)
+    let outFields = query?["outFields"] as? [String] ?? []
     let result: FeatureQueryResult
     if let serviceTable = table as? ServiceFeatureTable {
       result = try await serviceTable.queryFeatures(using: params, queryFeatureFields: .loadAll)
     } else {
       result = try await table.queryFeatures(using: params)
     }
-    return result.features().map(serializeFeature)
+    return result.features().map { serializeFeature($0, outFields: outFields) }
   }
 
   func queryFeatureCount(_ query: [String: Any]?) async throws -> Int {

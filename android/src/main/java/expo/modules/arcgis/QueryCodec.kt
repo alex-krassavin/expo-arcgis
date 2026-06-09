@@ -28,8 +28,28 @@ internal fun buildQueryParameters(dict: Map<*, *>?): QueryParameters {
   (dict["resultOffset"] as? Number)?.toInt()?.let { params.resultOffset = it }
   (dict["objectIds"] as? List<*>)?.mapNotNull { (it as? Number)?.toLong() }?.let { params.objectIds.addAll(it) }
   params.orderByFields.addAll(buildOrderBy(dict["orderBy"]))
+  params.orderByFields.addAll(parseOrderByFields(dict["orderByFields"]))
   return params
 }
+
+/** Parses `["POP DESC", "NAME ASC"]` strings into [OrderBy] objects. */
+private fun parseOrderByFields(value: Any?): List<OrderBy> {
+  val strings = value as? List<*> ?: return emptyList()
+  return strings.mapNotNull { item ->
+    val token = item as? String ?: return@mapNotNull null
+    val parts = token.trim().split(Regex("\\s+"), limit = 2)
+    val fieldName = parts[0]
+    val ascending = parts.size < 2 || parts[1].uppercase() != "DESC"
+    OrderBy(fieldName, if (ascending) SortOrder.Ascending else SortOrder.Descending)
+  }
+}
+
+/**
+ * Extracts the `outFields` list from a query dict for use in [serializeFeature].
+ * Returns an empty list when not specified (= all fields).
+ */
+internal fun outFieldsFromQuery(dict: Map<*, *>?): List<String> =
+  (dict?.get("outFields") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
 private fun buildOrderBy(value: Any?): List<OrderBy> =
   (value as? List<*>)?.mapNotNull { entry ->
@@ -52,8 +72,11 @@ private fun querySpatialRelationship(value: String): SpatialRelationship = when 
   else -> SpatialRelationship.Intersects
 }
 
-internal fun serializeFeature(feature: Feature): Map<String, Any?> {
-  val result = mutableMapOf<String, Any?>("attributes" to serializeAttributes(feature.attributes))
+internal fun serializeFeature(feature: Feature, outFields: List<String> = emptyList()): Map<String, Any?> {
+  val attrs = serializeAttributes(feature.attributes)
+  val filteredAttrs = if (outFields.isEmpty() || outFields == listOf("*")) attrs
+                      else attrs.filterKeys { it in outFields }
+  val result = mutableMapOf<String, Any?>("attributes" to filteredAttrs)
   feature.geometry?.let { result["geometry"] = dictFromGeometry(it) }
   return result
 }
