@@ -60,6 +60,9 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
   geLabelPoint(polygon: Geometry): Geometry | null;
   geNormalizeCentralMeridian(g: Geometry): Geometry | null;
   geReshape(g: Geometry, reshaper: Geometry): Geometry | null;
+  geIntersections(a: Geometry, b: Geometry): Geometry[];
+  geExtend(polyline: Geometry, extender: Geometry): Geometry | null;
+  geAutoComplete(existingPolygons: Geometry[], boundaries: Geometry[]): Geometry[];
   geBoundary(g: Geometry): Geometry | null;
   geSimplify(g: Geometry): Geometry | null;
   geDensify(g: Geometry, maxSegmentLength: number): Geometry | null;

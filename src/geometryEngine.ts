@@ -97,6 +97,17 @@ export const geometryEngine = {
   reshape: (geometry: Geometry, reshaper: Geometry): Geometry | null =>
     Module.geReshape(geometry, reshaper),
 
+  /** All intersection geometries of two geometries (points, lines and/or polygons). */
+  intersections: (a: Geometry, b: Geometry): Geometry[] => Module.geIntersections(a, b),
+
+  /** Extends a polyline to meet an `extender` polyline. */
+  extend: (polyline: Geometry, extender: Geometry): Geometry | null =>
+    Module.geExtend(polyline, extender),
+
+  /** Auto-completes polygons from existing polygon boundaries and new boundary polylines. */
+  autoComplete: (existingPolygons: Geometry[], boundaries: Geometry[]): Geometry[] =>
+    Module.geAutoComplete(existingPolygons, boundaries),
+
   /** Boundary of the geometry (polygon → polyline, polyline → multipoint). */
   boundary: (geometry: Geometry): Geometry | null => Module.geBoundary(geometry),
 

@@ -119,6 +119,23 @@ func geReshape(_ g: [String: Any], _ reshaper: [String: Any]) -> [String: Any]? 
   return nil
 }
 
+func geIntersections(_ a: [String: Any], _ b: [String: Any]) -> [[String: Any]] {
+  guard let g1 = parseGeo(a), let g2 = parseGeo(b) else { return [] }
+  return GeometryEngine.intersections(g1, g2).compactMap { encode($0) }
+}
+
+func geExtend(_ p: [String: Any], _ extender: [String: Any]) -> [String: Any]? {
+  guard let polyline = parseGeo(p) as? ArcGIS.Polyline,
+    let ext = parseGeo(extender) as? ArcGIS.Polyline else { return nil }
+  return encode(GeometryEngine.extend(polyline, usingExtender: ext, extendOptions: .default))
+}
+
+func geAutoComplete(_ existing: [[String: Any]], _ boundaries: [[String: Any]]) -> [[String: Any]] {
+  let polygons = existing.compactMap { parseGeo($0) as? ArcGIS.Polygon }
+  let lines = boundaries.compactMap { parseGeo($0) as? ArcGIS.Polyline }
+  return GeometryEngine.autoComplete(existingBoundaries: polygons, newBoundaries: lines).compactMap { encode($0) }
+}
+
 func geBoundary(_ g: [String: Any]) -> [String: Any]? {
   guard let geometry = parseGeo(g) else { return nil }
   return encode(GeometryEngine.boundary(of: geometry))

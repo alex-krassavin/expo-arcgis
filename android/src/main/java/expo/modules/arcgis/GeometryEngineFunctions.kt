@@ -118,6 +118,27 @@ internal fun geReshape(g: Map<String, Any?>, reshaper: Map<String, Any?>): Map<S
   return encode(GeometryEngine.reshape(multipart, line))
 }
 
+internal fun geIntersections(a: Map<String, Any?>, b: Map<String, Any?>): List<Map<String, Any?>> {
+  val g1 = parseGeo(a) ?: return emptyList()
+  val g2 = parseGeo(b) ?: return emptyList()
+  return GeometryEngine.tryIntersections(g1, g2).mapNotNull { encode(it) }
+}
+
+internal fun geExtend(p: Map<String, Any?>, extender: Map<String, Any?>): Map<String, Any?>? {
+  val polyline = parseGeo(p) as? Polyline ?: return null
+  val ext = parseGeo(extender) as? Polyline ?: return null
+  return encode(GeometryEngine.extend(polyline, ext, emptySet()))
+}
+
+internal fun geAutoComplete(
+  existing: List<Map<String, Any?>>,
+  boundaries: List<Map<String, Any?>>,
+): List<Map<String, Any?>> {
+  val polygons = existing.mapNotNull { parseGeo(it) as? Polygon }
+  val lines = boundaries.mapNotNull { parseGeo(it) as? Polyline }
+  return GeometryEngine.tryAutoComplete(polygons, lines).mapNotNull { encode(it) }
+}
+
 internal fun geBoundary(g: Map<String, Any?>): Map<String, Any?>? =
   parseGeo(g)?.let { encode(GeometryEngine.boundaryOrNull(it)) }
 
