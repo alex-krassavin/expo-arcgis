@@ -70,5 +70,18 @@ class ExpoArcgisExtrasModule : Module() {
         ref.updateAttachment(objectId, attachmentId, name, contentType, dataBase64)
       }
     }
+
+    // Turn-by-turn navigation — solve a route and track device locations against it.
+    AsyncFunction("createRouteTracker") Coroutine { stops: List<Map<String, Any?>>, params: Map<String, Any?> ->
+      createRouteTracker(appContext, stops, params)
+    }
+    Class(RouteTrackerRef::class) {
+      AsyncFunction("trackLocation") Coroutine { ref: RouteTrackerRef, location: Map<String, Any?> ->
+        ref.trackLocation(location)
+      }
+      AsyncFunction("switchToNextDestination") Coroutine { ref: RouteTrackerRef ->
+        ref.switchToNextDestination()
+      }
+    }
   }
 }

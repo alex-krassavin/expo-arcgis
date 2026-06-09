@@ -25,7 +25,7 @@ authentication.
 | **Editing** | add / update / delete features, `<GeometryEditor>` (tools), feature templates |
 | **Location** | device location, simulated location data source, `onLocationChange` |
 | **Geocoding** | `geocoder.geocode` / `reverseGeocode` / `suggest`, offline `.loc` locators |
-| **Routing** | `router.solveRoute` / directions, travel modes, point barriers, curb approach |
+| **Routing** | `router.solveRoute` / directions, travel modes, point barriers, curb approach; `router.createRouteTracker` turn-by-turn navigation |
 | **Analysis (3D)** | `<AnalysisOverlay>` + `<Viewshed>` / `<LineOfSight>` / `<DistanceMeasurement>` |
 | **Geoprocessing** | `geoprocessor.execute` → `JobRef` (progress + cancel), typed parameters |
 | **Utility network** | `<UtilityNetwork>` load + trace, named configs, associations, `describeNetwork` |

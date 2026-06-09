@@ -893,6 +893,42 @@ export type RouteResult = {
   messages: string[];
 };
 
+/** A device location fed to a `RouteTracker` (e.g. from `<MapView>`'s `onLocationChange`). */
+export type TrackedLocation = {
+  latitude: number;
+  longitude: number;
+  /** Speed in m/s (optional). */
+  speed?: number;
+  /** Heading in degrees (optional). */
+  course?: number;
+};
+
+/** Navigation status returned by `RouteTrackerHandle.trackLocation`. */
+export type RouteTrackingStatus = {
+  /** Distance remaining on the route, in meters. */
+  distanceRemaining: number;
+  /** Time remaining on the route, in minutes. */
+  timeRemaining: number;
+  /** Index of the current maneuver in the route's directions. */
+  currentManeuverIndex: number;
+  /** Number of destinations still to reach. */
+  remainingDestinationCount: number;
+  /** Destination status (e.g. `notReached`, `approaching`, `reached`). */
+  destinationStatus: string;
+  /** Voice-guidance text for the current maneuver (empty when none). */
+  voiceText: string;
+};
+
+/**
+ * Turn-by-turn navigation handle from `router.createRouteTracker`. Feed it device locations with
+ * `trackLocation` (typically from `<MapView>`'s `onLocationChange`); each call advances navigation
+ * and resolves with the current status. Call `switchToNextDestination` after reaching a stop.
+ */
+export type RouteTrackerHandle = {
+  trackLocation(location: TrackedLocation): Promise<RouteTrackingStatus>;
+  switchToNextDestination(): Promise<void>;
+};
+
 // ────────────────────────────────────────────────────────────────────────────
 // Spatial analysis (visual) — exploratory viewshed / line-of-sight on a `<SceneView>`.
 // ────────────────────────────────────────────────────────────────────────────

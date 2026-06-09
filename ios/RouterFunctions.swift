@@ -1,4 +1,5 @@
 import ArcGIS
+import ExpoModulesCore
 import Foundation
 
 /// Free functions backing the JS `router` namespace — routing between stops via a `RouteTask`.
@@ -106,4 +107,60 @@ private func serializeManeuver(_ maneuver: DirectionManeuver) -> [String: Any] {
     "duration": maneuver.duration,
     "geometry": maneuver.geometry.map(dictFromGeometry) ?? NSNull(),
   ]
+}
+
+// MARK: - Route tracking (turn-by-turn navigation)
+
+/// SharedObject wrapping a `RouteTracker`. Feed it device locations (e.g. from `onLocationChange`)
+/// via `trackLocation`; each call advances navigation and returns the current tracking status.
+public final class RouteTrackerRef: SharedObject {
+  private let tracker: RouteTracker
+
+  init(tracker: RouteTracker) {
+    self.tracker = tracker
+    super.init()
+  }
+
+  func trackLocation(_ loc: [String: Any]) async throws -> [String: Any] {
+    guard let lat = (loc["latitude"] as? NSNumber)?.doubleValue,
+      let lon = (loc["longitude"] as? NSNumber)?.doubleValue
+    else { return [:] }
+    let point = Point(x: lon, y: lat, spatialReference: .wgs84)
+    let location = Location(
+      position: point, horizontalAccuracy: 0, verticalAccuracy: 0,
+      speed: (loc["speed"] as? NSNumber)?.doubleValue ?? 0,
+      course: (loc["course"] as? NSNumber)?.doubleValue ?? 0)
+    try await tracker.track(location)
+    return serializeTrackingStatus(tracker)
+  }
+
+  func switchToNextDestination() async throws {
+    try await tracker.switchToNextDestination()
+  }
+}
+
+private func serializeTrackingStatus(_ tracker: RouteTracker) -> [String: Any] {
+  guard let status = tracker.trackingStatus else { return [:] }
+  let voice = tracker.generateVoiceGuidance()
+  return [
+    "distanceRemaining": status.routeProgress.remainingDistance.distance,
+    "timeRemaining": status.routeProgress.remainingTime,
+    "currentManeuverIndex": status.currentManeuverIndex,
+    "remainingDestinationCount": status.remainingDestinationCount,
+    "destinationStatus": String(describing: status.destinationStatus),
+    "voiceText": voice?.text ?? "",
+  ]
+}
+
+/// Solves a route from `stops` and returns a `RouteTrackerRef` for turn-by-turn navigation.
+func createRouteTracker(_ stops: [[String: Any]], _ params: [String: Any]) async throws -> RouteTrackerRef? {
+  guard let task = RouteTaskCache.shared.task(for: routeServiceURL(params)) else { return nil }
+  let parameters = try await task.makeDefaultParameters()
+  applyRouteParameters(parameters, params, task: task)
+  parameters.setStops(buildStops(stops))
+  parameters.returnsDirections = true
+  let result = try await task.solveRoute(using: parameters)
+  guard let tracker = RouteTracker(routeResult: result, routeIndex: 0, skipsCoincidentStops: false)
+  else { return nil }
+  return RouteTrackerRef(tracker: tracker)
 }

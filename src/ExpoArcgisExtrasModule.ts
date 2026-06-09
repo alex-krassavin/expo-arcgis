@@ -1,6 +1,11 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import type { FeatureLayerProps } from './ExpoArcgis.types';
+import type {
+  FeatureLayerProps,
+  RouteParameters,
+  RouteStop,
+  RouteTrackerHandle,
+} from './ExpoArcgis.types';
 import type { FeatureLayerRef } from './ExpoArcgisModule';
 
 /**
@@ -11,6 +16,7 @@ import type { FeatureLayerRef } from './ExpoArcgisModule';
  */
 declare class ExpoArcgisExtrasModule extends NativeModule {
   FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
+  createRouteTracker(stops: RouteStop[], params: RouteParameters): Promise<RouteTrackerHandle>;
 }
 
 export default requireNativeModule<ExpoArcgisExtrasModule>('ExpoArcgisExtras');
