@@ -20,6 +20,11 @@ for (const target of SUBTARGETS) {
   if (fs.existsSync(targetDir) && fs.existsSync(path.join(targetDir, 'tsconfig.json'))) {
     console.log(`Building ${target}`);
     fs.rmSync(path.join(targetDir, 'build'), { recursive: true, force: true });
-    run('tsc', ['--build', targetDir]);
+    // Also drop the incremental build info: after we delete build/, a stale .tsbuildinfo makes
+    // `tsc --build` think the output is up to date and skip re-emitting — leaving an EMPTY build/.
+    // The published package then ships no plugin/build and consumers hit
+    // `Cannot find module './plugin/build'` during `expo prebuild`. `--force` belt-and-suspenders.
+    fs.rmSync(path.join(targetDir, 'tsconfig.tsbuildinfo'), { force: true });
+    run('tsc', ['--build', '--force', targetDir]);
   }
 }

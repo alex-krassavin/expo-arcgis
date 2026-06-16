@@ -14,6 +14,10 @@ if (SUBTARGETS.includes(target)) {
     console.log(`tsconfig.json not found in ${target}, skipping build for ${target}`);
     process.exit(0);
   }
+  // Drop stale incremental build info first: a deleted build/ + a stale .tsbuildinfo makes
+  // `tsc --build` believe the output is up to date and skip re-emitting (the long-standing
+  // `rm plugin/tsconfig.tsbuildinfo` manual workaround). Removing it forces a fresh emit.
+  fs.rmSync(path.join(targetDir, 'tsconfig.tsbuildinfo'), { force: true });
   tscArgs = ['--build', targetDir, ...args.slice(1)];
 } else {
   tscArgs = [...args];
