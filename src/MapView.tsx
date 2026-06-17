@@ -18,6 +18,7 @@ import type {
   ImageOverlayRef,
 } from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
+import { sharedObjectId } from './utils/sharedObjectId';
 
 type NativeMapViewProps = MapViewProps & {
   /** The native map handle (SharedObject), passed by reference as a view prop. */
@@ -71,10 +72,12 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
     return (
       <NativeMapView
         ref={nativeRef}
-        map={map}
-        graphicsOverlays={overlays}
-        imageOverlays={imageOverlays}
-        geometryEditor={geometryEditor}
+        // SharedObjects are passed by registry id so they survive the Fabric prop pipeline on
+        // expo-modules-core < 56.0.13 (which lacks the auto-unwrap from expo/expo#46212).
+        map={sharedObjectId(map)}
+        graphicsOverlays={overlays.map(sharedObjectId)}
+        imageOverlays={imageOverlays.map(sharedObjectId)}
+        geometryEditor={sharedObjectId(geometryEditor)}
         {...props}
       >
         <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>

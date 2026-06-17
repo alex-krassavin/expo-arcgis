@@ -13,6 +13,7 @@ import {
 import type { SceneViewHandle, SceneViewProps } from './ExpoArcgis.types';
 import type { SceneRef, GraphicsOverlayRef, AnalysisOverlayRef } from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
+import { sharedObjectId } from './utils/sharedObjectId';
 
 type NativeSceneViewProps = SceneViewProps & {
   /** The native scene handle (SharedObject), passed by reference as a view prop. */
@@ -33,7 +34,7 @@ const NativeSceneView = requireNativeView<NativeSceneViewProps>('ExpoArcgis', 'E
  * `<GraphicsOverlay>` / `<AnalysisOverlay>` children, and exposes `retryLoad` via a `ref`.
  */
 export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneViewProps>>(
-  function SceneView({ children, ...props }, handle) {
+  function SceneView({ children, orbitGraphic, ...props }, handle) {
     const scene = useGeoModel() as SceneRef;
     // The native view exposes an async `retryLoad` function callable through its ref.
     const nativeRef = useRef<any>(null);
@@ -63,9 +64,10 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
     return (
       <NativeSceneView
         ref={nativeRef}
-        scene={scene}
-        graphicsOverlays={overlays}
-        analysisOverlays={analysisOverlays}
+        scene={sharedObjectId(scene)}
+        graphicsOverlays={overlays.map(sharedObjectId)}
+        analysisOverlays={analysisOverlays.map(sharedObjectId)}
+        orbitGraphic={sharedObjectId(orbitGraphic)}
         {...props}
       >
         <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
