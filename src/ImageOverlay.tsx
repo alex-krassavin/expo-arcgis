@@ -4,6 +4,7 @@ import type { ImageOverlayProps } from './ExpoArcgis.types';
 import ExtrasModule from './ExpoArcgisExtrasModule';
 import type { ImageOverlayRef } from './ExpoArcgisModule';
 import { useGeoView } from './contexts';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative image overlay. Displays a single georeferenced image (a local file) at a map extent on
@@ -21,7 +22,7 @@ export function ImageOverlay({ imagePath, extent, opacity }: ImageOverlayProps) 
     const overlay = ref.current!;
     view.addImageOverlay(overlay);
     return () => {
-      view.removeImageOverlay(overlay);
+      detachQuietly(() => view.removeImageOverlay(overlay));
       overlay.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

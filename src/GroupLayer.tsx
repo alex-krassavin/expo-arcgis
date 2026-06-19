@@ -7,6 +7,7 @@ import { GeoModelContext, useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative `GroupLayer` — a container that groups its child layers as a single unit on the
@@ -26,7 +27,7 @@ export function GroupLayer({ children, ...props }: PropsWithChildren<LayerProps>
     const group = ref.current!;
     model.addLayer(group);
     return () => {
-      model.removeLayer(group);
+      detachQuietly(() => model.removeLayer(group));
       group.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

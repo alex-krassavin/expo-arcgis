@@ -5,6 +5,7 @@ import { useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Builds a declarative operational-layer component from a native `LayerRef` factory.
@@ -30,7 +31,7 @@ export function createLayerComponent<P extends object, H = unknown>(
       const layer = ref.current!;
       model.addLayer(layer);
       return () => {
-        model.removeLayer(layer);
+        detachQuietly(() => model.removeLayer(layer));
         layer.release();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps

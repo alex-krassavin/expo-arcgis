@@ -7,6 +7,7 @@ import { useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative operational `FeatureLayer`. Adds itself to the nearest `<Map>` / `<Scene>`, and
@@ -31,7 +32,7 @@ export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
       const layer = ref.current!;
       model.addLayer(layer);
       return () => {
-        model.removeLayer(layer);
+        detachQuietly(() => model.removeLayer(layer));
         if (!isExternal.current) layer.release();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps

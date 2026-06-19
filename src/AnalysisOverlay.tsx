@@ -3,6 +3,7 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 import type { AnalysisOverlayProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type AnalysisOverlayRef } from './ExpoArcgisModule';
 import { AnalysisOverlayContext, useGeoView } from './contexts';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative analysis overlay. Mirrors the native `AnalysisOverlay` — a `<SceneView>` can hold
@@ -20,7 +21,7 @@ export function AnalysisOverlay({ visible, children }: PropsWithChildren<Analysi
     const overlay = ref.current!;
     view.addAnalysisOverlay(overlay);
     return () => {
-      view.removeAnalysisOverlay(overlay);
+      detachQuietly(() => view.removeAnalysisOverlay(overlay));
       overlay.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

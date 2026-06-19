@@ -6,6 +6,7 @@ import { useGeoModel } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /** Declarative operational `ArcGISMapImageLayer`. Adds itself to the nearest `<Map>` / `<Scene>`. */
 export function MapImageLayer(props: MapImageLayerProps) {
@@ -21,7 +22,7 @@ export function MapImageLayer(props: MapImageLayerProps) {
     const layer = ref.current!;
     model.addLayer(layer);
     return () => {
-      model.removeLayer(layer);
+      detachQuietly(() => model.removeLayer(layer));
       layer.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

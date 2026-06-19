@@ -10,6 +10,7 @@ import { useAnalysisOverlay } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative exploratory line of sight between an observer and a target.
@@ -56,7 +57,7 @@ export function LineOfSight(
     const analysis = analysisRef.current!;
     overlay.addAnalysis(analysis);
     return () => {
-      overlay.removeAnalysis(analysis);
+      detachQuietly(() => overlay.removeAnalysis(analysis));
       analysis.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

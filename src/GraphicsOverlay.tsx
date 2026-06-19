@@ -3,6 +3,7 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 import type { Renderer } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicsOverlayRef } from './ExpoArcgisModule';
 import { GraphicsOverlayContext, useGeoView } from './contexts';
+import { detachQuietly } from './utils/detachQuietly';
 
 export type GraphicsOverlayProps = {
   /** Renderer applied to graphics that set no `symbol` of their own. */
@@ -24,7 +25,7 @@ export function GraphicsOverlay({ renderer, children }: PropsWithChildren<Graphi
     const overlay = ref.current!;
     view.add(overlay);
     return () => {
-      view.remove(overlay);
+      detachQuietly(() => view.remove(overlay));
       overlay.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

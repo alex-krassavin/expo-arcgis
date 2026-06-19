@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { GeometryEditorHandle, GeometryEditorProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GeometryEditorRef } from './ExpoArcgisModule';
 import { useGeoView } from './contexts';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Interactive geometry editor. Mirrors the native `GeometryEditor` — place it inside a
@@ -25,7 +26,7 @@ export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorPro
       const editor = ref.current!;
       view.setGeometryEditor(editor);
       return () => {
-        view.setGeometryEditor(null);
+        detachQuietly(() => view.setGeometryEditor(null));
         editor.release();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps

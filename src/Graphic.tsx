@@ -6,6 +6,7 @@ import { useGraphicsOverlay } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
+import { detachQuietly } from './utils/detachQuietly';
 
 /**
  * Declarative point graphic. Draws itself on the nearest `<GraphicsOverlay>`. Forwards its native
@@ -26,7 +27,7 @@ export const Graphic = forwardRef<GraphicRef, GraphicProps>(function Graphic(pro
     const graphic = ref.current!;
     overlay.addGraphic(graphic);
     return () => {
-      overlay.removeGraphic(graphic);
+      detachQuietly(() => overlay.removeGraphic(graphic));
       graphic.release();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
