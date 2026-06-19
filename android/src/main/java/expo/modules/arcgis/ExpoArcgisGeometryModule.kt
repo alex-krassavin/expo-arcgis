@@ -103,6 +103,7 @@ class ExpoArcgisGeometryModule : Module() {
 
     // Job handle for long-running downloads — emits onProgress, awaits via result(), supports cancel().
     Class(JobRef::class) {
+      Constructor { throw IllegalStateException("JobRef is returned by long-running operations and cannot be constructed from JavaScript.") }
       Events("onProgress")
       AsyncFunction("result") Coroutine { ref: JobRef -> ref.result() }
       AsyncFunction("cancel") Coroutine { ref: JobRef -> ref.cancel() }

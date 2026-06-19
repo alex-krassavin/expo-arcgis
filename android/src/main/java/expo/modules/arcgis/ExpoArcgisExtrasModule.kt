@@ -103,6 +103,7 @@ class ExpoArcgisExtrasModule : Module() {
       createRouteTracker(appContext, stops, params)
     }
     Class(RouteTrackerRef::class) {
+      Constructor { throw IllegalStateException("RouteTrackerRef is created natively (createRouteTracker) and cannot be constructed from JavaScript.") }
       AsyncFunction("trackLocation") Coroutine { ref: RouteTrackerRef, location: Map<String, Any?> ->
         ref.trackLocation(location)
       }
@@ -113,6 +114,7 @@ class ExpoArcgisExtrasModule : Module() {
 
     // Branch versioning — a service geodatabase handle obtained from FeatureLayerRef.getServiceGeodatabase().
     Class(ServiceGeodatabaseRef::class) {
+      Constructor { throw IllegalStateException("ServiceGeodatabaseRef is obtained from FeatureLayer.getServiceGeodatabase() and cannot be constructed from JavaScript.") }
       AsyncFunction("fetchVersions") Coroutine { ref: ServiceGeodatabaseRef ->
         ref.fetchVersions()
       }
@@ -140,6 +142,7 @@ class ExpoArcgisExtrasModule : Module() {
       openGeodatabase(appContext, path)
     }
     Class(GeodatabaseRef::class) {
+      Constructor { throw IllegalStateException("GeodatabaseRef is obtained from openGeodatabase() and cannot be constructed from JavaScript.") }
       AsyncFunction("beginTransaction") Coroutine { ref: GeodatabaseRef -> ref.beginTransaction() }
       AsyncFunction("commitTransaction") Coroutine { ref: GeodatabaseRef -> ref.commitTransaction() }
       AsyncFunction("rollbackTransaction") Coroutine { ref: GeodatabaseRef -> ref.rollbackTransaction() }
