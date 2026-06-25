@@ -14,19 +14,20 @@ const TEXTURE = 'https://static.arcgis.com/images/Symbols/Shapes/BlackStarLargeB
 export default function PictureFill() {
   return (
     <Map basemap="arcGISTopographic" initialViewpoint={{ latitude: 34.01, longitude: -118.8, scale: 200_000 }}>
-      <GraphicsOverlay>
-        <Graphic
-          geometry={{ type: 'polygon', points: POLYGON_POINTS }}
-          symbol={{
-            type: 'picture-fill',
-            url: TEXTURE,
-            width: 24,
-            height: 24,
-            outline: { color: '#1d3557', width: 2 },
-          }}
-        />
-      </GraphicsOverlay>
-      <MapView style={{ flex: 1 }} />
+      <MapView style={{ flex: 1 }}>
+        <GraphicsOverlay>
+          <Graphic
+            geometry={{ type: 'polygon', points: POLYGON_POINTS }}
+            symbol={{
+              type: 'picture-fill',
+              url: TEXTURE,
+              width: 24,
+              height: 24,
+              outline: { color: '#1d3557', width: 2 },
+            }}
+          />
+        </GraphicsOverlay>
+      </MapView>
     </Map>
   );
 }

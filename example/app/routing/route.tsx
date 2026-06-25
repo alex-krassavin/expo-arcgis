@@ -26,12 +26,13 @@ export default function Route() {
   return (
     <SampleScreen status={status} controls={<Button title="Solve route" onPress={solve} />}>
       <Map basemap="arcGISNavigation" initialViewpoint={{ latitude: 34.04, longitude: -118.37, scale: 600_000 }}>
-        <GraphicsOverlay>
-          {geometry && (
-            <Graphic geometry={geometry} symbol={{ type: 'simple-line', color: '#5856d6', width: 4 }} />
-          )}
-        </GraphicsOverlay>
-        <MapView style={{ flex: 1 }} />
+        <MapView style={{ flex: 1 }}>
+          <GraphicsOverlay>
+            {geometry && (
+              <Graphic geometry={geometry} symbol={{ type: 'simple-line', color: '#5856d6', width: 4 }} />
+            )}
+          </GraphicsOverlay>
+        </MapView>
       </Map>
     </SampleScreen>
   );

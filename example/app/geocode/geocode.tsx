@@ -20,15 +20,16 @@ export default function Geocode() {
   return (
     <SampleScreen status={status} controls={<Button title="Find Los Angeles" onPress={find} />}>
       <Map basemap="arcGISNavigation" initialViewpoint={{ latitude: 34.05, longitude: -118.24, scale: 3_000_000 }}>
-        <GraphicsOverlay>
-          {location && (
-            <Graphic
-              geometry={location}
-              symbol={{ type: 'simple-marker', style: 'diamond', color: '#5856d6', size: 16 }}
-            />
-          )}
-        </GraphicsOverlay>
-        <MapView style={{ flex: 1 }} />
+        <MapView style={{ flex: 1 }}>
+          <GraphicsOverlay>
+            {location && (
+              <Graphic
+                geometry={location}
+                symbol={{ type: 'simple-marker', style: 'diamond', color: '#5856d6', size: 16 }}
+              />
+            )}
+          </GraphicsOverlay>
+        </MapView>
       </Map>
     </SampleScreen>
   );

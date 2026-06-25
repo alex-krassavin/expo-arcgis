@@ -17,27 +17,28 @@ const POLYGON_POINTS = [
 export default function Graphics() {
   return (
     <Map basemap="arcGISTopographic" initialViewpoint={{ latitude: 34.0, longitude: -118.81, scale: 60_000 }}>
-      <GraphicsOverlay>
-        <Graphic
-          geometry={{ type: 'point', ...POINT }}
-          symbol={{
-            type: 'simple-marker',
-            style: 'circle',
-            color: '#ffa500',
-            size: 12,
-            outline: { color: '#0000ff', width: 2 },
-          }}
-        />
-        <Graphic
-          geometry={{ type: 'polyline', points: LINE_POINTS }}
-          symbol={{ type: 'simple-line', color: '#0000ff', width: 3 }}
-        />
-        <Graphic
-          geometry={{ type: 'polygon', points: POLYGON_POINTS }}
-          symbol={{ type: 'simple-fill', color: '#ffa50080', outline: { color: '#0000ff', width: 2 } }}
-        />
-      </GraphicsOverlay>
-      <MapView style={{ flex: 1 }} />
+      <MapView style={{ flex: 1 }}>
+        <GraphicsOverlay>
+          <Graphic
+            geometry={{ type: 'point', ...POINT }}
+            symbol={{
+              type: 'simple-marker',
+              style: 'circle',
+              color: '#ffa500',
+              size: 12,
+              outline: { color: '#0000ff', width: 2 },
+            }}
+          />
+          <Graphic
+            geometry={{ type: 'polyline', points: LINE_POINTS }}
+            symbol={{ type: 'simple-line', color: '#0000ff', width: 3 }}
+          />
+          <Graphic
+            geometry={{ type: 'polygon', points: POLYGON_POINTS }}
+            symbol={{ type: 'simple-fill', color: '#ffa50080', outline: { color: '#0000ff', width: 2 } }}
+          />
+        </GraphicsOverlay>
+      </MapView>
     </Map>
   );
 }

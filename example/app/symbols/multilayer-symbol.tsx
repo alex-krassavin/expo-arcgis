@@ -13,10 +13,11 @@ const PIN: Symbol = {
 export default function MultilayerSymbol() {
   return (
     <Map basemap="arcGISNavigation" initialViewpoint={{ latitude: 34.05, longitude: -118.24, scale: 1_000_000 }}>
-      <GraphicsOverlay>
-        <Graphic geometry={{ type: 'point', x: -118.24, y: 34.05 }} symbol={PIN} />
-      </GraphicsOverlay>
-      <MapView style={{ flex: 1 }} />
+      <MapView style={{ flex: 1 }}>
+        <GraphicsOverlay>
+          <Graphic geometry={{ type: 'point', x: -118.24, y: 34.05 }} symbol={PIN} />
+        </GraphicsOverlay>
+      </MapView>
     </Map>
   );
 }

@@ -44,16 +44,17 @@ export default function Geoprocessing() {
   return (
     <SampleScreen status={status} controls={<Button title="Run viewshed" onPress={run} />}>
       <Map basemap="arcGISImagery" initialViewpoint={{ latitude: 34.05, longitude: -118.49, scale: 200_000 }}>
-        <GraphicsOverlay>
-          {polygons.map((geometry, i) => (
-            <Graphic
-              key={i}
-              geometry={geometry}
-              symbol={{ type: 'simple-fill', color: '#ffb70366', outline: { color: '#ff6b00', width: 1 } }}
-            />
-          ))}
-        </GraphicsOverlay>
-        <MapView style={{ flex: 1 }} />
+        <MapView style={{ flex: 1 }}>
+          <GraphicsOverlay>
+            {polygons.map((geometry, i) => (
+              <Graphic
+                key={i}
+                geometry={geometry}
+                symbol={{ type: 'simple-fill', color: '#ffb70366', outline: { color: '#ff6b00', width: 1 } }}
+              />
+            ))}
+          </GraphicsOverlay>
+        </MapView>
       </Map>
     </SampleScreen>
   );

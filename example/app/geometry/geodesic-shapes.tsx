@@ -38,11 +38,12 @@ const SECTOR_FILL: Symbol = { type: 'simple-fill', color: '#e6394655', outline: 
 export default function GeodesicShapes() {
   return (
     <Map basemap="arcGISDarkGray" initialViewpoint={{ latitude: 40, longitude: -100, scale: 50_000_000 }}>
-      <GraphicsOverlay>
-        {ELLIPSE && <Graphic geometry={ELLIPSE} symbol={ELLIPSE_FILL} />}
-        {SECTOR && <Graphic geometry={SECTOR} symbol={SECTOR_FILL} />}
-      </GraphicsOverlay>
-      <MapView style={{ flex: 1 }} />
+      <MapView style={{ flex: 1 }}>
+        <GraphicsOverlay>
+          {ELLIPSE && <Graphic geometry={ELLIPSE} symbol={ELLIPSE_FILL} />}
+          {SECTOR && <Graphic geometry={SECTOR} symbol={SECTOR_FILL} />}
+        </GraphicsOverlay>
+      </MapView>
     </Map>
   );
 }
