@@ -8,10 +8,13 @@ authentication.
 
 📖 **[Documentation & samples →](https://alex-krassavin.github.io/expo-arcgis)**
 
-> **Status — early / pre-1.0.** The full surface below is implemented and **compile-verified** on both
-> platforms (TypeScript · Android `compileDebugKotlin` · iOS pod build). On-device **runtime** validation
-> (rendering, network calls, device sensors) should be done in your own app. The API may still change
-> before 1.0. Pulls ArcGIS Maps SDK **300.0.0**.
+> **Status — early / pre-1.0.** The full surface below is implemented and verified on both platforms —
+> **compiled** (TypeScript · Android `compileDebugKotlin` · iOS pod build) **and run** in a standalone
+> New-Architecture consumer app on the **iOS Simulator and Android**, across the sample gallery: view
+> mount / render / unmount, navigation, the SharedObject bridge and component lifecycle. Runtime issues
+> found this way are fixed (≥ 0.2.5). Behaviour that depends on your own setup — basemap / feature
+> rendering with your **ArcGIS API key**, and device sensors (GPS) — is still best validated in your app.
+> The API may still change before 1.0. Pulls ArcGIS Maps SDK **300.0.0**.
 
 ## Features
 
