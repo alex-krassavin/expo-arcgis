@@ -346,6 +346,12 @@ declare class ExpoArcgisModule extends NativeModule {
    * `tokenExpirationMinutes` sets the token lifetime; pass `null` to use the server's default.
    */
   setTokenCredential(username: string, password: string, tokenExpirationMinutes: number | null): void;
+  /**
+   * Installs (`true`) or removes (`false`) a network-layer handler that trusts every TLS
+   * server-trust challenge, including self-signed certificates.
+   * **Dev/on-prem only** — disables TLS validation; never call with `true` in production.
+   */
+  setAllowUntrustedHosts(allow: boolean): void;
   /** Clears the stored login and all cached credentials (token + OAuth). */
   signOut(): Promise<void>;
   /** iOS-only OAuth sign-in: the SDK presents the auth browser, then caches the credential. */

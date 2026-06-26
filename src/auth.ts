@@ -20,6 +20,21 @@ export function setTokenCredential(
   Module.setTokenCredential(username, password, tokenExpirationMinutes ?? null);
 }
 
+/**
+ * Installs (or removes) a network-layer handler that trusts **every** TLS server-trust challenge,
+ * including self-signed and expired certificates.
+ *
+ * **For development and on-premises ArcGIS Enterprise only.** Disabling TLS certificate
+ * validation makes all SDK network connections vulnerable to man-in-the-middle attacks — never
+ * call this with `true` in a production app or against public-internet services.
+ *
+ * - `true`  → trust all server-trust challenges (bypass certificate validation).
+ * - `false` → remove the override and restore normal TLS validation (the default).
+ */
+export function setAllowUntrustedHosts(allow: boolean): void {
+  Module.setAllowUntrustedHosts(allow);
+}
+
 /** Clears the stored login and all cached credentials (token + OAuth). */
 export function signOut(): Promise<void> {
   return Module.signOut();

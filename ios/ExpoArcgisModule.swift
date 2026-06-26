@@ -28,6 +28,13 @@ public class ExpoArcgisModule: Module {
       )
     }
 
+    // Network-layer server-trust override — for on-prem ArcGIS Enterprise with self-signed certs.
+    // NEVER enable in production: disabling TLS validation exposes connections to MITM attacks.
+    Function("setAllowUntrustedHosts") { (allow: Bool) in
+      ArcGISEnvironment.authenticationManager.networkAuthenticationChallengeHandler =
+        allow ? NetworkTrustHandler.shared : nil
+    }
+
     // Revokes any OAuth user credentials on the server, then clears all cached credentials.
     AsyncFunction("signOut") {
       let store = ArcGISEnvironment.authenticationManager.arcGISCredentialStore

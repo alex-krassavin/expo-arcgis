@@ -14,6 +14,7 @@ export type {
 export { MapSettings, useMapSettings, type MapSettingsConfig } from './MapSettings';
 export {
   setTokenCredential,
+  setAllowUntrustedHosts,
   signOut,
   signInWithOAuth,
   setAppCredential,
