@@ -60,6 +60,7 @@ import com.arcgismaps.mapping.kml.KmlNode
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.raster.ImageServiceRaster
 import com.arcgismaps.raster.Raster
+import com.arcgismaps.raster.RasterFunction
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -537,16 +538,33 @@ class WmtsLayerRef(appContext: AppContext, url: String, layerId: String) : Layer
 }
 
 /** Operational raster layer from a remote image service or a local raster file. */
-class RasterLayerRef(appContext: AppContext, source: Map<String, Any?>) : LayerRef(appContext) {
-  override val layer: RasterLayer = RasterLayer(rasterFromSource(source))
+class RasterLayerRef(
+  appContext: AppContext,
+  source: Map<String, Any?>,
+  rasterFunctionJson: String? = null,
+) : LayerRef(appContext) {
+  override val layer: RasterLayer = RasterLayer(rasterFromSource(source, rasterFunctionJson))
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }
 
-/** Builds a [Raster] from a JS source dict: `{type:"imageService",url}` or `{type:"file",path}`. */
-private fun rasterFromSource(s: Map<String, Any?>): Raster =
-  if (s["type"] == "file") Raster.createWithPath(s["path"] as? String ?: "")
-  else ImageServiceRaster(s["url"] as? String ?: "")
+/**
+ * Builds a [Raster] from a JS source dict: `{type:"imageService",url}` or `{type:"file",path}`.
+ * When [rasterFunctionJson] is supplied, wraps the base raster in a [RasterFunction] pipeline:
+ * `RasterFunction.fromJsonOrNull` → wire source raster as first raster argument →
+ * `Raster.createWithRasterFunction`.  Falls back to the plain source raster if parsing fails
+ * or no raster argument is found.
+ */
+private fun rasterFromSource(s: Map<String, Any?>, rasterFunctionJson: String? = null): Raster {
+  val base: Raster =
+    if (s["type"] == "file") Raster.createWithPath(s["path"] as? String ?: "")
+    else ImageServiceRaster(s["url"] as? String ?: "")
+  if (rasterFunctionJson == null) return base
+  val fn = RasterFunction.fromJsonOrNull(rasterFunctionJson) ?: return base
+  val firstName = fn.arguments.rasterNames.firstOrNull() ?: return base
+  fn.arguments.setRaster(firstName, base)
+  return Raster.createWithRasterFunction(fn)
+}
 
 /** Operational KML layer from a remote .kml/.kmz URL or local file. */
 class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {

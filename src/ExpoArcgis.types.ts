@@ -831,7 +831,17 @@ export type WmtsLayerProps = LayerProps & { url: string; layerId: string };
 export type RasterSource = { type: 'imageService'; url: string } | { type: 'file'; path: string };
 
 /** Props for a `<RasterLayer>` — mirror the native `RasterLayer` (image service or local raster). */
-export type RasterLayerProps = LayerProps & { source: RasterSource };
+export type RasterLayerProps = LayerProps & {
+  source: RasterSource;
+  /**
+   * On-the-fly raster function chain to apply to the layer's raster, serialised as JSON
+   * (e.g. a hillshade / colormap / NDVI chain).  When set, the SDK builds a
+   * `RasterFunction.fromJSON` → `Raster(rasterFunction:)` pipeline with the source raster
+   * wired in as the first raster argument.  Construction-time only — changing this prop
+   * requires remounting the layer.
+   */
+  rasterFunction?: string;
+};
 
 /** Props for a `<KmlLayer>` — mirror `KMLLayer` (remote `.kml`/`.kmz` URL or local file). */
 export type KmlLayerProps = LayerProps & { url: string };

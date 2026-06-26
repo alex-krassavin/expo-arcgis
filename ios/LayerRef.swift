@@ -542,17 +542,30 @@ public final class WmtsLayerRef: LayerRef {
 
 /// Operational raster layer from a remote image service or a local raster file.
 public final class RasterLayerRef: LayerRef {
-  init(source: [String: Any]) {
-    super.init(layer: RasterLayer(raster: rasterFromSource(source)))
+  init(source: [String: Any], rasterFunction rasterFunctionJSON: String? = nil) {
+    super.init(layer: RasterLayer(raster: rasterFromSource(source, rasterFunctionJSON: rasterFunctionJSON)))
   }
 }
 
 /// Builds a `Raster` from a JS source dict: `{ type: "imageService", url }` or `{ type: "file", path }`.
-func rasterFromSource(_ s: [String: Any]) -> Raster {
+/// When `rasterFunctionJSON` is supplied, wraps the base raster in a `RasterFunction` pipeline:
+/// `RasterFunction.fromJSON` → wire source raster as first raster argument → `Raster(rasterFunction:)`.
+/// Falls back to the plain source raster if parsing fails or no raster argument is found.
+func rasterFromSource(_ s: [String: Any], rasterFunctionJSON: String? = nil) -> Raster {
+  let base: Raster
   if (s["type"] as? String) == "file", let path = s["path"] as? String {
-    return Raster(fileURL: URL(fileURLWithPath: path))
+    base = Raster(fileURL: URL(fileURLWithPath: path))
+  } else {
+    base = ImageServiceRaster(url: URL(string: s["url"] as? String ?? "")!)
   }
-  return ImageServiceRaster(url: URL(string: s["url"] as? String ?? "")!)
+  guard let json = rasterFunctionJSON,
+        let data = json.data(using: .utf8),
+        let fn = try? RasterFunction.fromJSON(data),
+        let args = fn.arguments,
+        let firstName = args.rasterNames.first
+  else { return base }
+  args.setRaster(base, forArgumentNamed: firstName)
+  return Raster(rasterFunction: fn)
 }
 
 /// Operational KML layer from a remote `.kml`/`.kmz` URL or local file.

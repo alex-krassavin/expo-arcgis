@@ -230,7 +230,10 @@ public class ExpoArcgisModule: Module {
 
     Class(RasterLayerRef.self) {
       Constructor { (props: [String: Any]) -> RasterLayerRef in
-        let ref = RasterLayerRef(source: props["source"] as? [String: Any] ?? [:])
+        let ref = RasterLayerRef(
+          source: props["source"] as? [String: Any] ?? [:],
+          rasterFunction: props["rasterFunction"] as? String
+        )
         ref.applyProps(props)
         return ref
       }

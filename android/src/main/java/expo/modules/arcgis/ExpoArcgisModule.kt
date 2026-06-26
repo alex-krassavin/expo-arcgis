@@ -210,7 +210,8 @@ class ExpoArcgisModule : Module() {
       Constructor { props: Map<String, Any?> ->
         @Suppress("UNCHECKED_CAST")
         val source = props["source"] as? Map<String, Any?> ?: emptyMap()
-        RasterLayerRef(appContext, source).also { it.applyProps(props) }
+        val rasterFunctionJson = props["rasterFunction"] as? String
+        RasterLayerRef(appContext, source, rasterFunctionJson).also { it.applyProps(props) }
       }
       Function("applyProps") { ref: RasterLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
