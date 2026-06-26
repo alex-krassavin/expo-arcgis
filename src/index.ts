@@ -66,6 +66,7 @@ export { geometryEngine } from './geometryEngine';
 export { coordinateFormatter } from './coordinateFormatter';
 export { geocoder } from './geocoder';
 export { router } from './router';
+export { serviceArea } from './serviceArea';
 export { geoprocessor } from './geoprocessor';
 export { offline } from './offline';
 export { portal } from './portal';

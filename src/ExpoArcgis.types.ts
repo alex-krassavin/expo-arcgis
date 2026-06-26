@@ -1433,6 +1433,39 @@ export type RouteTrackerHandle = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// Service Area — reachable-area polygons from facilities via `ServiceAreaTask`.
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Parameters for `serviceArea.solve`. */
+export type ServiceAreaSolveParams = {
+  /** URL of the network analysis service (e.g. the ArcGIS World Service Areas service). */
+  serviceUrl: string;
+  /** Facility locations to compute service areas from. */
+  facilities: PointGeometry[];
+  /**
+   * Impedance cutoff values (e.g. travel-time minutes or distance) that define each polygon ring.
+   * When omitted the service's default cutoffs are used.
+   */
+  cutoffs?: number[];
+};
+
+/** One service-area polygon returned from `serviceArea.solve`. Mirrors the native `ServiceAreaPolygon`. */
+export type ServiceAreaPolygon = {
+  /** The polygon geometry of the reachable area. */
+  geometry: Geometry;
+  /** Lower impedance bound for this polygon ring. */
+  fromCutoff: number;
+  /** Upper impedance bound for this polygon ring. */
+  toCutoff: number;
+};
+
+/** Result of `serviceArea.solve`. */
+export type ServiceAreaResult = {
+  /** All result polygons across all facilities, ordered by facility then cutoff. */
+  polygons: ServiceAreaPolygon[];
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // Spatial analysis (visual) — exploratory viewshed / line-of-sight on a `<SceneView>`.
 // ────────────────────────────────────────────────────────────────────────────
 

@@ -96,6 +96,11 @@ class ExpoArcgisGeometryModule : Module() {
       solveRoute(stops, params)
     }
 
+    // Service Area — compute reachable areas from facilities, exposed as the JS `serviceArea` namespace.
+    AsyncFunction("serviceAreaSolve") Coroutine { params: Map<String, Any?> ->
+      serviceAreaSolve(params)
+    }
+
     // Geoprocessing — run a geoprocessing service, exposed as the JS `geoprocessor` namespace.
     AsyncFunction("executeGeoprocessing") Coroutine { serviceUrl: String, inputs: Map<String, Any?> ->
       executeGeoprocessing(appContext, serviceUrl, inputs)

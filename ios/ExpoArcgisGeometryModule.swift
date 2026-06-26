@@ -89,6 +89,11 @@ public class ExpoArcgisGeometryModule: Module {
       try await solveRoute(stops, params)
     }
 
+    // Service Area — compute reachable areas from facilities, exposed as the JS `serviceArea` namespace.
+    AsyncFunction("serviceAreaSolve") { (params: [String: Any]) in
+      try await serviceAreaSolve(params)
+    }
+
     // Geoprocessing — run a geoprocessing service, exposed as the JS `geoprocessor` namespace.
     AsyncFunction("executeGeoprocessing") { (serviceUrl: String, inputs: [String: Any]) in
       try await executeGeoprocessing(serviceUrl, inputs)

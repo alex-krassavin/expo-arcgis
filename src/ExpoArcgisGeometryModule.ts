@@ -29,6 +29,8 @@ import type {
   ProximityResult,
   RouteResult,
   RouteStop,
+  ServiceAreaResult,
+  ServiceAreaSolveParams,
   SuggestResult,
 } from './ExpoArcgis.types';
 
@@ -126,6 +128,9 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
 
   // Routing — backing function for the `router` namespace (see ./router).
   solveRoute(stops: RouteStop[], params: Record<string, unknown>): Promise<RouteResult>;
+
+  // Service Area — backing function for the `serviceArea` namespace (see ./serviceArea).
+  serviceAreaSolve(params: ServiceAreaSolveParams): Promise<ServiceAreaResult>;
 
   // Geoprocessing — backing function for the `geoprocessor` namespace (see ./geoprocessor).
   executeGeoprocessing(
