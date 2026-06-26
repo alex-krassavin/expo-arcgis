@@ -17,6 +17,7 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var locationVersion = 0
   @Published private(set) var geometryEditor: GeometryEditor?
   @Published private(set) var grid: ArcGIS.Grid?
+  @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
   var proxy: MapViewProxy?
 
@@ -85,7 +86,12 @@ struct ExpoArcgisMapContainer: View {
   var body: some View {
     if let map = model.map {
       MapViewReader { proxy in
-        MapView(map: map, graphicsOverlays: model.graphicsOverlays, imageOverlays: model.imageOverlays)
+        MapView(
+          map: map,
+          timeExtent: Binding(get: { model.timeExtent }, set: { model.timeExtent = $0 }),
+          graphicsOverlays: model.graphicsOverlays,
+          imageOverlays: model.imageOverlays
+        )
           // `locationDisplay(_:)` / `geometryEditor(_:)` return `MapView`, so they must precede
           // the SwiftUI modifiers below.
           .locationDisplay(model.locationDisplay)
@@ -224,6 +230,18 @@ class ExpoArcgisMapView: ExpoView {
   /// Sets the coordinate grid overlay from JS (nil clears it).
   func setGrid(_ dict: [String: Any]?) {
     model.setGrid(buildGrid(dict))
+  }
+
+  /// Filters time-aware layers to a time window from JS (nil shows all time steps).
+  func setTimeExtent(_ dict: [String: Any]?) {
+    guard let dict,
+          let startMs = (dict["startTime"] as? NSNumber)?.doubleValue,
+          let endMs = (dict["endTime"] as? NSNumber)?.doubleValue
+    else { model.timeExtent = nil; return }
+    model.timeExtent = ArcGIS.TimeExtent(
+      startDate: Date(timeIntervalSince1970: startMs / 1000),
+      endDate: Date(timeIntervalSince1970: endMs / 1000)
+    )
   }
 
   /// Enables/configures the device location display from JS (nil disables it).

@@ -7,7 +7,9 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
 import com.arcgismaps.geometry.SpatialReference
+import com.arcgismaps.mapping.TimeExtent
 import com.arcgismaps.mapping.view.AtmosphereEffect
+import java.time.Instant
 import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.mapping.view.GlobeCameraController
 import com.arcgismaps.mapping.view.LightingMode
@@ -228,6 +230,14 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   fun setSunTime(ms: Double?) {
     ms ?: return
     sceneView.sunTime = java.time.Instant.ofEpochMilli(ms.toLong())
+  }
+
+  /** Filters time-aware layers to a time window from JS (null shows all time steps). */
+  fun setTimeExtent(config: Map<String, Any?>?) {
+    if (config == null) { sceneView.setTimeExtent(null); return }
+    val startMs = (config["startTime"] as? Number)?.toLong() ?: return
+    val endMs = (config["endTime"] as? Number)?.toLong() ?: return
+    sceneView.setTimeExtent(TimeExtent(Instant.ofEpochMilli(startMs), Instant.ofEpochMilli(endMs)))
   }
 
   override fun onAttachedToWindow() {

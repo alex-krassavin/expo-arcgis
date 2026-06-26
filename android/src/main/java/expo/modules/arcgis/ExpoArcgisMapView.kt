@@ -15,6 +15,7 @@ import com.arcgismaps.location.SimulatedLocationDataSource
 import com.arcgismaps.location.SimulationParameters
 import com.arcgismaps.location.SystemLocationDataSource
 import java.time.Instant
+import com.arcgismaps.mapping.TimeExtent
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.MapView
 import com.arcgismaps.mapping.view.ScreenCoordinate
@@ -149,6 +150,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   fun setGrid(config: Map<String, Any?>?) {
     mapView.grid = buildGrid(config)
       ?: com.arcgismaps.mapping.view.LatitudeLongitudeGrid().apply { isVisible = false }
+  }
+
+  /** Filters time-aware layers to a time window from JS (null shows all time steps). */
+  fun setTimeExtent(config: Map<String, Any?>?) {
+    if (config == null) { mapView.setTimeExtent(null); return }
+    val startMs = (config["startTime"] as? Number)?.toLong() ?: return
+    val endMs = (config["endTime"] as? Number)?.toLong() ?: return
+    mapView.setTimeExtent(TimeExtent(Instant.ofEpochMilli(startMs), Instant.ofEpochMilli(endMs)))
   }
 
   /** Enables/configures the device location display from JS (null disables it). */

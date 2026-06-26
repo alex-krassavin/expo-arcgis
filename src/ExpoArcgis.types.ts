@@ -138,6 +138,12 @@ export type MapViewProps = {
   viewpoint?: Viewpoint;
   /** Device-location display. When set, the view shows the device's GPS location. */
   locationDisplay?: LocationDisplay;
+  /**
+   * Filters time-aware layers to this time window. Both values are epoch milliseconds (UTC).
+   * Pass `null` / omit to show all time steps (no filter). Maps to `GeoView.timeExtent` /
+   * `MapView(timeExtent:)` on both platforms.
+   */
+  timeExtent?: { startTime: number; endTime: number } | null;
   /** Called once the map has finished loading successfully. */
   onMapLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the map fails to load (e.g. missing or invalid API key). */
@@ -2493,6 +2499,12 @@ export type SceneViewProps = {
   atmosphereEffect?: AtmosphereEffect;
   /** Sun position, as epoch milliseconds (affects shadow direction). */
   sunTime?: number;
+  /**
+   * Filters time-aware layers to this time window. Both values are epoch milliseconds (UTC).
+   * Pass `null` / omit to show all time steps (no filter). Maps to `GeoView.timeExtent` /
+   * `SceneView(timeExtent:)` on both platforms.
+   */
+  timeExtent?: { startTime: number; endTime: number } | null;
   /** Called once the scene has finished loading successfully. */
   onSceneLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
   /** Called if the scene fails to load. */

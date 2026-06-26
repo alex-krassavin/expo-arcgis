@@ -17,6 +17,7 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var sunDate = Date(timeIntervalSince1970: 1_372_683_600)
   @Published private(set) var cameraController: CameraController?
   @Published private(set) var grid: ArcGIS.Grid?
+  @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
 
@@ -57,6 +58,7 @@ struct ExpoArcgisSceneContainer: View {
       SceneViewReader { proxy in
         SceneView(
           scene: scene,
+          timeExtent: Binding(get: { model.timeExtent }, set: { model.timeExtent = $0 }),
           graphicsOverlays: model.graphicsOverlays,
           analysisOverlays: model.analysisOverlays
         )
@@ -211,6 +213,18 @@ class ExpoArcgisSceneView: ExpoView {
 
   /// Sets the coordinate grid overlay from JS (nil clears it).
   func setGrid(_ dict: [String: Any]?) { model.setGrid(buildGrid(dict)) }
+
+  /// Filters time-aware layers to a time window from JS (nil shows all time steps).
+  func setTimeExtent(_ dict: [String: Any]?) {
+    guard let dict,
+          let startMs = (dict["startTime"] as? NSNumber)?.doubleValue,
+          let endMs = (dict["endTime"] as? NSNumber)?.doubleValue
+    else { model.timeExtent = nil; return }
+    model.timeExtent = ArcGIS.TimeExtent(
+      startDate: Date(timeIntervalSince1970: startMs / 1000),
+      endDate: Date(timeIntervalSince1970: endMs / 1000)
+    )
+  }
 
   /// Camera-controller config + the target graphic for an `orbitGeoElement` controller. Stored so
   /// the controller can be (re)built once both the config and the graphic ref are available.

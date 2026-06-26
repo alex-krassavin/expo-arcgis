@@ -416,6 +416,10 @@ public class ExpoArcgisModule: Module {
         view.setGrid(grid)
       }
 
+      Prop("timeExtent") { (view: ExpoArcgisMapView, value: [String: Any]?) in
+        view.setTimeExtent(value)
+      }
+
       AsyncFunction("identify") { (view: ExpoArcgisMapView, screenPoint: [String: Any], options: [String: Any]?) in
         try await view.identify(screenPoint, options)
       }
@@ -481,6 +485,10 @@ public class ExpoArcgisModule: Module {
 
       Prop("sunTime") { (view: ExpoArcgisSceneView, value: Double?) in
         view.setSunTime(value)
+      }
+
+      Prop("timeExtent") { (view: ExpoArcgisSceneView, value: [String: Any]?) in
+        view.setTimeExtent(value)
       }
 
       AsyncFunction("retryLoad") { (view: ExpoArcgisSceneView) in
