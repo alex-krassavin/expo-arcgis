@@ -668,6 +668,23 @@ export type FeatureLayerHandle = {
    */
   getServiceGeodatabase(): Promise<ServiceGeodatabaseHandle>;
   /**
+   * Returns the valid coded values for `fieldName` given the feature's current `attributes`.
+   * Use this to drive editing-form dropdowns: pass the feature's current attribute state and the
+   * name of the field being edited; returns `[{ name, code }]` for coded values that satisfy all
+   * contingent-value constraints defined on the table.
+   *
+   * The table and its `ContingentValuesDefinition` are loaded automatically. A temporary feature
+   * is built from `attributes` (no server round-trip for the feature itself); only `ArcGISFeature`
+   * tables are supported — rejects for shapefiles and WFS tables.
+   *
+   * @example
+   * ```ts
+   * const options = await layer.current.contingentValues({ habitat: 'oak' }, 'species');
+   * // options → [{ name: 'Red Oak', code: 1 }, { name: 'White Oak', code: 2 }]
+   * ```
+   */
+  contingentValues(attributes: Record<string, unknown>, fieldName: string): Promise<{ name: string; code: unknown }[]>;
+  /**
    * Returns the valid contingent values for `fieldName` on the feature with `objectId`, given
    * the feature's current attribute state. Contingent values constrain which attribute values
    * are valid based on the values of other fields (e.g. "species" options depend on "habitat").

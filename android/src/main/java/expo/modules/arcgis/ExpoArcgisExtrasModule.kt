@@ -47,6 +47,9 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("addFeatureWithSubtype") Coroutine { ref: FeatureLayerRef, subtypeName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean? ->
         ref.addFeatureWithSubtype(subtypeName, attributes, geometry, apply)
       }
+      AsyncFunction("contingentValues") Coroutine { ref: FeatureLayerRef, attributes: Map<String, Any?>, fieldName: String ->
+        ref.contingentValues(attributes, fieldName)
+      }
       AsyncFunction("getContingentValues") Coroutine { ref: FeatureLayerRef, objectId: Long, fieldName: String ->
         ref.getContingentValues(objectId, fieldName)
       }

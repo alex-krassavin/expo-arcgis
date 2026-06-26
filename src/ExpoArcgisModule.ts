@@ -112,6 +112,16 @@ export declare class FeatureLayerRef extends LayerRef {
   updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
   getServiceGeodatabase(): Promise<ServiceGeodatabaseRef>;
   /**
+   * Returns the valid coded values for `fieldName` given the feature's current `attributes`.
+   * Use this to drive editing-form dropdowns: pass the feature's current attribute state and the
+   * name of the field being edited; returns `[{ name, code }]` for coded values that satisfy all
+   * contingent-value constraints.
+   *
+   * Requires an ArcGIS feature table; rejects for shapefiles and WFS tables.
+   * Resolves with an empty array when no constraints are defined for `fieldName`.
+   */
+  contingentValues(attributes: Record<string, unknown>, fieldName: string): Promise<{ name: string; code: unknown }[]>;
+  /**
    * Returns the valid contingent values for `fieldName` on the feature with `objectId`.
    * The `fieldName` is the name of an attribute field whose valid values may be constrained by
    * contingent-value rules (e.g. a "species" field whose options depend on "habitat"). Requires

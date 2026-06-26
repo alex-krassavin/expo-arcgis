@@ -294,6 +294,38 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
   }
 
   /**
+   * Returns the valid coded values for [fieldName] given a feature's current [attributes].
+   * Use this to drive editing-form dropdowns: pass the feature's current attribute state and the
+   * name of the field being edited; returns `[{ name, code }]` for coded values that satisfy all
+   * contingent-value constraints defined on the table.
+   *
+   * Loads the table and its [ContingentValuesDefinition], builds a temporary [ArcGISFeature] from
+   * [attributes] (via `FeatureTable.createFeature(attributes, null)` + `applyAttributes`), then
+   * calls `getContingentValuesOrNull(feature, fieldName)`.
+   * Non-coded contingent values ([ContingentRangeValue], null, any) are omitted — only
+   * [ContingentCodedValue] entries are returned.
+   *
+   * Requires an [ArcGISFeatureTable]; throws for shapefiles and WFS tables.
+   * Returns an empty list when no constraints are defined for [fieldName].
+   */
+  suspend fun contingentValues(attributes: Map<String, Any?>, fieldName: String): List<Map<String, Any?>> {
+    table.load().getOrThrow()
+    val arcGISTable = table as? ArcGISFeatureTable
+      ?: throw IllegalStateException("contingentValues requires an ArcGIS feature table (not a shapefile or WFS table)")
+    arcGISTable.contingentValuesDefinition.load().getOrThrow()
+    val feature = table.createFeature(attributes, null) as ArcGISFeature
+    val result = arcGISTable.getContingentValuesOrNull(feature, fieldName)
+      ?: return emptyList()
+    return result.byFieldGroup.flatMap { (_, values) ->
+      values.mapNotNull { cv ->
+        if (cv !is ContingentCodedValue) return@mapNotNull null
+        val coded = cv.codedValue
+        mapOf("name" to coded.name, "code" to coded.code)
+      }
+    }
+  }
+
+  /**
    * Returns the valid contingent values for [fieldName] on the feature with [objectId].
    * Requires the table to be an [ArcGISFeatureTable]; throws otherwise. Returns an empty list when
    * the feature is not found or the table has no contingent-values result for that field.

@@ -277,6 +277,43 @@ public final class FeatureLayerRef: LayerRef {
     _ = try await persistEdits()
   }
 
+  /// Returns the valid coded values for `fieldName` given a feature's current `attributes`.
+  /// Use this to drive editing-form dropdowns: pass the feature's current attribute state and the
+  /// name of the field being edited; returns `[{ name, code }]` for coded values that satisfy all
+  /// contingent-value constraints defined on the table.
+  ///
+  /// Loads the table and its `contingentValuesDefinition`, builds a temporary `ArcGISFeature` from
+  /// `attributes` (using `makeFeature(attributes:)`), then calls `contingentValues(with:forFieldNamed:)`.
+  /// Non-coded contingent values (`ContingentRangeValue`, `ContingentNullValue`, `ContingentAnyValue`)
+  /// are omitted from the result — only `ContingentCodedValue` entries are returned.
+  ///
+  /// Requires an `ArcGISFeatureTable`; throws for shapefiles and WFS tables.
+  /// Returns an empty array when no constraints are defined for `fieldName`.
+  func contingentValues(_ attributes: [String: Any], _ fieldName: String) async throws -> [[String: Any]] {
+    try await table.load()
+    guard let arcGISTable = table as? ArcGISFeatureTable else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 8,
+        userInfo: [NSLocalizedDescriptionKey: "contingentValues requires an ArcGIS feature table (not a shapefile or WFS table)"])
+    }
+    try await arcGISTable.contingentValuesDefinition.load()
+    let sendableAttrs: [String: any Sendable] = attributes.reduce(into: [:]) { acc, pair in
+      if let s = sendableValue(pair.value) { acc[pair.key] = s }
+    }
+    let feature = arcGISTable.makeFeature(attributes: sendableAttrs) as! ArcGISFeature
+    guard let result = arcGISTable.contingentValues(with: feature, forFieldNamed: fieldName) else {
+      return []
+    }
+    return result.contingentValuesByFieldGroup.flatMap { (_, values) in
+      values.compactMap { cv -> [String: Any]? in
+        guard let coded = cv as? ContingentCodedValue else { return nil }
+        let cv2 = coded.codedValue
+        let codeValue: Any = cv2.code ?? NSNull()
+        return ["name": cv2.name, "code": codeValue]
+      }
+    }
+  }
+
   /// Returns the valid contingent values for `fieldName` on the feature with `objectId`.
   /// Requires the table to be an `ArcGISFeatureTable`; throws otherwise. Returns `nil` when
   /// the feature is not found or the table has no contingent-values definition for that field.
