@@ -65,9 +65,12 @@ export declare class GroupLayerRef extends LayerRef {
   removeLayer(layer: LayerRef<any>): void;
 }
 
-/** Reference to a native `KmlLayer` — a `LayerRef` plus `getNodes` (mirrors `KmlLayerHandle`). */
+/** Reference to a native `KmlLayer` — a `LayerRef` plus `getNodes` and tour controls (mirrors `KmlLayerHandle`). */
 export declare class KmlLayerRef extends LayerRef {
   getNodes(): Promise<KmlNodeInfo[]>;
+  playTour(): void;
+  pauseTour(): void;
+  resetTour(): void;
 }
 
 /**

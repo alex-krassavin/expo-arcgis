@@ -57,6 +57,8 @@ import com.arcgismaps.mapping.layers.WmtsLayer
 import com.arcgismaps.mapping.kml.KmlContainer
 import com.arcgismaps.mapping.kml.KmlDataset
 import com.arcgismaps.mapping.kml.KmlNode
+import com.arcgismaps.mapping.kml.KmlTour
+import com.arcgismaps.mapping.kml.KmlTourController
 import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.raster.ImageServiceRaster
 import com.arcgismaps.raster.Raster
@@ -570,6 +572,8 @@ private fun rasterFromSource(s: Map<String, Any?>, rasterFunctionJson: String? =
 class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   private val dataset = KmlDataset(url)
   override val layer: KmlLayer = KmlLayer(dataset)
+  /** Lazily-created controller; held for the lifetime of the ref so play/pause/reset are idempotent. */
+  private var tourController: KmlTourController? = null
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 
@@ -578,6 +582,21 @@ class KmlLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
     dataset.load().getOrThrow()
     return dataset.rootNodes.map { serializeKmlNode(it) }
   }
+
+  /** Returns the existing controller, or creates one attached to the first [KmlTour] in the node tree.
+   *  Returns `null` if the dataset has no tour. */
+  private fun controller(): KmlTourController? {
+    tourController?.let { return it }
+    val tour = findFirstTour(dataset.rootNodes) ?: return null
+    return KmlTourController().also { it.tour = tour; tourController = it }
+  }
+
+  /** Starts or resumes playback of the first KML tour. No-ops if no tour exists. */
+  fun playTour() { controller()?.play() }
+  /** Pauses playback of the first KML tour. No-ops if no tour exists. */
+  fun pauseTour() { controller()?.pause() }
+  /** Resets playback of the first KML tour to the beginning. No-ops if no tour exists. */
+  fun resetTour() { controller()?.reset() }
 }
 
 /** Serializes a KML node, recursing into container nodes (documents / folders). */
@@ -591,6 +610,15 @@ private fun serializeKmlNode(node: KmlNode): Map<String, Any?> {
     dict["children"] = node.childNodes.map { serializeKmlNode(it) }
   }
   return dict
+}
+
+/** Depth-first search for the first [KmlTour] in a list of KML nodes. */
+private fun findFirstTour(nodes: List<KmlNode>): KmlTour? {
+  for (node in nodes) {
+    if (node is KmlTour) return node
+    if (node is KmlContainer) findFirstTour(node.childNodes)?.let { return it }
+  }
+  return null
 }
 
 /** Operational WFS layer — a [FeatureLayer] over a [WfsFeatureTable] (Web Feature Service). */

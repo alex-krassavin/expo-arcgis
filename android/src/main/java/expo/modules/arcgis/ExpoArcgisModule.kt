@@ -226,6 +226,9 @@ class ExpoArcgisModule : Module() {
         ref.applyProps(changed)
       }
       AsyncFunction("getNodes") Coroutine { ref: KmlLayerRef -> ref.getNodes() }
+      Function("playTour") { ref: KmlLayerRef -> ref.playTour() }
+      Function("pauseTour") { ref: KmlLayerRef -> ref.pauseTour() }
+      Function("resetTour") { ref: KmlLayerRef -> ref.resetTour() }
     }
 
     // WFS (Web Feature Service) + OGC API - Features — feature layers over async-populating tables.

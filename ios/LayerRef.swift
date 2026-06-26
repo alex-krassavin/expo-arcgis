@@ -571,6 +571,9 @@ func rasterFromSource(_ s: [String: Any], rasterFunctionJSON: String? = nil) -> 
 /// Operational KML layer from a remote `.kml`/`.kmz` URL or local file.
 public final class KmlLayerRef: LayerRef {
   private let dataset: KMLDataset
+  /// Lazily-created controller; held for the lifetime of the ref so play/pause/reset are idempotent.
+  private var tourController: KMLTourController?
+
   init(url: String) {
     let dataset = KMLDataset(url: URL(string: url)!)
     self.dataset = dataset
@@ -583,6 +586,33 @@ public final class KmlLayerRef: LayerRef {
     try await dataset.load()
     return dataset.rootNodes.map { serializeKmlNode($0) }
   }
+
+  /// Returns the existing controller, or creates one attached to the first `KMLTour` found in the
+  /// layer's node tree. Returns `nil` if the dataset has no tour.
+  private func controller() -> KMLTourController? {
+    if let existing = tourController { return existing }
+    guard let tour = findFirstTour(in: dataset.rootNodes) else { return nil }
+    let ctrl = KMLTourController(tour: tour)
+    tourController = ctrl
+    return ctrl
+  }
+
+  /// Starts or resumes playback of the first KML tour. No-ops if no tour exists.
+  func playTour() { controller()?.play() }
+  /// Pauses playback of the first KML tour. No-ops if no tour exists.
+  func pauseTour() { controller()?.pause() }
+  /// Resets playback of the first KML tour to the beginning. No-ops if no tour exists.
+  func resetTour() { controller()?.reset() }
+}
+
+/// Depth-first search for the first `KMLTour` in a list of KML nodes.
+private func findFirstTour(in nodes: [KMLNode]) -> KMLTour? {
+  for node in nodes {
+    if let tour = node as? KMLTour { return tour }
+    if let container = node as? KMLContainer,
+       let found = findFirstTour(in: container.childNodes) { return found }
+  }
+  return nil
 }
 
 /// Serializes a KML node, recursing into container nodes (documents / folders).

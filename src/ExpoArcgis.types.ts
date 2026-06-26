@@ -1101,6 +1101,12 @@ export type KmlNodeInfo = {
 export type KmlLayerHandle = {
   /** Loads the KML and returns its node tree (recursing into container nodes). */
   getNodes(): Promise<KmlNodeInfo[]>;
+  /** Starts or resumes playback of the first KML tour found in the layer. No-ops if no tour exists. */
+  playTour(): void;
+  /** Pauses playback of the first KML tour found in the layer. No-ops if no tour exists. */
+  pauseTour(): void;
+  /** Resets playback of the first KML tour found in the layer to the beginning. No-ops if no tour exists. */
+  resetTour(): void;
 };
 
 /**
