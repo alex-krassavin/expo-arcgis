@@ -3,15 +3,24 @@ import '../global.css';
 import { MapSettings } from 'expo-arcgis';
 import { Stack } from 'expo-router';
 
+import { SAMPLES } from '../src/samples';
+
 /**
- * Root layout. Applies the ArcGIS API key globally (from EXPO_PUBLIC_ARCGIS_API_KEY) and renders
- * the navigation stack — every sample screen inherits the key. The key can also be injected
- * natively by the config plugin at build time.
+ * Root layout. Applies the ArcGIS API key globally and configures a clean, branded navigation
+ * header — sample screens show their human title (from the catalog), not the raw route path.
  */
 export default function RootLayout() {
   return (
     <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
-      <Stack screenOptions={{ headerTintColor: '#0079c1' }} />
+      <Stack
+        screenOptions={({ route }) => ({
+          title: SAMPLES.find((sample) => sample.href === `/${route.name}`)?.title ?? 'expo-arcgis',
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTitleStyle: { fontWeight: '700', fontSize: 18, color: '#171717' },
+          headerTintColor: '#0079c1',
+          headerShadowVisible: false,
+        })}
+      />
     </MapSettings>
   );
 }
