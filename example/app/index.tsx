@@ -1,47 +1,30 @@
 import { Link, Stack } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { CATEGORIES, SAMPLES } from '../src/samples';
 
-/** Home gallery — samples grouped by category. */
+/** Home gallery — samples grouped by category, each a tappable card. */
 export default function Home() {
   return (
     <>
       <Stack.Screen options={{ title: 'expo-arcgis' }} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView className="flex-1 bg-neutral-100" contentContainerClassName="gap-6 p-4">
         {CATEGORIES.map((category) => (
-          <View key={category} style={styles.section}>
-            <Text style={styles.heading}>{category}</Text>
-            {SAMPLES.filter((sample) => sample.category === category).map((sample) => (
-              <View key={sample.href} style={styles.row}>
-                <Link href={sample.href} style={styles.title}>
-                  {sample.title}
+          <View key={category} className="gap-2">
+            <Text className="px-1 text-xs font-bold uppercase tracking-wider text-neutral-500">{category}</Text>
+            <View className="gap-2">
+              {SAMPLES.filter((sample) => sample.category === category).map((sample) => (
+                <Link key={sample.href} href={sample.href} asChild>
+                  <Pressable className="rounded-2xl border border-neutral-200 bg-white p-4 active:bg-neutral-50">
+                    <Text className="text-base font-semibold text-neutral-900">{sample.title}</Text>
+                    <Text className="mt-1 text-sm leading-5 text-neutral-500">{sample.description}</Text>
+                  </Pressable>
                 </Link>
-                <Text style={styles.description}>{sample.description}</Text>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         ))}
       </ScrollView>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { padding: 16 },
-  section: { marginBottom: 24 },
-  heading: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6e6e73',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  row: {
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d1d1d6',
-  },
-  title: { fontSize: 17, color: '#0079c1' },
-  description: { fontSize: 13, color: '#6e6e73', marginTop: 2 },
-});

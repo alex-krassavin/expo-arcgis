@@ -1,7 +1,8 @@
 import { KmlLayer, Scene, SceneView, type Camera, type KmlLayerHandle, type Surface } from 'expo-arcgis';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useEffect, useState } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 const ELEVATION: Surface = {
   elevationSources: [

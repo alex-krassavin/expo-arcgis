@@ -1,3 +1,5 @@
+import '../global.css';
+
 import { MapSettings } from 'expo-arcgis';
 import { Stack } from 'expo-router';
 

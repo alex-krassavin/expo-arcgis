@@ -8,7 +8,7 @@ import {
 } from 'expo-arcgis';
 import { Asset } from 'expo-asset';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
 

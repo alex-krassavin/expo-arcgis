@@ -1,6 +1,6 @@
 import { Graphic, GraphicsOverlay, Map, MapView, router, type Geometry } from 'expo-arcgis';
 import { useState } from 'react';
-import { Button } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
 

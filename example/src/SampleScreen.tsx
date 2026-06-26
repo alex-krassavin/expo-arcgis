@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+
+import { Text } from '../components/ui/text';
 
 /**
  * Shared chrome for interactive samples: renders the map/scene full-screen with an optional
@@ -15,30 +17,18 @@ export function SampleScreen({
   children: ReactNode;
 }) {
   return (
-    <View style={styles.fill}>
+    <View className="flex-1">
       {children}
       {(status != null || controls != null) && (
-        <View style={styles.bar}>
-          {status != null && <Text style={styles.status}>{status}</Text>}
-          {controls != null && <View style={styles.controls}>{controls}</View>}
+        <View className="absolute inset-x-0 bottom-0 gap-3 border-t border-neutral-200 bg-white/95 px-4 pb-7 pt-3">
+          {status != null && <Text className="text-sm leading-5 text-neutral-700">{status}</Text>}
+          {controls != null && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="flex-row gap-2">
+              {controls}
+            </ScrollView>
+          )}
         </View>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  bar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.96)',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
-  },
-  status: { fontSize: 13, color: '#1d3557' },
-  controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-});

@@ -1,6 +1,7 @@
 import { Map, MapView, setTokenCredential, signInWithOAuth, signOut } from 'expo-arcgis';
 import { useState } from 'react';
-import { Button, Linking } from 'react-native';
+import { Linking } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
 

@@ -8,7 +8,7 @@ import {
   type Geometry,
 } from 'expo-arcgis';
 import { useState } from 'react';
-import { Button } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
 

@@ -1,6 +1,6 @@
 import { KmlLayer, Map, MapView, type KmlLayerHandle, type KmlNodeInfo } from 'expo-arcgis';
 import { useRef, useState } from 'react';
-import { Button } from 'react-native';
+import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
 
