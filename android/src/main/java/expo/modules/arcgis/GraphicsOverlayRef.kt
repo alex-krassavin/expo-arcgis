@@ -348,9 +348,12 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     num(s["depth"], 100.0),
     sceneSymbolAnchor(s["anchor"]),
   )
-  "model-scene" -> (s["url"] as? String)?.let { uri ->
-    // ModelSceneSymbol(uri, scale) — 3D glTF/model marker. Set heading/pitch/roll (Float)
-    // and symbolSizeUnits after construction; the symbol is Loadable.
+  "model-scene" -> (s["url"] as? String)?.let { rawUri ->
+    // ModelSceneSymbol(uri, scale) — 3D glTF/model marker. ArcGIS on Android resolves a LOCAL model
+    // by filesystem path, so an expo `file://` URI must be unwrapped (iOS `URL(string:)` accepts the
+    // scheme, Android silently fails to load it). Set heading/pitch/roll (Float) + symbolSizeUnits;
+    // the symbol is Loadable.
+    val uri = if (rawUri.startsWith("file://")) android.net.Uri.parse(rawUri).path ?: rawUri else rawUri
     val scale = (s["scale"] as? Number)?.toFloat() ?: 1f
     ModelSceneSymbol(uri, scale).apply {
       symbolSizeUnits = if (s["sizeUnits"] == "meters") SymbolSizeUnits.Meters else SymbolSizeUnits.Dips
