@@ -1120,15 +1120,22 @@ export type KmlNodeInfo = {
   children?: KmlNodeInfo[];
 };
 
-/** Imperative handle exposed by `<KmlLayer>` via `ref`. */
+/**
+ * Imperative handle exposed by `<KmlLayer>` via `ref`.
+ *
+ * **Tour playback (`playTour` / `pauseTour` / `resetTour`) is iOS-only.** On Android the tour
+ * controller cannot drive the camera of the view-based scene view (an ArcGIS Maps SDK limitation —
+ * automatic tour playback exists only on the Compose `SceneView`, and the controller exposes no
+ * camera/viewpoint to drive it manually). The methods are present on Android but no-op visually.
+ */
 export type KmlLayerHandle = {
   /** Loads the KML and returns its node tree (recursing into container nodes). */
   getNodes(): Promise<KmlNodeInfo[]>;
-  /** Starts or resumes playback of the first KML tour found in the layer. No-ops if no tour exists. */
+  /** Starts or resumes playback of the first KML tour found in the layer. No-ops if no tour exists. iOS only (see above). */
   playTour(): void;
-  /** Pauses playback of the first KML tour found in the layer. No-ops if no tour exists. */
+  /** Pauses playback of the first KML tour found in the layer. No-ops if no tour exists. iOS only (see above). */
   pauseTour(): void;
-  /** Resets playback of the first KML tour found in the layer to the beginning. No-ops if no tour exists. */
+  /** Resets playback of the first KML tour found in the layer to the beginning. No-ops if no tour exists. iOS only (see above). */
   resetTour(): void;
 };
 

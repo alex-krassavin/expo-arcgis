@@ -58,5 +58,7 @@
   {"slug":"basics/portal-search","category":"Basics","title":"Portal search","description":"Search ArcGIS Online for items (web maps) anonymously."},
   {"slug":"layers/kml-tree","category":"Layers","title":"KML node tree","description":"Read a KML document's node hierarchy via the layer ref."},
   {"slug":"layers/raster-function","category":"Layers","title":"Raster function","description":"Apply an on-the-fly Hillshade raster function to an image service."},
-  {"slug":"layers/time-extent","category":"Layers","title":"Time extent","description":"Filter a time-aware layer to a time window via the MapView timeExtent prop."}
+  {"slug":"layers/time-extent","category":"Layers","title":"Time extent","description":"Filter a time-aware layer to a time window via the MapView timeExtent prop."},
+  {"slug":"three-d/model-scene","category":"3D","title":"Model scene symbol","description":"Render a 3D glTF model at a point with ModelSceneSymbol."},
+  {"slug":"editing/contingent-values","category":"Editing","title":"Contingent values","description":"Valid coded values for a field constrained by another (bird-nests geodatabase)."}
 ]

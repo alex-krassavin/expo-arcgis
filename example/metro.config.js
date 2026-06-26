@@ -32,4 +32,7 @@ config.transformer.getTransformOptions = async () => ({
   },
 });
 
+// Let `require()` resolve bundled binary data assets (a `.geodatabase` for the contingent-values sample).
+config.resolver.assetExts.push('geodatabase');
+
 module.exports = config;
