@@ -19,6 +19,8 @@ object NetworkTrustHandler : NetworkAuthenticationChallengeHandler {
     if (challenge.networkAuthenticationType is NetworkAuthenticationType.ServerTrust) {
       return NetworkAuthenticationChallengeResponse.ContinueWithCredential(ServerTrust)
     }
-    return NetworkAuthenticationChallengeResponse.Cancel
+    // Other challenge kinds (basic / digest / NTLM / client-cert) aren't ours to satisfy — continue
+    // without a credential (mirrors Swift's `.continueWithoutCredential`) instead of cancelling them.
+    return NetworkAuthenticationChallengeResponse.ContinueAndFail
   }
 }
