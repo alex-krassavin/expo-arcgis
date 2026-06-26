@@ -563,8 +563,9 @@ private fun rasterFromSource(s: Map<String, Any?>, rasterFunctionJson: String? =
     else ImageServiceRaster(s["url"] as? String ?: "")
   if (rasterFunctionJson == null) return base
   val fn = RasterFunction.fromJsonOrNull(rasterFunctionJson) ?: return base
-  val firstName = fn.arguments.rasterNames.firstOrNull() ?: return base
-  fn.arguments.setRaster(firstName, base)
+  val args = fn.arguments ?: return base
+  val firstName = args.rasterNames.firstOrNull() ?: return base
+  args.setRaster(firstName, base)
   return Raster.createWithRasterFunction(fn)
 }
 
