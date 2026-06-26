@@ -15,10 +15,10 @@ export default function RootLayout() {
       <Stack
         screenOptions={({ route }) => ({
           title: SAMPLES.find((sample) => sample.href === `/${route.name}`)?.title ?? 'expo-arcgis',
-          headerStyle: { backgroundColor: '#ffffff' },
+          headerStyle: { backgroundColor: '#f4f4f5' },
           headerTitleStyle: { fontWeight: '700', fontSize: 18, color: '#171717' },
           headerTintColor: '#0079c1',
-          headerShadowVisible: false,
+          headerShadowVisible: true,
         })}
       />
     </MapSettings>
