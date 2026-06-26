@@ -56,5 +56,7 @@
   {"slug":"editing/geodatabase-transactions","category":"Editing","title":"Geodatabase transactions","description":"Begin/commit/rollback edits on a local mobile geodatabase."},
   {"slug":"layers/image-overlay","category":"Layers","title":"Image overlay","description":"Display a georeferenced local image stretched to a map extent."},
   {"slug":"basics/portal-search","category":"Basics","title":"Portal search","description":"Search ArcGIS Online for items (web maps) anonymously."},
-  {"slug":"layers/kml-tree","category":"Layers","title":"KML node tree","description":"Read a KML document's node hierarchy via the layer ref."}
+  {"slug":"layers/kml-tree","category":"Layers","title":"KML node tree","description":"Read a KML document's node hierarchy via the layer ref."},
+  {"slug":"layers/raster-function","category":"Layers","title":"Raster function","description":"Apply an on-the-fly Hillshade raster function to an image service."},
+  {"slug":"layers/time-extent","category":"Layers","title":"Time extent","description":"Filter a time-aware layer to a time window via the MapView timeExtent prop."}
 ]
