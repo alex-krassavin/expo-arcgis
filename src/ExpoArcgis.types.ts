@@ -1983,6 +1983,28 @@ export type SimpleMarkerSceneSymbol = {
   anchor?: 'center' | 'bottom' | 'top' | 'origin';
 };
 
+/**
+ * A 3D model symbol (glTF / `.glb`) for point graphics in a `<SceneView>`. Mirrors the native
+ * `ModelSceneSymbol` (loads the model at `url` at runtime — symbol is `Loadable`).
+ */
+export type ModelSceneSymbol = {
+  type: 'model-scene';
+  /** URL of the glTF / `.glb` model file. Required. */
+  url: string;
+  /** Uniform scale factor applied to the model. Defaults to `1`. */
+  scale?: number;
+  /** Whether the model dimensions are expressed in device-independent pixels or geographic meters. Defaults to `dips`. */
+  sizeUnits?: 'dips' | 'meters';
+  /** Rotation around the vertical (z) axis, in degrees. Defaults to `0`. */
+  heading?: number;
+  /** Rotation around the lateral (x) axis, in degrees. Defaults to `0`. */
+  pitch?: number;
+  /** Rotation around the longitudinal (y) axis, in degrees. Defaults to `0`. */
+  roll?: number;
+  /** Which part of the model sits on the point. Defaults to `bottom`. */
+  anchor?: 'center' | 'bottom' | 'top' | 'origin';
+};
+
 /** A marker drawn from an image at a URL. Mirrors `PictureMarkerSymbol`. */
 export type PictureMarkerSymbol = {
   type: 'picture-marker';
@@ -2162,6 +2184,7 @@ export type Symbol =
   | SimpleFillSymbol
   | TextSymbol
   | SimpleMarkerSceneSymbol
+  | ModelSceneSymbol
   | PictureMarkerSymbol
   | PictureFillSymbol
   | DistanceCompositeSceneSymbol

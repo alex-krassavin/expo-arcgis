@@ -18,8 +18,10 @@ import com.arcgismaps.mapping.symbology.SimpleLineSymbol
 import com.arcgismaps.mapping.symbology.SimpleLineSymbolStyle
 import com.arcgismaps.mapping.symbology.DistanceCompositeSceneSymbol
 import com.arcgismaps.mapping.symbology.DistanceSymbolRange
+import com.arcgismaps.mapping.symbology.ModelSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbol
 import com.arcgismaps.mapping.symbology.SimpleMarkerSceneSymbolStyle
+import com.arcgismaps.mapping.symbology.SymbolSizeUnits
 import com.arcgismaps.mapping.symbology.MultilayerPointSymbol
 import com.arcgismaps.mapping.symbology.MultilayerPolygonSymbol
 import com.arcgismaps.mapping.symbology.MultilayerPolylineSymbol
@@ -346,6 +348,18 @@ private fun buildSymbol(s: Map<*, *>): Symbol? = when (s["type"]) {
     num(s["depth"], 100.0),
     sceneSymbolAnchor(s["anchor"]),
   )
+  "model-scene" -> (s["url"] as? String)?.let { uri ->
+    // ModelSceneSymbol(uri, scale) — 3D glTF/model marker. Set heading/pitch/roll (Float)
+    // and symbolSizeUnits after construction; the symbol is Loadable.
+    val scale = (s["scale"] as? Number)?.toFloat() ?: 1f
+    ModelSceneSymbol(uri, scale).apply {
+      symbolSizeUnits = if (s["sizeUnits"] == "meters") SymbolSizeUnits.Meters else SymbolSizeUnits.Dips
+      heading = (s["heading"] as? Number)?.toFloat() ?: 0f
+      pitch   = (s["pitch"]   as? Number)?.toFloat() ?: 0f
+      roll    = (s["roll"]    as? Number)?.toFloat() ?: 0f
+      anchorPosition = sceneSymbolAnchor(s["anchor"])
+    }
+  }
   "picture-marker" -> (s["url"] as? String)?.let { url ->
     PictureMarkerSymbol(url).apply {
       (s["width"] as? Number)?.toFloat()?.let { width = it }

@@ -265,6 +265,21 @@ func buildSymbol(_ s: [String: Any]) -> Symbol? {
       depth: (s["depth"] as? NSNumber)?.doubleValue ?? 100,
       anchorPosition: sceneSymbolAnchor(s["anchor"] as? String)
     )
+  case "model-scene":
+    // ModelSceneSymbol(url:scale:) — 3D glTF/model marker. Loadable; set heading/pitch/roll
+    // (Float on MarkerSceneSymbol) and symbolSizeUnits before the symbol is consumed.
+    guard let urlString = s["url"] as? String, let url = URL(string: urlString) else { return nil }
+    let scale = (s["scale"] as? NSNumber).map { Float($0.floatValue) } ?? Float(1.0)
+    let model = ModelSceneSymbol(url: url, scale: scale)
+    switch s["sizeUnits"] as? String {
+    case "meters": model.symbolSizeUnits = .meters
+    default: model.symbolSizeUnits = .dips
+    }
+    model.heading = (s["heading"] as? NSNumber).map { Float($0.doubleValue) } ?? Float(0.0)
+    model.pitch   = (s["pitch"]   as? NSNumber).map { Float($0.doubleValue) } ?? Float(0.0)
+    model.roll    = (s["roll"]    as? NSNumber).map { Float($0.doubleValue) } ?? Float(0.0)
+    model.anchorPosition = sceneSymbolAnchor(s["anchor"] as? String)
+    return model
   case "picture-marker":
     guard let urlString = s["url"] as? String, let url = URL(string: urlString) else { return nil }
     let picture = PictureMarkerSymbol(url: url)
