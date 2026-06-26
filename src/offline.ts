@@ -97,14 +97,23 @@ export const offline = {
   /**
    * Estimates the on-disk file size and tile count for an `exportTileCache` download WITHOUT
    * downloading. Useful for showing the user a preview before committing to a potentially large
-   * download. Returns `{ fileSize: number, tileCount: number }` (fileSize in bytes).
+   * download. Returns `{ fileSizeBytes: number, tileCount: number }`.
+   *
+   * Pass optional `minScale`/`maxScale` to match the scale window you plan to use in
+   * `exportTileCache` — the SDK applies the same scale filtering so the estimate stays accurate.
    */
-  estimateTileCacheSize: (
-    tileServiceUrl: string,
-    areaOfInterest: Geometry,
-    options?: Record<string, unknown>
-  ): Promise<TileCacheSizeEstimate> =>
-    ExtrasModule.estimateTileCacheSize(tileServiceUrl, areaOfInterest, options),
+  estimateTileCacheSize: (params: {
+    serviceUrl: string;
+    area: Geometry;
+    minScale?: number;
+    maxScale?: number;
+  }): Promise<TileCacheSizeEstimate> =>
+    Module.estimateTileCacheSize(
+      params.serviceUrl,
+      params.area,
+      params.minScale ?? null,
+      params.maxScale ?? null
+    ),
 
   /**
    * Opens a local mobile geodatabase (`.geodatabase` file, e.g. from `generateGeodatabase`) for

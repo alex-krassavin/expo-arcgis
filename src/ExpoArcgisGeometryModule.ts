@@ -27,6 +27,7 @@ import type {
   OfflineTileResult,
   PreplannedMapAreaInfo,
   ProximityResult,
+  TileCacheSizeEstimate,
   RouteResult,
   RouteStop,
   ServiceAreaResult,
@@ -175,6 +176,12 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
     areaOfInterest: Geometry,
     downloadName: string
   ): Promise<JobRef<OfflineTileResult>>;
+  estimateTileCacheSize(
+    tileServiceUrl: string,
+    areaOfInterest: Geometry,
+    minScale: number | null,
+    maxScale: number | null
+  ): Promise<TileCacheSizeEstimate>;
 
   // Auth — persistent credential store.  Registered here (not on the main module) to keep both
   // native `definition()` methods under the Android JVM 64 KB limit.

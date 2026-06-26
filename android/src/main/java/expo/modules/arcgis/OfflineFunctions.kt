@@ -209,20 +209,28 @@ internal suspend fun exportTileCache(
 
 /**
  * Estimates the on-disk file size and tile count for an [exportTileCache] download WITHOUT
- * downloading. Runs the [EstimateTileCacheSizeJob] to completion and returns `{fileSize, tileCount}`.
+ * downloading. Passes [minScale]/[maxScale] (0.0 = no limit) to
+ * [ExportTileCacheTask.createDefaultExportTileCacheParameters] to narrow the estimation to the
+ * same scale window that [exportTileCache] would use. Runs the [EstimateTileCacheSizeJob] to
+ * completion and returns `{fileSizeBytes, tileCount}`.
  */
 internal suspend fun estimateTileCacheSize(
   tileServiceUrl: String,
   areaOfInterest: Map<String, Any?>,
-  @Suppress("UNUSED_PARAMETER") options: Map<String, Any?>?,
+  minScale: Double?,
+  maxScale: Double?,
 ): Map<String, Any?> {
   val area = geometryFromDict(areaOfInterest) ?: throw IllegalArgumentException("Invalid area of interest")
   val task = ExportTileCacheTask(tileServiceUrl)
-  val parameters = task.createDefaultExportTileCacheParameters(area, 0.0, 0.0).getOrThrow()
+  val parameters = task.createDefaultExportTileCacheParameters(
+    area,
+    minScale ?: 0.0,
+    maxScale ?: 0.0,
+  ).getOrThrow()
   val job = task.createEstimateTileCacheSizeJob(parameters)
   job.start()
   val estimate = job.result().getOrThrow()
-  return mapOf("fileSize" to estimate.fileSize, "tileCount" to estimate.tileCount)
+  return mapOf("fileSizeBytes" to estimate.fileSize.toDouble(), "tileCount" to estimate.tileCount.toDouble())
 }
 
 internal suspend fun exportVectorTiles(

@@ -226,5 +226,8 @@ public class ExpoArcgisGeometryModule: Module {
     AsyncFunction("exportVectorTiles") { (vectorTileServiceUrl: String, areaOfInterest: [String: Any], downloadName: String) in
       try await exportVectorTiles(vectorTileServiceUrl, areaOfInterest, downloadName)
     }
+    AsyncFunction("estimateTileCacheSize") { (tileServiceUrl: String, areaOfInterest: [String: Any], minScale: Double?, maxScale: Double?) in
+      try await estimateTileCacheSize(tileServiceUrl, areaOfInterest, minScale, maxScale)
+    }
   }
 }

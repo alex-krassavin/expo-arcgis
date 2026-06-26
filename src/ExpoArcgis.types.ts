@@ -1848,7 +1848,7 @@ export type OfflineTileResult = {
 /** Result of `offline.estimateTileCacheSize` — an estimate of the download footprint. */
 export type TileCacheSizeEstimate = {
   /** Estimated on-disk size of the tile cache in bytes. */
-  fileSize: number;
+  fileSizeBytes: number;
   /** Estimated number of tiles in the tile cache. */
   tileCount: number;
 };

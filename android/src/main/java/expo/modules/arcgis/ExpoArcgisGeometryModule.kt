@@ -220,5 +220,8 @@ class ExpoArcgisGeometryModule : Module() {
     AsyncFunction("exportVectorTiles") Coroutine { vectorTileServiceUrl: String, areaOfInterest: Map<String, Any?>, downloadName: String ->
       exportVectorTiles(appContext, appContext.reactContext?.filesDir, vectorTileServiceUrl, areaOfInterest, downloadName)
     }
+    AsyncFunction("estimateTileCacheSize") Coroutine { tileServiceUrl: String, areaOfInterest: Map<String, Any?>, minScale: Double?, maxScale: Double? ->
+      estimateTileCacheSize(tileServiceUrl, areaOfInterest, minScale, maxScale)
+    }
   }
 }
