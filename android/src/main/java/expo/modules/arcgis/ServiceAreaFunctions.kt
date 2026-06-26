@@ -30,9 +30,9 @@ internal suspend fun serviceAreaSolve(params: Map<String, Any?>): Map<String, An
   (params["cutoffs"] as? List<*>)?.let { rawCutoffs ->
     val cutoffs = rawCutoffs.mapNotNull { (it as? Number)?.toDouble() }
     if (cutoffs.isNotEmpty()) {
-      parameters.getDefaultImpedanceCutoffs().clear()
-      // ServiceAreaParameters.getDefaultImpedanceCutoffs() returns a mutable live list.
-      parameters.getDefaultImpedanceCutoffs().addAll(cutoffs)
+      // ServiceAreaParameters.defaultImpedanceCutoffs is a mutable live list (no setter / add API).
+      parameters.defaultImpedanceCutoffs.clear()
+      parameters.defaultImpedanceCutoffs.addAll(cutoffs)
     }
   }
   val result = task.solveServiceArea(parameters).getOrThrow()

@@ -95,12 +95,6 @@ public class ExpoArcgisExtrasModule: Module {
       try ArcGISEnvironment.authenticationManager.arcGISCredentialStore.add(credential, for: url)
     }
 
-    // Tile-cache size estimation — quick estimate before committing to a download.
-    // Kept here for back-compat; the preferred entry point is the geometry module registration.
-    AsyncFunction("estimateTileCacheSize") { (tileServiceUrl: String, areaOfInterest: [String: Any], options: [String: Any]?) in
-      try await estimateTileCacheSize(tileServiceUrl, areaOfInterest, nil, nil)
-    }
-
     // Turn-by-turn navigation — solve a route and track device locations against it.
     AsyncFunction("createRouteTracker") { (stops: [[String: Any]], params: [String: Any]) in
       try await createRouteTracker(stops, params)
