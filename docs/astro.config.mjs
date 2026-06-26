@@ -27,6 +27,38 @@ export default defineConfig({
     starlight({
       title: 'expo-arcgis',
       description: 'Native ArcGIS Maps SDK for React Native, as an Expo module.',
+      customCss: ['./src/styles/theme.css'],
+      components: {
+        Header: './src/components/Header.astro',
+      },
+      head: [
+        { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
+        { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'stylesheet',
+            href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap',
+          },
+        },
+      ],
+      expressiveCode: {
+        themes: ['github-dark'],
+        styleOverrides: {
+          borderRadius: '8px',
+          borderColor: 'rgba(14, 30, 26, 0.16)',
+          codeBackground: '#0c1316',
+          frames: {
+            editorBackground: '#0c1316',
+            terminalBackground: '#0c1316',
+            editorActiveTabBackground: '#0e171b',
+            editorTabBarBackground: '#0e171b',
+            terminalTitlebarBackground: '#0e171b',
+            editorActiveTabIndicatorBottomColor: '#0e9c8e',
+            frameBoxShadowCssValue: 'none',
+          },
+        },
+      },
       social: [
         {
           icon: 'github',

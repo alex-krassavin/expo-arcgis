@@ -1,0 +1,297 @@
+/* expo-arcgis docs — custom Starlight theme.
+   Design: teal #0E9C8E on warm off-white #EEF1ED, Space Grotesk headings, IBM Plex Sans body,
+   IBM Plex Mono for code and labels. Light-first (the design has no dark variant); dark mode keeps
+   the teal accent over Starlight's dark surfaces. */
+
+:root {
+  --sl-font: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --sl-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Space Grotesk', var(--sl-font);
+
+  /* Teal accent (both modes) */
+  --sl-color-accent-low: #1c5a52;
+  --sl-color-accent: #0e9c8e;
+  --sl-color-accent-high: #b9e6df;
+  --sl-color-text-accent: #34e5d0;
+
+  /* design tokens reused across components */
+  --ea-teal: #0e9c8e;
+  --ea-teal-ink: #0b6f66;
+  --ea-teal-tint: #e6f0ec;
+  --ea-ink: #0e1a16;
+  --ea-line: rgba(14, 30, 26, 0.12);
+  --ea-line-soft: rgba(14, 30, 26, 0.1);
+  --ea-code-bg: #0c1316;
+}
+
+/* Light theme — match the design exactly */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e6f0ec;
+  --sl-color-accent: #0e9c8e;
+  --sl-color-accent-high: #0b6f66;
+  --sl-color-text-accent: #0b6f66;
+
+  --sl-color-white: #0e1a16; /* Starlight uses this for headings/strong in light */
+  --sl-color-gray-1: #13201b;
+  --sl-color-gray-2: #3c4c45;
+  --sl-color-gray-3: #5a6b64;
+  --sl-color-gray-4: #7c8a82;
+  --sl-color-gray-5: #8a988f;
+  --sl-color-gray-6: #eef2ec;
+  --sl-color-gray-7: #f3f6f1;
+  --sl-color-black: #ffffff;
+
+  --sl-color-text: #3c4c45;
+  --sl-color-bg: #eef1ed;
+  --sl-color-bg-nav: rgba(246, 248, 244, 0.9);
+  --sl-color-bg-sidebar: #f6f8f4;
+  --sl-color-bg-inline-code: #e5ebe4;
+  --sl-color-hairline: var(--ea-line-soft);
+  --sl-color-hairline-light: var(--ea-line-soft);
+  --sl-color-hairline-shade: var(--ea-line-soft);
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.sl-markdown-content h4,
+h1#_top,
+.content-panel h1,
+[data-page-title] {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.sl-markdown-content h1,
+.content-panel h1 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* page title (the big <h1>) */
+.content-panel h1 {
+  font-size: clamp(2.2rem, 1.6rem + 2vw, 2.9rem);
+  line-height: 1.06;
+  color: var(--sl-color-white);
+}
+
+.sl-markdown-content h2 {
+  font-weight: 600;
+  font-size: 1.55rem;
+  letter-spacing: -0.015em;
+  margin-top: 2.5rem;
+}
+.sl-markdown-content h3 {
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+
+/* ── Top nav (custom Header.astro) ────────────────────────── */
+.header {
+  border-bottom: 1px solid var(--ea-line-soft);
+  backdrop-filter: blur(8px);
+}
+.ea-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 100%;
+}
+.ea-logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+}
+.ea-logo span {
+  font-family: var(--sl-font-mono);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--sl-color-white);
+}
+.ea-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.ea-tab {
+  font-family: var(--sl-font);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--sl-color-gray-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ea-tab:hover {
+  color: var(--ea-teal-ink);
+}
+.ea-tab--active {
+  color: var(--sl-color-white);
+  font-weight: 600;
+  border-bottom: 2px solid var(--ea-teal);
+  padding-bottom: 2px;
+}
+.ea-gh {
+  color: var(--sl-color-white);
+  display: flex;
+  align-items: center;
+}
+.ea-gh:hover {
+  color: var(--ea-teal-ink);
+}
+@media (max-width: 50rem) {
+  .ea-tab,
+  .ea-gh {
+    display: none;
+  }
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.sidebar-content {
+  font-size: 0.82rem;
+}
+/* top-level group headings → mono uppercase teal labels */
+.sidebar-content summary > .group-label > .large,
+.sidebar-content > ul > li > details > summary .large,
+.sidebar-content h2 {
+  font-family: var(--sl-font-mono);
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ea-teal-ink);
+}
+.sidebar-content a {
+  color: var(--sl-color-gray-2);
+  border-radius: 0 5px 5px 0;
+}
+.sidebar-content a:hover {
+  color: var(--ea-teal-ink);
+  background: rgba(14, 156, 142, 0.06);
+}
+:root[data-theme='light'] .sidebar-content a[aria-current='page'],
+:root[data-theme='light'] .sidebar-content a[aria-current='page']:hover {
+  color: var(--ea-teal-ink);
+  font-weight: 600;
+  background: var(--ea-teal-tint);
+  border-inline-start: 2px solid var(--ea-teal);
+}
+
+/* ── Right table of contents ──────────────────────────────── */
+.right-sidebar h2,
+mobile-starlight-toc nav summary .display-current {
+  font-family: var(--sl-font-mono);
+  font-size: 0.69rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-4);
+}
+starlight-toc nav a {
+  border-inline-start: 2px solid transparent;
+  text-decoration: none;
+}
+starlight-toc nav a:hover {
+  color: var(--ea-teal-ink);
+}
+starlight-toc nav a[aria-current='true'],
+starlight-toc nav a[aria-current='true']:hover {
+  color: var(--ea-teal-ink);
+  font-weight: 500;
+  border-inline-start-color: var(--ea-teal);
+}
+
+/* ── Content ──────────────────────────────────────────────── */
+.sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--ea-teal-ink);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(14, 156, 142, 0.4);
+}
+.sl-markdown-content a:hover:not(:where(.not-content *)) {
+  color: var(--ea-teal);
+}
+.sl-markdown-content :not(pre) > code {
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: 0.82em;
+  color: var(--ea-teal-ink);
+  background: var(--sl-color-bg-inline-code);
+  border: none;
+  padding: 0.15em 0.4em;
+}
+
+/* tables → label column tinted, like the design's prop tables */
+.sl-markdown-content table {
+  border: 1px solid var(--ea-line);
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+.sl-markdown-content :is(th, td) {
+  border: none;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  padding: 0.8rem 1rem;
+}
+.sl-markdown-content tr:last-child :is(th, td) {
+  border-bottom: none;
+}
+.sl-markdown-content thead th,
+:root[data-theme='light'] .sl-markdown-content tbody td:first-child {
+  font-family: var(--sl-font-mono);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--ea-teal-ink);
+}
+:root[data-theme='light'] .sl-markdown-content tbody td:first-child {
+  background: #f3f6f1;
+}
+
+/* asides / callouts → teal left-accent */
+:root[data-theme='light'] .starlight-aside {
+  border-inline-start-color: var(--ea-teal);
+  border-radius: 0 6px 6px 0;
+}
+:root[data-theme='light'] .starlight-aside--note,
+:root[data-theme='light'] .starlight-aside--tip {
+  background: #e8f3f0;
+  border: 1px solid rgba(14, 156, 142, 0.25);
+  border-inline-start: 3px solid var(--ea-teal);
+}
+.starlight-aside__title {
+  color: var(--ea-teal-ink);
+}
+
+/* prev/next pagination → cards with Space Grotesk labels */
+.pagination-links a {
+  border: 1px solid var(--ea-line);
+  border-radius: 8px;
+  background: var(--sl-color-bg-nav);
+}
+:root[data-theme='light'] .pagination-links a {
+  background: #fff;
+}
+.pagination-links a span:last-child {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ea-teal);
+}
+.pagination-links svg {
+  color: var(--ea-teal);
+}
+
+/* badges already-generated by TypeDoc (e.g. "Variable") get a teal pill look */
+:root[data-theme='light'] .sl-markdown-content :is(.tsd-tag, .badge) {
+  font-family: var(--sl-font-mono);
+  color: var(--ea-teal-ink);
+  background: var(--ea-teal-tint);
+  border: 1px solid rgba(14, 156, 142, 0.3);
+}
+
+/* selection */
+::selection {
+  background: var(--ea-teal);
+  color: #fff;
+}

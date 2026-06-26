@@ -2,39 +2,9 @@
 title: expo-arcgis
 description: Native ArcGIS Maps SDK for React Native, as an Expo module.
 template: splash
-hero:
-  tagline: Native ArcGIS Maps SDK for React Native — 2D & 3D maps, layers, geometry, editing, query, geocoding, routing, analysis, offline, real-time and auth, as an Expo module.
-  actions:
-    - text: Getting started
-      link: /expo-arcgis/guides/getting-started/
-      icon: right-arrow
-    - text: View on GitHub
-      link: https://github.com/alex-krassavin/expo-arcgis
-      icon: external
-      variant: minimal
+tableOfContents: false
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import Landing from '../../components/Landing.astro';
 
-<CardGrid stagger>
-  <Card title="2D & 3D" icon="laptop">
-    `<MapView>` and `<SceneView>` with the full ArcGIS layer set — feature, tile, vector,
-    raster, WMS/WMTS, KML, scene, point cloud, WFS, OGC, dynamic-entity, building-scene,
-    annotation, dimension, oriented-imagery, subtype, in-memory feature collections and
-    `<GroupLayer>` containers.
-  </Card>
-  <Card title="Declarative" icon="seti:tsx">
-    An SDK-faithful component API that mirrors the ArcGIS object model — a `<Map>` model
-    inside a `<MapView>` host, layers and graphics as children.
-  </Card>
-  <Card title="Everything in the box" icon="setting">
-    Geometry, data-driven & dictionary symbology, query, identify, popups, batch & related
-    editing with attachments, geocoding (incl. suggestion round-trip), routing & turn-by-turn
-    navigation, 3D viewshed / line-of-sight / measurement, geoprocessing, utility networks,
-    real-time dynamic-entity tracking, offline maps and authentication.
-  </Card>
-  <Card title="Native" icon="rocket">
-    Kotlin (Android) + Swift (iOS) bridge over ArcGIS Maps SDK 300. Not Expo Go — use a
-    development build.
-  </Card>
-</CardGrid>
+<Landing />

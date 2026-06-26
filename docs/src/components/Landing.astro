@@ -1,0 +1,212 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const features = [
+  {
+    n: '01',
+    title: '2D & 3D, every layer type',
+    body: '`<MapView>` and `<SceneView>` host the full ArcGIS layer set inside declarative `<GroupLayer>` containers.',
+    tags: ['feature', 'tile', 'vector', 'raster', 'WMS / WMTS', 'KML', 'scene', 'point cloud', 'WFS / OGC'],
+  },
+  {
+    n: '02',
+    title: 'Declarative & SDK-faithful',
+    body: 'A component API that mirrors the ArcGIS object model — a `<Map>` model inside a `<MapView>` host, with layers and graphics as children. If you know ArcGIS, you already know the API.',
+  },
+  {
+    n: '03',
+    title: 'Everything in the box',
+    body: 'Query, identify, popups, batch & related editing with attachments, geocoding (with suggestion round-trip), routing & turn-by-turn navigation, 3D viewshed / line-of-sight / measurement, geoprocessing, utility networks, real-time dynamic-entity tracking, offline maps and authentication.',
+  },
+  {
+    n: '04',
+    title: 'Genuinely native',
+    body: 'A Kotlin (Android) + Swift (iOS) bridge over ArcGIS Maps SDK 300. Not Expo Go — use a development build.',
+  },
+];
+const code = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const tag = (t) =>
+  t.includes('`')
+    ? t.replace(/`([^`]+)`/g, (_, c) => `<code class="ea-ic">${code(c)}</code>`)
+    : code(t);
+---
+
+<div class="ea-landing">
+  <!-- hero -->
+  <section class="ea-hero">
+    <svg class="ea-hero-bg" viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
+      <g class="ea-contours" stroke="#0E9C8E" stroke-width="1" opacity="0.32">
+        <ellipse cx="720" cy="300" rx="120" ry="74"></ellipse>
+        <ellipse cx="720" cy="300" rx="220" ry="132"></ellipse>
+        <ellipse cx="730" cy="295" rx="330" ry="196"></ellipse>
+        <ellipse cx="708" cy="306" rx="446" ry="262"></ellipse>
+        <ellipse cx="738" cy="290" rx="566" ry="330"></ellipse>
+        <ellipse cx="700" cy="312" rx="692" ry="400"></ellipse>
+        <ellipse cx="720" cy="300" rx="824" ry="474"></ellipse>
+      </g>
+      <g stroke="#13201B" stroke-width="0.5" opacity="0.07">
+        <path d="M180 0V620M360 0V620M540 0V620M900 0V620M1080 0V620M1260 0V620"></path>
+        <path d="M0 80H1440M0 160H1440M0 460H1440M0 540H1440"></path>
+      </g>
+    </svg>
+    <div class="ea-sweep" aria-hidden="true"></div>
+    <div class="ea-hero-inner">
+      <div class="ea-eyebrow ea-rise">Native ArcGIS Maps SDK · Expo module</div>
+      <h1 class="ea-h1 ea-rise" style="animation-delay:.09s">The ArcGIS SDK,<br />rewritten as <span>components</span>.</h1>
+      <p class="ea-lead ea-rise" style="animation-delay:.18s">
+        2D &amp; 3D maps, layers, geometry, editing, query, geocoding, routing, analysis, offline and
+        real-time — for React Native, faithful to the ArcGIS object model.
+      </p>
+      <div class="ea-cta ea-rise" style="animation-delay:.27s">
+        <a class="ea-btn ea-btn--primary" href={`${base}/guides/getting-started/`}>
+          Getting started
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <a class="ea-btn ea-btn--ghost" href="https://github.com/alex-krassavin/expo-arcgis">View on GitHub</a>
+      </div>
+      <div class="ea-install ea-rise" style="animation-delay:.36s"><span>$</span> npx expo install expo-arcgis</div>
+    </div>
+  </section>
+
+  <!-- declarative code band -->
+  <section class="ea-band">
+    <div class="ea-band-inner">
+      <div>
+        <div class="ea-kicker">Declarative by design</div>
+        <h2 class="ea-h2">A component tree that mirrors the object model.</h2>
+        <p class="ea-p">A <code class="ea-ic">&lt;Map&gt;</code> model lives inside a <code class="ea-ic">&lt;MapView&gt;</code> host, with layers and graphics as children. If you know ArcGIS, you already know the API.</p>
+      </div>
+      <div class="ea-window">
+        <div class="ea-window-bar">
+          <span class="d r"></span><span class="d y"></span><span class="d g"></span>
+          <span class="ea-file">App.tsx</span>
+        </div>
+        <pre class="ea-code"><span class="cm">// a Map model inside a MapView host</span>
+<span class="pn">&lt;</span><span class="ty">MapSettings</span> <span class="at">config</span>=<span class="st">{`{{ apiKey }}`}</span><span class="pn">&gt;</span>
+  <span class="pn">&lt;</span><span class="ty">Map</span>
+    <span class="at">basemap</span>=<span class="st">"arcGISTopographic"</span>
+    <span class="at">initialViewpoint</span>=<span class="st">{`{viewpoint}`}</span>
+  <span class="pn">&gt;</span>
+    <span class="pn">&lt;</span><span class="ty">MapView</span> <span class="at">style</span>=<span class="st">{`{{ flex: 1 }}`}</span> <span class="pn">/&gt;</span>
+  <span class="pn">&lt;/</span><span class="ty">Map</span><span class="pn">&gt;</span>
+<span class="pn">&lt;/</span><span class="ty">MapSettings</span><span class="pn">&gt;</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- feature rows -->
+  <section class="ea-features">
+    <div class="ea-features-head"><span class="ea-kicker">What's in the box</span><span class="ea-rule"></span></div>
+    {features.map((f) => (
+      <div class="ea-feature">
+        <span class="ea-num">{f.n}</span>
+        <div>
+          <h3 class="ea-h3">{f.title}</h3>
+          <p class="ea-p" set:html={tag(f.body)} />
+          {f.tags && (
+            <div class="ea-tags">{f.tags.map((t) => <span class="ea-chip">{t}</span>)}</div>
+          )}
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <!-- samples -->
+  <section class="ea-samples">
+    <div class="ea-samples-inner">
+      <div class="ea-kicker" style="text-align:center">Running on device</div>
+      <h2 class="ea-h2" style="text-align:center">The same components. Real native maps.</h2>
+      <p class="ea-p" style="text-align:center;margin-inline:auto">Native iOS &amp; Android maps, rendered by the SDK.</p>
+      <div class="ea-phones">
+        <div class="ea-phone-col">
+          <div class="ea-phone"><div class="ea-screen"></div></div>
+          <div class="ea-phone-label">iOS · MAPVIEW · 2D</div>
+        </div>
+        <div class="ea-phone-col">
+          <div class="ea-phone"><div class="ea-screen"></div></div>
+          <div class="ea-phone-label">ANDROID · SCENEVIEW · 3D</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- footer cta -->
+  <section class="ea-footer">
+    <div class="ea-footer-inner">
+      <div>
+        <h2 class="ea-h2" style="color:#F1F5F0">Start mapping in minutes.</h2>
+        <p class="ea-p" style="color:#9DB0A8;margin:0">Add the module, run a development build, render your first <code class="ea-ic ea-ic--dark">&lt;MapView&gt;</code>.</p>
+      </div>
+      <a class="ea-btn ea-btn--accent" href={`${base}/guides/getting-started/`}>
+        Read the guide
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="#04110E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </a>
+    </div>
+  </section>
+</div>
+
+<style>
+  @keyframes ea-breath { 0%, 100% { opacity: .3; transform: scale(1); } 50% { opacity: .5; transform: scale(1.03); } }
+  @keyframes ea-sweep { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes ea-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { .ea-contours, .ea-sweep, .ea-rise { animation: none !important; } }
+
+  .ea-landing { font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0E1A16; }
+  .ea-landing section { width: 100vw; margin-inline-start: calc(50% - 50vw); }
+  .ea-landing :global(code.ea-ic) { font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: .9em; color: #0B6F66; background: transparent; padding: 0; }
+  .ea-landing :global(code.ea-ic--dark) { color: #5FE3D5; }
+
+  .ea-hero { position: relative; overflow: hidden; border-bottom: 1px solid rgba(14,30,26,.1); background: #EEF1ED; }
+  .ea-hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .55; }
+  .ea-contours { transform-box: fill-box; transform-origin: center; animation: ea-breath 8s ease-in-out infinite; }
+  .ea-sweep { position: absolute; left: 50%; top: 46%; width: 1100px; height: 1100px; transform: translate(-50%,-50%); background: conic-gradient(from 0deg, transparent 0deg, rgba(14,156,142,.13) 26deg, transparent 64deg); border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 0%, transparent 60%); mask: radial-gradient(circle, #000 0%, transparent 60%); animation: ea-sweep 11s linear infinite; pointer-events: none; }
+  .ea-hero-inner { position: relative; max-width: 880px; margin: 0 auto; padding: 94px 32px 86px; text-align: center; }
+  .ea-rise { animation: ea-rise .7s ease-out both; }
+  .ea-eyebrow { display: inline-block; font: 500 12px 'IBM Plex Mono', monospace; letter-spacing: .18em; color: #0B6F66; text-transform: uppercase; margin-bottom: 26px; background: #E2EAE3; border: 1px solid rgba(14,156,142,.3); padding: 6px 13px; border-radius: 20px; }
+  .ea-h1 { font: 700 clamp(40px, 5vw, 62px)/1.03 'Space Grotesk', sans-serif; color: #0E1A16; letter-spacing: -.025em; margin: 0 0 24px; }
+  .ea-h1 span { color: #0E9C8E; }
+  .ea-lead { font: 400 18px/1.6 'IBM Plex Sans', sans-serif; color: #4C5C55; max-width: 580px; margin: 0 auto 36px; }
+  .ea-cta { display: flex; gap: 14px; align-items: center; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+  .ea-btn { display: inline-flex; align-items: center; gap: 8px; font: 600 15px 'IBM Plex Sans', sans-serif; padding: 15px 26px; border-radius: 6px; text-decoration: none; }
+  .ea-btn--primary { background: #0E9C8E; color: #fff; box-shadow: 0 6px 18px rgba(14,156,142,.28); }
+  .ea-btn--ghost { color: #13201B; border: 1px solid rgba(14,30,26,.18); background: #fff; }
+  .ea-btn--accent { background: #34E5D0; color: #04110E; }
+  .ea-install { display: inline-flex; align-items: center; gap: 12px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 6px; padding: 12px 18px; font: 500 13.5px 'IBM Plex Mono', monospace; color: #3A4A44; box-shadow: 0 2px 12px rgba(14,30,26,.06); }
+  .ea-install span { color: #0E9C8E; }
+
+  .ea-band { background: #F6F8F4; border-bottom: 1px solid rgba(14,30,26,.1); }
+  .ea-band-inner { max-width: 1180px; margin: 0 auto; padding: 72px 32px; display: grid; grid-template-columns: .95fr 1.05fr; gap: 56px; align-items: center; }
+  .ea-kicker { font: 500 12px 'IBM Plex Mono', monospace; letter-spacing: .16em; color: #0B6F66; text-transform: uppercase; margin-bottom: 16px; }
+  .ea-h2 { font: 600 clamp(26px, 3vw, 34px)/1.15 'Space Grotesk', sans-serif; color: #0E1A16; letter-spacing: -.02em; margin: 0 0 16px; }
+  .ea-p { font: 400 15.5px/1.65 'IBM Plex Sans', sans-serif; color: #4C5C55; margin: 0; max-width: 780px; }
+  .ea-window { background: #0C1316; border: 1px solid rgba(14,30,26,.16); border-radius: 9px; box-shadow: 0 18px 44px rgba(14,30,26,.18); overflow: hidden; }
+  .ea-window-bar { display: flex; align-items: center; gap: 7px; padding: 11px 15px; border-bottom: 1px solid rgba(255,255,255,.08); background: #0E171B; }
+  .ea-window-bar .d { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .ea-window-bar .r { background: #ff5f57; } .ea-window-bar .y { background: #febc2e; } .ea-window-bar .g { background: #28c840; }
+  .ea-file { margin-left: 8px; font: 500 12px 'IBM Plex Mono', monospace; color: #7E9097; }
+  .ea-code { margin: 0; padding: 20px 22px; font: 400 13.5px/1.85 'IBM Plex Mono', monospace; color: #B9CACF; overflow-x: auto; white-space: pre; }
+  .ea-code .cm { color: #586B72; } .ea-code .pn { color: #6E8088; } .ea-code .ty { color: #5EE6D6; } .ea-code .at { color: #9FB4BC; } .ea-code .st { color: #C7F5EE; }
+
+  .ea-features { max-width: 1180px; margin: 0 auto !important; width: auto !important; padding: 14px 32px 56px; }
+  .ea-features-head { display: flex; align-items: center; gap: 16px; padding: 44px 0 6px; }
+  .ea-features-head .ea-kicker { margin: 0; }
+  .ea-rule { flex: 1; height: 1px; background: rgba(14,30,26,.12); }
+  .ea-feature { display: grid; grid-template-columns: 72px 1fr; gap: 32px; padding: 30px 0; border-bottom: 1px solid rgba(14,30,26,.1); align-items: start; }
+  .ea-num { font: 600 34px 'Space Grotesk', sans-serif; color: #0E9C8E; line-height: 1; }
+  .ea-h3 { font: 600 22px 'Space Grotesk', sans-serif; color: #0E1A16; margin: 0 0 9px; }
+  .ea-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ea-chip { font: 500 11.5px 'IBM Plex Mono', monospace; color: #3A4A44; background: #EEF2EC; border: 1px solid rgba(14,30,26,.1); padding: 5px 10px; border-radius: 4px; }
+
+  .ea-samples { background: #F6F8F4; border-top: 1px solid rgba(14,30,26,.1); border-bottom: 1px solid rgba(14,30,26,.1); }
+  .ea-samples-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px 60px; }
+  .ea-phones { display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; margin-top: 40px; }
+  .ea-phone { padding: 10px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 34px; box-shadow: 0 16px 38px rgba(14,30,26,.14); }
+  .ea-screen { width: 248px; height: 524px; border-radius: 26px; background: #E7EDE7; }
+  .ea-phone-label { margin-top: 16px; text-align: center; font: 500 11.5px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #5A6B64; }
+
+  .ea-footer { background: #13201B; }
+  .ea-footer-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+
+  @media (max-width: 50rem) {
+    .ea-band-inner { grid-template-columns: 1fr; gap: 32px; }
+  }
+</style>
