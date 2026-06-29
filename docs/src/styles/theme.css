@@ -475,7 +475,9 @@ body:has(.ea-api-grid) .content-panel:has(h1#_top) + .content-panel {
 .ea-shot-phone img {
   display: block;
   width: 220px;
-  height: auto;
+  height: 478px;
+  object-fit: cover;
+  object-position: top;
   border-radius: 17px;
 }
 .ea-shot figcaption {
