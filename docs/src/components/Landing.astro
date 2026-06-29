@@ -147,6 +147,10 @@ const tag = (t) =>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="#04110E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       </a>
     </div>
+    <div class="ea-contact">
+      <span>Questions, bug reports or collaboration — <a href="mailto:info@mapforge.dev">info@mapforge.dev</a></span>
+      <span class="ea-built">Built on the native ArcGIS Maps SDK</span>
+    </div>
   </section>
 </div>
 
@@ -226,7 +230,11 @@ const tag = (t) =>
   .ea-phone-label { margin-top: 16px; text-align: center; font: 500 11.5px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #5A6B64; }
 
   .ea-footer { background: #13201B; }
-  .ea-footer-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .ea-footer-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .ea-contact { max-width: 1180px; margin: 0 auto; padding: 26px 32px 56px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; font-size: 14.5px; color: #9DB0A8; }
+  .ea-contact a { color: #34E5D0; text-decoration: none; font-weight: 600; }
+  .ea-contact a:hover { text-decoration: underline; }
+  .ea-built { font-family: var(--sl-font-mono); font-size: 12px; letter-spacing: 0.04em; color: #6B7D75; }
 
   @media (max-width: 50rem) {
     .ea-band-inner { grid-template-columns: 1fr; gap: 32px; }
