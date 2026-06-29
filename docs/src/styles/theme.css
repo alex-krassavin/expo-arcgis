@@ -212,7 +212,7 @@ starlight-toc nav a[aria-current='true']:hover {
 .sl-markdown-content a:hover:not(:where(.not-content *)) {
   color: var(--ea-teal);
 }
-.sl-markdown-content :not(pre) > code {
+.sl-markdown-content :not(pre) > code:not(:where(.not-content *)) {
   font-family: var(--sl-font-mono);
   font-weight: 500;
   font-size: 0.82em;
