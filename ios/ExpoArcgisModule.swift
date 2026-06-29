@@ -19,6 +19,20 @@ public class ExpoArcgisModule: Module {
       ArcGISEnvironment.apiKey = APIKey(apiKey)
     }
 
+    // Apply a deployment license string to remove the "Licensed for Developer Use Only" watermark.
+    // Returns the license status: "valid" / "invalid" / "expired" / "loginRequired".
+    Function("setLicense") { (licenseKey: String) -> String in
+      guard let key = LicenseKey(licenseKey) else { return "invalid" }
+      let result = try ArcGISEnvironment.setLicense(with: key)
+      switch result.licenseStatus {
+      case .valid: return "valid"
+      case .invalid: return "invalid"
+      case .expired: return "expired"
+      case .loginRequired: return "loginRequired"
+      @unknown default: return "unknown"
+      }
+    }
+
     // Token auth for secured services (e.g. utility-network feature services) — store the login;
     // the challenge handler mints a TokenCredential for the exact challenged resource on demand.
     // `tokenExpirationMinutes` is optional; the server's default expiry is used when omitted.

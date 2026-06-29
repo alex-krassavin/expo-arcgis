@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
+import com.arcgismaps.LicenseKey
 import com.arcgismaps.httpcore.authentication.OAuthApplicationCredential
 import com.arcgismaps.httpcore.authentication.OAuthUserCredential
 import com.arcgismaps.httpcore.authentication.TokenCredential
@@ -31,6 +32,14 @@ class ExpoArcgisModule : Module() {
 
     Function("setApiKey") { apiKey: String ->
       ArcGISEnvironment.apiKey = ApiKey.create(apiKey)
+    }
+
+    // Apply a deployment license string to remove the "Licensed for Developer Use Only" watermark.
+    // Returns the license status: "valid" / "invalid" / "expired" / "loginRequired".
+    Function("setLicense") { licenseKey: String ->
+      val key = LicenseKey.create(licenseKey)
+      val status = if (key != null) ArcGISEnvironment.setLicense(key)?.licenseStatus else null
+      status?.javaClass?.simpleName?.replaceFirstChar { it.lowercase() } ?: "invalid"
     }
 
     // Token auth for secured services (e.g. utility-network feature services) — store the login;

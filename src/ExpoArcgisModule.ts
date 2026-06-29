@@ -340,6 +340,12 @@ declare class ExpoArcgisModule extends NativeModule {
   /** Sets the ArcGIS API key (access token) used to authenticate with ArcGIS services. */
   setApiKey(apiKey: string): void;
   /**
+   * Applies a deployment license string, removing the "Licensed for Developer Use Only" watermark.
+   * Returns the resulting license status (`"valid"`, `"invalid"`, `"expired"` or `"loginRequired"`).
+   * Separate from {@link setApiKey}: the key authenticates services, the license unlocks deployment.
+   */
+  setLicense(licenseKey: string): string;
+  /**
    * Stores a login used to authenticate token-secured services (e.g. a utility-network feature
    * service). The challenge handler mints a `TokenCredential` for the exact resource the SDK
    * challenges for — no service URL or up-front timing needed.
