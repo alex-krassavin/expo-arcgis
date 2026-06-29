@@ -24,7 +24,7 @@ const inGuides = !inApi && (path.includes('/guides') || path.includes('/samples'
   <div class="ea-actions">
     {shouldRenderSearch && <div class="ea-search not-content"><Search /></div>}
     <a href={`${base}/guides/getting-started/`} class:list={['ea-tab', { 'ea-tab--active': inGuides }]}>Guides</a>
-    <a href={`${base}/api/`} class:list={['ea-tab', { 'ea-tab--active': inApi }]}>API</a>
+    <a href={`${base}/api/readme/`} class:list={['ea-tab', { 'ea-tab--active': inApi }]}>API</a>
     <a
       href="https://github.com/alex-krassavin/expo-arcgis"
       class="ea-gh"

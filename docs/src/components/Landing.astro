@@ -30,7 +30,7 @@ const tag = (t) =>
     : code(t);
 ---
 
-<div class="ea-landing">
+<div class="ea-landing not-content">
   <!-- hero -->
   <section class="ea-hero">
     <svg class="ea-hero-bg" viewBox="0 0 1440 620" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true">
@@ -63,7 +63,13 @@ const tag = (t) =>
         </a>
         <a class="ea-btn ea-btn--ghost" href="https://github.com/alex-krassavin/expo-arcgis">View on GitHub</a>
       </div>
-      <div class="ea-install ea-rise" style="animation-delay:.36s"><span>$</span> npx expo install expo-arcgis</div>
+      <div class="ea-install ea-rise" style="animation-delay:.36s">
+        <code class="ea-install-cmd"><span>$</span> npx expo install expo-arcgis</code>
+        <button class="ea-copy" type="button" data-clip="npx expo install expo-arcgis" aria-label="Copy install command">
+          <svg class="ic-copy" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg class="ic-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -170,8 +176,22 @@ const tag = (t) =>
   .ea-btn--primary { background: #0E9C8E; color: #fff; box-shadow: 0 6px 18px rgba(14,156,142,.28); }
   .ea-btn--ghost { color: #13201B; border: 1px solid rgba(14,30,26,.18); background: #fff; }
   .ea-btn--accent { background: #34E5D0; color: #04110E; }
+  .ea-btn:hover { text-decoration: none; }
+  .ea-btn--primary, .ea-btn--primary:hover, .ea-btn--primary:focus { color: #fff; }
+  .ea-btn--primary:hover { background: #0c8a7e; }
+  .ea-btn--ghost, .ea-btn--ghost:hover { color: #13201B; background: #fff; }
+  .ea-btn--accent, .ea-btn--accent:hover { color: #04110E; }
+  .ea-btn--accent:hover { background: #2bd3bf; }
   .ea-install { display: inline-flex; align-items: center; gap: 12px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 6px; padding: 12px 18px; font: 500 13.5px 'IBM Plex Mono', monospace; color: #3A4A44; box-shadow: 0 2px 12px rgba(14,30,26,.06); }
   .ea-install span { color: #0E9C8E; }
+  .ea-install { padding: 7px 8px 7px 18px; gap: 0; }
+  .ea-install-cmd { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
+  .ea-copy { display: inline-flex; align-items: center; justify-content: center; margin-left: 16px; width: 30px; height: 30px; flex: none; border: 0; border-radius: 5px; background: #eef2ec; color: #3A4A44; cursor: pointer; transition: background .15s, color .15s; }
+  .ea-copy:hover { background: #dfe7e0; color: #0B6F66; }
+  .ea-copy .ic-check { display: none; color: #0E9C8E; }
+  .ea-copy.is-copied { background: #e0f0eb; }
+  .ea-copy.is-copied .ic-copy { display: none; }
+  .ea-copy.is-copied .ic-check { display: inline; }
 
   .ea-band { background: #F6F8F4; border-bottom: 1px solid rgba(14,30,26,.1); }
   .ea-band-inner { max-width: 1180px; margin: 0 auto; padding: 72px 32px; display: grid; grid-template-columns: .95fr 1.05fr; gap: 56px; align-items: center; }
@@ -198,7 +218,8 @@ const tag = (t) =>
 
   .ea-samples { background: #F6F8F4; border-top: 1px solid rgba(14,30,26,.1); border-bottom: 1px solid rgba(14,30,26,.1); }
   .ea-samples-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px 60px; }
-  .ea-phones { display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; margin-top: 40px; }
+  .ea-phones { display: flex; justify-content: center; align-items: flex-start; gap: 56px; flex-wrap: wrap; margin-top: 40px; }
+  .ea-phone-col { display: flex; flex-direction: column; align-items: center; }
   .ea-phone { padding: 10px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 34px; box-shadow: 0 16px 38px rgba(14,30,26,.14); }
   .ea-screen { width: 248px; height: 524px; border-radius: 26px; background: #E7EDE7; }
   .ea-phone-label { margin-top: 16px; text-align: center; font: 500 11.5px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #5A6B64; }
@@ -210,3 +231,13 @@ const tag = (t) =>
     .ea-band-inner { grid-template-columns: 1fr; gap: 32px; }
   }
 </style>
+
+<script>
+  for (const btn of document.querySelectorAll('.ea-copy')) {
+    btn.addEventListener('click', () => {
+      navigator.clipboard?.writeText(btn.getAttribute('data-clip') || '');
+      btn.classList.add('is-copied');
+      setTimeout(() => btn.classList.remove('is-copied'), 1500);
+    });
+  }
+</script>

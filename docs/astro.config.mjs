@@ -74,6 +74,11 @@ export default defineConfig({
           typeDoc: {
             skipErrorChecking: true,
             excludeInternal: true,
+            // Prepend the hand-authored 2×2 category cards (raw HTML) above the
+            // auto-generated category lists on the API index. mergeReadme is required
+            // for the project-root page; path is relative to docs/ (TypeDoc's cwd).
+            readme: './src/content/docs/_api-intro.md',
+            mergeReadme: true,
           },
         }),
       ],
