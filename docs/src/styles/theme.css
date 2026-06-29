@@ -106,11 +106,31 @@ h1#_top,
   gap: 11px;
   text-decoration: none;
 }
-.ea-logo span {
+.ea-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ea-wm-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+  color: var(--sl-color-white);
+}
+.ea-wm-forge {
+  color: var(--ea-teal);
+  margin-left: 0.14em;
+}
+.ea-wm-pkg {
   font-family: var(--sl-font-mono);
   font-weight: 600;
-  font-size: 15px;
-  color: var(--sl-color-white);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--sl-color-text-accent);
+  background: rgba(14, 156, 142, 0.12);
+  border-radius: 5px;
+  padding: 2px 6px;
 }
 .ea-actions {
   display: flex;
@@ -144,7 +164,8 @@ h1#_top,
 }
 @media (max-width: 50rem) {
   .ea-tab,
-  .ea-gh {
+  .ea-gh,
+  .ea-wm-pkg {
     display: none;
   }
 }

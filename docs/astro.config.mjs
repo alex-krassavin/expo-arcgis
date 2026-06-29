@@ -20,18 +20,22 @@ for (const { slug, title, category } of catalog) {
 }
 
 // Served via GitHub Pages on the custom domain mapforge.dev (app under /expo-arcgis/).
+const base = '/expo-arcgis';
 export default defineConfig({
   site: 'https://mapforge.dev',
-  base: '/expo-arcgis',
+  base,
   integrations: [
     starlight({
       title: 'expo-arcgis',
       description: 'Native ArcGIS Maps SDK for React Native, as an Expo module.',
       customCss: ['./src/styles/theme.css'],
+      favicon: '/favicon.svg',
       components: {
         Header: './src/components/Header.astro',
       },
       head: [
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: `${base}/apple-touch-icon.png` } },
+        { tag: 'link', attrs: { rel: 'icon', type: 'image/png', sizes: '32x32', href: `${base}/favicon-32.png` } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },
         {
