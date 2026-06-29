@@ -44,7 +44,7 @@
   },
   "author": "krassavin <walonade@icloud.com>",
   "license": "MIT",
-  "homepage": "https://alex-krassavin.github.io/expo-arcgis",
+  "homepage": "https://mapforge.dev/expo-arcgis",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.3",
     "@babel/core": "^7.26.0",

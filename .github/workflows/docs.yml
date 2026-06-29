@@ -54,6 +54,7 @@ jobs:
           rm -rf _site && mkdir -p _site/expo-arcgis
           cp -a docs/dist/. _site/expo-arcgis/
           printf '<!doctype html>\n<meta charset="utf-8">\n<title>expo-arcgis</title>\n<meta http-equiv="refresh" content="0; url=/expo-arcgis/">\n<link rel="canonical" href="/expo-arcgis/">\n<script>location.replace("/expo-arcgis/")</script>\n<a href="/expo-arcgis/">Go to expo-arcgis &rarr;</a>\n' > _site/index.html
+          printf 'mapforge.dev\n' > _site/CNAME
 
       - uses: actions/upload-pages-artifact@v3
         with:

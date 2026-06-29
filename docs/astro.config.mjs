@@ -19,9 +19,9 @@ for (const { slug, title, category } of catalog) {
   group.items.push({ label: title, slug: `samples/${slug.split('/')[1]}` });
 }
 
-// Served from GitHub Pages at https://alex-krassavin.github.io/expo-arcgis/
+// Served via GitHub Pages on the custom domain mapforge.dev (app under /expo-arcgis/).
 export default defineConfig({
-  site: 'https://alex-krassavin.github.io',
+  site: 'https://mapforge.dev',
   base: '/expo-arcgis',
   integrations: [
     starlight({
