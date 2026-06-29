@@ -124,11 +124,11 @@ const tag = (t) =>
       <p class="ea-p" style="text-align:center;margin-inline:auto">Native iOS &amp; Android maps, rendered by the SDK.</p>
       <div class="ea-phones">
         <div class="ea-phone-col">
-          <div class="ea-phone"><div class="ea-screen"></div></div>
+          <div class="ea-phone"><div class="ea-screen"><img src={`${base}/samples/display-map-ios.jpg`} alt="MapView running on iOS" /></div></div>
           <div class="ea-phone-label">iOS · MAPVIEW · 2D</div>
         </div>
         <div class="ea-phone-col">
-          <div class="ea-phone"><div class="ea-screen"></div></div>
+          <div class="ea-phone"><div class="ea-screen"><img src={`${base}/samples/light-and-shadows-android.jpg`} alt="SceneView running on Android" /></div></div>
           <div class="ea-phone-label">ANDROID · SCENEVIEW · 3D</div>
         </div>
       </div>
@@ -221,7 +221,8 @@ const tag = (t) =>
   .ea-phones { display: flex; justify-content: center; align-items: flex-start; gap: 56px; flex-wrap: wrap; margin-top: 40px; }
   .ea-phone-col { display: flex; flex-direction: column; align-items: center; }
   .ea-phone { padding: 10px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 34px; box-shadow: 0 16px 38px rgba(14,30,26,.14); }
-  .ea-screen { width: 248px; height: 524px; border-radius: 26px; background: #E7EDE7; }
+  .ea-screen { width: 248px; height: 524px; border-radius: 26px; background: #E7EDE7; overflow: hidden; }
+  .ea-screen img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ea-phone-label { margin-top: 16px; text-align: center; font: 500 11.5px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #5A6B64; }
 
   .ea-footer { background: #13201B; }
