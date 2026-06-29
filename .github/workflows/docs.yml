@@ -46,9 +46,18 @@ jobs:
         working-directory: docs
         run: npm run build
 
+      # A custom domain serves the repo at the domain ROOT, but the app uses base `/expo-arcgis`.
+      # Publish the app under /expo-arcgis/ and redirect the bare root there, so
+      # https://<domain>/ → https://<domain>/expo-arcgis/.
+      - name: Stage site with root → /expo-arcgis redirect
+        run: |
+          rm -rf _site && mkdir -p _site/expo-arcgis
+          cp -a docs/dist/. _site/expo-arcgis/
+          printf '<!doctype html>\n<meta charset="utf-8">\n<title>expo-arcgis</title>\n<meta http-equiv="refresh" content="0; url=/expo-arcgis/">\n<link rel="canonical" href="/expo-arcgis/">\n<script>location.replace("/expo-arcgis/")</script>\n<a href="/expo-arcgis/">Go to expo-arcgis &rarr;</a>\n' > _site/index.html
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: _site
 
   deploy:
     needs: build
