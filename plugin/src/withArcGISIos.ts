@@ -20,6 +20,7 @@ export const withArcGISIos: ConfigPlugin<ArcGISPluginProps> = (config, props) =>
   config = withArcGISPodfileDeploymentTarget(config, target);
   config = withArcGISAppDeploymentTarget(config, target);
   config = withArcGISEmbedFramework(config);
+  config = withArcGISSignatureCleanup(config);
 
   if (props.apiKey) {
     config = withArcGISApiKeyInfoPlist(config, props.apiKey);
@@ -85,20 +86,8 @@ export function embedArcGISFramework(project: XcodeProject): void {
     }
   }
 
-  // Find the application target (fall back to the first target).
   const nativeTargets = objects.PBXNativeTarget || {};
-  let targetUuid: string | undefined;
-  for (const key of Object.keys(nativeTargets)) {
-    if (key.endsWith('_comment')) continue;
-    const productType = String(nativeTargets[key].productType || '').replace(/"/g, '');
-    if (productType === 'com.apple.product-type.application') {
-      targetUuid = key;
-      break;
-    }
-  }
-  if (!targetUuid) {
-    targetUuid = project.getFirstTarget().uuid;
-  }
+  const targetUuid = findApplicationTargetUuid(project);
 
   // Create an "Embed Frameworks" copy-files phase (dstSubfolderSpec 10 = Frameworks).
   const phase = project.addBuildPhase(
@@ -146,6 +135,58 @@ export function embedArcGISFramework(project: XcodeProject): void {
     const [entry] = buildPhases.splice(embedIndex, 1);
     buildPhases.splice(resourcesIndex + 1, 0, entry);
   }
+}
+
+const withArcGISSignatureCleanup: ConfigPlugin = (config) =>
+  withXcodeProject(config, (cfg) => {
+    addSignatureCleanupPhase(cfg.modResults);
+    return cfg;
+  });
+
+const SIGNATURE_CLEANUP_PHASE_NAME = '[expo-arcgis] Remove duplicate ArcGIS.xcframework signature';
+
+/**
+ * Both the app target and the ExpoArcgis pod target run SignatureCollection for the signed
+ * ArcGIS xcframework, and archive-time signature aggregation copies both results into
+ * Signatures/ — failing with `"ArcGIS.xcframework-ios.signature" couldn't be copied to
+ * "Signatures" because an item with the same name already exists` (same Xcode bug as
+ * maplibre-react-native#1489). Delete the app-level copy during the build so aggregation
+ * only sees the pod target's. Mutates the parsed Xcode project in place; exported for tests.
+ */
+export function addSignatureCleanupPhase(project: XcodeProject): void {
+  const scriptPhases = project.hash.project.objects.PBXShellScriptBuildPhase || {};
+  // Idempotent: skip if already added (prebuild may run plugins more than once).
+  for (const key of Object.keys(scriptPhases)) {
+    if (key.endsWith('_comment')) continue;
+    if (String(scriptPhases[key]?.name || '').includes(SIGNATURE_CLEANUP_PHASE_NAME)) {
+      return;
+    }
+  }
+
+  const phase = project.addBuildPhase(
+    [],
+    'PBXShellScriptBuildPhase',
+    SIGNATURE_CLEANUP_PHASE_NAME,
+    findApplicationTargetUuid(project),
+    {
+      shellPath: '/bin/sh',
+      shellScript: 'rm -rf "$CONFIGURATION_BUILD_DIR/ArcGIS.xcframework-ios.signature"',
+    }
+  );
+  phase.buildPhase.alwaysOutOfDate = 1;
+}
+
+/** Finds the application target (falls back to the first target). */
+function findApplicationTargetUuid(project: XcodeProject): string {
+  const nativeTargets = project.hash.project.objects.PBXNativeTarget || {};
+  for (const key of Object.keys(nativeTargets)) {
+    if (key.endsWith('_comment')) continue;
+    const productType = String(nativeTargets[key].productType || '').replace(/"/g, '');
+    if (productType === 'com.apple.product-type.application') {
+      return key;
+    }
+  }
+  return project.getFirstTarget().uuid;
 }
 
 /** Stores the API key in Info.plist as `ArcGISAPIKey` for the native runtime to read. */

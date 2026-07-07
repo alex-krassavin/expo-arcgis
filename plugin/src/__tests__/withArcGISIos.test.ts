@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as xcode from 'xcode';
 
-import { embedArcGISFramework } from '../withArcGISIos';
+import { addSignatureCleanupPhase, embedArcGISFramework } from '../withArcGISIos';
 
 // Expo template project (app target with Sources/Frameworks/Resources) plus a tail
 // "Upload dSYMs to Datadog" script phase like the one expo-datadog appends.
@@ -61,5 +61,43 @@ describe(embedArcGISFramework, () => {
     embedArcGISFramework(project);
     expect(appTargetPhaseComments(project)).toEqual(after);
     expect(after.filter((comment) => comment === 'Embed Frameworks')).toHaveLength(1);
+  });
+});
+
+describe(addSignatureCleanupPhase, () => {
+  // Both the app target and the ExpoArcgis pod target collect the signed xcframework's
+  // signature; archive-time aggregation then copies both into Signatures/ and fails with
+  // "ArcGIS.xcframework-ios.signature couldn't be copied … File exists" (exit 70).
+  const PHASE_NAME = '[expo-arcgis] Remove duplicate ArcGIS.xcframework signature';
+
+  function findPhase(project: any) {
+    const scriptPhases = project.hash.project.objects.PBXShellScriptBuildPhase;
+    const uuid = Object.keys(scriptPhases).find(
+      (key) => !key.endsWith('_comment') && String(scriptPhases[key].name).includes(PHASE_NAME)
+    );
+    return uuid ? scriptPhases[uuid] : undefined;
+  }
+
+  it('adds a run-always script phase that deletes the app-level signature copy', () => {
+    const project = parseFixture();
+    addSignatureCleanupPhase(project);
+
+    const phase = findPhase(project);
+    expect(phase).toBeDefined();
+    expect(phase.shellScript).toContain('ArcGIS.xcframework-ios.signature');
+    expect(phase.shellScript).toContain('CONFIGURATION_BUILD_DIR');
+    expect(String(phase.alwaysOutOfDate)).toBe('1');
+
+    const comments = appTargetPhaseComments(project);
+    expect(comments.filter((comment) => comment.includes(PHASE_NAME))).toHaveLength(1);
+  });
+
+  it('is idempotent across repeated prebuild runs', () => {
+    const project = parseFixture();
+    addSignatureCleanupPhase(project);
+    addSignatureCleanupPhase(project);
+
+    const comments = appTargetPhaseComments(project);
+    expect(comments.filter((comment) => comment.includes(PHASE_NAME))).toHaveLength(1);
   });
 });
