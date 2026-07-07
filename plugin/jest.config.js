@@ -2,6 +2,8 @@
 // just strip TypeScript and convert ESM to CJS.
 module.exports = {
   testEnvironment: 'node',
+  // Default testMatch grabs everything under __tests__, including the xcode.d.ts shim.
+  testMatch: ['**/__tests__/**/*.test.ts'],
   transform: {
     '\\.ts$': [
       'babel-jest',
