@@ -412,6 +412,21 @@ public final class FeatureLayerRef: LayerRef {
     return Array(try await table.queryFeatures(using: params).features()).first
   }
 
+  /// Selects the features with `objectIds`, replacing any current selection. The SDK draws the
+  /// selection highlight above the layer — something a `<Graphic>` in an overlay cannot be made to
+  /// do, since overlays and layers are depth-sorted against each other in a scene.
+  func selectFeatures(_ objectIds: [Int]) async throws {
+    guard let featureLayer = layer as? FeatureLayer else { return }
+    let params = QueryParameters()
+    params.addObjectIDs(objectIds)
+    _ = try await featureLayer.selectFeatures(using: params, mode: .new)
+  }
+
+  /// Clears the layer's selection.
+  func clearSelection() {
+    (layer as? FeatureLayer)?.clearSelection()
+  }
+
   /// Pushes pending local edits to the feature service (no-op for non-service tables).
   private func persistEdits() async throws -> Int? {
     let table = try await resolvedTable()

@@ -761,6 +761,17 @@ export type FeatureLayerHandle = {
    * the user to type raw SIDC-style codes.
    */
   getDictionarySymbolStyleSchema(): Promise<string | null>;
+  /**
+   * Highlights the features with `objectIds`, replacing any current selection.
+   *
+   * The SDK draws the highlight above the layer, which a `<Graphic>` in a `<GraphicsOverlay>`
+   * cannot be made to do: overlays and layers are depth-sorted against one another in a
+   * `<SceneView>`, so a marker placed at a feature's own location is as likely to land behind it
+   * as in front. The highlight colour is a property of the view rather than the layer.
+   */
+  selectFeatures(objectIds: number[]): Promise<void>;
+  /** Clears the layer's selection. */
+  clearSelection(): void;
   /** Returns the metadata for all attachments on the feature with `objectId`. */
   queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
   /**
