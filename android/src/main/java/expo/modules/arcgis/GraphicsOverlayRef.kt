@@ -61,6 +61,11 @@ class GraphicsOverlayRef(appContext: AppContext) : SharedObject(appContext) {
   fun setRenderer(r: Map<String, Any?>?) {
     overlay.renderer = r?.let(::buildRenderer)
   }
+
+  /** Sets how the overlay's graphics sit against a 3D scene's surface, or resets to the defaults. */
+  fun setSceneProperties(props: Map<String, Any?>?) {
+    applySceneProperties(overlay.sceneProperties, props)
+  }
 }
 
 // region Renderers

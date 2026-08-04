@@ -18,6 +18,11 @@ public class GraphicsOverlayRef: SharedObject {
   func setRenderer(_ r: [String: Any]?) {
     overlay.renderer = r.flatMap(buildRenderer)
   }
+
+  /// Sets how the overlay's graphics sit against a 3D scene's surface, or resets to the defaults.
+  func setSceneProperties(_ props: [String: Any]?) {
+    applySceneProperties(overlay.sceneProperties, props)
+  }
 }
 
 /// SharedObject wrapping a native `Graphic` — a point, polyline, or polygon with a simple symbol.

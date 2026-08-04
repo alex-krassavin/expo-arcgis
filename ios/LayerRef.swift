@@ -475,6 +475,38 @@ public final class FeatureLayerRef: LayerRef {
       let seconds = (changed["refreshInterval"] as? NSNumber)?.doubleValue ?? 0
       featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil
     }
+    if changed.keys.contains("sceneProperties") {
+      applySceneProperties(featureLayer.sceneProperties, changed["sceneProperties"] as? [String: Any])
+    }
+  }
+}
+
+/// Applies a JS `sceneProperties` dict onto a layer's or overlay's `LayerSceneProperties`.
+/// Clearing the prop (`nil`) restores the SDK defaults; otherwise only keys that are present and
+/// understood are applied. An unrecognised `surfacePlacement` is left alone rather than coerced to
+/// the default, so a typo can't quietly drape a layer that asked to sit at an absolute height.
+func applySceneProperties(_ target: LayerSceneProperties, _ dict: [String: Any]?) {
+  guard let dict else {
+    target.surfacePlacement = .drapedBillboarded
+    target.altitudeOffset = 0
+    return
+  }
+  if let placement = surfacePlacement(dict["surfacePlacement"] as? String) {
+    target.surfacePlacement = placement
+  }
+  if let offset = (dict["altitudeOffset"] as? NSNumber)?.doubleValue {
+    target.altitudeOffset = offset
+  }
+}
+
+private func surfacePlacement(_ value: String?) -> SurfacePlacement? {
+  switch value {
+  case "draped-billboarded": return .drapedBillboarded
+  case "draped-flat": return .drapedFlat
+  case "absolute": return .absolute
+  case "relative": return .relative
+  case "relative-to-scene": return .relativeToScene
+  default: return nil
   }
 }
 

@@ -28,6 +28,8 @@ import com.arcgismaps.mapping.layers.ScaleDisplayFilterDefinition
 import com.arcgismaps.mapping.layers.ScaleRangeDisplayFilter
 import com.arcgismaps.mapping.symbology.DictionaryRenderer
 import com.arcgismaps.mapping.symbology.DictionarySymbolStyle
+import com.arcgismaps.mapping.view.LayerSceneProperties
+import com.arcgismaps.mapping.view.SurfacePlacement
 import com.arcgismaps.portal.Portal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -537,6 +539,9 @@ class FeatureLayerRef private constructor(
       val seconds = (changed["refreshInterval"] as? Number)?.toLong() ?: 0L
       layer.refreshInterval = if (seconds > 0L) seconds * 1000L else null
     }
+    if (changed.containsKey("sceneProperties")) {
+      applySceneProperties(layer.sceneProperties, changed["sceneProperties"] as? Map<*, *>)
+    }
   }
 }
 
@@ -555,6 +560,31 @@ private fun featureLayerParts(props: Map<String, Any?>): Pair<FeatureLayer, Feat
   }
   val table = featureTable(props)
   return FeatureLayer.createWithFeatureTable(table) to table
+}
+
+/**
+ * Applies a JS `sceneProperties` dict onto a layer's or overlay's [LayerSceneProperties].
+ * Clearing the prop (`null`) restores the SDK defaults; otherwise only keys that are present and
+ * understood are applied. An unrecognised `surfacePlacement` is left alone rather than coerced to
+ * the default, so a typo can't quietly drape a layer that asked to sit at an absolute height.
+ */
+internal fun applySceneProperties(target: LayerSceneProperties, dict: Map<*, *>?) {
+  if (dict == null) {
+    target.surfacePlacement = SurfacePlacement.DrapedBillboarded
+    target.altitudeOffset = 0.0
+    return
+  }
+  surfacePlacement(dict["surfacePlacement"] as? String)?.let { target.surfacePlacement = it }
+  (dict["altitudeOffset"] as? Number)?.toDouble()?.let { target.altitudeOffset = it }
+}
+
+private fun surfacePlacement(value: String?): SurfacePlacement? = when (value) {
+  "draped-billboarded" -> SurfacePlacement.DrapedBillboarded
+  "draped-flat" -> SurfacePlacement.DrapedFlat
+  "absolute" -> SurfacePlacement.Absolute
+  "relative" -> SurfacePlacement.Relative
+  "relative-to-scene" -> SurfacePlacement.RelativeToScene
+  else -> null
 }
 
 /** Builds a [FeatureTable] from a JS source: `{type:"shapefile",path}` or a service URL (or `url`). */

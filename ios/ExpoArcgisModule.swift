@@ -336,6 +336,9 @@ public class ExpoArcgisModule: Module {
       Function("setRenderer") { (ref: GraphicsOverlayRef, renderer: [String: Any]?) in
         ref.setRenderer(renderer)
       }
+      Function("setSceneProperties") { (ref: GraphicsOverlayRef, props: [String: Any]?) in
+        ref.setSceneProperties(props)
+      }
     }
 
     Class(GraphicRef.self) {

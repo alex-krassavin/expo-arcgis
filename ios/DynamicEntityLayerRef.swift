@@ -103,6 +103,9 @@ public final class DynamicEntityLayerRef: LayerRef {
   override func applyProps(_ changed: [String: Any]) {
     super.applyProps(changed)
     guard let layer = layer as? DynamicEntityLayer else { return }
+    if changed.keys.contains("sceneProperties") {
+      applySceneProperties(layer.sceneProperties, changed["sceneProperties"] as? [String: Any])
+    }
     if let track = changed["trackDisplay"] as? [String: Any] {
       if let maxObs = track["maximumObservations"] as? NSNumber {
         layer.trackDisplayProperties.maximumObservations = maxObs.intValue

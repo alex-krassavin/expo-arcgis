@@ -41,6 +41,7 @@ import type {
   RasterLayerProps,
   Renderer,
   SceneLayerProps,
+  SceneProperties,
   SceneProps,
   TargetVisibility,
   TileLayerProps,
@@ -214,6 +215,7 @@ export declare class GraphicsOverlayRef extends SharedObject {
   addGraphic(graphic: GraphicRef): void;
   removeGraphic(graphic: GraphicRef): void;
   setRenderer(renderer: Renderer | null): void;
+  setSceneProperties(sceneProperties: SceneProperties | null): void;
 }
 
 /** Reference to a native `ImageOverlay`. Built via the `<ImageOverlay>` component (extras module). */
