@@ -177,14 +177,22 @@ private func rendererNumber(_ value: Any?) -> Double {
   (value as? NSNumber)?.doubleValue ?? .nan
 }
 
-/// Converts JS unique values to ArcGIS-comparable scalars (whole numbers → `Int`, else `Double`/`String`).
+/// Converts JS unique values to ArcGIS-comparable scalars (whole numbers → `Int`, else `Double`).
+/// Anything that is neither a number nor a string, nulls included, is skipped — it could not
+/// compare equal to a feature attribute anyway.
 private func rendererValues(_ value: Any?) -> [any Sendable] {
-  (value as? [Any] ?? []).map { item -> any Sendable in
+  (value as? [Any] ?? []).compactMap { item -> (any Sendable)? in
+    // Booleans bridge to `NSNumber`, so they arrive here as 1/0 — which is how ArcGIS models them,
+    // the REST field types having no boolean.
     if let number = item as? NSNumber {
       let double = number.doubleValue
       return double == double.rounded() ? number.intValue : double
     }
-    return String(describing: item)
+    // Has to be a cast rather than `String(describing:)`. Expo hands elements over as `Any` that
+    // may wrap an `Optional`; a cast sees through that, whereas stringifying yields the literal
+    // text `Optional("…")`, which no attribute value can ever equal.
+    if let string = item as? String { return string }
+    return nil
   }
 }
 
