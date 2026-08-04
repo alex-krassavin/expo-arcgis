@@ -11,6 +11,7 @@ import com.arcgismaps.data.StatisticType
 import com.arcgismaps.data.StatisticsQueryParameters
 import com.arcgismaps.mapping.popup.FieldsPopupElement
 import com.arcgismaps.mapping.view.IdentifyLayerResult
+import java.time.Instant
 
 /**
  * Builds [QueryParameters] from a JS query dict and serializes [Feature]s back to JS.
@@ -81,11 +82,15 @@ internal fun serializeFeature(feature: Feature, outFields: List<String> = emptyL
   return result
 }
 
-/** Converts feature attributes to JS-friendly values (non-primitives, e.g. dates, → string). */
+/** Converts feature attributes to JS-friendly values (dates → epoch milliseconds, any other
+ *  non-primitive → string). */
 internal fun serializeAttributes(attributes: Map<String, Any?>): Map<String, Any?> =
   attributes.mapValues { (_, value) ->
     when (value) {
       null, is String, is Boolean, is Number -> value
+      // Date fields arrive as `Instant`. Left to `toString()` they reach JS as ISO-8601 text while
+      // iOS sends epoch milliseconds, so the same attribute has a different type per platform.
+      is Instant -> value.toEpochMilli()
       else -> value.toString()
     }
   }
