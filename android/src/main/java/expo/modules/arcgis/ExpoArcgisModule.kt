@@ -511,6 +511,14 @@ private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisScene
     view.retryLoad(promise)
   }
 
+  AsyncFunction("getCamera") { view: ExpoArcgisSceneView ->
+    view.getCamera()
+  }
+
+  AsyncFunction("screenPoint") { view: ExpoArcgisSceneView, location: Map<String, Any?> ->
+    view.screenPoint(location)
+  }
+
   AsyncFunction("getElevation") { view: ExpoArcgisSceneView, point: Map<String, Any?>, promise: Promise ->
     view.getElevation(point, promise)
   }

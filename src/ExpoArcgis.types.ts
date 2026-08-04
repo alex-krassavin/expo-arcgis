@@ -579,6 +579,24 @@ export type SceneViewHandle = {
    * if no surface/elevation is available there.
    */
   getElevation(point: Point): Promise<number | null>;
+  /**
+   * The camera as the user has left it, or `null` before the view has reported one. Returned in the
+   * same shape the `<Scene camera>` prop accepts, so it can be read, adjusted and handed back —
+   * assigning that prop animates the move.
+   */
+  getCamera(): Promise<Camera | null>;
+  /**
+   * Where a scene location currently falls on screen, measured from the view's top-left, or `null`
+   * before the view has drawn. Use it to tell whether something is under your own UI.
+   *
+   * Reported in each SDK's native units — iOS points, Android pixels — matching `onTap`'s
+   * `screenPoint` and what `identify` expects. React Native lays out in density-independent units,
+   * so divide by the display density on Android before comparing against your own layout.
+   *
+   * `visibility` reports what stands between the location and the camera; `'not-on-screen'` is
+   * Android-only, as the iOS SDK does not distinguish it.
+   */
+  screenPoint(location: Point): Promise<ScreenPoint | null>;
 };
 
 /** Imperative query handle exposed by `<FeatureLayer>` via `ref`. */
@@ -2820,6 +2838,21 @@ export type GraphicProps = {
   geometry: Geometry;
   /** Symbol used to draw the geometry. */
   symbol?: Symbol;
+};
+
+/** Where a scene location falls on screen, and what if anything is in front of it. */
+export type ScreenPoint = {
+  /** Distance from the view's left edge, in iOS points or Android pixels. */
+  x: number;
+  /** Distance from the view's top edge, in iOS points or Android pixels. */
+  y: number;
+  /** What stands between the location and the camera. `'not-on-screen'` is Android-only. */
+  visibility:
+    | 'visible'
+    | 'hidden-by-base-surface'
+    | 'hidden-by-earth'
+    | 'hidden-by-elevation'
+    | 'not-on-screen';
 };
 
 /** Payload for the `<MapView onTap>` event. */

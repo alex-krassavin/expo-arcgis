@@ -20,6 +20,8 @@ final class SceneViewModel: ObservableObject {
   @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
+  /// Last camera the view reported. Plain storage, not published — reading it must not redraw.
+  var currentCamera: Camera?
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -76,6 +78,7 @@ struct ExpoArcgisSceneContainer: View {
             let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
             model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
+          .onCameraChanged { model.currentCamera = $0 }
           .onAppear { model.proxy = proxy }
           .task(id: ObjectIdentifier(scene)) {
             do {
@@ -152,6 +155,34 @@ class ExpoArcgisSceneView: ExpoView {
   func getElevation(_ point: [String: Any]) async throws -> Double? {
     guard let scene = model.scene, let point = geometryFromDict(point) as? Point else { return nil }
     return try await scene.baseSurface.elevation(at: point)
+  }
+
+  /// The camera as the user has left it, in WGS84 — the same shape the `camera` prop accepts, so a
+  /// caller can read it, adjust it, and hand it back.
+  func getCamera() -> [String: Any]? {
+    guard let camera = model.currentCamera else { return nil }
+    let location = GeometryEngine.project(camera.location, into: .wgs84) as? Point ?? camera.location
+    var position: [String: Any] = ["x": location.x, "y": location.y]
+    if let z = location.z { position["z"] = z }
+    return [
+      "position": position,
+      "heading": camera.heading,
+      "pitch": camera.pitch,
+      "roll": camera.roll,
+    ]
+  }
+
+  /// Where a scene location currently falls on screen, in points, plus whether anything is between
+  /// it and the camera. `nil` before the view has drawn.
+  func screenPoint(_ location: [String: Any]) -> [String: Any]? {
+    guard let proxy = model.proxy, let point = geometryFromDict(location) as? Point,
+      let result = proxy.screenPoint(fromLocation: point)
+    else { return nil }
+    return [
+      "x": Double(result.screenPoint.x),
+      "y": Double(result.screenPoint.y),
+      "visibility": screenPointVisibility(result.visibility),
+    ]
   }
 
   /// Identifies the features under a screen point (3D). Mirrors `MapView.identify`.
@@ -278,5 +309,16 @@ func atmosphereEffectMode(_ s: String?) -> SceneView.AtmosphereEffect {
   case "off": return .off
   case "realistic": return .realistic
   default: return .horizonOnly
+  }
+}
+
+/// Maps `ScreenPointFromLocationResult.Visibility` to the kebab-case strings the JS side uses.
+private func screenPointVisibility(_ visibility: ScreenPointFromLocationResult.Visibility) -> String {
+  switch visibility {
+  case .visible: return "visible"
+  case .hiddenByBaseSurface: return "hidden-by-base-surface"
+  case .hiddenByEarth: return "hidden-by-earth"
+  case .hiddenByElevation: return "hidden-by-elevation"
+  @unknown default: return "visible"
   }
 }

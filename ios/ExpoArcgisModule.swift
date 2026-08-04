@@ -533,6 +533,14 @@ public class ExpoArcgisModule: Module {
         try await view.getElevation(point)
       }
 
+      AsyncFunction("getCamera") { (view: ExpoArcgisSceneView) in
+        view.getCamera()
+      }
+
+      AsyncFunction("screenPoint") { (view: ExpoArcgisSceneView, location: [String: Any]) in
+        view.screenPoint(location)
+      }
+
       AsyncFunction("identify") { (view: ExpoArcgisSceneView, screenPoint: [String: Any], options: [String: Any]?) in
         try await view.identify(screenPoint, options)
       }
