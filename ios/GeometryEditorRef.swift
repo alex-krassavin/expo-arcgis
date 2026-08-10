@@ -7,6 +7,7 @@ import ExpoModulesCore
 public final class GeometryEditorRef: SharedObject {
   let editor = GeometryEditor()
   private var observation: Task<Void, Never>?
+  private var previewObservation: Task<Void, Never>?
 
   override public init() {
     super.init()
@@ -19,11 +20,24 @@ public final class GeometryEditorRef: SharedObject {
         self.emit(event: "onGeometryChange", payload: payload)
       }
     }
+    // ArcGIS 300.1: the geometry a gesture *would* produce, while it is still in flight.
+    // `editor.geometry` only moves once the edit commits, so this is the live-feedback channel.
+    previewObservation = Task { [weak self] in
+      guard let stream = self?.editor.interactionPreviews else { return }
+      for await preview in stream {
+        guard let self else { break }
+        var payload: [String: Any] = [:]
+        if let serialized = serializeInteractionPreview(preview) { payload["preview"] = serialized }
+        self.emit(event: "onInteractionPreview", payload: payload)
+      }
+    }
   }
 
   override public func sharedObjectWillRelease() {
     observation?.cancel()
     observation = nil
+    previewObservation?.cancel()
+    previewObservation = nil
     super.sharedObjectWillRelease()
   }
 
@@ -63,4 +77,28 @@ public final class GeometryEditorRef: SharedObject {
   func undo() { editor.undo() }
   func redo() { editor.redo() }
   func deleteSelectedElement() { editor.deleteSelectedElement() }
+}
+
+/// Serializes a preview to `{ geometry, interactionType, elementKind }`; nil once the gesture ends.
+private func serializeInteractionPreview(_ preview: GeometryEditorInteractionPreview?) -> [String: Any]? {
+  guard let preview else { return nil }
+  let interactionType: String
+  switch preview.interactionType {
+  case .create: interactionType = "create"
+  case .move: interactionType = "move"
+  case .scale: interactionType = "scale"
+  default: interactionType = "rotate"
+  }
+  let elementKind: String
+  switch preview.interactionElement {
+  case is GeometryEditorVertex: elementKind = "vertex"
+  case is GeometryEditorMidVertex: elementKind = "mid-vertex"
+  case is GeometryEditorPart: elementKind = "part"
+  default: elementKind = "geometry"
+  }
+  return [
+    "geometry": dictFromGeometry(preview.geometry),
+    "interactionType": interactionType,
+    "elementKind": elementKind,
+  ]
 }

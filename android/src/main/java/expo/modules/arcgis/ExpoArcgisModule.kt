@@ -361,10 +361,11 @@ class ExpoArcgisModule : Module() {
     // UtilityNetworkRef is registered in ExpoArcgisExtras (this module's definition() hit the
     // Android 64 KB method-size limit). SharedObjects are global, so it still attaches to a <Map> here.
 
-    // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange.
+    // Interactive GeometryEditor — bound to a <MapView> for sketching; emits onGeometryChange
+    // (committed edits) and onInteractionPreview (the pending result mid-gesture, ArcGIS 300.1).
     Class(GeometryEditorRef::class) {
       Constructor { GeometryEditorRef(appContext) }
-      Events("onGeometryChange")
+      Events("onGeometryChange", "onInteractionPreview")
       Function("start") { ref: GeometryEditorRef, type: String -> ref.start(type) }
       Function("setTool") { ref: GeometryEditorRef, name: String -> ref.setTool(name) }
       Function("stop") { ref: GeometryEditorRef -> ref.stop() }

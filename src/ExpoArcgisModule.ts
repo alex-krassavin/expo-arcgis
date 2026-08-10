@@ -18,6 +18,7 @@ import type {
   FeatureTemplate,
   GeoElementViewshedProps,
   Geometry,
+  GeometryEditorInteractionPreview,
   RelatedFeaturesResult,
   GraphicProps,
   LineOfSightProps,
@@ -211,6 +212,7 @@ export declare class ImageOverlayRef extends SharedObject {
 /** Events emitted by a `GeometryEditorRef` as the user sketches. */
 type GeometryEditorEvents = {
   onGeometryChange(payload: { geometry?: Geometry }): void;
+  onInteractionPreview(payload: { preview?: GeometryEditorInteractionPreview }): void;
 };
 
 /** Reference to a native exploratory `Analysis` (viewshed / line-of-sight) drawn on an analysis overlay. */

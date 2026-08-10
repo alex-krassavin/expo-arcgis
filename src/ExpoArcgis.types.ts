@@ -2145,6 +2145,23 @@ export type GeometryEditorTool =
   | 'rectangle'
   | 'triangle';
 
+/** Which gesture is being previewed. Mirrors `GeometryEditorInteractionType`. */
+export type GeometryEditorInteractionType = 'create' | 'move' | 'scale' | 'rotate';
+
+/** Which piece of the sketch the gesture is acting on. */
+export type GeometryEditorElementKind = 'vertex' | 'mid-vertex' | 'part' | 'geometry';
+
+/**
+ * A live preview of the edit in progress, reported by `onInteractionPreview` (ArcGIS 300.1).
+ * Mirrors `GeometryEditorInteractionPreview`.
+ */
+export type GeometryEditorInteractionPreview = {
+  /** The geometry the sketch would take if the gesture ended now. */
+  geometry: Geometry;
+  interactionType: GeometryEditorInteractionType;
+  elementKind: GeometryEditorElementKind;
+};
+
 export type GeometryEditorProps = {
   /** The kind of geometry to sketch. */
   type: GeometryEditorType;
@@ -2154,6 +2171,13 @@ export type GeometryEditorProps = {
   tool?: GeometryEditorTool;
   /** Called as the sketch geometry changes (`null` when empty / cleared). */
   onGeometryChange?: (geometry: Geometry | null) => void;
+  /**
+   * Called while a gesture is in flight with the geometry it *would* produce, and `null` once it
+   * ends (ArcGIS 300.1). `onGeometryChange` only fires once the edit is committed, so this is what
+   * to use for live feedback — validating a shape mid-drag, or enabling a control only when the
+   * pending result is acceptable.
+   */
+  onInteractionPreview?: (preview: GeometryEditorInteractionPreview | null) => void;
 };
 
 /** Imperative handle exposed by `<GeometryEditor>` via `ref`. */

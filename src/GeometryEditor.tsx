@@ -14,7 +14,10 @@ import { detachQuietly } from './utils/detachQuietly';
  * inside a `<SceneView>`.
  */
 export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorProps>(
-  function GeometryEditor({ type, active = true, tool, onGeometryChange }, handle) {
+  function GeometryEditor(
+    { type, active = true, tool, onGeometryChange, onInteractionPreview },
+    handle
+  ) {
     const view = useGeoView();
     const ref = useRef<GeometryEditorRef | undefined>(undefined);
     if (!ref.current) {
@@ -40,6 +43,15 @@ export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorPro
       });
       return () => subscription.remove();
     }, [onGeometryChange]);
+
+    // Forward in-flight interaction previews (ArcGIS 300.1) to the callback.
+    useEffect(() => {
+      if (!onInteractionPreview) return;
+      const subscription = ref.current!.addListener('onInteractionPreview', ({ preview }) => {
+        onInteractionPreview(preview ?? null);
+      });
+      return () => subscription.remove();
+    }, [onInteractionPreview]);
 
     // Start / restart / stop editing as `active`, `type`, or `tool` changes.
     useEffect(() => {

@@ -3,6 +3,11 @@ package expo.modules.arcgis
 import com.arcgismaps.geometry.GeometryType
 import com.arcgismaps.mapping.view.geometryeditor.FreehandTool
 import com.arcgismaps.mapping.view.geometryeditor.GeometryEditor
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditorInteractionPreview
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditorInteractionType
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditorMidVertex
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditorPart
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditorVertex
 import com.arcgismaps.mapping.view.geometryeditor.ReticleVertexTool
 import com.arcgismaps.mapping.view.geometryeditor.ShapeTool
 import com.arcgismaps.mapping.view.geometryeditor.ShapeToolType
@@ -30,11 +35,38 @@ class GeometryEditorRef(appContext: AppContext) : SharedObject(appContext) {
         emit("onGeometryChange", geometry?.let { mapOf("geometry" to dictFromGeometry(it)) } ?: emptyMap<String, Any?>())
       }
     }
+    // ArcGIS 300.1: the geometry a gesture *would* produce, while it is still in flight.
+    // `editor.geometry` only moves once the edit commits, so this is the live-feedback channel.
+    scope.launch {
+      editor.interactionPreviewChanged.collect { event ->
+        emit("onInteractionPreview", mapOf("preview" to serializeInteractionPreview(event.interactionPreview)))
+      }
+    }
   }
 
   override fun deallocate() {
     scope.cancel()
     super.deallocate()
+  }
+
+  /** Serializes a preview to `{ geometry, interactionType, elementKind }`; null once the gesture ends. */
+  private fun serializeInteractionPreview(preview: GeometryEditorInteractionPreview?): Map<String, Any?>? {
+    preview ?: return null
+    return mapOf(
+      "geometry" to dictFromGeometry(preview.previewGeometry),
+      "interactionType" to when (preview.interactionType) {
+        GeometryEditorInteractionType.Create -> "create"
+        GeometryEditorInteractionType.Move -> "move"
+        GeometryEditorInteractionType.Scale -> "scale"
+        else -> "rotate"
+      },
+      "elementKind" to when (preview.interactionElement) {
+        is GeometryEditorVertex -> "vertex"
+        is GeometryEditorMidVertex -> "mid-vertex"
+        is GeometryEditorPart -> "part"
+        else -> "geometry"
+      },
+    )
   }
 
   /** Starts editing a new geometry of the given type. */
