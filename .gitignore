@@ -67,3 +67,6 @@ yarn-error.log
 /example/android
 /example/ios
 /example/.expo
+
+# Internal working doc — local only
+handoff.md
