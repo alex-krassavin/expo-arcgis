@@ -17,9 +17,9 @@ jobs:
     name: Typecheck · build · package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -48,16 +48,16 @@ jobs:
     name: Android · compileDebugKotlin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
 
       # ArcGIS 300.1 ships Kotlin 2.3.20 metadata; the module reads it with
       # -Xskip-metadata-version-check. JDK 17 is what the Expo/AGP toolchain expects.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -65,7 +65,7 @@ jobs:
       # The ArcGIS AAR is ~190 MB. Key the cache on the pinned SDK version so it survives every
       # build until the next bump.
       - name: Cache Gradle + ArcGIS AAR
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -100,9 +100,9 @@ jobs:
     # iOS 18 deployment target, both satisfied by the default toolchain.
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -111,7 +111,7 @@ jobs:
       # a fixed directory (rather than inside DerivedData, whose path is randomised) so it can be
       # cached across runs and keyed on the pinned SDK version.
       - name: Cache resolved Swift packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/spm-cache
           key: spm-${{ runner.os }}-${{ hashFiles('ios/ExpoArcgis.podspec') }}
