@@ -50,6 +50,32 @@ public final class ServiceGeodatabaseRef: SharedObject {
     try await geodatabase.refresh()
   }
 
+  /// Shared templates published with the service, grouped by layer id and flattened for JS.
+  /// A shared template creates several related features at once — a transformer plus the pole it
+  /// sits on — where a plain feature template creates one. `numberOfRelatedFeatures` on each
+  /// relationship is the ArcGIS 300.1 addition: how much the template will actually add.
+  func getSharedTemplates() async throws -> [[String: Any]] {
+    let byLayer = try await geodatabase.querySharedTemplates(using: SharedTemplateQueryParameters())
+    return byLayer.flatMap { layerID, templates in
+      templates.map { template in
+        [
+          "layerId": layerID,
+          "templateId": template.id as Any,
+          "name": template.name,
+          "description": template.description,
+          "visible": template.isVisible,
+          "relationships": ((template.definition as? FeatureTemplateDefinition)?.relationships ?? [])
+            .map {
+              [
+                "name": $0.featureTemplate.name,
+                "numberOfRelatedFeatures": $0.numberOfRelatedFeatures,
+              ]
+            },
+        ]
+      }
+    }
+  }
+
   func hasLocalEdits() -> Bool { geodatabase.hasLocalEdits }
   func getVersionName() -> String { geodatabase.versionName }
   func getDefaultVersionName() -> String { geodatabase.defaultVersionName }

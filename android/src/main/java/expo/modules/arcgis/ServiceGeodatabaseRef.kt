@@ -3,6 +3,8 @@ package expo.modules.arcgis
 import com.arcgismaps.arcgisservices.ServiceVersionInfo
 import com.arcgismaps.arcgisservices.ServiceVersionParameters
 import com.arcgismaps.arcgisservices.VersionAccess
+import com.arcgismaps.data.FeatureTemplateDefinition
+import com.arcgismaps.data.SharedTemplateQueryParameters
 import com.arcgismaps.data.ServiceGeodatabase
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -52,6 +54,35 @@ class ServiceGeodatabaseRef(appContext: AppContext, private val geodatabase: Ser
    */
   suspend fun refresh() {
     geodatabase.refresh().getOrThrow()
+  }
+
+  /**
+   * Shared templates published with the service, grouped by layer id and flattened for JS.
+   * A shared template creates several related features at once — a transformer plus the pole it
+   * sits on — where a plain feature template creates one. `numberOfRelatedFeatures` on each
+   * relationship is the ArcGIS 300.1 addition: how much the template will actually add.
+   */
+  suspend fun getSharedTemplates(): List<Map<String, Any?>> {
+    val byLayer = geodatabase.querySharedTemplates(SharedTemplateQueryParameters()).getOrThrow()
+    return byLayer.flatMap { (layerId, templates) ->
+      templates.map { template ->
+        mapOf(
+          "layerId" to layerId,
+          "templateId" to template.templateId,
+          "name" to template.name,
+          "description" to template.description,
+          "visible" to template.isVisible,
+          "relationships" to
+            ((template.definition as? FeatureTemplateDefinition)?.relationships ?: emptyList())
+              .map {
+                mapOf(
+                  "name" to it.featureTemplate.name,
+                  "numberOfRelatedFeatures" to it.numberOfRelatedFeatures.toInt(),
+                )
+              },
+        )
+      }
+    }
   }
 
   fun hasLocalEdits(): Boolean = geodatabase.hasLocalEdits()

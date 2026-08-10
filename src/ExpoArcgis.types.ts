@@ -590,6 +590,31 @@ export type FeatureTemplate = {
   prototypeAttributes: Record<string, unknown>;
 };
 
+/** One related feature a shared template will create. Mirrors `FeatureTemplateRelationship`. */
+export type SharedTemplateRelationship = {
+  /** Name of the related template. */
+  name: string;
+  /**
+   * How many features this relationship creates. New in ArcGIS 300.1 — before it, a caller could
+   * see that a template had relationships but not how much it would add.
+   */
+  numberOfRelatedFeatures: number;
+};
+
+/** A shared template published with a service geodatabase. Mirrors `SharedTemplate`. */
+export type SharedTemplateInfo = {
+  /** Layer the template belongs to. */
+  layerId: number;
+  /** Template id within the service, or `null` when it carries none. */
+  templateId: number | null;
+  name: string;
+  description: string;
+  /** Whether the template is meant to be offered in editing UI. */
+  visible: boolean;
+  /** Related features the template creates. Empty for templates that create a single feature. */
+  relationships: SharedTemplateRelationship[];
+};
+
 /** Result of one edit applied via `applyEdits`. */
 export type EditResult = {
   /** Object id of the edited feature. */
@@ -851,6 +876,12 @@ export type ServiceGeodatabaseHandle = {
    * it before querying when a stale read would matter. Requires ArcGIS Enterprise 12.0+.
    */
   refresh(): Promise<void>;
+  /**
+   * Shared templates published with the service, grouped by layer id (ArcGIS 300.1 for the
+   * relationship counts). A shared template creates several related features at once — a
+   * transformer plus the pole it sits on — where a plain feature template creates one.
+   */
+  getSharedTemplates(): Promise<SharedTemplateInfo[]>;
   /** Whether any connected table has unsaved local edits. */
   hasLocalEdits(): boolean;
   /** The active version's name. */

@@ -132,6 +132,9 @@ class ExpoArcgisExtrasModule : Module() {
         ref.undoLocalEdits()
       }
       AsyncFunction("refresh") Coroutine { ref: ServiceGeodatabaseRef -> ref.refresh() }
+      AsyncFunction("getSharedTemplates") Coroutine { ref: ServiceGeodatabaseRef ->
+        ref.getSharedTemplates()
+      }
       Function("hasLocalEdits") { ref: ServiceGeodatabaseRef -> ref.hasLocalEdits() }
       Function("getVersionName") { ref: ServiceGeodatabaseRef -> ref.getVersionName() }
       Function("getDefaultVersionName") { ref: ServiceGeodatabaseRef -> ref.getDefaultVersionName() }

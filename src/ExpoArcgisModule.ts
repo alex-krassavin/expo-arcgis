@@ -13,6 +13,7 @@ import type {
   EditResult,
   Envelope,
   ServiceVersionInfo,
+  SharedTemplateInfo,
   Feature,
   FeatureLayerProps,
   FeatureTemplate,
@@ -160,6 +161,7 @@ export declare class ServiceGeodatabaseRef extends SharedObject {
   applyEdits(): Promise<EditResult[]>;
   undoLocalEdits(): Promise<void>;
   refresh(): Promise<void>;
+  getSharedTemplates(): Promise<SharedTemplateInfo[]>;
   hasLocalEdits(): boolean;
   getVersionName(): string;
   getDefaultVersionName(): string;
