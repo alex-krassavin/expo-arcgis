@@ -17,6 +17,7 @@ import com.arcgismaps.location.SystemLocationDataSource
 import java.time.Instant
 import com.arcgismaps.mapping.TimeExtent
 import com.arcgismaps.mapping.Viewpoint
+import com.arcgismaps.mapping.view.InsetsViewpointAdjustmentType
 import com.arcgismaps.mapping.view.MapView
 import com.arcgismaps.mapping.view.ScreenCoordinate
 import expo.modules.kotlin.AppContext
@@ -151,6 +152,25 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   fun setGrid(config: Map<String, Any?>?) {
     mapView.grid = buildGrid(config)
       ?: com.arcgismaps.mapping.view.LatitudeLongitudeGrid().apply { isVisible = false }
+  }
+
+  /**
+   * Reserves space at the view's edges for UI drawn over the map. The map keeps drawing
+   * full-bleed; attribution and the location symbol move inside the inset area and viewpoint
+   * framing targets it.
+   */
+  fun setContentInsets(config: Map<String, Any?>?) {
+    fun edge(key: String) = (config?.get(key) as? Number)?.toDouble() ?: 0.0
+    mapView.setViewInsets(edge("left"), edge("right"), edge("top"), edge("bottom"))
+  }
+
+  /** How the viewpoint reacts when the insets change (ArcGIS 300.1). */
+  fun setInsetsViewpointAdjustment(value: String?) {
+    mapView.insetsViewpointAdjustment = if (value == "preserve-center") {
+      InsetsViewpointAdjustmentType.PreserveCenter
+    } else {
+      InsetsViewpointAdjustmentType.NoAdjustment
+    }
   }
 
   /** Filters time-aware layers to a time window from JS (null shows all time steps). */

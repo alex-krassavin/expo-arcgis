@@ -409,6 +409,12 @@ class ExpoArcgisModule : Module() {
         view.setGeometryEditor(ref)
       }
 
+      Prop("contentInsets") { view: ExpoArcgisMapView, insets: Map<String, Any?>? ->
+        view.setContentInsets(insets)
+      }
+      Prop("insetsViewpointAdjustment") { view: ExpoArcgisMapView, value: String? ->
+        view.setInsetsViewpointAdjustment(value)
+      }
       Prop("grid") { view: ExpoArcgisMapView, grid: Map<String, Any?>? ->
         view.setGrid(grid)
       }

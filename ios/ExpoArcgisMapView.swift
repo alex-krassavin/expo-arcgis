@@ -17,6 +17,9 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var locationVersion = 0
   @Published private(set) var geometryEditor: GeometryEditor?
   @Published private(set) var grid: ArcGIS.Grid?
+  /// Space reserved at the view's edges for UI drawn over the map (ArcGIS 300.1 adjustment below).
+  @Published private(set) var contentInsets = EdgeInsets()
+  @Published private(set) var insetsAdjustment: InsetsViewpointAdjustmentType = .noAdjustment
   @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
   var proxy: MapViewProxy?
@@ -62,6 +65,14 @@ final class MapViewModel: ObservableObject {
   func setGrid(_ grid: ArcGIS.Grid?) {
     self.grid = grid
   }
+
+  func setContentInsets(_ insets: EdgeInsets) {
+    contentInsets = insets
+  }
+
+  func setInsetsAdjustment(_ adjustment: InsetsViewpointAdjustmentType) {
+    insetsAdjustment = adjustment
+  }
 }
 
 /// Builds an ArcGIS coordinate `Grid` from a JS config (`{ type, visible? }`); nil clears the grid.
@@ -93,7 +104,9 @@ struct ExpoArcgisMapContainer: View {
           imageOverlays: model.imageOverlays
         )
           // `locationDisplay(_:)` / `geometryEditor(_:)` return `MapView`, so they must precede
-          // the SwiftUI modifiers below.
+          // the SwiftUI modifiers below — as do the inset modifiers.
+          .contentInsets(model.contentInsets)
+          .insetsViewpointAdjustmentType(model.insetsAdjustment)
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
           .grid(model.grid)
@@ -230,6 +243,21 @@ class ExpoArcgisMapView: ExpoView {
   /// Sets the coordinate grid overlay from JS (nil clears it).
   func setGrid(_ dict: [String: Any]?) {
     model.setGrid(buildGrid(dict))
+  }
+
+  /// Reserves space at the view's edges for UI drawn over the map. The map keeps drawing
+  /// full-bleed; attribution and the location symbol move inside the inset area and viewpoint
+  /// framing targets it.
+  func setContentInsets(_ dict: [String: Any]?) {
+    func edge(_ key: String) -> CGFloat { (dict?[key] as? NSNumber)?.doubleValue ?? 0 }
+    model.setContentInsets(
+      EdgeInsets(top: edge("top"), leading: edge("left"), bottom: edge("bottom"), trailing: edge("right"))
+    )
+  }
+
+  /// How the viewpoint reacts when the insets change (ArcGIS 300.1).
+  func setInsetsViewpointAdjustment(_ value: String?) {
+    model.setInsetsAdjustment(value == "preserve-center" ? .preserveCenter : .noAdjustment)
   }
 
   /// Filters time-aware layers to a time window from JS (nil shows all time steps).

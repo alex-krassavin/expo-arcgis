@@ -132,8 +132,37 @@ export type LocationEventPayload = {
 };
 
 /** Props for the `<MapView>` host component. */
+/** Insets, in density-independent units, matching the `EdgeInsets` / view-inset model. */
+export type MapViewInsets = {
+  top?: number;
+  left?: number;
+  bottom?: number;
+  right?: number;
+};
+
+/**
+ * What happens to the visible map when `contentInsets` change. Mirrors
+ * `InsetsViewpointAdjustmentType` (ArcGIS 300.1).
+ *
+ * - `none` — the map keeps its viewpoint, so growing an inset slides content out of the inset area.
+ * - `preserve-center` — the map shifts so whatever was centred in the uninset area stays centred.
+ */
+export type InsetsViewpointAdjustment = 'none' | 'preserve-center';
+
 export type MapViewProps = {
   style?: StyleProp<ViewStyle>;
+  /**
+   * Reserves space at the view's edges for UI drawn over the map — a bottom sheet, a toolbar.
+   * The map still draws full-bleed underneath; attribution and the location symbol move inside
+   * the inset area, and `setViewpoint` frames content to it rather than to the whole view.
+   */
+  contentInsets?: MapViewInsets;
+  /**
+   * How the viewpoint reacts when `contentInsets` change (ArcGIS 300.1). Defaults to `none`,
+   * the pre-300.1 behaviour. Use `preserve-center` when a sheet expands over the map and the
+   * feature the user was looking at should stay put.
+   */
+  insetsViewpointAdjustment?: InsetsViewpointAdjustment;
   /** Animates the view to this viewpoint whenever the value changes (runtime camera control). */
   viewpoint?: Viewpoint;
   /** Device-location display. When set, the view shows the device's GPS location. */
