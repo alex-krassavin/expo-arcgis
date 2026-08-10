@@ -151,10 +151,20 @@ public final class UtilityNetworkRef: SharedObject {
     let functionOutputs = results
       .compactMap { $0 as? UtilityFunctionTraceResult }
       .flatMap(\.functionOutputs)
+    // The third result type: the traced path aggregated into geometry. Like the function outputs
+    // above it only appears when the configuration asks for it, and was being dropped too.
+    let geometryResult = results.compactMap { $0 as? UtilityGeometryTraceResult }.first
     return [
       "elementCount": found.count,
       "elements": found.map(serializeUtilityElement),
       "functionResults": functionOutputs.map(serializeTraceFunctionOutput),
+      "geometryResult": geometryResult.map {
+        [
+          "polyline": $0.polyline.map(dictFromGeometry) as Any,
+          "polygon": $0.polygon.map(dictFromGeometry) as Any,
+          "multipoint": $0.multipoint.map(dictFromGeometry) as Any,
+        ]
+      } as Any,
     ]
   }
 
@@ -192,7 +202,7 @@ public final class UtilityNetworkRef: SharedObject {
   }
 
   private var emptyTraceResult: [String: Any] {
-    ["elementCount": 0, "elements": [], "functionResults": []]
+    ["elementCount": 0, "elements": [], "functionResults": [], "geometryResult": NSNull()]
   }
 }
 

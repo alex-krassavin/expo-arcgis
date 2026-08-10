@@ -12,6 +12,7 @@ import com.arcgismaps.utilitynetworks.UtilityAssociationType
 import com.arcgismaps.utilitynetworks.UtilityElement
 import com.arcgismaps.utilitynetworks.UtilityElementTraceResult
 import com.arcgismaps.utilitynetworks.UtilityFunctionTraceResult
+import com.arcgismaps.utilitynetworks.UtilityGeometryTraceResult
 import com.arcgismaps.utilitynetworks.UtilityTraceFunctionOutput
 import com.arcgismaps.utilitynetworks.UtilityTraceFunctionType
 import com.arcgismaps.utilitynetworks.UtilityNamedTraceConfiguration
@@ -181,10 +182,20 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     // computed along the path (total length, device count…), separate from the elements found.
     val functionOutputs = results.filterIsInstance<UtilityFunctionTraceResult>()
       .flatMap { it.functionOutputs }
+    // The third result type: the traced path aggregated into geometry. Like the function outputs
+    // above it only appears when the configuration asks for it, and was being dropped too.
+    val geometryResult = results.filterIsInstance<UtilityGeometryTraceResult>().firstOrNull()
     return mapOf(
       "elementCount" to found.size,
       "elements" to found.map { serializeUtilityElement(it) },
       "functionResults" to functionOutputs.map { serializeTraceFunctionOutput(it) },
+      "geometryResult" to geometryResult?.let {
+        mapOf(
+          "polyline" to it.polyline?.let { g -> dictFromGeometry(g) },
+          "polygon" to it.polygon?.let { g -> dictFromGeometry(g) },
+          "multipoint" to it.multipoint?.let { g -> dictFromGeometry(g) },
+        )
+      },
     )
   }
 
@@ -216,7 +227,12 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
   }
 
   private fun emptyTraceResult(): Map<String, Any?> =
-    mapOf("elementCount" to 0, "elements" to emptyList<Any?>(), "functionResults" to emptyList<Any?>())
+    mapOf(
+      "elementCount" to 0,
+      "elements" to emptyList<Any?>(),
+      "functionResults" to emptyList<Any?>(),
+      "geometryResult" to null,
+    )
 }
 
 /** Resolves a JS descriptor (asset-type path + global id) to a [UtilityElement] via the definition. */

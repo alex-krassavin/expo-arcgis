@@ -1987,6 +1987,17 @@ export type UtilityTraceResult = {
    * device count, and so on. Empty when the configuration defines no functions.
    */
   functionResults: UtilityTraceFunctionResult[];
+  /**
+   * The traced path aggregated into geometry, when the configuration asks for it
+   * (`resultTypes` including geometry). Each part is `null` unless the trace produced it — a
+   * downstream trace along mains yields a `polyline`, an isolation trace a `polygon`. Draw these
+   * on a `<GraphicsOverlay>` to show the result without styling every element.
+   */
+  geometryResult: {
+    polyline: Geometry | null;
+    polygon: Geometry | null;
+    multipoint: Geometry | null;
+  } | null;
 };
 
 /** Props for `<UtilityNetwork>` — a utility network loaded from a feature service, a child of `<Map>`. */
