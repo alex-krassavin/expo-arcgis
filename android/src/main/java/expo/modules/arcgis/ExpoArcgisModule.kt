@@ -11,6 +11,7 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.modules.ModuleDefinitionBuilder
 
 class ExpoArcgisModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -381,134 +382,145 @@ class ExpoArcgisModule : Module() {
       Function("deleteSelectedElement") { ref: GeometryEditorRef -> ref.deleteSelectedElement() }
     }
 
-    // 2D map host — receives the map + graphics overlay SharedObjects as props.
-    View(ExpoArcgisMapView::class) {
-      Events("onMapLoaded", "onMapLoadError", "onTap", "onLocationChange")
+    mapViewDefinition()
 
-      Prop("map") { view: ExpoArcgisMapView, ref: MapRef? ->
-        view.setMap(ref)
-      }
+    sceneViewDefinition()
+  }
+}
 
-      Prop("graphicsOverlays") { view: ExpoArcgisMapView, refs: List<GraphicsOverlayRef> ->
-        view.setGraphicsOverlays(refs)
-      }
+/**
+ * 2D map host — receives the map + graphics overlay SharedObjects as props.
+ *
+ * Each view sits in its own function because the Expo DSL is `inline`: every `Prop` and
+ * `AsyncFunction` body is copied into the method that calls it, and [ExpoArcgisModule.definition]
+ * was already close enough to the JVM's 64 KB per-method ceiling that one more view function broke
+ * the Kotlin compile. A function per view gives each its own budget.
+ */
+private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView::class) {
+  Events("onMapLoaded", "onMapLoadError", "onTap", "onLocationChange")
 
-      Prop("imageOverlays") { view: ExpoArcgisMapView, refs: List<ImageOverlayRef> ->
-        view.setImageOverlays(refs)
-      }
+  Prop("map") { view: ExpoArcgisMapView, ref: MapRef? ->
+    view.setMap(ref)
+  }
 
-      Prop("viewpoint") { view: ExpoArcgisMapView, vp: Map<String, Any?>? ->
-        view.setViewpoint(vp)
-      }
+  Prop("graphicsOverlays") { view: ExpoArcgisMapView, refs: List<GraphicsOverlayRef> ->
+    view.setGraphicsOverlays(refs)
+  }
 
-      Prop("locationDisplay") { view: ExpoArcgisMapView, config: Map<String, Any?>? ->
-        view.setLocationDisplay(config)
-      }
+  Prop("imageOverlays") { view: ExpoArcgisMapView, refs: List<ImageOverlayRef> ->
+    view.setImageOverlays(refs)
+  }
 
-      Prop("geometryEditor") { view: ExpoArcgisMapView, ref: GeometryEditorRef? ->
-        view.setGeometryEditor(ref)
-      }
+  Prop("viewpoint") { view: ExpoArcgisMapView, vp: Map<String, Any?>? ->
+    view.setViewpoint(vp)
+  }
 
-      Prop("contentInsets") { view: ExpoArcgisMapView, insets: Map<String, Any?>? ->
-        view.setContentInsets(insets)
-      }
-      Prop("insetsViewpointAdjustment") { view: ExpoArcgisMapView, value: String? ->
-        view.setInsetsViewpointAdjustment(value)
-      }
-      Prop("grid") { view: ExpoArcgisMapView, grid: Map<String, Any?>? ->
-        view.setGrid(grid)
-      }
+  Prop("locationDisplay") { view: ExpoArcgisMapView, config: Map<String, Any?>? ->
+    view.setLocationDisplay(config)
+  }
 
-      Prop("timeExtent") { view: ExpoArcgisMapView, value: Map<String, Any?>? ->
-        view.setTimeExtent(value)
-      }
+  Prop("geometryEditor") { view: ExpoArcgisMapView, ref: GeometryEditorRef? ->
+    view.setGeometryEditor(ref)
+  }
 
-      AsyncFunction("identify") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
-        view.identify(screenPoint, options, promise)
-      }
+  Prop("contentInsets") { view: ExpoArcgisMapView, insets: Map<String, Any?>? ->
+    view.setContentInsets(insets)
+  }
+  Prop("insetsViewpointAdjustment") { view: ExpoArcgisMapView, value: String? ->
+    view.setInsetsViewpointAdjustment(value)
+  }
+  Prop("grid") { view: ExpoArcgisMapView, grid: Map<String, Any?>? ->
+    view.setGrid(grid)
+  }
 
-      AsyncFunction("identifyPopups") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
-        view.identifyPopups(screenPoint, options, promise)
-      }
+  Prop("timeExtent") { view: ExpoArcgisMapView, value: Map<String, Any?>? ->
+    view.setTimeExtent(value)
+  }
 
-      AsyncFunction("retryLoad") { view: ExpoArcgisMapView, promise: Promise ->
-        view.retryLoad(promise)
-      }
+  AsyncFunction("identify") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+    view.identify(screenPoint, options, promise)
+  }
 
-      AsyncFunction("getBookmarkNames") { view: ExpoArcgisMapView, promise: Promise ->
-        view.getBookmarkNames(promise)
-      }
+  AsyncFunction("identifyPopups") { view: ExpoArcgisMapView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+    view.identifyPopups(screenPoint, options, promise)
+  }
 
-      AsyncFunction("setBookmark") { view: ExpoArcgisMapView, name: String, promise: Promise ->
-        view.setBookmark(name, promise)
-      }
-    }
+  AsyncFunction("retryLoad") { view: ExpoArcgisMapView, promise: Promise ->
+    view.retryLoad(promise)
+  }
 
-    // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
-    View(ExpoArcgisSceneView::class) {
-      Name("ExpoArcgisSceneView")
-      Events("onSceneLoaded", "onSceneLoadError", "onTap")
+  AsyncFunction("getBookmarkNames") { view: ExpoArcgisMapView, promise: Promise ->
+    view.getBookmarkNames(promise)
+  }
 
-      Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->
-        view.setScene(ref)
-      }
+  AsyncFunction("setBookmark") { view: ExpoArcgisMapView, name: String, promise: Promise ->
+    view.setBookmark(name, promise)
+  }
+}
 
-      Prop("graphicsOverlays") { view: ExpoArcgisSceneView, refs: List<GraphicsOverlayRef> ->
-        view.setGraphicsOverlays(refs)
-      }
+// 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').
+private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisSceneView::class) {
+  Name("ExpoArcgisSceneView")
+  Events("onSceneLoaded", "onSceneLoadError", "onTap")
 
-      Prop("analysisOverlays") { view: ExpoArcgisSceneView, refs: List<AnalysisOverlayRef> ->
-        view.setAnalysisOverlays(refs)
-      }
+  Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->
+    view.setScene(ref)
+  }
 
-      Prop("camera") { view: ExpoArcgisSceneView, camera: Map<String, Any?>? ->
-        view.setCamera(camera)
-      }
+  Prop("graphicsOverlays") { view: ExpoArcgisSceneView, refs: List<GraphicsOverlayRef> ->
+    view.setGraphicsOverlays(refs)
+  }
 
-      Prop("cameraController") { view: ExpoArcgisSceneView, value: Map<String, Any?>? ->
-        view.setCameraController(value)
-      }
+  Prop("analysisOverlays") { view: ExpoArcgisSceneView, refs: List<AnalysisOverlayRef> ->
+    view.setAnalysisOverlays(refs)
+  }
 
-      Prop("grid") { view: ExpoArcgisSceneView, grid: Map<String, Any?>? ->
-        view.setGrid(grid)
-      }
+  Prop("camera") { view: ExpoArcgisSceneView, camera: Map<String, Any?>? ->
+    view.setCamera(camera)
+  }
 
-      Prop("orbitGraphic") { view: ExpoArcgisSceneView, ref: GraphicRef? ->
-        view.setOrbitGraphic(ref)
-      }
+  Prop("cameraController") { view: ExpoArcgisSceneView, value: Map<String, Any?>? ->
+    view.setCameraController(value)
+  }
 
-      Prop("sunLighting") { view: ExpoArcgisSceneView, value: String? ->
-        view.setSunLighting(value)
-      }
+  Prop("grid") { view: ExpoArcgisSceneView, grid: Map<String, Any?>? ->
+    view.setGrid(grid)
+  }
 
-      Prop("atmosphereEffect") { view: ExpoArcgisSceneView, value: String? ->
-        view.setAtmosphereEffect(value)
-      }
+  Prop("orbitGraphic") { view: ExpoArcgisSceneView, ref: GraphicRef? ->
+    view.setOrbitGraphic(ref)
+  }
 
-      Prop("sunTime") { view: ExpoArcgisSceneView, value: Double? ->
-        view.setSunTime(value)
-      }
+  Prop("sunLighting") { view: ExpoArcgisSceneView, value: String? ->
+    view.setSunLighting(value)
+  }
 
-      Prop("timeExtent") { view: ExpoArcgisSceneView, value: Map<String, Any?>? ->
-        view.setTimeExtent(value)
-      }
+  Prop("atmosphereEffect") { view: ExpoArcgisSceneView, value: String? ->
+    view.setAtmosphereEffect(value)
+  }
 
-      AsyncFunction("retryLoad") { view: ExpoArcgisSceneView, promise: Promise ->
-        view.retryLoad(promise)
-      }
+  Prop("sunTime") { view: ExpoArcgisSceneView, value: Double? ->
+    view.setSunTime(value)
+  }
 
-      AsyncFunction("getElevation") { view: ExpoArcgisSceneView, point: Map<String, Any?>, promise: Promise ->
-        view.getElevation(point, promise)
-      }
+  Prop("timeExtent") { view: ExpoArcgisSceneView, value: Map<String, Any?>? ->
+    view.setTimeExtent(value)
+  }
 
-      AsyncFunction("identify") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
-        view.identify(screenPoint, options, promise)
-      }
+  AsyncFunction("retryLoad") { view: ExpoArcgisSceneView, promise: Promise ->
+    view.retryLoad(promise)
+  }
 
-      AsyncFunction("identifyPopups") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
-        view.identifyPopups(screenPoint, options, promise)
-      }
-    }
+  AsyncFunction("getElevation") { view: ExpoArcgisSceneView, point: Map<String, Any?>, promise: Promise ->
+    view.getElevation(point, promise)
+  }
+
+  AsyncFunction("identify") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+    view.identify(screenPoint, options, promise)
+  }
+
+  AsyncFunction("identifyPopups") { view: ExpoArcgisSceneView, screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise ->
+    view.identifyPopups(screenPoint, options, promise)
   }
 }
 
