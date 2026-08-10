@@ -445,7 +445,13 @@ export type StatisticRecord = {
   statistics: Record<string, unknown>;
 };
 
-/** One layer's hits from a `<MapView>` `identify` (the features under a screen point). */
+/**
+ * One layer's hits from a `<MapView>` `identify` (the features under a screen point).
+ *
+ * Only hits that are features are reported. ArcGIS 300.1 made `<VectorTileLayer>` identifiable
+ * natively, but it returns vector-tile features rather than the feature type this bridge
+ * serializes, so a vector tile layer still yields no hits here.
+ */
 export type IdentifyResult = {
   /** Name of the layer the features belong to. */
   layerName: string;
@@ -836,7 +842,13 @@ export type MapImageLayerProps = LayerProps & {
   url: string;
 };
 
-/** Props for a `<SceneLayer>` — mirror the native `ArcGISSceneLayer` (3D objects / integrated mesh). */
+/**
+ * Props for a `<SceneLayer>` — mirror the native `ArcGISSceneLayer` (3D objects / integrated mesh).
+ *
+ * Since ArcGIS 300.1 a scene layer that carries labels draws them as soon as it loads, where
+ * earlier versions left them off. There is no prop to suppress them yet — publish the service
+ * without labels if you need them hidden.
+ */
 export type SceneLayerProps = LayerProps & {
   /** URL of the scene service (`.../SceneServer`). */
   url: string;
