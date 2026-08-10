@@ -573,7 +573,12 @@ class MapImageLayerRef(appContext: AppContext, url: String) : LayerRef(appContex
 class SceneLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: ArcGISSceneLayer = ArcGISSceneLayer(url)
 
-  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+  override fun applyProps(changed: Map<String, Any?>) {
+    applyCommonProps(changed)
+    // ArcGIS 300.1 turns labels on at load for any scene layer that carries them, so this is the
+    // only way back to the pre-300.1 look.
+    (changed["labelsEnabled"] as? Boolean)?.let { layer.labelsEnabled = it }
+  }
 }
 
 /** Operational vector tiled layer backed by a vector tile service URL. */

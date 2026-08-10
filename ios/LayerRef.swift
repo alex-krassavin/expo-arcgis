@@ -569,8 +569,21 @@ public final class MapImageLayerRef: LayerRef {
 
 /// Operational 3D scene layer (3D objects / integrated mesh) backed by a scene service URL.
 public final class SceneLayerRef: LayerRef {
+  private let sceneLayer: ArcGISSceneLayer
+
   init(url: String) {
-    super.init(layer: ArcGISSceneLayer(url: URL(string: url)!))
+    let layer = ArcGISSceneLayer(url: URL(string: url)!)
+    sceneLayer = layer
+    super.init(layer: layer)
+  }
+
+  override func applyProps(_ changed: [String: Any]) {
+    super.applyProps(changed)
+    // ArcGIS 300.1 turns labels on at load for any scene layer that carries them, so this is the
+    // only way back to the pre-300.1 look.
+    if let labelsEnabled = changed["labelsEnabled"] as? Bool {
+      sceneLayer.labelsAreEnabled = labelsEnabled
+    }
   }
 }
 

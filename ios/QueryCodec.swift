@@ -147,6 +147,32 @@ func serializeIdentifyResult(_ result: IdentifyLayerResult) -> [String: Any] {
   [
     "layerName": result.layerContent.name,
     "features": result.geoElements.compactMap { $0 as? Feature }.map(serializeFeature),
+    // ArcGIS 300.1 made vector tiled layers identifiable. Their hits are `VectorTileFeature`s, not
+    // `Feature`s — no object id, no service schema — so they get their own list rather than being
+    // squeezed into `features`, which would change what existing callers read.
+    "vectorTileFeatures": result.geoElements
+      .compactMap { $0 as? VectorTileFeature }
+      .map(serializeVectorTileFeature),
+  ]
+}
+
+/// Serializes a `VectorTileFeature` to `{ id, styleLayerId, styleLayerType, attributes, geometry }`.
+func serializeVectorTileFeature(_ feature: VectorTileFeature) -> [String: Any] {
+  let styleLayerType: String
+  switch feature.styleLayerType {
+  case .background: styleLayerType = "background"
+  case .circle: styleLayerType = "circle"
+  case .fill: styleLayerType = "fill"
+  case .line: styleLayerType = "line"
+  default: styleLayerType = "symbol"
+  }
+  return [
+    "id": feature.id,
+    "styleLayerId": feature.styleLayerID,
+    "styleLayerType": styleLayerType,
+    "attributes": feature.attributes.mapValues { $0 as Any },
+    // The SDK only returns geometry for point-based features; line and fill hits carry none.
+    "geometry": feature.geometry.map(dictFromGeometry) as Any,
   ]
 }
 

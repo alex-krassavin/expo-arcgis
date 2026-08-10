@@ -445,18 +445,38 @@ export type StatisticRecord = {
   statistics: Record<string, unknown>;
 };
 
+/** Which kind of style layer drew a vector tile feature. Mirrors `VectorTileStyleLayerType`. */
+export type VectorTileStyleLayerType = 'background' | 'circle' | 'fill' | 'line' | 'symbol';
+
 /**
- * One layer's hits from a `<MapView>` `identify` (the features under a screen point).
+ * One hit on a `<VectorTileLayer>`. Mirrors the native `VectorTileFeature`, which ArcGIS 300.1
+ * added along with identify support for vector tiled layers.
  *
- * Only hits that are features are reported. ArcGIS 300.1 made `<VectorTileLayer>` identifiable
- * natively, but it returns vector-tile features rather than the feature type this bridge
- * serializes, so a vector tile layer still yields no hits here.
+ * A vector tile carries no object ids or feature service schema, so this is not a `Feature`: it
+ * reports the style layer that drew it and the attributes baked into the tile.
  */
+export type VectorTileFeature = {
+  /** Feature id within the tile. `null` when the tile carries none (Android only — iOS reports 0). */
+  id: number | null;
+  /** Id of the style layer that drew the feature, as named in the vector tile style. */
+  styleLayerId: string;
+  styleLayerType: VectorTileStyleLayerType;
+  attributes: Record<string, unknown>;
+  /** The SDK only returns geometry for point-based features; `null` for line and fill. */
+  geometry: Geometry | null;
+};
+
+/** One layer's hits from a `<MapView>` `identify` (the features under a screen point). */
 export type IdentifyResult = {
   /** Name of the layer the features belong to. */
   layerName: string;
-  /** Identified features in that layer. */
+  /** Identified features in that layer. Empty for a `<VectorTileLayer>` — see `vectorTileFeatures`. */
   features: Feature[];
+  /**
+   * Hits on a `<VectorTileLayer>`, which ArcGIS 300.1 made identifiable. Empty for every other
+   * layer type, so existing callers reading `features` are unaffected.
+   */
+  vectorTileFeatures: VectorTileFeature[];
 };
 
 /** An evaluated popup from `identifyPopups` — a title plus formatted field label/value pairs. */
@@ -842,16 +862,15 @@ export type MapImageLayerProps = LayerProps & {
   url: string;
 };
 
-/**
- * Props for a `<SceneLayer>` — mirror the native `ArcGISSceneLayer` (3D objects / integrated mesh).
- *
- * Since ArcGIS 300.1 a scene layer that carries labels draws them as soon as it loads, where
- * earlier versions left them off. There is no prop to suppress them yet — publish the service
- * without labels if you need them hidden.
- */
+/** Props for a `<SceneLayer>` — mirror the native `ArcGISSceneLayer` (3D objects / integrated mesh). */
 export type SceneLayerProps = LayerProps & {
   /** URL of the scene service (`.../SceneServer`). */
   url: string;
+  /**
+   * Whether the layer's labels are drawn. Since ArcGIS 300.1 a scene layer that carries labels
+   * enables them on load, where earlier versions left them off — pass `false` to keep them hidden.
+   */
+  labelsEnabled?: boolean;
 };
 
 /** Props for a `<VectorTileLayer>` — mirror the native `ArcGISVectorTiledLayer`. */

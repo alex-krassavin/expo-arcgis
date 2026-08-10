@@ -10,6 +10,8 @@ import com.arcgismaps.data.StatisticRecord
 import com.arcgismaps.data.StatisticType
 import com.arcgismaps.data.StatisticsQueryParameters
 import com.arcgismaps.mapping.popup.FieldsPopupElement
+import com.arcgismaps.mapping.layers.VectorTileFeature
+import com.arcgismaps.mapping.layers.VectorTileStyleLayerType
 import com.arcgismaps.mapping.view.IdentifyLayerResult
 import java.time.Instant
 
@@ -137,6 +139,27 @@ internal fun applyAttributes(feature: Feature, attributes: Map<*, *>) {
 internal fun serializeIdentifyResult(result: IdentifyLayerResult): Map<String, Any?> = mapOf(
   "layerName" to result.layerContent.name,
   "features" to result.geoElements.filterIsInstance<Feature>().map { serializeFeature(it) },
+  // ArcGIS 300.1 made vector tiled layers identifiable. Their hits are `VectorTileFeature`s, not
+  // `Feature`s — no object id, no service schema — so they get their own list rather than being
+  // squeezed into `features`, which would change what existing callers read.
+  "vectorTileFeatures" to result.geoElements.filterIsInstance<VectorTileFeature>()
+    .map { serializeVectorTileFeature(it) },
+)
+
+/** Serializes a [VectorTileFeature] to `{ id, styleLayerId, styleLayerType, attributes, geometry }`. */
+internal fun serializeVectorTileFeature(feature: VectorTileFeature): Map<String, Any?> = mapOf(
+  "id" to feature.id,
+  "styleLayerId" to feature.styleLayerId,
+  "styleLayerType" to when (feature.styleLayerType) {
+    VectorTileStyleLayerType.Background -> "background"
+    VectorTileStyleLayerType.Circle -> "circle"
+    VectorTileStyleLayerType.Fill -> "fill"
+    VectorTileStyleLayerType.Line -> "line"
+    else -> "symbol"
+  },
+  "attributes" to serializeAttributes(feature.attributes),
+  // The SDK only returns geometry for point-based features; line and fill hits carry none.
+  "geometry" to feature.geometry?.let { dictFromGeometry(it) },
 )
 
 /** Evaluates each identified popup and flattens its fields into `{ title, fields: [{label, value}] }`. */
