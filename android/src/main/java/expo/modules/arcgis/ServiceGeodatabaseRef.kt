@@ -45,6 +45,15 @@ class ServiceGeodatabaseRef(appContext: AppContext, private val geodatabase: Ser
     geodatabase.undoLocalEdits().getOrThrow()
   }
 
+  /**
+   * Re-reads the service's version state (ArcGIS 300.1). In a multi-user branch-versioning
+   * workflow another client's edits to the current version are invisible until this runs; call it
+   * before querying if a stale read would matter. Requires ArcGIS Enterprise 12.0+.
+   */
+  suspend fun refresh() {
+    geodatabase.refresh().getOrThrow()
+  }
+
   fun hasLocalEdits(): Boolean = geodatabase.hasLocalEdits()
   fun getVersionName(): String = geodatabase.versionName
   fun getDefaultVersionName(): String = geodatabase.defaultVersionName

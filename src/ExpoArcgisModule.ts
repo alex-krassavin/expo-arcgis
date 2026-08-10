@@ -147,6 +147,7 @@ export declare class ServiceGeodatabaseRef extends SharedObject {
   switchVersion(name: string): Promise<void>;
   applyEdits(): Promise<EditResult[]>;
   undoLocalEdits(): Promise<void>;
+  refresh(): Promise<void>;
   hasLocalEdits(): boolean;
   getVersionName(): string;
   getDefaultVersionName(): string;

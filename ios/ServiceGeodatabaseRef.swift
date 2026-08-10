@@ -43,6 +43,13 @@ public final class ServiceGeodatabaseRef: SharedObject {
     try await geodatabase.undoLocalEdits()
   }
 
+  /// Re-reads the service's version state (ArcGIS 300.1). In a multi-user branch-versioning
+  /// workflow another client's edits to the current version are invisible until this runs; call it
+  /// before querying if a stale read would matter. Requires ArcGIS Enterprise 12.0+.
+  func refresh() async throws {
+    try await geodatabase.refresh()
+  }
+
   func hasLocalEdits() -> Bool { geodatabase.hasLocalEdits }
   func getVersionName() -> String { geodatabase.versionName }
   func getDefaultVersionName() -> String { geodatabase.defaultVersionName }

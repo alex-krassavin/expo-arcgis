@@ -128,6 +128,7 @@ public class ExpoArcgisExtrasModule: Module {
       AsyncFunction("undoLocalEdits") { (ref: ServiceGeodatabaseRef) in
         try await ref.undoLocalEdits()
       }
+      AsyncFunction("refresh") { (ref: ServiceGeodatabaseRef) in try await ref.refresh() }
       Function("hasLocalEdits") { (ref: ServiceGeodatabaseRef) in ref.hasLocalEdits() }
       Function("getVersionName") { (ref: ServiceGeodatabaseRef) in ref.getVersionName() }
       Function("getDefaultVersionName") { (ref: ServiceGeodatabaseRef) in ref.getDefaultVersionName() }

@@ -789,6 +789,12 @@ export type ServiceGeodatabaseHandle = {
   applyEdits(): Promise<EditResult[]>;
   /** Discards all local edits across connected tables. */
   undoLocalEdits(): Promise<void>;
+  /**
+   * Re-reads the service's version state (ArcGIS 300.1). In a multi-user branch-versioning
+   * workflow another client's edits to the current version stay invisible until this runs — call
+   * it before querying when a stale read would matter. Requires ArcGIS Enterprise 12.0+.
+   */
+  refresh(): Promise<void>;
   /** Whether any connected table has unsaved local edits. */
   hasLocalEdits(): boolean;
   /** The active version's name. */
