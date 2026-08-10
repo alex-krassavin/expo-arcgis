@@ -508,12 +508,30 @@ export type IdentifyResult = {
   vectorTileFeatures: VectorTileFeature[];
 };
 
+/** One media item in an evaluated popup. Mirrors `PopupMedia`. */
+export type PopupMediaInfo = {
+  title: string;
+  caption: string;
+  /**
+   * Text describing the media for screen readers (ArcGIS 300.1). Empty when the popup author set
+   * none — fall back to `caption` or `title` rather than leaving the image unlabelled.
+   */
+  alternativeText: string;
+  type: 'image' | 'bar-chart' | 'column-chart' | 'line-chart' | 'pie-chart' | 'unknown';
+  /** Image source, for `image` media. */
+  sourceUrl: string | null;
+  /** Where tapping the media should navigate, when the author set a link. */
+  linkUrl: string | null;
+};
+
 /** An evaluated popup from `identifyPopups` — a title plus formatted field label/value pairs. */
 export type PopupResult = {
   /** The popup's (evaluated) title. */
   title: string;
   /** Formatted fields, in the layer's popup-definition order. */
   fields: { label: string; value: string }[];
+  /** Images and charts the popup defines, in author order. Empty when it defines none. */
+  media: PopupMediaInfo[];
 };
 
 /** Imperative handle exposed by `<MapView>` via `ref`. */

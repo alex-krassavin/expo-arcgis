@@ -183,15 +183,43 @@ func serializePopups(_ results: [IdentifyLayerResult]) async -> [[String: Any]] 
     for popup in result.popups {
       _ = try? await popup.evaluateExpressions()
       var fields: [[String: Any]] = []
+      var media: [[String: Any]] = []
       for element in popup.evaluatedElements {
         if let fieldsElement = element as? FieldsPopupElement {
           for (label, value) in zip(fieldsElement.labels, fieldsElement.formattedValues) {
             fields.append(["label": label, "value": value])
           }
         }
+        // Media elements were being skipped entirely, so a popup's images and charts never
+        // reached JS. `alternativeText` is the 300.1 addition.
+        if let mediaElement = element as? MediaPopupElement {
+          media.append(contentsOf: mediaElement.media.map(serializePopupMedia))
+        }
       }
-      output.append(["title": popup.title, "fields": fields])
+      output.append(["title": popup.title, "fields": fields, "media": media])
     }
   }
   return output
+}
+
+/// Serializes a `PopupMedia` to `{ title, caption, alternativeText, type, sourceUrl, linkUrl }`.
+private func serializePopupMedia(_ item: PopupMedia) -> [String: Any] {
+  let type: String
+  switch item.kind {
+  case .image: type = "image"
+  case .barChart: type = "bar-chart"
+  case .columnChart: type = "column-chart"
+  case .lineChart: type = "line-chart"
+  case .pieChart: type = "pie-chart"
+  default: type = "unknown"
+  }
+  return [
+    "title": item.title,
+    "caption": item.caption,
+    // Added in ArcGIS 300.1; empty when the popup author set none.
+    "alternativeText": item.alternativeText,
+    "type": type,
+    "sourceUrl": item.value?.sourceURL?.absoluteString as Any,
+    "linkUrl": item.value?.linkURL?.absoluteString as Any,
+  ]
 }

@@ -10,6 +10,9 @@ import com.arcgismaps.data.StatisticRecord
 import com.arcgismaps.data.StatisticType
 import com.arcgismaps.data.StatisticsQueryParameters
 import com.arcgismaps.mapping.popup.FieldsPopupElement
+import com.arcgismaps.mapping.popup.MediaPopupElement
+import com.arcgismaps.mapping.popup.PopupMedia
+import com.arcgismaps.mapping.popup.PopupMediaType
 import com.arcgismaps.mapping.layers.VectorTileFeature
 import com.arcgismaps.mapping.layers.VectorTileStyleLayerType
 import com.arcgismaps.mapping.view.IdentifyLayerResult
@@ -169,15 +172,39 @@ internal suspend fun serializePopups(results: List<IdentifyLayerResult>): List<M
     for (popup in result.popups) {
       popup.evaluateExpressions()
       val fields = mutableListOf<Map<String, Any?>>()
+      val media = mutableListOf<Map<String, Any?>>()
       for (element in popup.evaluatedElements) {
         if (element is FieldsPopupElement) {
           element.labels.zip(element.formattedValues).forEach { (label, value) ->
             fields.add(mapOf("label" to label, "value" to value))
           }
         }
+        // Media elements were being skipped entirely, so a popup's images and charts never
+        // reached JS. `alternativeText` is the 300.1 addition.
+        if (element is MediaPopupElement) {
+          element.media.forEach { media.add(serializePopupMedia(it)) }
+        }
       }
-      output.add(mapOf("title" to popup.title, "fields" to fields))
+      output.add(mapOf("title" to popup.title, "fields" to fields, "media" to media))
     }
   }
   return output
 }
+
+/** Serializes a [PopupMedia] to `{ title, caption, alternativeText, type, sourceUrl, linkUrl }`. */
+private fun serializePopupMedia(item: PopupMedia): Map<String, Any?> = mapOf(
+  "title" to item.title,
+  "caption" to item.caption,
+  // Added in ArcGIS 300.1; empty when the popup author set none.
+  "alternativeText" to item.alternativeText,
+  "type" to when (item.type) {
+    PopupMediaType.Image -> "image"
+    PopupMediaType.BarChart -> "bar-chart"
+    PopupMediaType.ColumnChart -> "column-chart"
+    PopupMediaType.LineChart -> "line-chart"
+    PopupMediaType.PieChart -> "pie-chart"
+    else -> "unknown"
+  },
+  "sourceUrl" to item.value?.sourceUrl?.takeIf { it.isNotEmpty() },
+  "linkUrl" to item.value?.linkUrl?.takeIf { it.isNotEmpty() },
+)
