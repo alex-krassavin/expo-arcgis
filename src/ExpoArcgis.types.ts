@@ -2180,6 +2180,18 @@ export type OfflineMapParameterOverrides = {
    * E.g. `5000` drops levels finer than 1:5 000, meaningfully reducing download size.
    */
   maxScale?: number;
+  /**
+   * Use a basemap already on the device instead of downloading one. The basemap is by far the
+   * largest part of an offline map, so pointing at a file you ship or side-load cuts the download
+   * to the operational layers alone.
+   *
+   * Name the file (e.g. `basemap.tpkx`), and set `referenceBasemapDirectory` to the folder holding
+   * it. Tile and vector-tile packages have always worked; ArcGIS 300.1 added georeferenced PDFs
+   * and raster files.
+   */
+  referenceBasemapFilename?: string;
+  /** Folder containing `referenceBasemapFilename`. Required when that is set. */
+  referenceBasemapDirectory?: string;
 };
 
 // ────────────────────────────────────────────────────────────────────────────

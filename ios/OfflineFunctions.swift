@@ -38,6 +38,17 @@ func generateOfflineMap(
   let parameters = try await task.makeDefaultGenerateOfflineMapParameters(areaOfInterest: area)
   let directory = offlineDownloadURL(downloadName)
 
+  // A reference basemap swaps the downloaded basemap for one already on the device — the basemap
+  // is the bulk of an offline map, so this cuts the download to the operational layers. 300.1
+  // widened the accepted formats from tile/vector-tile packages to georeferenced PDFs and rasters.
+  // Swift takes the folder as a URL where Kotlin takes a path string.
+  if let filename = overridesDict?["referenceBasemapFilename"] as? String {
+    parameters.referenceBasemapFilename = filename
+  }
+  if let directoryPath = overridesDict?["referenceBasemapDirectory"] as? String {
+    parameters.referenceBasemapDirectoryURL = URL(fileURLWithPath: directoryPath)
+  }
+
   // Build parameter overrides when the caller supplied an overrides dictionary.
   var paramOverrides: GenerateOfflineMapParameterOverrides?
   if let dict = overridesDict {

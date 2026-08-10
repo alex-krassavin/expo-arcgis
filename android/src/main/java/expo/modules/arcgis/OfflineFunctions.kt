@@ -57,6 +57,16 @@ internal suspend fun generateOfflineMap(
   val parameters = task.createDefaultGenerateOfflineMapParameters(area).getOrThrow()
   val dir = offlineDownloadDir(baseDir, downloadName)
 
+  // A reference basemap swaps the downloaded basemap for one already on the device — the basemap
+  // is the bulk of an offline map, so this cuts the download to the operational layers. 300.1
+  // widened the accepted formats from tile/vector-tile packages to georeferenced PDFs and rasters.
+  (overrides?.get("referenceBasemapFilename") as? String)?.let {
+    parameters.referenceBasemapFilename = it
+  }
+  (overrides?.get("referenceBasemapDirectory") as? String)?.let {
+    parameters.referenceBasemapDirectory = it
+  }
+
   val paramOverrides = overrides?.let {
     val minScale = (it["minScale"] as? Number)?.toDouble() ?: 0.0
     val maxScale = (it["maxScale"] as? Number)?.toDouble() ?: 0.0
