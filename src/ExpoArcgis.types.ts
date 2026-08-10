@@ -1961,11 +1961,32 @@ export type UtilityElementInfo = {
 };
 
 /** Result of `UtilityNetwork.trace`. Flattens the native `UtilityElementTraceResult`. */
+/** What a trace function computed along the traced path. Mirrors `UtilityTraceFunctionOutput`. */
+export type UtilityTraceFunctionResult = {
+  /**
+   * The function's name when the trace configuration gave it one, otherwise empty. Named trace
+   * functions arrived in ArcGIS 300.1 (ArcGIS Pro 3.7+ / Enterprise 12.1+) — before that a
+   * configuration with several functions of the same type could not be told apart in the results.
+   */
+  name: string;
+  /** Which aggregation the function applied. */
+  type: 'add' | 'average' | 'count' | 'max' | 'min' | 'subtract';
+  /** Network attribute the function aggregated. */
+  networkAttributeName: string;
+  /** The computed value. */
+  result: unknown;
+};
+
 export type UtilityTraceResult = {
   /** Number of elements found by the trace. */
   elementCount: number;
   /** The elements found by the trace. */
   elements: UtilityElementInfo[];
+  /**
+   * Values computed by the trace configuration's functions — total length along the path, a
+   * device count, and so on. Empty when the configuration defines no functions.
+   */
+  functionResults: UtilityTraceFunctionResult[];
 };
 
 /** Props for `<UtilityNetwork>` — a utility network loaded from a feature service, a child of `<Map>`. */

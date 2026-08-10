@@ -11,6 +11,9 @@ import com.arcgismaps.mapping.layers.SelectionMode
 import com.arcgismaps.utilitynetworks.UtilityAssociationType
 import com.arcgismaps.utilitynetworks.UtilityElement
 import com.arcgismaps.utilitynetworks.UtilityElementTraceResult
+import com.arcgismaps.utilitynetworks.UtilityFunctionTraceResult
+import com.arcgismaps.utilitynetworks.UtilityTraceFunctionOutput
+import com.arcgismaps.utilitynetworks.UtilityTraceFunctionType
 import com.arcgismaps.utilitynetworks.UtilityNamedTraceConfiguration
 import com.arcgismaps.utilitynetworks.UtilityNamedTraceConfigurationQueryParameters
 import com.arcgismaps.utilitynetworks.UtilityNetwork
@@ -174,11 +177,33 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     val found = results.filterIsInstance<UtilityElementTraceResult>().firstOrNull()?.elements
       ?: emptyList()
     if (select) selectElements(found)
+    // Function outputs come back as their own result type — what the configuration's functions
+    // computed along the path (total length, device count…), separate from the elements found.
+    val functionOutputs = results.filterIsInstance<UtilityFunctionTraceResult>()
+      .flatMap { it.functionOutputs }
     return mapOf(
       "elementCount" to found.size,
       "elements" to found.map { serializeUtilityElement(it) },
+      "functionResults" to functionOutputs.map { serializeTraceFunctionOutput(it) },
     )
   }
+
+  /** Serializes a [UtilityTraceFunctionOutput] to `{ name, type, networkAttributeName, result }`. */
+  private fun serializeTraceFunctionOutput(output: UtilityTraceFunctionOutput): Map<String, Any?> =
+    mapOf(
+      // Named trace functions are new in 300.1; older configurations leave this empty.
+      "name" to output.function.functionName,
+      "type" to when (output.function.functionType) {
+        UtilityTraceFunctionType.Add -> "add"
+        UtilityTraceFunctionType.Average -> "average"
+        UtilityTraceFunctionType.Count -> "count"
+        UtilityTraceFunctionType.Max -> "max"
+        UtilityTraceFunctionType.Min -> "min"
+        else -> "subtract"
+      },
+      "networkAttributeName" to output.function.networkAttribute.name,
+      "result" to output.result,
+    )
 
   /** Selects the trace-result features on their corresponding feature layers (best-effort). */
   private suspend fun selectElements(elements: List<UtilityElement>) {
@@ -190,7 +215,8 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     }
   }
 
-  private fun emptyTraceResult(): Map<String, Any?> = mapOf("elementCount" to 0, "elements" to emptyList<Any?>())
+  private fun emptyTraceResult(): Map<String, Any?> =
+    mapOf("elementCount" to 0, "elements" to emptyList<Any?>(), "functionResults" to emptyList<Any?>())
 }
 
 /** Resolves a JS descriptor (asset-type path + global id) to a [UtilityElement] via the definition. */

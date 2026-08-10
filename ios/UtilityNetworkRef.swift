@@ -146,9 +146,36 @@ public final class UtilityNetworkRef: SharedObject {
     let results = try await network.trace(using: parameters)
     let found = results.compactMap { $0 as? UtilityElementTraceResult }.first?.elements ?? []
     if select { await selectElements(found) }
+    // Function outputs come back as their own result type — what the configuration's functions
+    // computed along the path (total length, device count…), separate from the elements found.
+    let functionOutputs = results
+      .compactMap { $0 as? UtilityFunctionTraceResult }
+      .flatMap(\.functionOutputs)
     return [
       "elementCount": found.count,
       "elements": found.map(serializeUtilityElement),
+      "functionResults": functionOutputs.map(serializeTraceFunctionOutput),
+    ]
+  }
+
+  /// Serializes a `UtilityTraceFunctionOutput` to `{ name, type, networkAttributeName, result }`.
+  private func serializeTraceFunctionOutput(_ output: UtilityTraceFunctionOutput) -> [String: Any] {
+    let type: String
+    switch output.function.kind {
+    case .add: type = "add"
+    case .average: type = "average"
+    case .count: type = "count"
+    case .max: type = "max"
+    case .min: type = "min"
+    default: type = "subtract"
+    }
+    return [
+      // Named trace functions are new in 300.1; older configurations leave this empty.
+      // Swift spells the property `name` and the kind `kind`; Kotlin uses `functionName`/`functionType`.
+      "name": output.function.name,
+      "type": type,
+      "networkAttributeName": output.function.networkAttribute.name,
+      "result": output.result,
     ]
   }
 
@@ -164,7 +191,9 @@ public final class UtilityNetworkRef: SharedObject {
     }
   }
 
-  private var emptyTraceResult: [String: Any] { ["elementCount": 0, "elements": []] }
+  private var emptyTraceResult: [String: Any] {
+    ["elementCount": 0, "elements": [], "functionResults": []]
+  }
 }
 
 /// Resolves a JS descriptor (asset-type path + global id) to a `UtilityElement` via the definition.
