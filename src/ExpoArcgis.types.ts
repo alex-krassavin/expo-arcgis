@@ -680,6 +680,15 @@ export type FeatureLayerHandle = {
   undoLocalEdits(): Promise<void>;
   /** Queries features related to `objectId` across all relationships, grouped by relationship. */
   queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
+  /**
+   * The UI schema of the layer's `dictionaryRenderer` style, as a JSON string, or `null` when the
+   * layer has no dictionary renderer (ArcGIS 300.1).
+   *
+   * The schema lists the style's configuration rules and each symbology field's allowed values —
+   * what you need to build a symbol picker for military or utility symbology instead of asking
+   * the user to type raw SIDC-style codes.
+   */
+  getDictionarySymbolStyleSchema(): Promise<string | null>;
   /** Returns the metadata for all attachments on the feature with `objectId`. */
   queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
   /**

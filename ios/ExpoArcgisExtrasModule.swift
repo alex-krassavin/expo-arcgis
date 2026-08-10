@@ -64,6 +64,9 @@ public class ExpoArcgisExtrasModule: Module {
       AsyncFunction("queryRelatedFeatures") { (ref: FeatureLayerRef, objectId: Int) in
         try await ref.queryRelatedFeatures(objectId)
       }
+      AsyncFunction("getDictionarySymbolStyleSchema") { (ref: FeatureLayerRef) in
+        try await ref.getDictionarySymbolStyleSchema()
+      }
       AsyncFunction("queryAttachments") { (ref: FeatureLayerRef, objectId: Int) in
         try await ref.queryAttachments(objectId)
       }

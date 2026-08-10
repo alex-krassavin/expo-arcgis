@@ -263,6 +263,17 @@ class FeatureLayerRef private constructor(
     return ServiceGeodatabaseRef(ctx, geodatabase).also { cachedServiceGeodatabase = it }
   }
 
+  /**
+   * The UI schema of the layer's dictionary-renderer style (ArcGIS 300.1), or null when the layer
+   * has no dictionary renderer. Lists the style's configuration rules and each symbology field's
+   * allowed values — the input for building a symbol picker instead of typing raw codes.
+   */
+  suspend fun getDictionarySymbolStyleSchema(): String? {
+    val style = (layer.renderer as? DictionaryRenderer)?.dictionarySymbolStyle ?: return null
+    style.load().getOrThrow()
+    return style.uiSchemaJson
+  }
+
   /** Queries features related to `objectId` (across all relationships); returns groups by relationship. */
   suspend fun queryRelatedFeatures(objectId: Long): List<Map<String, Any?>> {
     val table = resolvedTable()

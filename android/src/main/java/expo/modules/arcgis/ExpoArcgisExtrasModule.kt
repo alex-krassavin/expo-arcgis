@@ -68,6 +68,9 @@ class ExpoArcgisExtrasModule : Module() {
       AsyncFunction("queryRelatedFeatures") Coroutine { ref: FeatureLayerRef, objectId: Long ->
         ref.queryRelatedFeatures(objectId)
       }
+      AsyncFunction("getDictionarySymbolStyleSchema") Coroutine { ref: FeatureLayerRef ->
+        ref.getDictionarySymbolStyleSchema()
+      }
       AsyncFunction("queryAttachments") Coroutine { ref: FeatureLayerRef, objectId: Long ->
         ref.queryAttachments(objectId)
       }

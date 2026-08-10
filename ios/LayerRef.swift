@@ -240,6 +240,18 @@ public final class FeatureLayerRef: LayerRef {
     return ref
   }
 
+  /// The UI schema of the layer's dictionary-renderer style (ArcGIS 300.1), or nil when the layer
+  /// has no dictionary renderer. Lists the style's configuration rules and each symbology field's
+  /// allowed values — the input for building a symbol picker instead of typing raw codes.
+  /// Swift hands the schema over as `Data`; Kotlin as a `String`. JS sees a string either way.
+  func getDictionarySymbolStyleSchema() async throws -> String? {
+    guard let featureLayer = layer as? FeatureLayer,
+      let style = (featureLayer.renderer as? DictionaryRenderer)?.dictionarySymbolStyle
+    else { return nil }
+    try await style.load()
+    return String(data: style.uiSchemaJSON, encoding: .utf8)
+  }
+
   /// Queries features related to `objectId` (across all relationships); returns groups by relationship.
   func queryRelatedFeatures(_ objectId: Int) async throws -> [[String: Any]] {
     let table = try await resolvedTable()
