@@ -85,19 +85,47 @@ abstract class LayerRef(appContext: AppContext) : SharedObject(appContext) {
   }
 }
 
-/** Operational FeatureLayer from a feature service URL or a local shapefile. */
-class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) : LayerRef(appContext) {
-  override val layer: FeatureLayer = FeatureLayer.createWithFeatureTable(table)
+/** Operational FeatureLayer from a feature service URL, a portal item, or a local shapefile. */
+class FeatureLayerRef private constructor(
+  appContext: AppContext,
+  override val layer: FeatureLayer,
+  /**
+   * The table this layer was built around, when one was supplied up front. A layer built from a
+   * portal item has none until it loads, so this is null in that case — call [resolvedTable]
+   * rather than reading this.
+   */
+  private val providedTable: FeatureTable?,
+) : LayerRef(appContext) {
   private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-  /** Builds the layer from declarative props (a feature-service URL or a local shapefile). */
-  constructor(appContext: AppContext, props: Map<String, Any?>) : this(appContext, featureTable(props))
+  /** Wraps an existing feature table (e.g. from a ServiceGeodatabase version or a Geodatabase). */
+  constructor(appContext: AppContext, table: FeatureTable) :
+    this(appContext, FeatureLayer.createWithFeatureTable(table), table)
+
+  /** Builds the layer from declarative props (a feature-service URL, portal item, or shapefile). */
+  constructor(appContext: AppContext, props: Map<String, Any?>) : this(appContext, featureLayerParts(props))
+
+  private constructor(appContext: AppContext, parts: Pair<FeatureLayer, FeatureTable?>) :
+    this(appContext, parts.first, parts.second)
+
+  /**
+   * The layer's feature table. A portal-item layer only gains one once it has loaded, so this
+   * loads it on first use; every caller is already a suspend function. Throws rather than
+   * returning null so a caller cannot silently no-op on a layer that failed to load.
+   */
+  private suspend fun resolvedTable(): FeatureTable {
+    providedTable?.let { return it }
+    layer.load().getOrThrow()
+    return layer.featureTable
+      ?: throw IllegalStateException("Portal item has no feature table — check the item type and layerId")
+  }
 
   /** Lazily-built branch-versioning handle for this layer's service geodatabase (cached). */
   private var cachedServiceGeodatabase: ServiceGeodatabaseRef? = null
 
   /** Returns the features matching `query` (all features when null). Loads attributes in full. */
   suspend fun queryFeatures(query: Map<String, Any?>?): List<Map<String, Any?>> {
+    val table = resolvedTable()
     val params = buildQueryParameters(query)
     val outFields = outFieldsFromQuery(query)
     val result = if (table is ServiceFeatureTable) {
@@ -109,16 +137,17 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
   }
 
   suspend fun queryFeatureCount(query: Map<String, Any?>?): Long =
-    table.queryFeatureCount(buildQueryParameters(query)).getOrThrow()
+    resolvedTable().queryFeatureCount(buildQueryParameters(query)).getOrThrow()
 
   suspend fun queryExtent(query: Map<String, Any?>?): Map<String, Any?> =
-    dictFromGeometry(table.queryExtent(buildQueryParameters(query)).getOrThrow())
+    dictFromGeometry(resolvedTable().queryExtent(buildQueryParameters(query)).getOrThrow())
 
   suspend fun queryStatistics(query: Map<String, Any?>): List<Map<String, Any?>> =
-    table.queryStatistics(buildStatisticsQueryParameters(query)).getOrThrow().map { serializeStatisticRecord(it) }
+    resolvedTable().queryStatistics(buildStatisticsQueryParameters(query)).getOrThrow().map { serializeStatisticRecord(it) }
 
   /** Returns the table's editing templates (name + prototype attributes), for building edit UIs. */
   suspend fun queryFeatureTemplates(): List<Map<String, Any?>> {
+    val table = resolvedTable()
     table.load().getOrThrow()
     val templates = (table as? ArcGISFeatureTable)?.featureTemplates ?: emptyList()
     return templates.map { template ->
@@ -132,6 +161,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * pushes the edit and returns the new object id; pass `apply = false` for a local-only edit.
    */
   suspend fun addFeatureWithTemplate(templateName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
+    val table = resolvedTable()
     table.load().getOrThrow()
     val arcGISTable = table as? ArcGISFeatureTable
       ?: throw IllegalStateException("addFeatureWithTemplate requires an ArcGIS feature table (not a shapefile or WFS table)")
@@ -152,6 +182,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * `apply = false` for a local-only edit.
    */
   suspend fun addFeatureWithSubtype(subtypeName: String, attributes: Map<String, Any?>?, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
+    val table = resolvedTable()
     table.load().getOrThrow()
     val arcGISTable = table as? ArcGISFeatureTable
       ?: throw IllegalStateException("addFeatureWithSubtype requires an ArcGIS feature table (not a shapefile or WFS table)")
@@ -170,6 +201,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * pass `apply = false` to make a local-only edit (batch with `applyEdits`).
    */
   suspend fun addFeature(attributes: Map<String, Any?>, geometry: Map<String, Any?>?, apply: Boolean?): Long? {
+    val table = resolvedTable()
     val feature = table.createFeature()
     applyAttributes(feature, attributes)
     geometry?.let { dict -> geometryFromDict(dict)?.let { feature.geometry = it } }
@@ -180,6 +212,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
 
   /** Updates the feature with `objectId`. Pass `apply = false` for a local-only edit. */
   suspend fun updateFeature(objectId: Long, changes: Map<String, Any?>, apply: Boolean?) {
+    val table = resolvedTable()
     val feature = featureByObjectId(objectId) ?: return
     (changes["attributes"] as? Map<*, *>)?.let { applyAttributes(feature, it) }
     (changes["geometry"] as? Map<*, *>)?.let { geometryFromDict(it)?.let { g -> feature.geometry = g } }
@@ -189,6 +222,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
 
   /** Deletes the feature with `objectId`. Pass `apply = false` for a local-only edit. */
   suspend fun deleteFeature(objectId: Long, apply: Boolean?) {
+    val table = resolvedTable()
     val feature = featureByObjectId(objectId) ?: return
     table.deleteFeature(feature).getOrThrow()
     if (apply != false) persistEdits()
@@ -196,6 +230,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
 
   /** Pushes all pending local edits to the service in one batch; returns each edit's result. */
   suspend fun applyEdits(): List<Map<String, Any?>> {
+    val table = resolvedTable()
     val serviceTable = table as? ServiceFeatureTable ?: return emptyList()
     return serviceTable.applyEdits().getOrThrow().map {
       mapOf("objectId" to it.objectId, "completedWithErrors" to it.completedWithErrors)
@@ -204,6 +239,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
 
   /** Discards all pending local edits (since the last `applyEdits`). */
   suspend fun undoLocalEdits() {
+    val table = resolvedTable()
     (table as? ServiceFeatureTable)?.undoLocalEdits()?.getOrThrow()
   }
 
@@ -213,6 +249,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * service. The same handle is returned on repeat calls.
    */
   suspend fun getServiceGeodatabase(): ServiceGeodatabaseRef {
+    val table = resolvedTable()
     cachedServiceGeodatabase?.let { return it }
     val serviceTable = table as? ServiceFeatureTable
       ?: throw IllegalStateException("Layer is not backed by a service feature table")
@@ -226,6 +263,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
 
   /** Queries features related to `objectId` (across all relationships); returns groups by relationship. */
   suspend fun queryRelatedFeatures(objectId: Long): List<Map<String, Any?>> {
+    val table = resolvedTable()
     val arcgisTable = table as? ArcGISFeatureTable ?: return emptyList()
     val feature = featureByObjectId(objectId) as? ArcGISFeature ?: return emptyList()
     return arcgisTable.queryRelatedFeatures(feature).getOrThrow().map { result ->
@@ -310,6 +348,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * Returns an empty list when no constraints are defined for [fieldName].
    */
   suspend fun contingentValues(attributes: Map<String, Any?>, fieldName: String): List<Map<String, Any?>> {
+    val table = resolvedTable()
     table.load().getOrThrow()
     val arcGISTable = table as? ArcGISFeatureTable
       ?: throw IllegalStateException("contingentValues requires an ArcGIS feature table (not a shapefile or WFS table)")
@@ -336,6 +375,7 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
    * Exotic subtypes are serialized as `{ type: "any" }` / `{ type: "null" }`.
    */
   suspend fun getContingentValues(objectId: Long, fieldName: String): Map<String, Any?> {
+    val table = resolvedTable()
     table.load().getOrThrow()
     val arcGISTable = table as? ArcGISFeatureTable
       ?: throw IllegalStateException("getContingentValues requires an ArcGIS feature table (not a shapefile or WFS table)")
@@ -375,12 +415,14 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
   }
 
   private suspend fun featureByObjectId(objectId: Long): Feature? {
+    val table = resolvedTable()
     val params = QueryParameters().apply { objectIds.add(objectId) }
     return table.queryFeatures(params).getOrThrow().firstOrNull()
   }
 
   /** Pushes pending local edits to the feature service (no-op for non-service tables). */
   private suspend fun persistEdits(): Long? {
+    val table = resolvedTable()
     val serviceTable = table as? ServiceFeatureTable ?: return null
     return serviceTable.applyEdits().getOrThrow().firstOrNull()?.objectId
   }
@@ -483,6 +525,31 @@ class FeatureLayerRef(appContext: AppContext, private val table: FeatureTable) :
       layer.refreshInterval = if (seconds > 0L) seconds * 1000L else null
     }
   }
+}
+
+/**
+ * Builds the layer and, when one exists up front, its table. A portal item carries its own layer
+ * definition — renderer, definition expression, popups — so the SDK applies the symbology authored
+ * in ArcGIS Online rather than the service default.
+ */
+private fun featureLayerParts(props: Map<String, Any?>): Pair<FeatureLayer, FeatureTable?> {
+  val item = portalItemFrom(props["portalItem"])
+  if (item != null) {
+    val layerId = (props["layerId"] as? Number)?.toLong()
+    val layer = if (layerId != null) FeatureLayer.createWithItemAndLayerId(item, layerId)
+    else FeatureLayer.createWithItem(item)
+    return layer to null
+  }
+  val table = featureTable(props)
+  return FeatureLayer.createWithFeatureTable(table) to table
+}
+
+/** Builds a [PortalItem] from a `{ itemId, portalUrl }` prop dict, defaulting to ArcGIS Online. */
+private fun portalItemFrom(value: Any?): PortalItem? {
+  val dict = value as? Map<*, *> ?: return null
+  val itemId = dict["itemId"] as? String ?: return null
+  val portalUrl = dict["portalUrl"] as? String ?: "https://www.arcgis.com"
+  return PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId)
 }
 
 /** Builds a [FeatureTable] from a JS source: `{type:"shapefile",path}` or a service URL (or `url`). */

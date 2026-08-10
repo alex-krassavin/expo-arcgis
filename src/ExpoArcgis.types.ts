@@ -232,6 +232,22 @@ export type DictionaryRendererProp = {
 export type FeatureLayerProps = LayerProps & {
   /** Feature service URL — shorthand for `source: { type: 'service', url }`. */
   url?: string;
+  /**
+   * Build the layer from an ArcGIS portal item rather than a service URL. The item's own layer
+   * definition comes with it — renderer, definition expression, popups — so symbology authored in
+   * ArcGIS Online is applied without restating it here. A service URL only ever carries the
+   * symbology the service was published with.
+   *
+   * Takes precedence over `url` / `source`. Construction-only (set once; remount to change).
+   * The layer's feature table does not exist until the layer loads, so the query and edit methods
+   * on the ref load it on first use.
+   */
+  portalItem?: PortalItem;
+  /**
+   * Which sublayer of a feature *service* item to display. Ignored unless `portalItem` is set, and
+   * unnecessary for an item that already refers to a single feature layer.
+   */
+  layerId?: number;
   /** Explicit feature-table source (service or local shapefile). */
   source?: FeatureTableSource;
   /**

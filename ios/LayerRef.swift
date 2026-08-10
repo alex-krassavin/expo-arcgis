@@ -28,27 +28,61 @@ public class LayerRef: SharedObject {
   }
 }
 
-/// Operational FeatureLayer from a feature service URL or a local shapefile.
+/// Operational FeatureLayer from a feature service URL, a portal item, or a local shapefile.
 public final class FeatureLayerRef: LayerRef {
-  private let table: FeatureTable
+  /// The table this layer was built around, when one was supplied up front. A layer built from a
+  /// portal item has none until it loads, so this is nil in that case — read `resolvedTable()`
+  /// rather than this.
+  private let providedTable: FeatureTable?
   /// Lazily-built branch-versioning handle for this layer's service geodatabase (cached).
   private var cachedServiceGeodatabase: ServiceGeodatabaseRef?
 
   init(props: [String: Any]) {
-    let table = featureTable(from: props)
-    self.table = table
-    super.init(layer: FeatureLayer(featureTable: table))
+    if let item = portalItem(from: props["portalItem"]) {
+      // The item carries its own layer definition — renderer, definition expression, popups — so
+      // the SDK applies the symbology authored in ArcGIS Online rather than the service default.
+      providedTable = nil
+      if let layerID = (props["layerId"] as? NSNumber)?.intValue {
+        super.init(layer: FeatureLayer(featureServiceItem: item, layerID: layerID))
+      } else {
+        super.init(layer: FeatureLayer(item: item))
+      }
+    } else {
+      let table = featureTable(from: props)
+      providedTable = table
+      super.init(layer: FeatureLayer(featureTable: table))
+    }
   }
 
   /// Wraps an existing feature table (e.g. one from a `ServiceGeodatabase` version or a local
   /// `Geodatabase`) so it can be displayed via `<FeatureLayer layer>` and edited.
   init(table: FeatureTable) {
-    self.table = table
+    providedTable = table
     super.init(layer: FeatureLayer(featureTable: table))
+  }
+
+  /// The layer's feature table. A portal-item layer only gains one once it has loaded, so this
+  /// loads it on first use; every caller is already async. Throws rather than returning nil so a
+  /// caller cannot silently no-op on a layer that failed to load.
+  private func resolvedTable() async throws -> FeatureTable {
+    if let providedTable { return providedTable }
+    guard let featureLayer = layer as? FeatureLayer else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 8,
+        userInfo: [NSLocalizedDescriptionKey: "Layer is not a feature layer"])
+    }
+    try await featureLayer.load()
+    guard let table = featureLayer.featureTable else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 9,
+        userInfo: [NSLocalizedDescriptionKey: "Portal item has no feature table — check the item type and layerId"])
+    }
+    return table
   }
 
   /// Returns the features matching `query` (all features when nil). Loads attributes in full.
   func queryFeatures(_ query: [String: Any]?) async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     let params = buildQueryParameters(query)
     let outFields = query?["outFields"] as? [String] ?? []
     let result: FeatureQueryResult
@@ -61,20 +95,24 @@ public final class FeatureLayerRef: LayerRef {
   }
 
   func queryFeatureCount(_ query: [String: Any]?) async throws -> Int {
-    try await table.queryFeatureCount(using: buildQueryParameters(query))
+    let table = try await resolvedTable()
+    return try await table.queryFeatureCount(using: buildQueryParameters(query))
   }
 
   func queryExtent(_ query: [String: Any]?) async throws -> [String: Any] {
-    dictFromGeometry(try await table.queryExtent(using: buildQueryParameters(query)))
+    let table = try await resolvedTable()
+    return dictFromGeometry(try await table.queryExtent(using: buildQueryParameters(query)))
   }
 
   func queryStatistics(_ query: [String: Any]) async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     let result = try await table.queryStatistics(using: buildStatisticsQueryParameters(query))
     return result.statisticRecords().map(serializeStatisticRecord)
   }
 
   /// Returns the table's editing templates (name + prototype attributes), for building edit UIs.
   func queryFeatureTemplates() async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     try await table.load()
     let templates = (table as? ArcGISFeatureTable)?.featureTemplates ?? []
     return templates.map { template in
@@ -86,6 +124,7 @@ public final class FeatureLayerRef: LayerRef {
   /// optionally applies `attributes` on top and sets `geometry`. When `apply` is not `false`,
   /// pushes the edit and returns the new object id; pass `apply: false` for a local-only edit.
   func addFeatureWithTemplate(_ templateName: String, _ attributes: [String: Any]?, _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {
+    let table = try await resolvedTable()
     try await table.load()
     guard let arcGISTable = table as? ArcGISFeatureTable else {
       throw NSError(
@@ -110,6 +149,7 @@ public final class FeatureLayerRef: LayerRef {
   /// When `apply` is not `false`, pushes the edit and returns the new object id; pass
   /// `apply: false` for a local-only edit.
   func addFeatureWithSubtype(_ subtypeName: String, _ attributes: [String: Any]?, _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {
+    let table = try await resolvedTable()
     try await table.load()
     guard let arcGISTable = table as? ArcGISFeatureTable else {
       throw NSError(
@@ -132,6 +172,7 @@ public final class FeatureLayerRef: LayerRef {
   /// Adds a feature. When `apply` is not `false`, pushes the edit and returns the new object id;
   /// pass `apply: false` to make a local-only edit (batch with `applyEdits`).
   func addFeature(_ attributes: [String: Any], _ geometry: [String: Any]?, _ apply: Bool?) async throws -> Int? {
+    let table = try await resolvedTable()
     let feature = table.makeFeature()
     applyAttributes(feature, attributes)
     if let geometry = geometry.flatMap(geometryFromDict) { feature.geometry = geometry }
@@ -142,6 +183,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Updates the feature with `objectId`. Pass `apply: false` for a local-only edit.
   func updateFeature(_ objectId: Int, _ changes: [String: Any], _ apply: Bool?) async throws {
+    let table = try await resolvedTable()
     guard let feature = try await featureByObjectId(objectId) else { return }
     if let attributes = changes["attributes"] as? [String: Any] { applyAttributes(feature, attributes) }
     if let geometry = (changes["geometry"] as? [String: Any]).flatMap(geometryFromDict) { feature.geometry = geometry }
@@ -151,6 +193,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Deletes the feature with `objectId`. Pass `apply: false` for a local-only edit.
   func deleteFeature(_ objectId: Int, _ apply: Bool?) async throws {
+    let table = try await resolvedTable()
     guard let feature = try await featureByObjectId(objectId) else { return }
     try await table.delete(feature)
     if apply != false { _ = try await persistEdits() }
@@ -158,6 +201,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Pushes all pending local edits to the service in one batch; returns each edit's result.
   func applyEdits() async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     guard let serviceTable = table as? ServiceFeatureTable else { return [] }
     return try await serviceTable.applyEdits().map {
       ["objectId": $0.objectID, "completedWithErrors": $0.didCompleteWithErrors]
@@ -166,6 +210,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Discards all pending local edits (since the last `applyEdits`).
   func undoLocalEdits() async throws {
+    let table = try await resolvedTable()
     guard let serviceTable = table as? ServiceFeatureTable else { return }
     try await serviceTable.undoLocalEdits()
   }
@@ -174,6 +219,7 @@ public final class FeatureLayerRef: LayerRef {
   /// first (so the geodatabase is populated). Throws if the layer is not backed by a feature
   /// service. The same handle is returned on repeat calls.
   func getServiceGeodatabase() async throws -> ServiceGeodatabaseRef {
+    let table = try await resolvedTable()
     if let cached = cachedServiceGeodatabase { return cached }
     guard let serviceTable = table as? ServiceFeatureTable else {
       throw NSError(
@@ -194,6 +240,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Queries features related to `objectId` (across all relationships); returns groups by relationship.
   func queryRelatedFeatures(_ objectId: Int) async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     guard let arcgisTable = table as? ArcGISFeatureTable,
       let feature = try await featureByObjectId(objectId) as? ArcGISFeature
     else { return [] }
@@ -290,6 +337,7 @@ public final class FeatureLayerRef: LayerRef {
   /// Requires an `ArcGISFeatureTable`; throws for shapefiles and WFS tables.
   /// Returns an empty array when no constraints are defined for `fieldName`.
   func contingentValues(_ attributes: [String: Any], _ fieldName: String) async throws -> [[String: Any]] {
+    let table = try await resolvedTable()
     try await table.load()
     guard let arcGISTable = table as? ArcGISFeatureTable else {
       throw NSError(
@@ -322,6 +370,7 @@ public final class FeatureLayerRef: LayerRef {
   /// Exotic subtypes (`ContingentAnyValue`, `ContingentNullValue`) are serialized as
   /// `{ type: "any" }` / `{ type: "null" }` — consumers should treat them as "any value allowed".
   func getContingentValues(_ objectId: Int, _ fieldName: String) async throws -> [String: Any] {
+    let table = try await resolvedTable()
     try await table.load()
     guard let arcGISTable = table as? ArcGISFeatureTable else {
       throw NSError(
@@ -343,6 +392,7 @@ public final class FeatureLayerRef: LayerRef {
   }
 
   private func featureByObjectId(_ objectId: Int) async throws -> Feature? {
+    let table = try await resolvedTable()
     let params = QueryParameters()
     params.addObjectIDs([objectId])
     return Array(try await table.queryFeatures(using: params).features()).first
@@ -350,6 +400,7 @@ public final class FeatureLayerRef: LayerRef {
 
   /// Pushes pending local edits to the feature service (no-op for non-service tables).
   private func persistEdits() async throws -> Int? {
+    let table = try await resolvedTable()
     guard let serviceTable = table as? ServiceFeatureTable else { return nil }
     return try await serviceTable.applyEdits().first?.objectID
   }
@@ -411,6 +462,22 @@ public final class FeatureLayerRef: LayerRef {
       featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil
     }
   }
+}
+
+/// Builds a `PortalItem` from a `{ itemId, portalUrl }` prop dict, defaulting to anonymous
+/// ArcGIS Online. Shared by the layer/map/scene props that accept a portal item.
+func portalItem(from value: Any?) -> PortalItem? {
+  guard let dict = value as? [String: Any],
+    let itemId = dict["itemId"] as? String,
+    let id = PortalItem.ID(itemId)
+  else { return nil }
+  let portal: Portal
+  if let urlString = dict["portalUrl"] as? String, let url = URL(string: urlString) {
+    portal = Portal(url: url, connection: .anonymous)
+  } else {
+    portal = .arcGISOnline(connection: .anonymous)
+  }
+  return PortalItem(portal: portal, id: id)
 }
 
 /// Builds a `PortalItem` from a `dictionaryRenderer` prop dict:
