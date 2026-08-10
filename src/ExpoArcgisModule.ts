@@ -32,6 +32,7 @@ import type {
   MapImageLayerProps,
   MapProps,
   Ogc3DTilesLayerProps,
+  PointCloudAttribute,
   PointCloudLayerProps,
   RasterLayerProps,
   Renderer,
@@ -63,6 +64,11 @@ export declare class LayerRef<
 export declare class GroupLayerRef extends LayerRef {
   addLayer(layer: LayerRef<any>): void;
   removeLayer(layer: LayerRef<any>): void;
+}
+
+/** Reference to a native `PointCloudLayer` — a `LayerRef` plus attribute inspection (mirrors `PointCloudLayerHandle`). */
+export declare class PointCloudLayerRef extends LayerRef {
+  getAttributes(): Promise<PointCloudAttribute[]>;
 }
 
 /** Reference to a native `KmlLayer` — a `LayerRef` plus `getNodes` and tour controls (mirrors `KmlLayerHandle`). */
@@ -377,7 +383,7 @@ declare class ExpoArcgisModule extends NativeModule {
   SceneLayerRef: new (props: SceneLayerProps) => LayerRef;
   VectorTiledLayerRef: new (props: VectorTileLayerProps) => LayerRef;
   IntegratedMeshLayerRef: new (props: IntegratedMeshLayerProps) => LayerRef;
-  PointCloudLayerRef: new (props: PointCloudLayerProps) => LayerRef;
+  PointCloudLayerRef: new (props: PointCloudLayerProps) => PointCloudLayerRef;
   Ogc3DTilesLayerRef: new (props: Ogc3DTilesLayerProps) => LayerRef;
   WebTiledLayerRef: new (props: WebTiledLayerProps) => LayerRef;
   OpenStreetMapLayerRef: new () => LayerRef;

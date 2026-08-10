@@ -11,7 +11,8 @@ import { ArcGISPluginProps } from './types';
 /** Esri public Maven repository that serves the ArcGIS Maps SDK for Kotlin. */
 const DEFAULT_ESRI_MAVEN_URL = 'https://esri.jfrog.io/artifactory/arcgis';
 
-// ArcGIS Maps SDK for Kotlin 300.0 minimum build requirements.
+// ArcGIS Maps SDK for Kotlin 300.1 minimum build requirements. API 28 is deprecated by Esri
+// (300.1 is the last release to support it); the next SDK release moves the floor to API 29.
 const REQUIRED_MIN_SDK = 28;
 const REQUIRED_COMPILE_SDK = 36;
 
@@ -99,7 +100,7 @@ const withArcGISApiKeyResource: ConfigPlugin<string> = (config, apiKey) =>
 const SKIP_METADATA_FLAG = '-Xskip-metadata-version-check';
 
 /**
- * ArcGIS Maps SDK 300.0 is built with Kotlin 2.3.0; its kotlin-stdlib/reflect 2.3.0 resolve across
+ * ArcGIS Maps SDK 300.1 is built with Kotlin 2.3.20; its kotlin-stdlib/reflect 2.3.20 resolve across
  * the whole app, but Expo SDK 56 compiles with Kotlin 2.1.0. Let every module read the newer
  * metadata so the app (expo, expo-modules-core, this module) compiles.
  */
@@ -113,7 +114,7 @@ const withArcGISKotlinMetadataFix: ConfigPlugin = (config) =>
     if (!cfg.modResults.contents.includes(SKIP_METADATA_FLAG)) {
       cfg.modResults.contents += `
 
-// expo-arcgis: ArcGIS Maps SDK 300.0 ships Kotlin 2.3.0 metadata, newer than Expo SDK 56's compiler.
+// expo-arcgis: ArcGIS Maps SDK 300.1 ships Kotlin 2.3.20 metadata, newer than Expo SDK 56's compiler.
 allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {

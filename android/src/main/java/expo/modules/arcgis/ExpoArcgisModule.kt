@@ -175,6 +175,7 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: PointCloudLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
       }
+      AsyncFunction("getAttributes") Coroutine { ref: PointCloudLayerRef -> ref.getAttributes() }
     }
 
     Class(Ogc3DTilesLayerRef::class) {

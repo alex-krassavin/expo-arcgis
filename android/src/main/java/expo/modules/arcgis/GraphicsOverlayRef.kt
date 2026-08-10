@@ -498,8 +498,8 @@ private fun lineSymbol(s: Map<*, *>): SimpleLineSymbol = SimpleLineSymbol(
 
 private fun outlineOf(value: Any?): SimpleLineSymbol? = (value as? Map<*, *>)?.let(::lineSymbol)
 
-/** Parses `#RRGGBB` / `#RRGGBBAA` (alpha last) into an ArcGIS [Color]. */
-private fun colorOf(value: Any?): Color? {
+/** Parses `#RRGGBB` / `#RRGGBBAA` (alpha last) into an ArcGIS [Color]. Shared with PointCloudFactory. */
+internal fun colorOf(value: Any?): Color? {
   val hex = (value as? String)?.trim()?.removePrefix("#") ?: return null
   val v = hex.toLongOrNull(16) ?: return null
   return when (hex.length) {

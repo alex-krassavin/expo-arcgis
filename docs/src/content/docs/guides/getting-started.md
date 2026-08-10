@@ -9,12 +9,12 @@ use a development build.
 
 ## Requirements
 
-ArcGIS Maps SDK 300.0 sets the floor for any app using this module:
+ArcGIS Maps SDK 300.1 sets the floor for any app using this module:
 
 | | Minimum |
 |---|---|
-| iOS | **17.0**, built with **Xcode 26** |
-| Android | **API 28** (Android 9), compileSdk **36** |
+| iOS | **18.0**, built with **Xcode 26** |
+| Android | **API 28** (Android 9), compileSdk **36** — Esri deprecated API 28 in 300.1; the next SDK release requires API 29 |
 | Expo | SDK **54+** (New Architecture). Verified on Expo **56** / RN **0.82** / React **19** |
 | Auth | An [ArcGIS API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/) (or token / OAuth) |
 

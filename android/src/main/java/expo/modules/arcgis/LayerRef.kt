@@ -49,6 +49,7 @@ import com.arcgismaps.mapping.layers.SubtypeFeatureLayer
 import com.arcgismaps.mapping.layers.Ogc3DTilesLayer
 import com.arcgismaps.mapping.layers.OpenStreetMapLayer
 import com.arcgismaps.mapping.layers.PointCloudLayer
+import com.arcgismaps.mapping.pointcloud.PointCloudAttributeValueType
 import com.arcgismaps.mapping.layers.RasterLayer
 import com.arcgismaps.mapping.layers.WebTiledLayer
 import com.arcgismaps.mapping.layers.KmlLayer
@@ -529,12 +530,54 @@ class IntegratedMeshLayerRef(appContext: AppContext, url: String) : LayerRef(app
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
 }
 
-/** Operational 3D point cloud layer backed by a scene service URL. */
+/**
+ * Operational 3D point cloud layer backed by a scene service URL. `renderer` / `filters` use the
+ * point cloud rendering API added in ArcGIS Maps SDK 300.1 (see PointCloudFactory.kt).
+ */
 class PointCloudLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {
   override val layer: PointCloudLayer = PointCloudLayer(url)
 
-  override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+  override fun applyProps(changed: Map<String, Any?>) {
+    applyCommonProps(changed)
+    if (changed.containsKey("altitudeOffset")) {
+      layer.altitudeOffset = (changed["altitudeOffset"] as? Number)?.toDouble() ?: 0.0
+    }
+    // A null/absent renderer clears ours and lets the service-authored one show again.
+    if (changed.containsKey("renderer")) {
+      layer.renderer = pointCloudRenderer(changed["renderer"])
+    }
+    if (changed.containsKey("filters")) {
+      layer.filters.clear()
+      layer.filters.addAll(pointCloudFilters(changed["filters"]))
+    }
+  }
+
+  /** Attributes available for rendering/filtering; loads the layer first. */
+  suspend fun getAttributes(): List<Map<String, Any?>> {
+    layer.load().getOrThrow()
+    return layer.attributes.map {
+      mapOf(
+        "name" to it.name,
+        "valueType" to it.valueType.jsName(),
+        "valuesPerElement" to it.valuesPerElement.toInt(),
+      )
+    }
+  }
 }
+
+/** Serialises [PointCloudAttributeValueType] to the lowercase names used by the JS types. */
+private fun PointCloudAttributeValueType.jsName(): String =
+  when (this) {
+    PointCloudAttributeValueType.Int8 -> "int8"
+    PointCloudAttributeValueType.Uint8 -> "uint8"
+    PointCloudAttributeValueType.Int16 -> "int16"
+    PointCloudAttributeValueType.Uint16 -> "uint16"
+    PointCloudAttributeValueType.Int32 -> "int32"
+    PointCloudAttributeValueType.Uint32 -> "uint32"
+    PointCloudAttributeValueType.Float32 -> "float32"
+    PointCloudAttributeValueType.Float64 -> "float64"
+    else -> "unknown"
+  }
 
 /** Operational OGC 3D Tiles layer backed by a 3D Tiles service URL. */
 class Ogc3DTilesLayerRef(appContext: AppContext, url: String) : LayerRef(appContext) {

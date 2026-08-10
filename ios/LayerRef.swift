@@ -535,10 +535,55 @@ public final class IntegratedMeshLayerRef: LayerRef {
   }
 }
 
-/// Operational 3D point cloud layer backed by a scene service URL.
+/// Operational 3D point cloud layer backed by a scene service URL. `renderer` / `filters` use the
+/// point cloud rendering API added in ArcGIS Maps SDK 300.1 (see PointCloudFactory.swift).
 public final class PointCloudLayerRef: LayerRef {
+  private let pointCloudLayer: PointCloudLayer
+
   init(url: String) {
-    super.init(layer: PointCloudLayer(url: URL(string: url)!))
+    let layer = PointCloudLayer(url: URL(string: url)!)
+    pointCloudLayer = layer
+    super.init(layer: layer)
+  }
+
+  override func applyProps(_ changed: [String: Any]) {
+    super.applyProps(changed)
+    if let n = changed["altitudeOffset"] as? NSNumber {
+      pointCloudLayer.altitudeOffset = n.doubleValue
+    }
+    // A null/absent renderer clears ours and lets the service-authored one show again.
+    if changed.keys.contains("renderer") {
+      pointCloudLayer.renderer = pointCloudRenderer(changed["renderer"])
+    }
+    if changed.keys.contains("filters") {
+      pointCloudLayer.removeAllFilters()
+      pointCloudLayer.addFilters(pointCloudFilters(changed["filters"]))
+    }
+  }
+
+  /// Attributes available for rendering/filtering; loads the layer first.
+  func getAttributes() async throws -> [[String: Any]] {
+    try await pointCloudLayer.load()
+    return pointCloudLayer.attributes.map {
+      ["name": $0.name, "valueType": $0.valueType.jsName, "valuesPerElement": $0.valuesPerElement]
+    }
+  }
+}
+
+private extension PointCloudAttribute.ValueType {
+  /// Lowercase names matching the JS `PointCloudAttribute.valueType` strings.
+  var jsName: String {
+    switch self {
+    case .int8: return "int8"
+    case .uint8: return "uint8"
+    case .int16: return "int16"
+    case .uint16: return "uint16"
+    case .int32: return "int32"
+    case .uint32: return "uint32"
+    case .float32: return "float32"
+    case .float64: return "float64"
+    @unknown default: return "unknown"
+    }
   }
 }
 

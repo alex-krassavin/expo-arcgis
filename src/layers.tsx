@@ -10,6 +10,7 @@ import type {
   OgcFeatureLayerProps,
   OpenStreetMapLayerProps,
   OrientedImageryLayerProps,
+  PointCloudLayerHandle,
   PointCloudLayerProps,
   RasterLayerProps,
   SubtypeFeatureLayerProps,
@@ -34,8 +35,11 @@ export const IntegratedMeshLayer = createLayerComponent<IntegratedMeshLayerProps
   (props) => new ExpoArcgisModule.IntegratedMeshLayerRef(props)
 );
 
-/** Declarative `PointCloudLayer` (3D point cloud from a scene service). */
-export const PointCloudLayer = createLayerComponent<PointCloudLayerProps>(
+/**
+ * Declarative `PointCloudLayer` (3D point cloud from a scene service).
+ * `renderer` / `filters` mirror the point cloud rendering API added in ArcGIS Maps SDK 300.1.
+ */
+export const PointCloudLayer = createLayerComponent<PointCloudLayerProps, PointCloudLayerHandle>(
   (props) => new ExpoArcgisModule.PointCloudLayerRef(props)
 );
 

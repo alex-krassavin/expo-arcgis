@@ -6,22 +6,23 @@ Pod::Spec.new do |s|
   s.author         = 'krassavin'
   s.homepage       = 'https://docs.expo.dev/modules/'
   s.platforms      = {
-    :ios => '17.0'
+    :ios => '18.0'
   }
   s.source         = { git: '' }
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
 
-  # ArcGIS Maps SDK for Swift (300.0.0) is distributed as a binary xcframework via
+  # ArcGIS Maps SDK for Swift (300.1.0) is distributed as a binary xcframework via
   # Swift Package Manager. `spm_dependency` (React Native 0.75+) wires the SPM product
   # into this pod target so the module's Swift code can `import ArcGIS`.
-  # Package: https://github.com/Esri/arcgis-maps-sdk-swift — requires Xcode 26 / iOS 17+.
+  # Package: https://github.com/Esri/arcgis-maps-sdk-swift — requires Xcode 26 / iOS 18+
+  # (300.1 raised the package platform from .iOS(.v17) to .iOS(.v18)).
   spm_dependency(s,
     url: 'https://github.com/Esri/arcgis-maps-sdk-swift',
     requirement: {
       kind: 'exactVersion',
-      version: '300.0.0',
+      version: '300.1.0',
     },
     products: ['ArcGIS']
   )

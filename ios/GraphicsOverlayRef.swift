@@ -458,7 +458,8 @@ private func fillStyle(_ style: String?) -> SimpleFillSymbol.Style {
   }
 }
 
-private extension UIColor {
+// Internal (not private) so PointCloudFactory.swift can reuse the same hex parsing.
+extension UIColor {
   convenience init?(hex: String) {
     var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)
     if s.hasPrefix("#") { s.removeFirst() }

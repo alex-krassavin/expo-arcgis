@@ -190,6 +190,7 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: PointCloudLayerRef, changed: [String: Any]) in
         ref.applyProps(changed)
       }
+      AsyncFunction("getAttributes") { (ref: PointCloudLayerRef) in try await ref.getAttributes() }
     }
 
     Class(Ogc3DTilesLayerRef.self) {

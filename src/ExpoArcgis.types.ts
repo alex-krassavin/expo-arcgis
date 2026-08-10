@@ -832,8 +832,157 @@ export type VectorTileLayerProps = LayerProps & { url: string };
 /** Props for an `<IntegratedMeshLayer>` (3D) — mirror the native `IntegratedMeshLayer`. */
 export type IntegratedMeshLayerProps = LayerProps & { url: string };
 
+// ─── Point cloud rendering (SDK 300.1) ───────────────────────────────────────
+
+/** How point sizes are computed — mirrors the native `PointCloudSizeAlgorithm` hierarchy. */
+export type PointCloudSizeAlgorithm =
+  /** Every point drawn at a fixed `size`, in screen `dips` or ground `meters`. */
+  | { type: 'fixed-size'; size: number; sizeUnits?: 'dips' | 'meters' }
+  /** Points scale with distance so nearby points fill the gaps between them. */
+  | { type: 'splat'; scaleFactor: number };
+
+/** Brightness modulation driven by an attribute — mirrors `PointCloudColorModulation`. */
+export type PointCloudColorModulation = {
+  /** Attribute whose value modulates brightness (e.g. `INTENSITY`). */
+  attributeName: string;
+  minValue: number;
+  maxValue: number;
+};
+
+/**
+ * Transform applied to the renderer's attribute values before they are matched.
+ * Mirrors `PointCloudAttributeTransformType` — `modulo-ten` and the four-bit variants
+ * are the usual way to spread LAS classification codes across a colour ramp.
+ */
+export type PointCloudAttributeTransformType =
+  | 'none'
+  | 'absolute-value'
+  | 'modulo-ten'
+  | 'high-four-bit'
+  | 'low-four-bit';
+
+/** One range of a `class-breaks` point cloud renderer — `minValue < value <= maxValue`. */
+export type PointCloudColorClassBreak = {
+  minValue: number;
+  maxValue: number;
+  /** `#RRGGBB` / `#RRGGBBAA`. */
+  color: string;
+  label?: string;
+  description?: string;
+};
+
+/** One stop of a `stretch` point cloud renderer (colours interpolate between stops). */
+export type PointCloudColorStop = {
+  value: number;
+  /** `#RRGGBB` / `#RRGGBBAA`. */
+  color: string;
+  label?: string;
+};
+
+/** One category of a `unique-value` point cloud renderer. */
+export type PointCloudColorUniqueValue = {
+  /** Attribute value(s) that select this colour (strings, as the SDK stores them). */
+  values: string[];
+  /** `#RRGGBB` / `#RRGGBBAA`. */
+  color: string;
+  label?: string;
+  description?: string;
+};
+
+/** Properties shared by every point cloud renderer — mirrors the `PointCloudRenderer` base. */
+type PointCloudRendererBase = {
+  /** Attribute the renderer reads (e.g. `CLASS_CODE`, `INTENSITY`, `RGB`). */
+  attributeName: string;
+  /** Optional attribute-driven brightness modulation. */
+  colorModulation?: PointCloudColorModulation;
+  /** Point density — higher draws more points per inch of screen. */
+  pointsPerInch?: number;
+  /** How point size is computed. */
+  sizeAlgorithm?: PointCloudSizeAlgorithm;
+};
+
+/**
+ * Renderer for a `<PointCloudLayer>` — mirrors the native `PointCloudRenderer` hierarchy
+ * (`PointCloudRgbRenderer` / `PointCloudClassBreaksRenderer` / `PointCloudStretchRenderer` /
+ * `PointCloudUniqueValueRenderer`). New in ArcGIS Maps SDK 300.1.
+ */
+export type PointCloudRenderer =
+  /** Colours points straight from an RGB attribute. */
+  | (PointCloudRendererBase & { type: 'rgb' })
+  /** Bins a numeric attribute into discrete `classBreaks`. */
+  | (PointCloudRendererBase & {
+      type: 'class-breaks';
+      classBreaks: PointCloudColorClassBreak[];
+      transformType?: PointCloudAttributeTransformType;
+    })
+  /** Interpolates colour along `stops` (continuous ramp, e.g. elevation). */
+  | (PointCloudRendererBase & {
+      type: 'stretch';
+      stops: PointCloudColorStop[];
+      transformType?: PointCloudAttributeTransformType;
+    })
+  /** Matches discrete attribute values against `uniqueValues` (e.g. LAS class codes). */
+  | (PointCloudRendererBase & {
+      type: 'unique-value';
+      uniqueValues: PointCloudColorUniqueValue[];
+      transformType?: PointCloudAttributeTransformType;
+    });
+
+/** LiDAR return being filtered — mirrors `PointCloudReturnType`. */
+export type PointCloudReturnType = 'single' | 'first-of-many' | 'last-of-many' | 'last';
+
+/**
+ * Filter hiding part of a `<PointCloudLayer>` — mirrors the native `PointCloudFilter`
+ * hierarchy (`PointCloudValueFilter` / `PointCloudReturnFilter` / `PointCloudBitfieldFilter`).
+ * New in ArcGIS Maps SDK 300.1.
+ */
+export type PointCloudFilter =
+  /** Includes or excludes points whose attribute equals one of `values`. */
+  | {
+      type: 'value';
+      attributeName: string;
+      values: number[];
+      /** Defaults to `include`. */
+      mode?: 'include' | 'exclude';
+    }
+  /** Keeps only the listed LiDAR returns. */
+  | { type: 'return'; attributeName: string; includedReturns: PointCloudReturnType[] }
+  /** Keeps points whose bitfield attribute has all `requiredSetBits` set and `requiredClearBits` clear. */
+  | {
+      type: 'bitfield';
+      attributeName: string;
+      requiredSetBits?: number[];
+      requiredClearBits?: number[];
+    };
+
+/** One attribute exposed by a loaded point cloud layer — mirrors `PointCloudAttribute`. */
+export type PointCloudAttribute = {
+  name: string;
+  /** Storage type of the attribute's values (e.g. `int32`, `float64`). */
+  valueType: string;
+  /** How many values each point carries for this attribute (3 for RGB). */
+  valuesPerElement: number;
+};
+
+/** Imperative handle for a `<PointCloudLayer>` (via `ref`). */
+export type PointCloudLayerHandle = {
+  /**
+   * Attributes available for rendering/filtering on this layer. Loads the layer first,
+   * so call it before building a `renderer` when the attribute names aren't known up front.
+   */
+  getAttributes: () => Promise<PointCloudAttribute[]>;
+};
+
 /** Props for a `<PointCloudLayer>` (3D) — mirror the native `PointCloudLayer`. */
-export type PointCloudLayerProps = LayerProps & { url: string };
+export type PointCloudLayerProps = LayerProps & {
+  url: string;
+  /** Vertical offset applied to every point, in the scene's elevation units. */
+  altitudeOffset?: number;
+  /** Colouring for the points. Omit to keep the layer's own (service-authored) renderer. */
+  renderer?: PointCloudRenderer;
+  /** Filters hiding part of the cloud. Replaces the whole set on change; `[]` clears it. */
+  filters?: PointCloudFilter[];
+};
 
 /** Props for an `<Ogc3DTilesLayer>` (3D) — mirror the native OGC 3D Tiles layer. */
 export type Ogc3DTilesLayerProps = LayerProps & { url: string };

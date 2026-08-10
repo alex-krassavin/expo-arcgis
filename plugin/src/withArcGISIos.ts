@@ -8,15 +8,15 @@ import {
 
 import { ArcGISPluginProps } from './types';
 
-/** ArcGIS Maps SDK for Swift 300.0 requires iOS 17.0+. */
-const REQUIRED_IOS_DEPLOYMENT_TARGET = '17.0';
+/** ArcGIS Maps SDK for Swift 300.1 requires iOS 18.0+ (300.0 required 17.0). */
+const REQUIRED_IOS_DEPLOYMENT_TARGET = '18.0';
 
 export const withArcGISIos: ConfigPlugin<ArcGISPluginProps> = (config, props) => {
   const target = props.iosDeploymentTarget ?? REQUIRED_IOS_DEPLOYMENT_TARGET;
   // Pods read the target from Podfile.properties.json; the app target reads it from the
-  // .xcodeproj build settings. ArcGIS needs both raised to 17.0, or the app target (which
+  // .xcodeproj build settings. ArcGIS needs both raised to 18.0, or the app target (which
   // imports our module via ExpoModulesProvider.swift) fails: "compiling for iOS 16.4, but
-  // module 'ExpoArcgis' has a minimum deployment target of iOS 17.0".
+  // module 'ExpoArcgis' has a minimum deployment target of iOS 18.0".
   config = withArcGISPodfileDeploymentTarget(config, target);
   config = withArcGISAppDeploymentTarget(config, target);
   config = withArcGISEmbedFramework(config);

@@ -65,6 +65,27 @@ Layers and graphics carry the full symbology model: simple, picture, text, 3D sc
 renderers** for military / utility symbology; plus client-side and scale-dependent display
 filters, and per-layer `minScale` / `maxScale` visibility.
 
+3D point clouds have their own renderer and filter model. A `<PointCloudLayer>` takes an
+`rgb`, `class-breaks`, `stretch` or `unique-value` `renderer` — each reading one attribute, with
+optional `sizeAlgorithm`, `pointsPerInch` and attribute-driven `colorModulation` — plus `filters`
+that hide points by value, LiDAR return, or bitfield.
+
+```tsx
+<PointCloudLayer
+  url={SCENE_SERVICE}
+  renderer={{
+    type: 'unique-value',
+    attributeName: 'CLASS_CODE',
+    uniqueValues: [
+      { values: ['2'], color: '#8d6e4a', label: 'Ground' },
+      { values: ['5'], color: '#3f8f4a', label: 'Vegetation' },
+    ],
+    sizeAlgorithm: { type: 'splat', scaleFactor: 1 },
+  }}
+  filters={[{ type: 'value', attributeName: 'CLASS_CODE', values: [7], mode: 'exclude' }]}
+/>
+```
+
 ## Refs for imperative operations
 
 Some operations act on a specific object at runtime — querying a layer, editing features, identifying
@@ -84,8 +105,9 @@ discard with `undoLocalEdits()`) — `queryRelatedFeatures(objectId)`, and attac
 (`queryAttachments` / `addAttachment` / `fetchAttachment` / `deleteAttachment`). A `<MapView>` /
 `<SceneView>` handle adds `identifyPopups(screenPoint)`, which returns each tapped feature's
 evaluated popup title and fields. A `<DynamicEntityLayer>` handle adds `queryObservations(id)` for an
-entity's recent track. A `<UtilityNetwork>` handle adds `validateNetworkTopology(extent)`,
-`getState()` and `getTerminalConfigurations()`.
+entity's recent track. A `<PointCloudLayer>` handle adds `getAttributes()`, which loads the layer
+and reports the attributes available to renderers and filters. A `<UtilityNetwork>` handle adds
+`validateNetworkTopology(extent)`, `getState()` and `getTerminalConfigurations()`.
 
 ## Namespaces (no view needed)
 

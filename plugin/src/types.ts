@@ -12,13 +12,17 @@ export type ArcGISPluginProps = {
   /** Esri Maven repository URL (Android). Defaults to Esri's public artifactory. */
   androidMavenUrl?: string;
 
-  /** Minimum Android SDK level. ArcGIS Maps SDK 300.0 requires >= 28. */
+  /**
+   * Minimum Android SDK level. ArcGIS Maps SDK 300.1 requires >= 28, but API 28 is
+   * deprecated by Esri — 300.1 is the last release supporting it, and the next release
+   * raises the floor to API 29.
+   */
   androidMinSdkVersion?: number;
 
-  /** Android compileSdk level. ArcGIS Maps SDK 300.0 requires >= 36. */
+  /** Android compileSdk level. ArcGIS Maps SDK 300.1 requires >= 36. */
   androidCompileSdkVersion?: number;
 
-  /** Minimum iOS deployment target. ArcGIS Maps SDK 300.0 requires >= 17.0. */
+  /** Minimum iOS deployment target. ArcGIS Maps SDK 300.1 requires >= 18.0. */
   iosDeploymentTarget?: string;
 
   /**
