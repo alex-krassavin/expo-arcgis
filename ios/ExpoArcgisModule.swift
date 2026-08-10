@@ -262,6 +262,12 @@ public class ExpoArcgisModule: Module {
       Function("applyProps") { (ref: RasterLayerRef, changed: [String: Any]) in
         ref.applyProps(changed)
       }
+      AsyncFunction("getPyramidInfo") { (ref: RasterLayerRef) in try await ref.getPyramidInfo() }
+      AsyncFunction("buildPyramids") { (ref: RasterLayerRef, params: [String: Any]?) in
+        try await ref.buildPyramids(params)
+      }
+      AsyncFunction("deletePyramids") { (ref: RasterLayerRef) in try await ref.deletePyramids() }
+      Function("closeRaster") { (ref: RasterLayerRef) in ref.closeRaster() }
     }
 
     Class(KmlLayerRef.self) {

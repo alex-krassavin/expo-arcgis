@@ -690,9 +690,44 @@ public final class WmtsLayerRef: LayerRef {
 
 /// Operational raster layer from a remote image service or a local raster file.
 public final class RasterLayerRef: LayerRef {
+  private let rasterLayer: RasterLayer
+
   init(source: [String: Any], rasterFunction rasterFunctionJSON: String? = nil) {
-    super.init(layer: RasterLayer(raster: rasterFromSource(source, rasterFunctionJSON: rasterFunctionJSON)))
+    let layer = RasterLayer(raster: rasterFromSource(source, rasterFunctionJSON: rasterFunctionJSON))
+    rasterLayer = layer
+    super.init(layer: layer)
   }
+
+  /// The layer's pyramid overviews once it has loaded. Throws if the layer has no raster at all.
+  private func pyramids() async throws -> RasterPyramids? {
+    try await rasterLayer.load()
+    return rasterLayer.raster?.pyramids
+  }
+
+  /// The raster's pyramid overviews, or nil when it has none (ArcGIS 300.1).
+  func getPyramidInfo() async throws -> [String: Any]? {
+    try await pyramids()?.info.map(serializePyramidInfo)
+  }
+
+  /// Builds sidecar `.ovr` overviews and resolves once they are written (ArcGIS 300.1).
+  func buildPyramids(_ parameters: [String: Any]?) async throws -> [String: Any] {
+    guard let pyramids = try await pyramids() else {
+      throw NSError(
+        domain: "ExpoArcgis", code: 10,
+        userInfo: [NSLocalizedDescriptionKey: "Layer has no raster to build pyramids for"])
+    }
+    let operation = try pyramids.build(using: buildPyramidsParameters(parameters))
+    return serializePyramidInfo(try await operation.result)
+  }
+
+  /// Deletes the external `.ovr` overviews (ArcGIS 300.1). Embedded ones cannot be removed.
+  func deletePyramids() async throws {
+    try await pyramids()?.delete()
+  }
+
+  /// Releases the raster's native file handles (ArcGIS 300.1). Call before deleting or replacing
+  /// the underlying file; the layer stops drawing afterwards.
+  func closeRaster() { rasterLayer.raster?.close() }
 }
 
 /// Builds a `Raster` from a JS source dict: `{ type: "imageService", url }` or `{ type: "file", path }`.

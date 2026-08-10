@@ -12,6 +12,7 @@ import type {
   OrientedImageryLayerProps,
   PointCloudLayerHandle,
   PointCloudLayerProps,
+  RasterLayerHandle,
   RasterLayerProps,
   SubtypeFeatureLayerProps,
   FeatureCollectionLayerProps,
@@ -69,7 +70,7 @@ export const WmtsLayer = createLayerComponent<WmtsLayerProps>(
 );
 
 /** Declarative `RasterLayer` from a remote image service or a local raster file. */
-export const RasterLayer = createLayerComponent<RasterLayerProps>(
+export const RasterLayer = createLayerComponent<RasterLayerProps, RasterLayerHandle>(
   (props) => new ExpoArcgisModule.RasterLayerRef(props)
 );
 

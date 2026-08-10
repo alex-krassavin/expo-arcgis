@@ -64,6 +64,7 @@ import com.arcgismaps.mapping.view.Graphic
 import com.arcgismaps.raster.ImageServiceRaster
 import com.arcgismaps.raster.Raster
 import com.arcgismaps.raster.RasterFunction
+import com.arcgismaps.raster.RasterPyramids
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 
@@ -688,6 +689,37 @@ class RasterLayerRef(
   override val layer: RasterLayer = RasterLayer(rasterFromSource(source, rasterFunctionJson))
 
   override fun applyProps(changed: Map<String, Any?>) = applyCommonProps(changed)
+
+  /** The layer's pyramid overviews once it has loaded; null when it has no raster at all. */
+  private suspend fun pyramids(): RasterPyramids? {
+    layer.load().getOrThrow()
+    return layer.raster?.pyramids
+  }
+
+  /** The raster's pyramid overviews, or null when it has none (ArcGIS 300.1). */
+  suspend fun getPyramidInfo(): Map<String, Any?>? =
+    pyramids()?.pyramidInfo?.let { serializePyramidInfo(it) }
+
+  /** Builds sidecar `.ovr` overviews and resolves once they are written (ArcGIS 300.1). */
+  suspend fun buildPyramids(parameters: Map<String, Any?>?): Map<String, Any?> {
+    val pyramids = pyramids()
+      ?: throw IllegalStateException("Layer has no raster to build pyramids for")
+    val operation = pyramids.buildPyramids(buildPyramidsParameters(parameters))
+    return serializePyramidInfo(operation.result().getOrThrow())
+  }
+
+  /** Deletes the external `.ovr` overviews (ArcGIS 300.1). Embedded ones cannot be removed. */
+  suspend fun deletePyramids() {
+    pyramids()?.deletePyramids()
+  }
+
+  /**
+   * Releases the raster's native file handles (ArcGIS 300.1). Call before deleting or replacing the
+   * underlying file; the layer stops drawing afterwards.
+   */
+  fun closeRaster() {
+    layer.raster?.close()
+  }
 }
 
 /**

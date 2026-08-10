@@ -34,6 +34,8 @@ import type {
   MapProps,
   Ogc3DTilesLayerProps,
   PointCloudAttribute,
+  RasterPyramidInfo,
+  BuildRasterPyramidsParameters,
   PointCloudLayerProps,
   RasterLayerProps,
   Renderer,
@@ -65,6 +67,14 @@ export declare class LayerRef<
 export declare class GroupLayerRef extends LayerRef {
   addLayer(layer: LayerRef<any>): void;
   removeLayer(layer: LayerRef<any>): void;
+}
+
+/** Reference to a native `RasterLayer` — a `LayerRef` plus pyramid management (mirrors `RasterLayerHandle`). */
+export declare class RasterLayerRef extends LayerRef {
+  getPyramidInfo(): Promise<RasterPyramidInfo | null>;
+  buildPyramids(parameters?: BuildRasterPyramidsParameters): Promise<RasterPyramidInfo>;
+  deletePyramids(): Promise<void>;
+  closeRaster(): void;
 }
 
 /** Reference to a native `PointCloudLayer` — a `LayerRef` plus attribute inspection (mirrors `PointCloudLayerHandle`). */
@@ -392,7 +402,7 @@ declare class ExpoArcgisModule extends NativeModule {
   OpenStreetMapLayerRef: new () => LayerRef;
   WmsLayerRef: new (props: WmsLayerProps) => LayerRef;
   WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
-  RasterLayerRef: new (props: RasterLayerProps) => LayerRef;
+  RasterLayerRef: new (props: RasterLayerProps) => RasterLayerRef;
   KmlLayerRef: new (props: KmlLayerProps) => KmlLayerRef;
   WfsLayerRef: new (props: WfsLayerProps) => LayerRef;
   OgcFeatureLayerRef: new (props: OgcFeatureLayerProps) => LayerRef;

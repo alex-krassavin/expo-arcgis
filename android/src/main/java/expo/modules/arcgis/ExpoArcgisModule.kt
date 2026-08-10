@@ -233,6 +233,12 @@ class ExpoArcgisModule : Module() {
       Function("applyProps") { ref: RasterLayerRef, changed: Map<String, Any?> ->
         ref.applyProps(changed)
       }
+      AsyncFunction("getPyramidInfo") Coroutine { ref: RasterLayerRef -> ref.getPyramidInfo() }
+      AsyncFunction("buildPyramids") Coroutine { ref: RasterLayerRef, params: Map<String, Any?>? ->
+        ref.buildPyramids(params)
+      }
+      AsyncFunction("deletePyramids") Coroutine { ref: RasterLayerRef -> ref.deletePyramids() }
+      Function("closeRaster") { ref: RasterLayerRef -> ref.closeRaster() }
     }
 
     Class(KmlLayerRef::class) {

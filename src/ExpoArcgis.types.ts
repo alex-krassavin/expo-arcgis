@@ -879,6 +879,64 @@ export type SceneLayerProps = LayerProps & {
   labelsEnabled?: boolean;
 };
 
+/** Compression used for a raster's pyramid overviews. Mirrors `RasterPyramidCompressionType`. */
+export type RasterPyramidCompressionType =
+  | 'default'
+  | 'deflate'
+  | 'jpeg'
+  | 'jpeg-ycbcr'
+  | 'lzw'
+  | 'none';
+
+/** How pixels are sampled when building pyramid levels. Mirrors `RasterResamplingType`. */
+export type RasterResamplingType = 'automatic' | 'nearest-neighbor' | 'bilinear-interpolation';
+
+/** A raster's pyramid overviews, as reported by `getPyramidInfo()`. Mirrors `RasterPyramidInfo`. */
+export type RasterPyramidInfo = {
+  /** How many reduced-resolution levels exist. */
+  levelCount: number;
+  /** `true` when the overviews live inside the raster file rather than a sidecar `.ovr`. */
+  isEmbedded: boolean;
+  /** Path of the external `.ovr` file, when the overviews are not embedded. */
+  filePath: string | null;
+  compressionType: RasterPyramidCompressionType;
+  resamplingType: RasterResamplingType;
+};
+
+/** Options for `buildPyramids()`. Mirrors `BuildRasterPyramidsParameters`. */
+export type BuildRasterPyramidsParameters = {
+  compressionType?: RasterPyramidCompressionType;
+  resamplingType?: RasterResamplingType;
+  /** 1–100, only meaningful for the JPEG compression types. */
+  jpegCompressionQuality?: number;
+  /** Cap on how many levels to generate. */
+  maximumLevelCount?: number;
+  /** Skip the first (largest) overview level to trade quality for a smaller file. */
+  skipFirstLevel?: boolean;
+};
+
+/** Imperative handle exposed by `<RasterLayer>` via `ref`. */
+export type RasterLayerHandle = {
+  /**
+   * The raster's pyramid overviews, or `null` when it has none (ArcGIS 300.1). Without them a
+   * large local raster is resampled from full resolution on every draw.
+   */
+  getPyramidInfo(): Promise<RasterPyramidInfo | null>;
+  /**
+   * Builds pyramid overviews into a sidecar `.ovr` beside the raster file and resolves once they
+   * are written (ArcGIS 300.1). Local rasters only — an image service has its own.
+   */
+  buildPyramids(parameters?: BuildRasterPyramidsParameters): Promise<RasterPyramidInfo>;
+  /** Deletes the external `.ovr` overviews (ArcGIS 300.1). Embedded ones cannot be removed. */
+  deletePyramids(): Promise<void>;
+  /**
+   * Releases the raster's native file handles (ArcGIS 300.1). Call before deleting or replacing
+   * the underlying file — until then the handle stays open and the delete fails on some platforms.
+   * The layer stops drawing afterwards.
+   */
+  closeRaster(): void;
+};
+
 /** Props for a `<VectorTileLayer>` — mirror the native `ArcGISVectorTiledLayer`. */
 export type VectorTileLayerProps = LayerProps & { url: string };
 
