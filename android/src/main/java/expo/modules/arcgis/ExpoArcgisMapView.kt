@@ -87,12 +87,13 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     // Emit tap events with the map location (projected to WGS84).
     scope.launch {
       mapView.onSingleTapConfirmed.collect { event ->
-        val wgs84 = event.mapPoint?.let {
-          GeometryEngine.projectOrNull(it, SpatialReference.wgs84()) as? Point
-        }
+        // A 2D tap resolves to the map in practice, but report nothing rather than a fabricated
+        // (0, 0) on the off chance it does not. Matches iOS and the SceneView above.
+        val mapPoint = event.mapPoint ?: return@collect
+        val wgs84 = GeometryEngine.projectOrNull(mapPoint, SpatialReference.wgs84()) as? Point ?: mapPoint
         onTap(
           TapEventPayload(
-            mapPoint = PointRecord(wgs84?.y ?: 0.0, wgs84?.x ?: 0.0),
+            mapPoint = PointRecord(wgs84.y, wgs84.x),
             screenPoint = ScreenPointRecord(event.screenCoordinate.x, event.screenCoordinate.y)
           )
         )

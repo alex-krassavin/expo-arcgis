@@ -47,12 +47,18 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   init {
     scope.launch {
       sceneView.onSingleTapConfirmed.collect { event ->
-        val wgs84 = event.mapPoint?.let {
-          GeometryEngine.projectOrNull(it, SpatialReference.wgs84()) as? Point
-        }
+        // `mapPoint` is frequently null on a SceneView — a 3D tap can miss the globe entirely, and
+        // the event does not resolve taps that land on scene content. `screenToLocation` accounts
+        // for both the base surface and scene content, so try it before giving up.
+        val scenePoint = event.mapPoint
+          ?: sceneView.screenToLocation(event.screenCoordinate).getOrNull()
+          // Report nothing rather than a fabricated (0, 0), which a caller cannot tell apart from
+          // a genuine tap in the Gulf of Guinea. Matches iOS, which skips the event on a miss.
+          ?: return@collect
+        val wgs84 = GeometryEngine.projectOrNull(scenePoint, SpatialReference.wgs84()) as? Point ?: scenePoint
         onTap(
           TapEventPayload(
-            mapPoint = PointRecord(wgs84?.y ?: 0.0, wgs84?.x ?: 0.0),
+            mapPoint = PointRecord(wgs84.y, wgs84.x),
             screenPoint = ScreenPointRecord(event.screenCoordinate.x, event.screenCoordinate.y)
           )
         )
