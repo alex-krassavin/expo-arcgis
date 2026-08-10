@@ -76,9 +76,13 @@ jobs:
       - name: Install module
         run: npm ci
 
+      # `npm install`, not `npm ci`: the example is a disposable harness whose package.json
+      # carries caret ranges, so its lockfile drifts whenever an upstream Expo package ships.
+      # `npm ci` would turn somebody else's release into a red build here. The module's own
+      # lockfile is still installed strictly above — that one describes the published artifact.
       - name: Install example app
         working-directory: example
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       # Generates example/android from app.config.js + the config plugin — which is also the only
       # place the plugin's Gradle wiring (Esri Maven repo, minSdk/compileSdk) gets exercised.
@@ -116,9 +120,13 @@ jobs:
       - name: Install module
         run: npm ci
 
+      # `npm install`, not `npm ci`: the example is a disposable harness whose package.json
+      # carries caret ranges, so its lockfile drifts whenever an upstream Expo package ships.
+      # `npm ci` would turn somebody else's release into a red build here. The module's own
+      # lockfile is still installed strictly above — that one describes the published artifact.
       - name: Install example app
         working-directory: example
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Prebuild example (ios)
         working-directory: example
