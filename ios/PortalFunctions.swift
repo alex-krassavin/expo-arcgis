@@ -10,6 +10,24 @@ import Foundation
 
 enum PortalError: Error { case invalidPortalURL }
 
+/// Builds a `PortalItem` from the `{ itemId, portalUrl }` prop dict, defaulting to anonymous
+/// ArcGIS Online. The single source for every prop that takes a portal item — `<Map portalItem>`,
+/// `<Scene portalItem>` and `<FeatureLayer portalItem>` all resolve through here, so they agree on
+/// the accepted shape and the default portal.
+func portalItemFromDict(_ value: Any?) -> PortalItem? {
+  guard let dict = value as? [String: Any],
+    let itemId = dict["itemId"] as? String,
+    let id = PortalItem.ID(itemId)
+  else { return nil }
+  let portal: Portal
+  if let urlString = dict["portalUrl"] as? String, let url = URL(string: urlString) {
+    portal = Portal(url: url, connection: .anonymous)
+  } else {
+    portal = .arcGISOnline(connection: .anonymous)
+  }
+  return PortalItem(portal: portal, id: id)
+}
+
 /// Serialises a `PortalItem` to the wire dict `{ id, title, type, snippet, owner, thumbnailUrl }`.
 ///
 /// `PortalItem.id` is an `Item.ID?` whose `rawValue` is a `String`.

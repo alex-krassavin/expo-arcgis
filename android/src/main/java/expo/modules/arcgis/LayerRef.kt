@@ -249,9 +249,10 @@ class FeatureLayerRef private constructor(
    * service. The same handle is returned on repeat calls.
    */
   suspend fun getServiceGeodatabase(): ServiceGeodatabaseRef {
-    val table = resolvedTable()
+    // Check the cache before resolving: on a portal-item layer `resolvedTable()` loads the layer,
+    // which is wasted work once the handle is already built.
     cachedServiceGeodatabase?.let { return it }
-    val serviceTable = table as? ServiceFeatureTable
+    val serviceTable = resolvedTable() as? ServiceFeatureTable
       ?: throw IllegalStateException("Layer is not backed by a service feature table")
     serviceTable.load().getOrThrow()
     val geodatabase = serviceTable.serviceGeodatabase
@@ -533,7 +534,7 @@ class FeatureLayerRef private constructor(
  * in ArcGIS Online rather than the service default.
  */
 private fun featureLayerParts(props: Map<String, Any?>): Pair<FeatureLayer, FeatureTable?> {
-  val item = portalItemFrom(props["portalItem"])
+  val item = portalItemFromDict(props["portalItem"])
   if (item != null) {
     val layerId = (props["layerId"] as? Number)?.toLong()
     val layer = if (layerId != null) FeatureLayer.createWithItemAndLayerId(item, layerId)
@@ -542,14 +543,6 @@ private fun featureLayerParts(props: Map<String, Any?>): Pair<FeatureLayer, Feat
   }
   val table = featureTable(props)
   return FeatureLayer.createWithFeatureTable(table) to table
-}
-
-/** Builds a [PortalItem] from a `{ itemId, portalUrl }` prop dict, defaulting to ArcGIS Online. */
-private fun portalItemFrom(value: Any?): PortalItem? {
-  val dict = value as? Map<*, *> ?: return null
-  val itemId = dict["itemId"] as? String ?: return null
-  val portalUrl = dict["portalUrl"] as? String ?: "https://www.arcgis.com"
-  return PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId)
 }
 
 /** Builds a [FeatureTable] from a JS source: `{type:"shapefile",path}` or a service URL (or `url`). */

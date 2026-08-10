@@ -15,16 +15,10 @@ public final class MapRef: SharedObject {
 
   /// Builds the map from a portal item (web map) when provided, otherwise an empty map.
   init(portalItem: [String: Any]?) {
-    if let portalItem,
-       let itemId = portalItem["itemId"] as? String,
-       let id = PortalItem.ID(itemId) {
-      let portal: Portal
-      if let urlString = portalItem["portalUrl"] as? String, let url = URL(string: urlString) {
-        portal = Portal(url: url, connection: .anonymous)
-      } else {
-        portal = .arcGISOnline(connection: .anonymous)
-      }
-      map = Map(item: PortalItem(portal: portal, id: id))
+    // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
+    // `<Scene portalItem>` and `<FeatureLayer portalItem>` — see `portalItemFromDict`.
+    if let item = portalItemFromDict(portalItem) {
+      map = Map(item: item)
     } else {
       map = Map()
     }

@@ -16,16 +16,10 @@ public final class SceneRef: SharedObject {
 
   /// Builds the scene from a portal item (web scene) when provided, otherwise an empty scene.
   init(portalItem: [String: Any]?) {
-    if let portalItem,
-       let itemId = portalItem["itemId"] as? String,
-       let id = PortalItem.ID(itemId) {
-      let portal: Portal
-      if let urlString = portalItem["portalUrl"] as? String, let url = URL(string: urlString) {
-        portal = Portal(url: url, connection: .anonymous)
-      } else {
-        portal = .arcGISOnline(connection: .anonymous)
-      }
-      scene = ArcGIS.Scene(item: PortalItem(portal: portal, id: id))
+    // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
+    // `<Map portalItem>` and `<FeatureLayer portalItem>` — see `portalItemFromDict`.
+    if let item = portalItemFromDict(portalItem) {
+      scene = ArcGIS.Scene(item: item)
     } else {
       scene = ArcGIS.Scene()
     }

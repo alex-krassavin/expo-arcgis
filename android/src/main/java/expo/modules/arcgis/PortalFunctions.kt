@@ -15,6 +15,19 @@ import com.arcgismaps.portal.PortalQueryParameters
  */
 
 /**
+ * Builds a [PortalItem] from the `{ itemId, portalUrl }` prop map, defaulting to anonymous
+ * ArcGIS Online. The single source for every prop that takes a portal item — `<Map portalItem>`,
+ * `<Scene portalItem>` and `<FeatureLayer portalItem>` all resolve through here, so they agree on
+ * the accepted shape and the default portal.
+ */
+internal fun portalItemFromDict(value: Any?): PortalItem? {
+  val dict = value as? Map<*, *> ?: return null
+  val itemId = dict["itemId"] as? String ?: return null
+  val portalUrl = dict["portalUrl"] as? String ?: "https://www.arcgis.com"
+  return PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId)
+}
+
+/**
  * Serialises a [PortalItem] to the wire map `{ id, title, type, snippet, owner, thumbnailUrl }`.
  *
  * Kotlin SDK notes:

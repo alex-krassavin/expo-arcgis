@@ -38,7 +38,7 @@ public final class FeatureLayerRef: LayerRef {
   private var cachedServiceGeodatabase: ServiceGeodatabaseRef?
 
   init(props: [String: Any]) {
-    if let item = portalItem(from: props["portalItem"]) {
+    if let item = portalItemFromDict(props["portalItem"]) {
       // The item carries its own layer definition — renderer, definition expression, popups — so
       // the SDK applies the symbology authored in ArcGIS Online rather than the service default.
       providedTable = nil
@@ -219,8 +219,10 @@ public final class FeatureLayerRef: LayerRef {
   /// first (so the geodatabase is populated). Throws if the layer is not backed by a feature
   /// service. The same handle is returned on repeat calls.
   func getServiceGeodatabase() async throws -> ServiceGeodatabaseRef {
-    let table = try await resolvedTable()
+    // Check the cache before resolving: on a portal-item layer `resolvedTable()` loads the layer,
+    // which is wasted work once the handle is already built.
     if let cached = cachedServiceGeodatabase { return cached }
+    let table = try await resolvedTable()
     guard let serviceTable = table as? ServiceFeatureTable else {
       throw NSError(
         domain: "ExpoArcgis", code: 4,
@@ -462,22 +464,6 @@ public final class FeatureLayerRef: LayerRef {
       featureLayer.refreshInterval = seconds > 0 ? TimeInterval(seconds) : nil
     }
   }
-}
-
-/// Builds a `PortalItem` from a `{ itemId, portalUrl }` prop dict, defaulting to anonymous
-/// ArcGIS Online. Shared by the layer/map/scene props that accept a portal item.
-func portalItem(from value: Any?) -> PortalItem? {
-  guard let dict = value as? [String: Any],
-    let itemId = dict["itemId"] as? String,
-    let id = PortalItem.ID(itemId)
-  else { return nil }
-  let portal: Portal
-  if let urlString = dict["portalUrl"] as? String, let url = URL(string: urlString) {
-    portal = Portal(url: url, connection: .anonymous)
-  } else {
-    portal = .arcGISOnline(connection: .anonymous)
-  }
-  return PortalItem(portal: portal, id: id)
 }
 
 /// Builds a `PortalItem` from a `dictionaryRenderer` prop dict:

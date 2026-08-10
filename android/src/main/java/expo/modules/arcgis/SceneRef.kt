@@ -141,8 +141,8 @@ private fun buildSurface(s: Map<*, *>): Surface = Surface().apply {
 
 /** Builds the scene from a portal item (web scene) when provided, otherwise an empty scene. */
 private fun buildScene(portalItem: Map<String, Any?>?): ArcGISScene {
-  portalItem ?: return ArcGISScene()
-  val itemId = portalItem["itemId"] as? String ?: return ArcGISScene()
-  val portalUrl = portalItem["portalUrl"] as? String ?: "https://www.arcgis.com"
-  return ArcGISScene(PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId))
+  // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
+  // `<Map portalItem>` and `<FeatureLayer portalItem>` — see [portalItemFromDict].
+  val item = portalItemFromDict(portalItem) ?: return ArcGISScene()
+  return ArcGISScene(item)
 }

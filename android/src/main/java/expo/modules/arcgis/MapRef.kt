@@ -157,8 +157,8 @@ internal fun buildBasemap(style: BasemapStyle, language: String?, worldview: Str
 
 /** Builds the map from a portal item (web map) when provided, otherwise an empty map. */
 private fun buildMap(portalItem: Map<String, Any?>?): ArcGISMap {
-  portalItem ?: return ArcGISMap()
-  val itemId = portalItem["itemId"] as? String ?: return ArcGISMap()
-  val portalUrl = portalItem["portalUrl"] as? String ?: "https://www.arcgis.com"
-  return ArcGISMap(PortalItem(Portal(portalUrl, Portal.Connection.Anonymous), itemId))
+  // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
+  // `<Scene portalItem>` and `<FeatureLayer portalItem>` — see [portalItemFromDict].
+  val item = portalItemFromDict(portalItem) ?: return ArcGISMap()
+  return ArcGISMap(item)
 }
