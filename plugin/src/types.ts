@@ -19,7 +19,7 @@ export type ArcGISPluginProps = {
    */
   androidMinSdkVersion?: number;
 
-  /** Android compileSdk level. ArcGIS Maps SDK 300.1 requires >= 36. */
+  /** Android compileSdk level. ArcGIS Maps SDK 300.1 requires >= 37. */
   androidCompileSdkVersion?: number;
 
   /** Minimum iOS deployment target. ArcGIS Maps SDK 300.1 requires >= 18.0. */

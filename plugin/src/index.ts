@@ -8,7 +8,7 @@ import { withArcGISIos } from './withArcGISIos';
  * Expo config plugin for `expo-arcgis`.
  *
  * Pulls the native ArcGIS Maps SDK into the consuming app and configures the build:
- * - Android: Esri Maven repository, minSdk >= 28, compileSdk >= 36, optional API key + location.
+ * - Android: Esri Maven repository, minSdk >= 28, compileSdk >= 37, optional API key + location.
  * - iOS: deployment target >= 18.0, optional API key + location usage description.
  *
  * The ArcGIS SDK artifacts themselves are declared by the module's own android/build.gradle

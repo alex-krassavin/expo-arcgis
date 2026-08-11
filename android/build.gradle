@@ -34,6 +34,6 @@ android {
 
 dependencies {
   // ArcGIS Maps SDK for Kotlin — core MapView/GeoView, basemaps, layers, graphics.
-  // Requires the consuming app to set minSdk >= 28 and compileSdk >= 36 (config plugin).
+  // Requires the consuming app to set minSdk >= 28 and compileSdk >= 37 (config plugin).
   implementation 'com.esri:arcgis-maps-kotlin:300.1.0'
 }

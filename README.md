@@ -35,7 +35,7 @@ ArcGIS Maps SDK 300.1 sets the floor for any app using this module:
 | | Minimum |
 |---|---|
 | iOS | **18.0**, built with **Xcode 26** |
-| Android | **API 28** (Android 9), compileSdk **36** — Esri deprecated API 28 in 300.1; the next SDK release requires API 29 |
+| Android | **API 28** (Android 9), compileSdk **37** — Esri deprecated API 28 in 300.1; the next SDK release requires API 29 |
 | Expo | SDK **54+** (New Architecture). Verified on Expo **56** / RN **0.82** / React **19** |
 | Auth | An [ArcGIS API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/) (or token / OAuth) |
 
@@ -74,7 +74,7 @@ npx expo prebuild --clean
 | `apiKey` | `string` | – | Written to `strings.xml` (`arcgis_api_key`) / `Info.plist` (`ArcGISAPIKey`) and read at init. |
 | `androidMavenUrl` | `string` | Esri artifactory | Override the ArcGIS Maven repository. |
 | `androidMinSdkVersion` | `number` | `28` | Minimum Android SDK. |
-| `androidCompileSdkVersion` | `number` | `36` | Android compileSdk. |
+| `androidCompileSdkVersion` | `number` | `37` | Android compileSdk. |
 | `iosDeploymentTarget` | `string` | `18.0` | Minimum iOS deployment target. |
 | `locationWhenInUseUsageDescription` | `string` | – | Opt into location permissions for showing device position. |
 
