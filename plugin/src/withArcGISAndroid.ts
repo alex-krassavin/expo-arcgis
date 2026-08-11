@@ -14,7 +14,10 @@ const DEFAULT_ESRI_MAVEN_URL = 'https://esri.jfrog.io/artifactory/arcgis';
 // ArcGIS Maps SDK for Kotlin 300.1 minimum build requirements. API 28 is deprecated by Esri
 // (300.1 is the last release to support it); the next SDK release moves the floor to API 29.
 const REQUIRED_MIN_SDK = 28;
-const REQUIRED_COMPILE_SDK = 36;
+
+// Expo default compile SDK is 36, but ArcGIS Maps SDK for Kotlin 300.1 requires 37:
+// https://github.com/Esri/arcgis-maps-sdk-kotlin-toolkit/pull/1135
+const REQUIRED_COMPILE_SDK = 37;
 
 export const withArcGISAndroid: ConfigPlugin<ArcGISPluginProps> = (config, props) => {
   config = withEsriMavenRepository(config, props.androidMavenUrl ?? DEFAULT_ESRI_MAVEN_URL);
