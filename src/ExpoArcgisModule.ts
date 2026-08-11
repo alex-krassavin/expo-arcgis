@@ -124,6 +124,8 @@ export declare class FeatureLayerRef extends LayerRef {
   undoLocalEdits(): Promise<void>;
   queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
   getDictionarySymbolStyleSchema(): Promise<string | null>;
+  selectFeatures(objectIds: number[]): Promise<void>;
+  clearSelection(): void;
   queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
   addAttachment(objectId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
   fetchAttachment(objectId: number, attachmentId: number): Promise<string>;

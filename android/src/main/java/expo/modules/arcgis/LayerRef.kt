@@ -41,6 +41,7 @@ import com.arcgismaps.mapping.layers.BuildingSceneLayer
 import com.arcgismaps.mapping.layers.DimensionLayer
 import com.arcgismaps.mapping.layers.FeatureCollectionLayer
 import com.arcgismaps.mapping.layers.FeatureLayer
+import com.arcgismaps.mapping.layers.SelectionMode
 import com.arcgismaps.mapping.layers.GroupLayer
 import com.arcgismaps.mapping.layers.IntegratedMeshLayer
 import com.arcgismaps.mapping.layers.Layer
@@ -431,6 +432,22 @@ class FeatureLayerRef private constructor(
     val table = resolvedTable()
     val params = QueryParameters().apply { objectIds.add(objectId) }
     return table.queryFeatures(params).getOrThrow().firstOrNull()
+  }
+
+  /**
+   * Selects the features with [objectIds], replacing any current selection. The SDK draws the
+   * selection highlight above the layer — something a `<Graphic>` in an overlay cannot be made to
+   * do, since overlays and layers are depth-sorted against each other in a scene.
+   */
+  suspend fun selectFeatures(objectIds: List<Long>) {
+    val featureLayer = layer as? FeatureLayer ?: return
+    val params = QueryParameters().apply { this.objectIds.addAll(objectIds) }
+    featureLayer.selectFeatures(params, SelectionMode.New).getOrThrow()
+  }
+
+  /** Clears the layer's selection. */
+  fun clearSelection() {
+    (layer as? FeatureLayer)?.clearSelection()
   }
 
   /** Pushes pending local edits to the feature service (no-op for non-service tables). */
