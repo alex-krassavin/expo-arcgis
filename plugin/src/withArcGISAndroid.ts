@@ -1,6 +1,7 @@
 import {
   AndroidConfig,
   ConfigPlugin,
+  withAppBuildGradle,
   withGradleProperties,
   withProjectBuildGradle,
   withStringsXml,
@@ -19,10 +20,29 @@ const REQUIRED_MIN_SDK = 28;
 // https://github.com/Esri/arcgis-maps-sdk-kotlin-toolkit/pull/1135
 const REQUIRED_COMPILE_SDK = 37;
 
+/**
+ * From API 37 on, the SDK platform is published only under a minor version — `platforms;android-37.0`,
+ * `37.1` and so on, with no plain `platforms;android-37`. An integer `compileSdk` makes AGP look the
+ * platform up by the legacy `android-37` target hash, which nothing provides, so release builds die in
+ * R8 with "Failed to find target with hash string 'android-37'". Naming the minor level sends it after
+ * `android-37.0` instead.
+ *
+ * API 36 and below still ship an unsuffixed `platforms;android-36` and no `android-36.0`, so a minor
+ * level is only correct from 37 up — below that it would break the lookup it is meant to fix.
+ */
+const MINOR_VERSIONED_FROM_COMPILE_SDK = 37;
+const REQUIRED_COMPILE_SDK_MINOR = 0;
+
 export const withArcGISAndroid: ConfigPlugin<ArcGISPluginProps> = (config, props) => {
   config = withEsriMavenRepository(config, props.androidMavenUrl ?? DEFAULT_ESRI_MAVEN_URL);
   config = withArcGISSdkVersions(config, props);
   config = withArcGISKotlinMetadataFix(config);
+
+  if (
+    (props.androidCompileSdkVersion ?? REQUIRED_COMPILE_SDK) >= MINOR_VERSIONED_FROM_COMPILE_SDK
+  ) {
+    config = withArcGISCompileSdkMinor(config, REQUIRED_COMPILE_SDK_MINOR);
+  }
 
   if (props.apiKey) {
     config = withArcGISApiKeyResource(config, props.apiKey);
@@ -89,6 +109,44 @@ const withArcGISSdkVersions: ConfigPlugin<ArcGISPluginProps> = (config, props) =
     return cfg;
   });
 };
+
+/**
+ * Names the compile SDK's minor level in the app module, so AGP resolves the minor-versioned platform
+ * package. gradle.properties cannot carry this: Expo parses `android.compileSdkVersion` to an Int and
+ * neither Expo nor React Native plumbs a minor level, so it has to be set in the `android {}` block.
+ *
+ * Only the app module needs it. Library modules compile against the same platform without trouble; it
+ * is R8, which runs in the app module, that resolves the platform by target hash.
+ */
+const withArcGISCompileSdkMinor: ConfigPlugin<number> = (config, minor) =>
+  withAppBuildGradle(config, (cfg) => {
+    if (cfg.modResults.language !== 'groovy') {
+      throw new Error(
+        'expo-arcgis: cannot set compileSdkMinor — android/app/build.gradle is not Groovy.'
+      );
+    }
+    cfg.modResults.contents = setCompileSdkMinor(cfg.modResults.contents, minor);
+    return cfg;
+  });
+
+/** Adds `compileSdkMinor <minor>` directly below the app module's `compileSdk` assignment. */
+export function setCompileSdkMinor(appBuildGradle: string, minor: number): string {
+  if (/^[ \t]*compileSdkMinor\b/m.test(appBuildGradle)) {
+    return appBuildGradle; // idempotent
+  }
+  // `compileSdk` followed by whitespace, so compileSdkVersion/compileSdkPreview don't match.
+  const compileSdk = /^([ \t]*)compileSdk[ \t]+.+$/m;
+  const match = appBuildGradle.match(compileSdk);
+  if (!match) {
+    throw new Error(
+      'expo-arcgis: cannot set compileSdkMinor — no compileSdk assignment in android/app/build.gradle.'
+    );
+  }
+  return appBuildGradle.replace(
+    compileSdk,
+    (line) => `${line}\n${match[1]}compileSdkMinor ${minor}`
+  );
+}
 
 /** Stores the API key in strings.xml as `arcgis_api_key` for the native runtime to read. */
 const withArcGISApiKeyResource: ConfigPlugin<string> = (config, apiKey) =>
