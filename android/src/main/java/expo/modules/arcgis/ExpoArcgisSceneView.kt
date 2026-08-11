@@ -14,6 +14,7 @@ import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.mapping.view.GlobeCameraController
 import com.arcgismaps.mapping.view.LightingMode
 import com.arcgismaps.mapping.view.OrbitLocationCameraController
+import com.arcgismaps.mapping.view.SceneLocationVisibility
 import com.arcgismaps.mapping.view.SceneView
 import com.arcgismaps.mapping.view.ScreenCoordinate
 import expo.modules.kotlin.AppContext
@@ -140,6 +141,40 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     }
   }
 
+  /**
+   * The camera as the user has left it, in WGS84 — the same shape the `camera` prop accepts, so a
+   * caller can read it, adjust it, and hand it back.
+   */
+  fun getCamera(): Map<String, Any?>? {
+    val camera = sceneView.getCurrentViewpointCamera() ?: return null
+    val location = (GeometryEngine.projectOrNull(camera.location, SpatialReference.wgs84()) as? Point)
+      ?: camera.location
+    return mapOf(
+      "position" to buildMap {
+        put("x", location.x)
+        put("y", location.y)
+        location.z?.let { put("z", it) }
+      },
+      "heading" to camera.heading,
+      "pitch" to camera.pitch,
+      "roll" to camera.roll,
+    )
+  }
+
+  /**
+   * Where a scene location currently falls on screen, in points, plus whether anything is between
+   * it and the camera. Null before the view has drawn.
+   */
+  fun screenPoint(location: Map<String, Any?>): Map<String, Any?>? {
+    val point = geometryFromDict(location) as? Point ?: return null
+    val result = sceneView.locationToScreen(point) ?: return null
+    return mapOf(
+      "x" to result.screenPoint.x,
+      "y" to result.screenPoint.y,
+      "visibility" to screenPointVisibility(result.visibility),
+    )
+  }
+
   /** Returns the terrain elevation (meters) at a point on the scene's base surface, or null. */
   fun getElevation(point: Map<String, Any?>, promise: Promise) {
     val scene = sceneView.scene ?: run { promise.resolve(null); return }
@@ -262,4 +297,13 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     observedLifecycle?.removeObserver(sceneView)
     observedLifecycle = null
   }
+}
+
+/** Maps [SceneLocationVisibility] to the kebab-case strings the JS side uses. */
+private fun screenPointVisibility(visibility: SceneLocationVisibility): String = when (visibility) {
+  SceneLocationVisibility.Visible -> "visible"
+  SceneLocationVisibility.HiddenByBaseSurface -> "hidden-by-base-surface"
+  SceneLocationVisibility.HiddenByEarth -> "hidden-by-earth"
+  SceneLocationVisibility.HiddenByElevation -> "hidden-by-elevation"
+  SceneLocationVisibility.NotOnScreen -> "not-on-screen"
 }
