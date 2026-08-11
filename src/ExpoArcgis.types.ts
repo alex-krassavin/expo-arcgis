@@ -193,6 +193,43 @@ export type GridConfig = {
   visible?: boolean;
 };
 
+/**
+ * How a geometry's z value is interpreted against the scene's surface. Mirrors `SurfacePlacement`.
+ *
+ * - `draped-billboarded` — z ignored; drawn on the surface, always facing the camera. The default.
+ * - `draped-flat` — z ignored; drawn lying on the surface, so it tilts with the terrain.
+ * - `absolute` — z is height above sea level, independent of the surface.
+ * - `relative` — z is height above the surface.
+ * - `relative-to-scene` — z is height above scene layers (buildings, meshes) where present,
+ *   falling back to the surface elsewhere.
+ */
+export type SurfacePlacement =
+  | 'draped-billboarded'
+  | 'draped-flat'
+  | 'absolute'
+  | 'relative'
+  | 'relative-to-scene';
+
+/**
+ * 3D placement, applied when the content is drawn in a `<SceneView>` and ignored in a `<MapView>`.
+ * Mirrors `LayerSceneProperties`.
+ *
+ * The default `draped-billboarded` lays markers on the terrain, where scene layers drawn above the
+ * terrain — an integrated mesh, say — will hide them. `absolute` with an `altitudeOffset` lifts
+ * them clear.
+ *
+ * @example
+ * ```tsx
+ * <FeatureLayer url={...} sceneProperties={{ surfacePlacement: 'absolute', altitudeOffset: -15 }} />
+ * ```
+ */
+export type SceneProperties = {
+  /** Defaults to `draped-billboarded`. */
+  surfacePlacement?: SurfacePlacement;
+  /** Metres added to each geometry's z. Defaults to `0`. */
+  altitudeOffset?: number;
+};
+
 /** Common operational-layer props (subset of ArcGIS layer properties). */
 export type LayerProps = {
   /** Layer opacity, 0–1. */
@@ -326,6 +363,8 @@ export type FeatureLayerProps = LayerProps & {
    * and `refreshInterval: TimeInterval?` (seconds) on iOS.
    */
   refreshInterval?: number;
+  /** How the layer's features sit against a 3D scene's surface. Ignored in a `<MapView>`. */
+  sceneProperties?: SceneProperties;
 };
 
 /** One field in a `<FeatureCollectionLayer>` schema. */
@@ -1352,6 +1391,8 @@ export type DynamicEntityLayerProps = LayerProps & {
   trackDisplay?: TrackDisplay;
   /** Stream-service filter — only entities matching `whereClause` (and/or within `geometry`) stream in. */
   filter?: { whereClause?: string; geometry?: Geometry };
+  /** How the layer's entities sit against a 3D scene's surface. Ignored in a `<MapView>`. */
+  sceneProperties?: SceneProperties;
   /**
    * Bounds the observation history kept in memory by the data source. Set either field to limit how
    * many total observations or how much elapsed time the stream retains across all dynamic entities.

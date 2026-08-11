@@ -304,6 +304,9 @@ class ExpoArcgisModule : Module() {
       Function("setRenderer") { ref: GraphicsOverlayRef, renderer: Map<String, Any?>? ->
         ref.setRenderer(renderer)
       }
+      Function("setSceneProperties") { ref: GraphicsOverlayRef, props: Map<String, Any?>? ->
+        ref.setSceneProperties(props)
+      }
     }
 
     Class(GraphicRef::class) {

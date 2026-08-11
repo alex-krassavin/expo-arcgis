@@ -96,6 +96,9 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
   override fun applyProps(changed: Map<String, Any?>) {
     applyCommonProps(changed)
     val entityLayer = layer as? DynamicEntityLayer ?: return
+    if (changed.containsKey("sceneProperties")) {
+      applySceneProperties(entityLayer.sceneProperties, changed["sceneProperties"] as? Map<*, *>)
+    }
     (changed["trackDisplay"] as? Map<*, *>)?.let { track ->
       (track["maximumObservations"] as? Number)?.toInt()?.let {
         entityLayer.trackDisplayProperties.maximumObservations = it
