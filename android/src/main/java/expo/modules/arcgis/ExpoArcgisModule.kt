@@ -459,6 +459,10 @@ private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView
   AsyncFunction("setBookmark") { view: ExpoArcgisMapView, name: String, promise: Promise ->
     view.setBookmark(name, promise)
   }
+
+  AsyncFunction("getCenter") { view: ExpoArcgisMapView, promise: Promise ->
+    view.getCenter(promise)
+}
 }
 
 // 3D scene host — named so JS resolves it via requireNativeView('ExpoArcgis', 'ExpoArcgisSceneView').

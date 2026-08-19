@@ -597,6 +597,11 @@ export type MapViewHandle = {
   getBookmarkNames(): Promise<string[]>;
   /** Navigates to the named bookmark's viewpoint; resolves to whether a matching bookmark was found. */
   setBookmark(name: string): Promise<boolean>;
+  /** Gets the center of the mapview returns screen coordinates. */
+  getCenter(): Promise<{
+  latitude: number;
+  longitude: number;
+} | null>;
 };
 
 /** Imperative handle exposed by `<SceneView>` via `ref`. */
