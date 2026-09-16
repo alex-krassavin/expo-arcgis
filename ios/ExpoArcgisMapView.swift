@@ -23,6 +23,9 @@ final class MapViewModel: ObservableObject {
   @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `MapViewReader`, used for `identify` (not published).
   var proxy: MapViewProxy?
+  /// Centre of the last reported viewpoint, for `getCenter()`. Not published on purpose: the
+  /// viewpoint changes on every frame of a pan, and republishing would re-render the view with it.
+  var currentCenter: Point?
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -107,6 +110,9 @@ struct ExpoArcgisMapContainer: View {
           // the SwiftUI modifiers below — as do the inset modifiers.
           .contentInsets(model.contentInsets)
           .insetsViewpointAdjustmentType(model.insetsAdjustment)
+          .onViewpointChanged(kind: .centerAndScale) { viewpoint in
+            model.currentCenter = viewpoint.targetGeometry as? Point
+          }
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
           .grid(model.grid)
@@ -202,6 +208,17 @@ class ExpoArcgisMapView: ExpoView {
     guard let map = model.map else { return [] }
     try await map.load()
     return map.bookmarks.map { $0.name }
+  }
+
+  /// The geographic centre of the visible map (WGS84), or nil before the view has drawn.
+  ///
+  /// Reads the centre of the last reported viewpoint rather than projecting the view's mid-point:
+  /// SwiftUI does not hand the hosted view its pixel size here, and the viewpoint centre is the
+  /// same answer. It also already accounts for `contentInsets`, which a raw mid-point would not.
+  func getCenter() -> [String: Any]? {
+    guard let center = model.currentCenter else { return nil }
+    let wgs84 = GeometryEngine.project(center, into: .wgs84) ?? center
+    return ["latitude": wgs84.y, "longitude": wgs84.x]
   }
 
   /// Navigates to the named bookmark's viewpoint; returns whether a matching bookmark was found.

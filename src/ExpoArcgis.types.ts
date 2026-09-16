@@ -597,11 +597,11 @@ export type MapViewHandle = {
   getBookmarkNames(): Promise<string[]>;
   /** Navigates to the named bookmark's viewpoint; resolves to whether a matching bookmark was found. */
   setBookmark(name: string): Promise<boolean>;
-  /** Gets the center of the mapview returns screen coordinates. */
-  getCenter(): Promise<{
-  latitude: number;
-  longitude: number;
-} | null>;
+  /**
+   * Geographic centre of the visible map in WGS84, or `null` before the view has drawn.
+   * Accounts for `contentInsets`, so it reports the centre of the part the user can actually see.
+   */
+  getCenter(): Promise<{ latitude: number; longitude: number } | null>;
 };
 
 /** Imperative handle exposed by `<SceneView>` via `ref`. */

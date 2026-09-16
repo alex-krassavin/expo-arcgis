@@ -473,6 +473,9 @@ public class ExpoArcgisModule: Module {
         try await view.getBookmarkNames()
       }
 
+      AsyncFunction("getCenter") { (view: ExpoArcgisMapView) in
+        view.getCenter()
+      }
       AsyncFunction("setBookmark") { (view: ExpoArcgisMapView, name: String) in
         try await view.setBookmark(name)
       }
