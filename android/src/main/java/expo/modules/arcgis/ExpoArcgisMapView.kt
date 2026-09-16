@@ -237,6 +237,36 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
+      fun getCenter(promise: Promise) {
+        val width = mapView.width.toDouble()
+        val height = mapView.height.toDouble()
+
+        val screenCenter = ScreenCoordinate(
+            width / 2.0,
+            height / 2.0
+        )
+
+        val mapPoint = mapView.screenToLocation(screenCenter)
+
+        if (mapPoint == null) {
+            promise.resolve(null)
+            return
+        }
+
+        val wgs84 =
+            GeometryEngine.projectOrNull(
+                mapPoint,
+                SpatialReference.wgs84()
+            ) as? Point ?: mapPoint
+
+        promise.resolve(
+            mapOf(
+                "latitude" to wgs84.y,
+                "longitude" to wgs84.x
+            )
+        )
+    }
+
   /** Identifies popups under a screen point — evaluates each and returns `{ title, fields }`. */
   fun identifyPopups(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
     val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
