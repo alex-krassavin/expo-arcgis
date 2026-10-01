@@ -29,7 +29,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const APP_ID = 'dev.expoarcgis.harness';
 
 function parseArgs(argv) {
-  const args = { dir: path.join(os.tmpdir(), 'expo-arcgis-harness') };
+  const args = {};
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i].replace(/^--/, '').replace(/-(\w)/g, (_, c) => c.toUpperCase());
     // An option followed by another option, or by nothing, is a switch.
@@ -61,6 +61,9 @@ function parseArgs(argv) {
     );
     process.exit(1);
   }
+  // Without --dir, a fresh private directory: a fixed path under the shared temp dir is one another
+  // user could create first, and own.
+  args.dir ??= fs.mkdtempSync(path.join(os.tmpdir(), 'expo-arcgis-harness-'));
   return args;
 }
 
@@ -108,8 +111,36 @@ function createApp(appDir, sdk, moduleSource) {
   console.log(`\nHarness app: Expo ${installed}, React Native ${rn}`);
 }
 
+// React Native pins an NDK that GitHub's runner image doesn't carry, so the Android Gradle plugin
+// downloads it (~1 GB) in the middle of the build, and a broken download fails the job: "Archive is
+// not a ZIP archive". Install it up front instead, with retries. A machine that has it skips this.
+function installNdk(appDir) {
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const catalog = path.join(appDir, 'node_modules/react-native/gradle/libs.versions.toml');
+  const version = fs.existsSync(catalog)
+    ? fs.readFileSync(catalog, 'utf8').match(/^ndkVersion\s*=\s*"([^"]+)"/m)?.[1]
+    : undefined;
+  const sdkmanager = sdkRoot && path.join(sdkRoot, 'cmdline-tools/latest/bin/sdkmanager');
+  if (!version || !sdkmanager || !fs.existsSync(sdkmanager)) return;
+  if (fs.existsSync(path.join(sdkRoot, 'ndk', version))) return;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      // `input` answers the license prompt.
+      run(sdkmanager, ['--install', `ndk;${version}`], {
+        input: 'y\n'.repeat(5),
+        stdio: ['pipe', 'inherit', 'inherit'],
+      });
+      return;
+    } catch (error) {
+      if (attempt === 3) throw error;
+      console.warn(`sdkmanager could not install ndk;${version} (attempt ${attempt} of 3), retrying`);
+    }
+  }
+}
+
 function buildAndroid(appDir, codeql) {
   run('npx', ['expo', 'prebuild', '-p', 'android', '--no-install'], { cwd: appDir });
+  installNdk(appDir);
   const gradleArgs = [':expo-arcgis:compileDebugKotlin'];
   if (process.env.CI || codeql) gradleArgs.push('--no-daemon');
   if (codeql) {
