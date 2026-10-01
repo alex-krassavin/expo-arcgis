@@ -1,59 +1,40 @@
 package expo.modules.arcgistoolkit
 
-import android.content.Context
-import android.view.ViewGroup
-import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.ComposeView
-import com.arcgismaps.toolkit.basemapgallery.BasemapGallery
-import com.arcgismaps.toolkit.compass.Compass
-import com.arcgismaps.toolkit.geoviewcompose.MapView
-import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
-import expo.modules.arcgis.MapRef
-import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import expo.modules.kotlin.views.ExpoView
+import expo.modules.kotlin.sharedobjects.SharedObject
 
-// SPIKE — build-compatibility probe, replaced by the real components. It compiles, on each Expo
-// SDK the harness covers:
-// - toolkit composables (Compass, BasemapGallery) hosted in an Expo view;
-// - geoview-compose's MapView + MapViewProxy, the candidate replacement for the core's Android
-//   MapView;
-// - a core shared object (MapRef) resolved from another module.
+/**
+ * ArcGIS Maps SDK Toolkit components for expo-arcgis.
+ *
+ * Compass and Scalebar are accessories: shared objects the JS components hand to the nearest
+ * `<MapView>`, which composes them over the map (expo-arcgis's `GeoViewAccessory`). BasemapGallery
+ * is a view of its own.
+ */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ExpoArcgisToolkit")
 
-    View(ToolkitProbeView::class) {
-      Prop("map") { view: ToolkitProbeView, ref: MapRef? ->
-        view.setMap(ref)
-      }
+    Class(CompassAccessory::class) {
+      Constructor { CompassAccessory(appContext) }
+      AsyncFunction("update") { accessory: CompassAccessory, props: Map<String, Any?> ->
+        accessory.update(props)
+      }.runOnQueue(Queues.MAIN)
     }
-  }
-}
 
-class ToolkitProbeView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  private var mapRef: MapRef? = null
+    Class(ScalebarAccessory::class) {
+      Constructor { ScalebarAccessory(appContext) }
+      AsyncFunction("update") { accessory: ScalebarAccessory, props: Map<String, Any?> ->
+        accessory.update(props)
+      }.runOnQueue(Queues.MAIN)
+    }
 
-  private val composeView = ComposeView(context).also {
-    it.layoutParams = ViewGroup.LayoutParams(
-      ViewGroup.LayoutParams.MATCH_PARENT,
-      ViewGroup.LayoutParams.MATCH_PARENT
-    )
-    addView(it)
-  }
-
-  fun setMap(ref: MapRef?) {
-    mapRef = ref
-    val map = ref?.map ?: return
-    composeView.setContent {
-      val proxy = remember { MapViewProxy() }
-      Column {
-        Compass(rotation = 0.0)
-        BasemapGallery(basemapGalleryItems = emptyList(), onItemClick = {})
-        MapView(arcGISMap = map, mapViewProxy = proxy)
+    View(BasemapGalleryView::class) {
+      Prop("geoModel") { view: BasemapGalleryView, ref: SharedObject? ->
+        view.setGeoModel(ref)
       }
+      OnViewDestroys { view: BasemapGalleryView -> view.destroy() }
     }
   }
 }

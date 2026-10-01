@@ -197,7 +197,8 @@ function buildIos(appDir, spmCache, codeql) {
   }
 }
 
-// Enough of the API to make the typecheck and the bundle reach the library's main entry points.
+// Enough of the API to make the typecheck and the bundle reach the library's main entry points,
+// and those of the packages built on it.
 const APP_TSX = `import { useRef } from 'react';
 import {
   FeatureLayer,
@@ -208,21 +209,21 @@ import {
   type MapViewHandle,
   geometryEngine,
 } from 'expo-arcgis';
-import { ToolkitProbe } from 'expo-arcgis-toolkit';
+import { BasemapGallery, Compass, Scalebar } from 'expo-arcgis-toolkit';
 
 export default function App() {
   const view = useRef<MapViewHandle>(null);
   const area = geometryEngine.buffer({ type: 'point', x: 0, y: 0 }, 1000);
   return (
-    <>
+    <Map basemap="arcGISTopographic">
       <MapView ref={view} style={{ flex: 1 }} onTap={() => view.current?.getCenter()}>
-        <Map basemap="arcGISTopographic">
-          <FeatureLayer url="https://services.arcgis.com/example/FeatureServer/0" />
-        </Map>
+        <FeatureLayer url="https://services.arcgis.com/example/FeatureServer/0" />
         <GraphicsOverlay>{area && <Graphic geometry={area} />}</GraphicsOverlay>
+        <Compass autoHide={false} />
+        <Scalebar units="metric" style="line" />
       </MapView>
-      <ToolkitProbe style={{ height: 120 }} />
-    </>
+      <BasemapGallery style={{ height: 240 }} />
+    </Map>
   );
 }
 `;

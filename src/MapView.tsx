@@ -34,7 +34,7 @@ type NativeMapViewProps = MapViewProps & {
   /** Interactive geometry editor declared as a `<GeometryEditor>` child, passed by reference. */
   geometryEditor?: GeometryEditorRef | null;
   /** UI other packages draw over the map (expo-arcgis-toolkit's compass…), passed by reference. */
-  accessories: SharedObject[];
+  accessories: InstanceType<SharedObject>[];
   /** Ref to the native view, whose `identify` async function is callable through it. */
   ref?: Ref<unknown>;
   children?: ReactNode;
@@ -55,7 +55,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
     const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
     const [imageOverlays, setImageOverlays] = useState<ImageOverlayRef[]>([]);
     const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
-    const [accessories, setAccessories] = useState<SharedObject[]>([]);
+    const [accessories, setAccessories] = useState<InstanceType<SharedObject>[]>([]);
     const host = useMemo<GeoViewHost>(
       () => ({
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),

@@ -16,8 +16,8 @@ import type { ViewStyle } from 'react-native';
 
 // @public
 export type AccessoryHost = {
-    addAccessory(accessory: SharedObject): void;
-    removeAccessory(accessory: SharedObject): void;
+    addAccessory(accessory: InstanceType<SharedObject>): void;
+    removeAccessory(accessory: InstanceType<SharedObject>): void;
 };
 
 // @public

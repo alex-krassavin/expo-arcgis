@@ -67,8 +67,9 @@ export type ImageOverlayHost = {
  * the view renders it in its own overlay, with the view's live state. Not on `<SceneView>` yet.
  */
 export type AccessoryHost = {
-  addAccessory(accessory: SharedObject): void;
-  removeAccessory(accessory: SharedObject): void;
+  // `SharedObject` is the class; an accessory is an instance of one of its subclasses.
+  addAccessory(accessory: InstanceType<SharedObject>): void;
+  removeAccessory(accessory: InstanceType<SharedObject>): void;
 };
 
 /** What a `<MapView>` / `<SceneView>` exposes to its children. */
