@@ -86,7 +86,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle') }}
+          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle', 'packages/*/android/build.gradle') }}
           restore-keys: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-
 
       - if: matrix.language == 'swift'
@@ -94,7 +94,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/spm-cache
-          key: spm-${{ runner.os }}-${{ hashFiles('ios/ExpoArcgis.podspec') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('ios/*.podspec', 'packages/*/ios/*.podspec') }}
           restore-keys: spm-${{ runner.os }}-
 
       - uses: github/codeql-action/init@v4

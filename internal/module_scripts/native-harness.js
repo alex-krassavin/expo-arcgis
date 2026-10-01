@@ -14,6 +14,9 @@
 // Platforms: `android` compiles the module's Kotlin, `ios` compiles its Swift (ExpoArcgis scheme),
 // `js` typechecks and bundles an app that imports the library.
 //
+// The packages released next to the core (packages/*, e.g. expo-arcgis-toolkit) are Expo modules
+// built on it. They are packed and installed with the core, and their native code compiles too.
+//
 //   node internal/module_scripts/native-harness.js --codeql --platform android
 //
 // `--codeql` is the build behind a CodeQL database (.github/workflows/codeql.yml). The app links
@@ -27,6 +30,25 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '../..');
 const APP_ID = 'dev.expoarcgis.harness';
+
+/** The packages built on the core (packages/*): their directories and npm names. */
+const PACKAGES = (
+  fs.existsSync(path.join(ROOT, 'packages')) ? fs.readdirSync(path.join(ROOT, 'packages')) : []
+)
+  .map((dir) => path.join(ROOT, 'packages', dir))
+  .filter((dir) => fs.existsSync(path.join(dir, 'package.json')))
+  .map((dir) => ({ dir, name: require(path.join(dir, 'package.json')).name }));
+
+/** The CocoaPods pods a module directory declares (`ios/<Pod>.podspec`). */
+function podsIn(dir) {
+  const iosDir = path.join(dir, 'ios');
+  return fs.existsSync(iosDir)
+    ? fs
+        .readdirSync(iosDir)
+        .filter((file) => file.endsWith('.podspec'))
+        .map((file) => path.basename(file, '.podspec'))
+    : [];
+}
 
 function parseArgs(argv) {
   const args = { dir: path.join(os.tmpdir(), 'expo-arcgis-harness') };
@@ -74,12 +96,13 @@ function run(cmd, args, options = {}) {
   });
 }
 
-function pack(dir) {
-  const out = run('npm', ['pack', '--pack-destination', dir], { cwd: ROOT, capture: true });
+/** Packs the package in `source` into `dir`; returns the tarball's path. */
+function pack(source, dir) {
+  const out = run('npm', ['pack', '--pack-destination', dir], { cwd: source, capture: true });
   return path.join(dir, out.trim().split('\n').pop().trim());
 }
 
-function createApp(appDir, sdk, moduleSource) {
+function createApp(appDir, sdk, moduleSources) {
   fs.rmSync(appDir, { recursive: true, force: true });
   run('npx', [
     '--yes',
@@ -91,10 +114,11 @@ function createApp(appDir, sdk, moduleSource) {
     '--no-agents-md',
   ]);
   run('npm', ['install', '--no-audit', '--no-fund'], { cwd: appDir });
-  // A tarball installs as a copy. The checkout (--codeql) installs as a symlink — npm's default for
-  // a directory, pinned here — which autolinking resolves to the repository's real path.
-  const link = fs.statSync(moduleSource).isDirectory() ? ['--install-links=false'] : [];
-  run('npm', ['install', '--no-audit', '--no-fund', ...link, moduleSource], { cwd: appDir });
+  // One install, so each package's `expo-arcgis` peer resolves to the core installed with it. A
+  // tarball installs as a copy. The checkout (--codeql) installs as a symlink — npm's default for a
+  // directory, pinned here — which autolinking resolves to the repository's real path.
+  const link = fs.statSync(moduleSources[0]).isDirectory() ? ['--install-links=false'] : [];
+  run('npm', ['install', '--no-audit', '--no-fund', ...link, ...moduleSources], { cwd: appDir });
 
   const appJsonPath = path.join(appDir, 'app.json');
   const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
@@ -110,7 +134,10 @@ function createApp(appDir, sdk, moduleSource) {
 
 function buildAndroid(appDir, codeql) {
   run('npx', ['expo', 'prebuild', '-p', 'android', '--no-install'], { cwd: appDir });
-  const gradleArgs = [':expo-arcgis:compileDebugKotlin'];
+  // Autolinking names each module's Gradle project after its npm package.
+  const gradleArgs = ['expo-arcgis', ...PACKAGES.map((pkg) => pkg.name)].map(
+    (project) => `:${project}:compileDebugKotlin`
+  );
   if (process.env.CI || codeql) gradleArgs.push('--no-daemon');
   if (codeql) {
     gradleArgs.push(
@@ -136,8 +163,6 @@ function buildIos(appDir, spmCache, codeql) {
   const xcodeArgs = [
     '-workspace',
     workspace,
-    '-scheme',
-    'ExpoArcgis',
     '-sdk',
     'iphonesimulator',
     '-configuration',
@@ -162,7 +187,10 @@ function buildIos(appDir, spmCache, codeql) {
     );
   }
   run('xcodebuild', ['-version'], { cwd: iosDir });
-  run('xcodebuild', [...xcodeArgs, 'build'], { cwd: iosDir, env: utf8 });
+  // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
+  for (const scheme of [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn)) {
+    run('xcodebuild', [...xcodeArgs, '-scheme', scheme, 'build'], { cwd: iosDir, env: utf8 });
+  }
 }
 
 // Enough of the API to make the typecheck and the bundle reach the library's main entry points.
@@ -176,17 +204,21 @@ import {
   type MapViewHandle,
   geometryEngine,
 } from 'expo-arcgis';
+import { ToolkitProbe } from 'expo-arcgis-toolkit';
 
 export default function App() {
   const view = useRef<MapViewHandle>(null);
   const area = geometryEngine.buffer({ type: 'point', x: 0, y: 0 }, 1000);
   return (
-    <MapView ref={view} style={{ flex: 1 }} onTap={() => view.current?.getCenter()}>
-      <Map basemap="arcGISTopographic">
-        <FeatureLayer url="https://services.arcgis.com/example/FeatureServer/0" />
-      </Map>
-      <GraphicsOverlay>{area && <Graphic geometry={area} />}</GraphicsOverlay>
-    </MapView>
+    <>
+      <MapView ref={view} style={{ flex: 1 }} onTap={() => view.current?.getCenter()}>
+        <Map basemap="arcGISTopographic">
+          <FeatureLayer url="https://services.arcgis.com/example/FeatureServer/0" />
+        </Map>
+        <GraphicsOverlay>{area && <Graphic geometry={area} />}</GraphicsOverlay>
+      </MapView>
+      <ToolkitProbe style={{ height: 120 }} />
+    </>
   );
 }
 `;
@@ -218,7 +250,9 @@ function checkCodeqlExtraction(platform) {
           .filter((file) => file.endsWith(ext))
           .map((file) => path.join(dir, file))
       : [];
-  const sources = filesIn(path.join(ROOT, sourceDir));
+  const sources = [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) =>
+    filesIn(path.join(dir, sourceDir))
+  );
   const missing = sources.filter(
     (file) => !fs.existsSync(path.join(archive, fs.realpathSync(file)))
   );
@@ -236,13 +270,14 @@ function checkCodeqlExtraction(platform) {
 
 const args = parseArgs(process.argv.slice(2));
 fs.mkdirSync(args.dir, { recursive: true });
-const moduleSource = args.codeql
-  ? ROOT
-  : args.tarball
-    ? path.resolve(args.tarball)
-    : pack(args.dir);
+const moduleSources = args.codeql
+  ? [ROOT, ...PACKAGES.map((pkg) => pkg.dir)]
+  : [
+      args.tarball ? path.resolve(args.tarball) : pack(ROOT, args.dir),
+      ...PACKAGES.map((pkg) => pack(pkg.dir, args.dir)),
+    ];
 const appDir = path.join(args.dir, `sdk${args.sdk}-${args.platform}`);
-createApp(appDir, args.sdk, moduleSource);
+createApp(appDir, args.sdk, moduleSources);
 
 if (args.platform === 'android') buildAndroid(appDir, args.codeql);
 else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql);

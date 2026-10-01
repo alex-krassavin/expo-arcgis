@@ -100,7 +100,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-${{ hashFiles('android/build.gradle') }}
+          key: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-${{ hashFiles('android/build.gradle', 'packages/*/android/build.gradle') }}
           restore-keys: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-
 
       # Dev dependencies are needed to pack: `npm pack` runs `prepare`, which compiles build/.
@@ -138,7 +138,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/spm-cache
-          key: spm-${{ runner.os }}-${{ hashFiles('ios/ExpoArcgis.podspec') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('ios/*.podspec', 'packages/*/ios/*.podspec') }}
           restore-keys: spm-${{ runner.os }}-
 
       - name: Install module
