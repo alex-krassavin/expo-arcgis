@@ -18,17 +18,47 @@ import expo.modules.kotlin.views.ExpoView
  * without measuring the ComposeView. Android layout (`shouldUseAndroidLayout`) then measures it for
  * real: attaching makes the ComposeView request a layout, which React Native wouldn't run itself.
  * This is what expo-modules-core's own ExpoComposeView does.
+ *
+ * Every child fills the view, stacked in order: the ComposeView, and above it the layer of a geo
+ * view's React children ([ReactChildrenLayer]). ExpoView's LinearLayout would lay them out in a row.
  */
 abstract class ComposeHostView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
   override val shouldUseAndroidLayout = true
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    val width = MeasureSpec.getSize(widthMeasureSpec)
+    val height = MeasureSpec.getSize(heightMeasureSpec)
+    setMeasuredDimension(width, height)
     if (!isAttachedToWindow) {
-      setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec))
       return
     }
-    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    val childWidthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
+    val childHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+    for (i in 0 until childCount) {
+      getChildAt(i).measure(childWidthSpec, childHeightSpec)
+    }
   }
+
+  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+    for (i in 0 until childCount) {
+      getChildAt(i).layout(0, 0, r - l, b - t)
+    }
+  }
+}
+
+/**
+ * Holds a `<MapView>` / `<SceneView>`'s React children, above the map. Fabric inserts them by index
+ * and positions each one itself; as the view's own children they would sit under the map, and its
+ * ComposeHostView layout would stretch them over it. The module routes them here instead
+ * (`reactChildrenAboveMap` in ExpoArcgisModule). Like React Native's own views, this layer leaves its
+ * children where Fabric puts them, and it handles no touches: those that hit no child reach the map.
+ */
+internal class ReactChildrenLayer(context: Context) : ViewGroup(context) {
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec))
+  }
+
+  override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) = Unit
 }
 
 /**

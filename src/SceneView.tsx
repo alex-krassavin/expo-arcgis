@@ -34,7 +34,8 @@ const NativeSceneView = requireNativeView<NativeSceneViewProps>('ExpoArcgis', 'E
 
 /**
  * Declarative 3D scene view. Renders the `Scene` from the nearest `<Scene>`, hosts the
- * `<GraphicsOverlay>` / `<AnalysisOverlay>` children, and exposes `retryLoad` via a `ref`.
+ * `<GraphicsOverlay>` / `<AnalysisOverlay>` children, and exposes `retryLoad` via a `ref`. Other
+ * React children, such as buttons, render above the scene where their layout puts them.
  */
 export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneViewProps>>(
   function SceneView({ children, orbitGraphic, ...props }, handle) {

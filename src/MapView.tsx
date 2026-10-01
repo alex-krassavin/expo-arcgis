@@ -44,7 +44,8 @@ const NativeMapView = requireNativeView<NativeMapViewProps>('ExpoArcgis');
 
 /**
  * Declarative 2D map view. Renders the `ArcGISMap` from the nearest `<Map>`, hosts the
- * `<GraphicsOverlay>` / `<GeometryEditor>` children, and exposes `identify` via a `ref`.
+ * `<GraphicsOverlay>` / `<GeometryEditor>` children, and exposes `identify` via a `ref`. Other React
+ * children, such as buttons, render above the map where their layout puts them.
  */
 export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>>(
   function MapView({ children, ...props }, handle) {

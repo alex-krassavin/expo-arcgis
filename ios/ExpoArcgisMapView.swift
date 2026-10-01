@@ -212,6 +212,18 @@ class ExpoArcgisMapView: ExpoView {
     self.hostingController = hostingController
   }
 
+  // Fabric mounts React children by index among the subviews, where the map's hosting view comes
+  // first: as is, they would sit under the map. Shifted past it, they render above the map, and
+  // touches that miss them still reach it. React Native keeps the order when it wraps the subviews
+  // in a container (for `overflow` or `filter` styles), so the hosting view stays first.
+  override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
+    super.mountChildComponentView(childComponentView, index: index + 1)
+  }
+
+  override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
+    super.unmountChildComponentView(childComponentView, index: index + 1)
+  }
+
   /// Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result.
   func retryLoad() async throws {
     guard let map = model.map else { return }

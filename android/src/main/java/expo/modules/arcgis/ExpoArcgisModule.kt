@@ -1,6 +1,8 @@
 package expo.modules.arcgis
 
 import android.content.Context
+import android.view.View
+import android.view.ViewGroup
 import com.arcgismaps.ApiKey
 import com.arcgismaps.ArcGISEnvironment
 import com.arcgismaps.LicenseKey
@@ -13,6 +15,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.modules.ModuleDefinitionBuilder
+import expo.modules.kotlin.views.ViewDefinitionBuilder
 
 class ExpoArcgisModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -393,6 +396,20 @@ class ExpoArcgisModule : Module() {
 }
 
 /**
+ * Routes a geo view's React children into its [ReactChildrenLayer], above the map. Fabric manages
+ * children by index, so it also counts, looks up and removes them through the layer.
+ */
+private inline fun <reified T : ComposeHostView> ViewDefinitionBuilder<T>.reactChildrenAboveMap(
+  crossinline layer: (T) -> ViewGroup
+) = GroupView<T> {
+  AddChildView { parent, child: View, index -> layer(parent).addView(child, index) }
+  GetChildCount { parent -> layer(parent).childCount }
+  GetChildViewAt { parent, index -> layer(parent).getChildAt(index) }
+  RemoveChildView { parent, child: View -> layer(parent).removeView(child) }
+  RemoveChildViewAt { parent, index -> layer(parent).removeViewAt(index) }
+}
+
+/**
  * 2D map host — receives the map + graphics overlay SharedObjects as props.
  *
  * Each view sits in its own function because the Expo DSL is `inline`: every `Prop` and
@@ -404,6 +421,8 @@ private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView
   Events("onMapLoaded", "onMapLoadError", "onTap", "onLocationChange")
 
   OnViewDestroys { view: ExpoArcgisMapView -> view.destroy() }
+
+  reactChildrenAboveMap { it.reactChildren }
 
   Prop("map") { view: ExpoArcgisMapView, ref: MapRef? ->
     view.setMap(ref)
@@ -480,6 +499,8 @@ private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisScene
   Events("onSceneLoaded", "onSceneLoadError", "onTap")
 
   OnViewDestroys { view: ExpoArcgisSceneView -> view.destroy() }
+
+  reactChildrenAboveMap { it.reactChildren }
 
   Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->
     view.setScene(ref)
