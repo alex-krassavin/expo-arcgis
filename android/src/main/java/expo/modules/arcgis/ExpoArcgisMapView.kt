@@ -359,11 +359,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
    * enough to go on: react-native-screens also detaches screens it is about to show again.
    *
    * Disposing the composition destroys the GeoView — the SDK frees its render thread and GPU
-   * surface only then — and cancelling the scope lets go of the view.
+   * surface only then — and cancelling the scope lets go of the view. The ComposeView is removed
+   * too: the screen can stay attached through its exit animation, and a ComposeView measured after
+   * `disposeComposition()` composes its content again — a second map for a screen that is leaving.
    */
   fun destroy() {
     scope.cancel()
     composeView.disposeComposition()
+    removeView(composeView)
   }
 }
 

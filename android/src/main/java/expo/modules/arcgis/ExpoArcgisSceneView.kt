@@ -330,6 +330,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
   fun destroy() {
     scope.cancel()
     composeView.disposeComposition()
+    removeView(composeView)
   }
 }
 
