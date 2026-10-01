@@ -41,8 +41,11 @@ internal fun geometryFromDict(dict: Map<*, *>): Geometry? {
   return when (dict["type"]) {
     "point" -> codecPoint(dict, sr)
     "multipoint" -> Multipoint(codecPointList(dict["points"], sr), sr)
-    "polyline" -> Polyline(codecParts(dict, sr))
-    "polygon" -> Polygon(codecParts(dict, sr))
+    // The parts constructors take the spatial reference from the parts, so an empty geometry — the
+    // editor's polygon before its first vertex — would come out without one, and geodetic
+    // operations then throw instead of returning 0. The points constructors take it explicitly.
+    "polyline" -> codecParts(dict, sr).let { if (it.isEmpty()) Polyline(emptyList<Point>(), sr) else Polyline(it) }
+    "polygon" -> codecParts(dict, sr).let { if (it.isEmpty()) Polygon(emptyList<Point>(), sr) else Polygon(it) }
     "envelope" -> Envelope(
       Point(codecNum(dict["xMin"]), codecNum(dict["yMin"]), sr),
       Point(codecNum(dict["xMax"]), codecNum(dict["yMax"]), sr),
