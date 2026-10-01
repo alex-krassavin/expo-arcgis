@@ -26,11 +26,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 23
+          node-version: 24
           cache: npm
           cache-dependency-path: '**/package-lock.json'
 
@@ -56,7 +56,7 @@ jobs:
           printf '<!doctype html>\n<meta charset="utf-8">\n<title>expo-arcgis</title>\n<meta http-equiv="refresh" content="0; url=/expo-arcgis/">\n<link rel="canonical" href="/expo-arcgis/">\n<script>location.replace("/expo-arcgis/")</script>\n<a href="/expo-arcgis/">Go to expo-arcgis &rarr;</a>\n' > _site/index.html
           printf 'mapforge.dev\n' > _site/CNAME
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -68,4 +68,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
