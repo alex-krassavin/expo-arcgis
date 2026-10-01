@@ -15,6 +15,12 @@ import type { StyleProp } from 'react-native';
 import type { ViewStyle } from 'react-native';
 
 // @public
+export type AccessoryHost = {
+    addAccessory(accessory: SharedObject): void;
+    removeAccessory(accessory: SharedObject): void;
+};
+
+// @public
 export function AnalysisOverlay(input: PropsWithChildren<AnalysisOverlayProps>): JSX.Element;
 
 // @public
@@ -1001,7 +1007,7 @@ export const geoprocessor: {
 };
 
 // @public
-export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost;
+export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost & AccessoryHost;
 
 // @public
 export const Graphic: ForwardRefExoticComponent<GraphicProps & RefAttributes<GraphicRef>>;

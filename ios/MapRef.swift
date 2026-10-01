@@ -3,8 +3,12 @@ import ExpoModulesCore
 
 /// SharedObject wrapping a native ArcGIS `Map`. Constructed and reconciled declaratively from the
 /// JS `<Map>` component; the `<MapView>` reads `map` by reference to render it.
-public final class MapRef: SharedObject {
-  private(set) var map: Map
+///
+/// Public, with `map` observable, for packages built on expo-arcgis: expo-arcgis-toolkit's
+/// `BasemapGallery` resolves a `<Map>`'s ref to the map it changes the basemap of.
+public final class MapRef: SharedObject, ObservableObject {
+  /// The map. Replaced asynchronously when a mobile map package loads.
+  @Published public private(set) var map: Map
   /// Called when `map` is replaced asynchronously (e.g. after a mobile map package finishes loading).
   var onMapChanged: ((Map) -> Void)?
 

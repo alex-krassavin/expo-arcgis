@@ -18,6 +18,9 @@ import expo.modules.kotlin.sharedobjects.SharedObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -25,8 +28,16 @@ import kotlinx.coroutines.launch
  * JS `<Map>` component; the `<MapView>` reads [map] by reference to render it.
  */
 class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
-  var map: ArcGISMap = buildMap(portalItem)
-    private set
+  private val mapState = MutableStateFlow(buildMap(portalItem))
+
+  /** The map. Replaced asynchronously when a mobile map package loads; [mapFlow] follows that. */
+  val map: ArcGISMap get() = mapState.value
+
+  /**
+   * The map as it is replaced, for packages built on expo-arcgis: expo-arcgis-toolkit's
+   * `BasemapGallery` resolves a `<Map>`'s ref to the map it changes the basemap of.
+   */
+  val mapFlow: StateFlow<ArcGISMap> = mapState.asStateFlow()
 
   /** Called when [map] is replaced asynchronously (e.g. after a mobile map package finishes loading). */
   var onMapChanged: ((ArcGISMap) -> Unit)? = null
@@ -99,7 +110,7 @@ class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : Sh
       val pkg = MobileMapPackage(path)
       pkg.load().onSuccess {
         pkg.maps.firstOrNull()?.let { first ->
-          map = first
+          mapState.value = first
           onMapChanged?.invoke(first)
         }
       }

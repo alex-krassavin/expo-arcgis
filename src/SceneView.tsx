@@ -57,6 +57,16 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         // Image overlays are bound to <MapView> (2D) only.
         addImageOverlay: () => {},
         removeImageOverlay: () => {},
+        // Accessories (expo-arcgis-toolkit's compass, scalebar…) draw over a <MapView> only, so far.
+        addAccessory: () => {
+          if (__DEV__) {
+            console.warn(
+              '[expo-arcgis] <SceneView> does not show accessories yet (a compass, a scalebar…): ' +
+                'they draw over a <MapView> only.'
+            );
+          }
+        },
+        removeAccessory: () => {},
       }),
       []
     );

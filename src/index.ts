@@ -105,6 +105,7 @@ export {
   type GeometryEditorHost,
   type AnalysisOverlayHost,
   type ImageOverlayHost,
+  type AccessoryHost,
 } from './contexts';
 
 export * from './ExpoArcgis.types';

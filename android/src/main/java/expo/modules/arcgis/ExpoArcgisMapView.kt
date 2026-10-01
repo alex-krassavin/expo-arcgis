@@ -1,6 +1,7 @@
 package expo.modules.arcgis
 
 import android.content.Context
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.kotlin.viewevent.EventDispatcher
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
@@ -96,6 +98,8 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
 
   /** Identify, viewpoint animations: everything that needs the drawn MapView. */
   private val proxy = MapViewProxy()
+  /** The view's live state for its accessories (expo-arcgis-toolkit's compass…). */
+  private val viewState = GeoViewState(proxy)
   /** The view's device-location display; `locationDisplay` configures it. */
   private val locationDisplay = LocationDisplay()
 
@@ -111,6 +115,8 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
   private var timeExtent by mutableStateOf<TimeExtent?>(null)
   /** The last viewpoint from JS. Animated to once the MapView is composed: the prop can come first. */
   private var requestedViewpoint by mutableStateOf<Viewpoint?>(null)
+  /** UI other packages draw over the map (expo-arcgis-toolkit's compass…). */
+  private var shownAccessories by mutableStateOf<List<GeoViewAccessory>>(emptyList())
 
   /**
    * Centre of the last reported viewpoint, for `getCenter()`. Read from the viewpoint, like iOS, so
@@ -123,6 +129,17 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
   @Composable
   private fun Content() {
     val map = map ?: return
+    Box(Modifier.fillMaxSize()) {
+      MapContent(map)
+      GeoViewAccessories(shownAccessories, insets, viewState)
+    }
+    LaunchedEffect(requestedViewpoint) {
+      requestedViewpoint?.let { proxy.setViewpointAnimated(it, 0.5.seconds) }
+    }
+  }
+
+  @Composable
+  private fun MapContent(map: ArcGISMap) {
     MapView(
       arcGISMap = map,
       modifier = Modifier.fillMaxSize(),
@@ -137,7 +154,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
       insetsViewpointAdjustment = insetsAdjustment,
       grid = grid,
       timeExtent = timeExtent,
-      onViewpointChangedForCenterAndScale = { currentCenter = it.targetGeometry as? Point },
+      onViewpointChangedForCenterAndScale = {
+        currentCenter = it.targetGeometry as? Point
+        viewState.viewpoint = it
+      },
+      onMapRotationChanged = { viewState.rotation = it },
+      onUnitsPerDipChanged = { viewState.unitsPerDip = it },
+      onSpatialReferenceChanged = { viewState.spatialReference = it },
+      onVisibleAreaChanged = { viewState.visibleArea = it },
       onSingleTapConfirmed = { event ->
         // A 2D tap resolves to the map in practice, but report nothing rather than a fabricated
         // (0, 0) on the off chance it does not. Matches iOS and the SceneView.
@@ -152,9 +176,6 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
         }
       },
     )
-    LaunchedEffect(requestedViewpoint) {
-      requestedViewpoint?.let { proxy.setViewpointAnimated(it, 0.5.seconds) }
-    }
   }
 
   init {
@@ -164,6 +185,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
         location?.let { onLocationChange(locationPayload(it)) }
       }
     }
+  }
+
+  /** Receives the accessories other packages declare as `<MapView>` children (expo-arcgis-toolkit). */
+  fun setAccessories(refs: List<SharedObject>) {
+    shownAccessories = refs.filterIsInstance<GeoViewAccessory>()
   }
 
   /** Receives the native map (by reference) from the `<Map>` SharedObject. */
@@ -176,6 +202,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
 
   private fun applyMap(newMap: ArcGISMap) {
     map = newMap
+    viewState.map = newMap
     loadJob?.cancel()
     loadJob = scope.launch {
       newMap.load()

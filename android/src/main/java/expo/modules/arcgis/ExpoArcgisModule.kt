@@ -10,6 +10,7 @@ import com.arcgismaps.httpcore.authentication.TokenCredential
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.modules.ModuleDefinitionBuilder
 
@@ -414,6 +415,12 @@ private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView
 
   Prop("imageOverlays") { view: ExpoArcgisMapView, refs: List<ImageOverlayRef> ->
     view.setImageOverlays(refs)
+  }
+
+  // UI that packages built on expo-arcgis draw over the map (expo-arcgis-toolkit): their own shared
+  // objects, implementing GeoViewAccessory.
+  Prop("accessories") { view: ExpoArcgisMapView, refs: List<SharedObject> ->
+    view.setAccessories(refs)
   }
 
   Prop("viewpoint") { view: ExpoArcgisMapView, vp: Map<String, Any?>? ->
