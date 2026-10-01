@@ -1,0 +1,46 @@
+{
+  "name": "expo-arcgis-toolkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ArcGIS Maps SDK Toolkit components (compass, scalebar, basemap gallery, …) for expo-arcgis",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "src",
+    "android/src",
+    "android/build.gradle",
+    "ios/*.swift",
+    "ios/*.podspec",
+    "expo-module.config.json"
+  ],
+  "scripts": {
+    "build": "tsc -p .",
+    "prepare": "tsc -p ."
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "arcgis",
+    "esri",
+    "maps",
+    "toolkit"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-krassavin/expo-arcgis.git",
+    "directory": "packages/expo-arcgis-toolkit"
+  },
+  "bugs": {
+    "url": "https://github.com/alex-krassavin/expo-arcgis/issues"
+  },
+  "author": "krassavin <walonade@icloud.com>",
+  "license": "MIT",
+  "homepage": "https://mapforge.dev/expo-arcgis",
+  "peerDependencies": {
+    "expo": ">=56.0.0",
+    "expo-arcgis": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}
