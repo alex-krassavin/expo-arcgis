@@ -44,9 +44,9 @@ class GeometryEditorRef(appContext: AppContext) : SharedObject(appContext) {
     }
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 
   /** Serializes a preview to `{ geometry, interactionType, elementKind }`; null once the gesture ends. */

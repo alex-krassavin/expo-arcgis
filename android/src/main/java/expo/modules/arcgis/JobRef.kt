@@ -34,8 +34,8 @@ class JobRef(
     job.cancel()
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 }

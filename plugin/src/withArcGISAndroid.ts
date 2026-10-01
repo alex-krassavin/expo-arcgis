@@ -162,8 +162,13 @@ const SKIP_METADATA_FLAG = '-Xskip-metadata-version-check';
 
 /**
  * ArcGIS Maps SDK 300.1 is built with Kotlin 2.3.20; its kotlin-stdlib/reflect 2.3.20 resolve across
- * the whole app, but Expo SDK 56 compiles with Kotlin 2.1.0. Let every module read the newer
- * metadata so the app (expo, expo-modules-core, this module) compiles.
+ * the whole app, but Expo SDK 56 and 57 compile with Kotlin 2.1.20, which can't read metadata two
+ * versions ahead. Let every module read it so the app (expo, expo-modules-core, this module)
+ * compiles. (SDK 58's Kotlin 2.2 reads it on its own; the flag is harmless there.)
+ *
+ * Set through `compilerOptions`, not the deprecated `kotlinOptions` DSL. Projects prebuilt with an
+ * older version keep their `kotlinOptions` block (it carries the same flag, so this stays a no-op)
+ * until their next `prebuild --clean`.
  */
 const withArcGISKotlinMetadataFix: ConfigPlugin = (config) =>
   withProjectBuildGradle(config, (cfg) => {
@@ -175,12 +180,11 @@ const withArcGISKotlinMetadataFix: ConfigPlugin = (config) =>
     if (!cfg.modResults.contents.includes(SKIP_METADATA_FLAG)) {
       cfg.modResults.contents += `
 
-// expo-arcgis: ArcGIS Maps SDK 300.1 ships Kotlin 2.3.20 metadata, newer than Expo SDK 56's compiler.
+// expo-arcgis: ArcGIS Maps SDK 300.1 ships Kotlin 2.3.20 metadata, newer than the Kotlin 2.1 compiler
+// of Expo SDK 56/57.
 allprojects {
   tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-      freeCompilerArgs += ["${SKIP_METADATA_FLAG}"]
-    }
+    compilerOptions.freeCompilerArgs.add("${SKIP_METADATA_FLAG}")
   }
 }
 `;

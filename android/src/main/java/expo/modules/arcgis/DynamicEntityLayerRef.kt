@@ -121,9 +121,9 @@ class DynamicEntityLayerRef(appContext: AppContext, props: Map<String, Any?>) : 
     }
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 }
 

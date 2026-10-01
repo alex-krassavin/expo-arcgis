@@ -21,15 +21,17 @@ android {
     versionCode 1
     versionName "0.1.0"
   }
-  lintOptions {
+  lint {
     abortOnError false
   }
+}
 
-  kotlinOptions {
-    // ArcGIS Maps SDK 300.1 is built with Kotlin 2.3.20. Allow this module to read its newer
-    // metadata even when the app's Kotlin compiler is older (Expo SDK 56 ships Kotlin 2.1.0).
-    freeCompilerArgs += ["-Xskip-metadata-version-check"]
-  }
+// ArcGIS Maps SDK 300.1 is built with Kotlin 2.3.20. Allow this module to read its newer metadata
+// even when the app's Kotlin compiler is older (Expo SDK 56 and 57 ship Kotlin 2.1.20). Set on the
+// compile tasks rather than through `android { kotlinOptions }`: that block is deprecated, and AGP 9's
+// built-in Kotlin — which Expo SDK 58 still opts out of — doesn't provide it at all.
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  compilerOptions.freeCompilerArgs.add("-Xskip-metadata-version-check")
 }
 
 dependencies {

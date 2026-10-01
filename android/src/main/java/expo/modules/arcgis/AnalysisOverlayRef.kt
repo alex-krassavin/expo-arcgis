@@ -131,9 +131,9 @@ class LineOfSightRef(appContext: AppContext, props: Map<String, Any?>) : Analysi
     }
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 
   fun applyProps(changed: Map<String, Any?>) {
@@ -174,9 +174,9 @@ class DistanceMeasurementRef(appContext: AppContext, props: Map<String, Any?>) :
     }
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 
   fun applyProps(changed: Map<String, Any?>) {
@@ -211,9 +211,9 @@ class GeoElementLineOfSightRef(appContext: AppContext, observer: GraphicRef, tar
     }
   }
 
-  override fun deallocate() {
+  override fun sharedObjectDidRelease() {
     scope.cancel()
-    super.deallocate()
+    super.sharedObjectDidRelease()
   }
 }
 
