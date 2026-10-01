@@ -12,6 +12,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# CI only reads the repository.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Typecheck · build · package

@@ -1,0 +1,120 @@
+name: CodeQL
+
+# Code scanning with CodeQL's security queries over everything this repository ships or runs: the
+# library's TypeScript, the module's Kotlin and Swift, and these workflows. Alerts land in the
+# Security tab and, from a pull request, on the lines that introduce them.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # New queries arrive with CodeQL releases; the weekly run applies them to code nobody touched.
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL · ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      security-events: write # upload the results to code scanning
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: JavaScript/TypeScript
+            language: javascript-typescript
+            build-mode: none
+            runner: ubuntu-latest
+          - label: GitHub Actions
+            language: actions
+            build-mode: none
+            runner: ubuntu-latest
+          # Kotlin and Swift are extracted from the compiler runs CodeQL observes, so these two
+          # build the module: the SDK gates' harness in --codeql mode, which links this checkout
+          # into an app on the repository's own Expo SDK, and fails unless every module source
+          # reached the database (internal/module_scripts/native-harness.js).
+          - label: Kotlin
+            language: java-kotlin
+            build-mode: manual
+            runner: ubuntu-latest
+          - label: Swift
+            language: swift
+            build-mode: manual
+            runner: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      - if: matrix.build-mode == 'manual'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # `prepare` compiles plugin/build, which the harness app's prebuild runs.
+      - if: matrix.build-mode == 'manual'
+        name: Install module
+        run: npm ci
+
+      # The same caches, under the same keys, as the Android and iOS gates in ci.yml.
+      - if: matrix.language == 'java-kotlin'
+        id: sdk
+        name: Expo SDK of this repository
+        run: echo "major=$(node -p "require('expo/package.json').version.split('.')[0]")" >> "$GITHUB_OUTPUT"
+
+      - if: matrix.language == 'java-kotlin'
+        name: Cache Gradle + ArcGIS AAR
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle') }}
+          restore-keys: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-
+
+      - if: matrix.language == 'swift'
+        name: Cache resolved Swift packages
+        uses: actions/cache@v6
+        with:
+          path: ~/spm-cache
+          key: spm-${{ runner.os }}-${{ hashFiles('ios/ExpoArcgis.podspec') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended
+
+      - if: matrix.language == 'java-kotlin'
+        name: Build the module's Kotlin
+        run: >
+          node internal/module_scripts/native-harness.js --codeql
+          --platform android --dir ${{ runner.temp }}/harness
+
+      - if: matrix.language == 'swift'
+        name: Build the module's Swift
+        run: >
+          node internal/module_scripts/native-harness.js --codeql
+          --platform ios --dir ${{ runner.temp }}/harness --spm-cache ~/spm-cache
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
