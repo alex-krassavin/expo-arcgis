@@ -40,6 +40,21 @@ jobs:
       - name: Validate published package
         run: npm run check:package
 
+      # Each platform compiles on its own, so a function or prop registered on only one of them
+      # passes every build and fails at runtime on the other (how getCenter shipped in #19).
+      - name: Native API parity (iOS ↔ Android)
+        run: npm run check:parity
+
+      # etc/expo-arcgis.api.md is the public API contract. Any change to it — even an additive one —
+      # has to be committed on purpose, so it is visible in review; a removed or retyped prop
+      # breaks every app that uses it.
+      - name: Public API report
+        run: |
+          npm run check:api || {
+            echo "::error file=etc/expo-arcgis.api.md::The public API changed. If that is intended, run 'npm run update:api' and commit etc/expo-arcgis.api.md — then make sure nothing existing was removed or retyped."
+            exit 1
+          }
+
   # The native gates. TS compiling says nothing about whether the Kotlin and Swift behind it
   # still builds — every SDK bump and most feature PRs have broken one platform or the other
   # while `tsc` stayed green. `example/` is the harness: its android/ and ios/ directories are

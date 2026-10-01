@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+
+  // The public surface is whatever build/index.d.ts exposes, so the report is generated from the
+  // compiled declarations (`npm run build` / `prepare` must have run first).
+  "mainEntryPointFilePath": "<projectFolder>/build/index.d.ts",
+
+  // etc/expo-arcgis.api.md is committed: it is the API contract. `npm run check:api` fails when the
+  // declarations no longer match it; `npm run update:api` rewrites it so the change shows up in review.
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/etc/",
+    "reportTempFolder": "<projectFolder>/temp/api-extractor/"
+  },
+
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+
+  "messages": {
+    "compilerMessageReporting": {
+      "default": { "logLevel": "warning" }
+    },
+    "extractorMessageReporting": {
+      // Findings about the API itself (e.g. a public type that isn't exported) are written into the
+      // report, so they show up in review instead of failing the build.
+      "default": { "logLevel": "warning", "addToApiReportFile": true },
+      // Release tags (@public/@beta) are not used in this package.
+      "ae-missing-release-tag": { "logLevel": "none" }
+    },
+    // Doc comments use JSDoc, not strict TSDoc.
+    "tsdocMessageReporting": {
+      "default": { "logLevel": "none" }
+    }
+  }
+}

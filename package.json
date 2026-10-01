@@ -22,6 +22,9 @@
     "lint": "eslint src/",
     "test": "node internal/module_scripts/test.js",
     "check:package": "publint && attw --pack --profile esm-only --ignore-rules unexpected-module-syntax",
+    "check:api": "tsc && api-extractor run",
+    "update:api": "tsc && api-extractor run --local",
+    "check:parity": "node internal/module_scripts/check-native-parity.js",
     "prepare": "node internal/module_scripts/prepare.js",
     "open:ios": "node internal/module_scripts/open-ios.js",
     "open:android": "node internal/module_scripts/open-android.js"
@@ -48,6 +51,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.3",
     "@babel/core": "^7.26.0",
+    "@microsoft/api-extractor": "^7.59.3",
     "@types/jest": "^29.2.1",
     "@types/react": "~19.1.1",
     "babel-preset-expo": "~55.0.8",
