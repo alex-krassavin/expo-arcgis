@@ -43,7 +43,8 @@ jobs:
             runner: ubuntu-latest
           # Kotlin and Swift are extracted from the compiler runs CodeQL observes, so these two
           # build the module: the SDK gates' harness in --codeql mode, which links this checkout
-          # into an app on the repository's own Expo SDK (internal/module_scripts/native-harness.js).
+          # into an app on the repository's own Expo SDK, and fails unless every module source
+          # reached the database (internal/module_scripts/native-harness.js).
           - label: Kotlin
             language: java-kotlin
             build-mode: manual

@@ -199,6 +199,41 @@ function buildJs(appDir) {
   });
 }
 
+// Under CodeQL's tracer (after codeql-action/init), a compile the tracer misses fails nothing:
+// CodeQL just analyzes less and still reports a clean result. Each extracted file is copied into the
+// database's source archive at its absolute path, so check that every module source is there.
+function checkCodeqlExtraction(platform) {
+  const [language, sourceDir, ext] =
+    platform === 'android' ? ['Kotlin', 'android/src', '.kt'] : ['Swift', 'ios', '.swift'];
+  const archive =
+    process.env[`CODEQL_EXTRACTOR_${platform === 'android' ? 'JAVA' : 'SWIFT'}_SOURCE_ARCHIVE_DIR`];
+  if (!archive) {
+    console.log(`\nNot running under CodeQL: no ${language} extraction to check.`);
+    return;
+  }
+  const filesIn = (dir) =>
+    fs.existsSync(dir)
+      ? fs
+          .readdirSync(dir, { recursive: true })
+          .filter((file) => file.endsWith(ext))
+          .map((file) => path.join(dir, file))
+      : [];
+  const sources = filesIn(path.join(ROOT, sourceDir));
+  const missing = sources.filter(
+    (file) => !fs.existsSync(path.join(archive, fs.realpathSync(file)))
+  );
+  if (missing.length > 0) {
+    console.error(
+      `\n✗ CodeQL extracted ${sources.length - missing.length} of the module's ${sources.length} ` +
+        `${language} sources. Missing:\n` +
+        missing.map((file) => `  ${path.relative(ROOT, file)}\n`).join('') +
+        `The database holds ${filesIn(archive).length} ${ext} files in all (${archive}).`
+    );
+    process.exit(1);
+  }
+  console.log(`\n✓ CodeQL extracted all ${sources.length} of the module's ${language} sources`);
+}
+
 const args = parseArgs(process.argv.slice(2));
 fs.mkdirSync(args.dir, { recursive: true });
 const moduleSource = args.codeql
@@ -214,3 +249,4 @@ else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql);
 else buildJs(appDir);
 
 console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
+if (args.codeql) checkCodeqlExtraction(args.platform);
