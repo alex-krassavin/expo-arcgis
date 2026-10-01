@@ -58,14 +58,14 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   /** Identify, camera animations, screen projections: everything that needs the drawn SceneView. */
   private val proxy = SceneViewProxy()
 
-  // What the SceneView renders — one state per prop.
+  // What the SceneView renders — one state per prop (overlay lists `shown…`, as in the MapView).
   private var scene by mutableStateOf<ArcGISScene?>(null)
-  private var graphicsOverlays by mutableStateOf<List<GraphicsOverlay>>(emptyList())
-  private var analysisOverlays by mutableStateOf<List<AnalysisOverlay>>(emptyList())
+  private var shownGraphicsOverlays by mutableStateOf<List<GraphicsOverlay>>(emptyList())
+  private var shownAnalysisOverlays by mutableStateOf<List<AnalysisOverlay>>(emptyList())
   private var cameraController by mutableStateOf<CameraController>(GlobeCameraController())
   private var grid by mutableStateOf<Grid?>(null)
-  private var sunLighting by mutableStateOf(LightingMode.NoLight)
-  private var atmosphereEffect by mutableStateOf(AtmosphereEffect.HorizonOnly)
+  private var sunLighting by mutableStateOf<LightingMode>(LightingMode.NoLight)
+  private var atmosphereEffect by mutableStateOf<AtmosphereEffect>(AtmosphereEffect.HorizonOnly)
   private var sunTime by mutableStateOf(SceneViewDefaults.DefaultSunTime)
   private var timeExtent by mutableStateOf<TimeExtent?>(null)
   /** The last camera from JS. Animated to once the SceneView is composed: the prop can come first. */
@@ -82,11 +82,11 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     SceneView(
       arcGISScene = scene,
       modifier = Modifier.fillMaxSize(),
-      graphicsOverlays = graphicsOverlays,
+      graphicsOverlays = shownGraphicsOverlays,
       sceneViewProxy = proxy,
       grid = grid,
       cameraController = cameraController,
-      analysisOverlays = analysisOverlays,
+      analysisOverlays = shownAnalysisOverlays,
       atmosphereEffect = atmosphereEffect,
       timeExtent = timeExtent,
       sunTime = sunTime,
@@ -139,12 +139,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
 
   /** Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<SceneView>`. */
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
-    graphicsOverlays = refs.map { it.overlay }
+    shownGraphicsOverlays = refs.map { it.overlay }
   }
 
   /** Receives the analysis overlays declared as `<AnalysisOverlay>` children of the `<SceneView>`. */
   fun setAnalysisOverlays(refs: List<AnalysisOverlayRef>) {
-    analysisOverlays = refs.map { it.overlay }
+    shownAnalysisOverlays = refs.map { it.overlay }
   }
 
   /** Identifies the features under a screen point (3D). Mirrors `MapView.identify`. */

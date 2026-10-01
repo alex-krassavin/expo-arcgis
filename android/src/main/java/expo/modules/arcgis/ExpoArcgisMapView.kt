@@ -100,14 +100,15 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   /** The view's device-location display; `locationDisplay` configures it. */
   private val locationDisplay = LocationDisplay()
 
-  // What the MapView renders — one state per prop.
+  // What the MapView renders — one state per prop. The overlay lists are `shown…`: a property named
+  // like its prop setter would clash with it on the JVM (the same erased `set…(List)` signature).
   private var map by mutableStateOf<ArcGISMap?>(null)
-  private var graphicsOverlays by mutableStateOf<List<GraphicsOverlay>>(emptyList())
-  private var imageOverlays by mutableStateOf<List<ImageOverlay>>(emptyList())
+  private var shownGraphicsOverlays by mutableStateOf<List<GraphicsOverlay>>(emptyList())
+  private var shownImageOverlays by mutableStateOf<List<ImageOverlay>>(emptyList())
   private var geometryEditor by mutableStateOf<GeometryEditor?>(null)
   private var grid by mutableStateOf<Grid?>(null)
   private var insets by mutableStateOf(PaddingValues(0.dp))
-  private var insetsAdjustment by mutableStateOf(InsetsViewpointAdjustmentType.NoAdjustment)
+  private var insetsAdjustment by mutableStateOf<InsetsViewpointAdjustmentType>(InsetsViewpointAdjustmentType.NoAdjustment)
   private var timeExtent by mutableStateOf<TimeExtent?>(null)
   /** The last viewpoint from JS. Animated to once the MapView is composed: the prop can come first. */
   private var requestedViewpoint by mutableStateOf<Viewpoint?>(null)
@@ -128,8 +129,8 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
       modifier = Modifier.fillMaxSize(),
       // Like the view-based MapView: the viewpoint is the map's or the app's, never a saved one.
       viewpointPersistence = ViewpointPersistence.None,
-      graphicsOverlays = graphicsOverlays,
-      imageOverlays = imageOverlays,
+      graphicsOverlays = shownGraphicsOverlays,
+      imageOverlays = shownImageOverlays,
       locationDisplay = locationDisplay,
       geometryEditor = geometryEditor,
       mapViewProxy = proxy,
@@ -188,11 +189,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`. */
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
-    graphicsOverlays = refs.map { it.overlay }
+    shownGraphicsOverlays = refs.map { it.overlay }
   }
 
   fun setImageOverlays(refs: List<ImageOverlayRef>) {
-    imageOverlays = refs.map { it.overlay }
+    shownImageOverlays = refs.map { it.overlay }
   }
 
   /** Animates the view to a runtime viewpoint sent from JS. */
