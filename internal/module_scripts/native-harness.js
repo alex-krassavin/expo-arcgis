@@ -23,6 +23,12 @@
 // this checkout instead of a packed copy, so the compilers — and so the alerts — see the repository's
 // own paths; a copy under node_modules would put every alert on a file the repository doesn't have.
 // Every compile is also forced to run where CodeQL's tracer sees it.
+//
+//   node internal/module_scripts/native-harness.js --codeql --platform ios --reuse-app
+//
+// `--reuse-app` (iOS) rebuilds the app the previous run left in --dir, recompiling only the modules'
+// own Swift. CodeQL's Swift job runs the harness once before the tracer starts, then traces only this
+// rebuild: under the tracer, Esri's Toolkit package (a dependency) never finished compiling.
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
@@ -73,13 +79,14 @@ function parseArgs(argv) {
   if (
     !/^\d+$/.test(args.sdk ?? '') ||
     !['android', 'ios', 'js'].includes(args.platform) ||
-    (args.codeql && args.platform === 'js')
+    (args.codeql && args.platform === 'js') ||
+    (args.reuseApp && (!args.codeql || args.platform !== 'ios' || !args.dir))
   ) {
     console.error(
       'Usage: native-harness.js --sdk <N> --platform android|ios|js [--dir <work dir>] ' +
         '[--tarball <expo-arcgis.tgz>] [--spm-cache <dir>]\n' +
         '       native-harness.js --codeql --platform android|ios [--dir <work dir>] ' +
-        '[--spm-cache <dir>]'
+        '[--spm-cache <dir>] [--reuse-app]'
     );
     process.exit(1);
   }
@@ -188,12 +195,19 @@ function buildAndroid(appDir, codeql) {
   run('./gradlew', gradleArgs, { cwd: path.join(appDir, 'android') });
 }
 
-function buildIos(appDir, spmCache, codeql) {
-  run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
+function buildIos(appDir, spmCache, codeql, reuse) {
   const iosDir = path.join(appDir, 'ios');
   // CocoaPods aborts on a non-UTF-8 locale.
   const utf8 = { LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
-  run('pod', ['install'], { cwd: iosDir, env: utf8 });
+  if (reuse) {
+    // Everything is built. Marking the modules' own Swift as changed recompiles those files, and
+    // only those.
+    const now = new Date();
+    for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
+  } else {
+    run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
+    run('pod', ['install'], { cwd: iosDir, env: utf8 });
+  }
   const workspace = fs.readdirSync(iosDir).find((f) => f.endsWith('.xcworkspace'));
   const xcodeArgs = [
     '-workspace',
@@ -209,7 +223,8 @@ function buildIos(appDir, spmCache, codeql) {
   if (spmCache) xcodeArgs.push('-clonedSourcePackagesDirPath', spmCache);
   if (codeql) {
     xcodeArgs.push(
-      // Fresh DerivedData: a file that is already up to date isn't compiled, so isn't extracted.
+      // The app's own DerivedData, fresh unless --reuse-app: a file that is already up to date
+      // isn't compiled, so isn't extracted.
       '-derivedDataPath',
       path.join(appDir, 'DerivedData'),
       // What CodeQL's own Swift autobuilder passes, so every file goes through a swift-frontend
@@ -267,6 +282,19 @@ function buildJs(appDir) {
   });
 }
 
+/** The `ext` files under `sourceDir` (e.g. `ios`) of the core and every package. */
+function moduleSourceFiles(sourceDir, ext) {
+  return [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) => {
+    const root = path.join(dir, sourceDir);
+    return fs.existsSync(root)
+      ? fs
+          .readdirSync(root, { recursive: true })
+          .filter((file) => file.endsWith(ext))
+          .map((file) => path.join(root, file))
+      : [];
+  });
+}
+
 // Under CodeQL's tracer (after codeql-action/init), a compile the tracer misses fails nothing:
 // CodeQL just analyzes less and still reports a clean result. Each extracted file is copied into the
 // database's source archive at its absolute path, so check that every module source is there.
@@ -286,9 +314,7 @@ function checkCodeqlExtraction(platform) {
           .filter((file) => file.endsWith(ext))
           .map((file) => path.join(dir, file))
       : [];
-  const sources = [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) =>
-    filesIn(path.join(dir, sourceDir))
-  );
+  const sources = moduleSourceFiles(sourceDir, ext);
   const missing = sources.filter(
     (file) => !fs.existsSync(path.join(archive, fs.realpathSync(file)))
   );
@@ -313,10 +339,10 @@ const moduleSources = args.codeql
       ...PACKAGES.map((pkg) => pack(pkg.dir, args.dir)),
     ];
 const appDir = path.join(args.dir, `sdk${args.sdk}-${args.platform}`);
-createApp(appDir, args.sdk, moduleSources);
+if (!args.reuseApp) createApp(appDir, args.sdk, moduleSources);
 
 if (args.platform === 'android') buildAndroid(appDir, args.codeql);
-else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql);
+else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql, args.reuseApp);
 else buildJs(appDir);
 
 console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
