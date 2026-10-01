@@ -13,6 +13,9 @@
 
 ### Fixed
 
+- React Native views inside `<MapView>` or `<SceneView>` render above the map, where their layout
+  puts them. On Android they covered the whole view and left the map zero width; on iOS the map
+  hid them.
 - Android: `getCenter()` returns the centre of the visible map, as on iOS. It used to project the
   view's midpoint, which ignored `contentInsets`.
 
