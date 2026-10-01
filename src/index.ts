@@ -9,9 +9,34 @@ export type {
   GraphicsOverlayRef,
   GeoElementViewshedRef,
   JobRef,
+  JobEvents,
+  AnalysisRef,
+  AnalysisOverlayRef,
+  GeometryEditorRef,
+  ImageOverlayRef,
+  ExpoArcgisModule,
+  GeometryEditorEvents,
+  FeatureLayerRef,
+  RasterLayerRef,
+  PointCloudLayerRef,
+  KmlLayerRef,
+  DynamicEntityLayerRef,
+  ViewshedRef,
+  LineOfSightRef,
+  GeoElementLineOfSightRef,
+  DistanceMeasurementRef,
+  DistanceMeasurementEvents,
+  DynamicEntityLayerEvents,
+  LineOfSightEvents,
+  ServiceGeodatabaseRef,
 } from './ExpoArcgisModule';
 
-export { MapSettings, useMapSettings, type MapSettingsConfig } from './MapSettings';
+export {
+  MapSettings,
+  useMapSettings,
+  type MapSettingsConfig,
+  type MapSettingsProps,
+} from './MapSettings';
 export {
   setTokenCredential,
   setAllowUntrustedHosts,
@@ -71,6 +96,15 @@ export { serviceArea } from './serviceArea';
 export { geoprocessor } from './geoprocessor';
 export { offline } from './offline';
 export { portal } from './portal';
-export { useGeoModel, useGeoView, useGraphicsOverlay, type GraphicsOverlayHost } from './contexts';
+export {
+  useGeoModel,
+  useGeoView,
+  useGraphicsOverlay,
+  type GraphicsOverlayHost,
+  type GeoViewHost,
+  type GeometryEditorHost,
+  type AnalysisOverlayHost,
+  type ImageOverlayHost,
+} from './contexts';
 
 export * from './ExpoArcgis.types';

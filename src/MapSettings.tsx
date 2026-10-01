@@ -12,7 +12,7 @@ export type MapSettingsConfig = {
   license?: string;
 };
 
-type MapSettingsProps = {
+export type MapSettingsProps = {
   config?: MapSettingsConfig;
 };
 

@@ -18,9 +18,31 @@ import type { ViewStyle } from 'react-native';
 export function AnalysisOverlay(input: PropsWithChildren<AnalysisOverlayProps>): JSX.Element;
 
 // @public
+export type AnalysisOverlayHost = {
+    addAnalysisOverlay(overlay: AnalysisOverlayRef): void;
+    removeAnalysisOverlay(overlay: AnalysisOverlayRef): void;
+};
+
+// @public
 export type AnalysisOverlayProps = {
     visible?: boolean;
 };
+
+// @public
+export class AnalysisOverlayRef extends SharedObject {
+    // (undocumented)
+    addAnalysis(analysis: AnalysisRef<any>): void;
+    // (undocumented)
+    removeAnalysis(analysis: AnalysisRef<any>): void;
+    // (undocumented)
+    setVisible(visible: boolean): void;
+}
+
+// @public
+export class AnalysisRef<TEvents extends Record<string, (...args: any[]) => void> = Record<never, never>> extends SharedObject<TEvents> {
+    // (undocumented)
+    applyProps(changed: Record<string, unknown>): void;
+}
 
 // @public
 export type AngularUnit = 'degrees' | 'radians';
@@ -208,8 +230,6 @@ export type CustomDynamicSource = {
     fields: DynamicEntityField[];
 };
 
-// Warning: (ae-forgotten-export) The symbol "ExpoArcgisModule" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 const _default: ExpoArcgisModule;
 export default _default;
@@ -247,12 +267,25 @@ export type DistanceCompositeSceneSymbol = {
 // @public
 export function DistanceMeasurement(input: DistanceMeasurementProps): null;
 
+// @public
+export type DistanceMeasurementEvents = {
+    onMeasurementChange(payload: {
+        directDistance: number;
+        horizontalDistance: number;
+        verticalDistance: number;
+    }): void;
+};
+
 // @public (undocumented)
 export type DistanceMeasurementProps = {
     startLocation: PointGeometry;
     endLocation: PointGeometry;
     onMeasurementChange?: (measurement: DistanceMeasurementResult) => void;
 };
+
+// @public
+export class DistanceMeasurementRef extends AnalysisRef<DistanceMeasurementEvents> {
+}
 
 // @public
 export type DistanceMeasurementResult = {
@@ -309,6 +342,14 @@ nativeEvent: DynamicEntityChange;
 } & RefAttributes<DynamicEntityLayerHandle>>;
 
 // @public
+export type DynamicEntityLayerEvents = {
+    onConnectionStatusChange: (event: {
+        status: ConnectionStatus;
+    }) => void;
+    onDynamicEntityChange: (event: DynamicEntityChange) => void;
+};
+
+// @public
 export type DynamicEntityLayerHandle = {
     queryDynamicEntities(): Promise<{
         count: number;
@@ -334,6 +375,22 @@ export type DynamicEntityLayerProps = LayerProps & {
         nativeEvent: DynamicEntityChange;
     }) => void;
 };
+
+// @public
+export class DynamicEntityLayerRef extends LayerRef<DynamicEntityLayerEvents> {
+    // (undocumented)
+    pushObservation(attributes: Record<string, unknown>, geometry: Geometry): void;
+    // (undocumented)
+    queryDynamicEntities(): Promise<{
+        count: number;
+        entities: {
+            attributes: Record<string, unknown>;
+            geometry: Geometry | null;
+        }[];
+    }>;
+    // (undocumented)
+    queryObservations(entityId: string, max?: number): Promise<DynamicEntityObservationInfo[]>;
+}
 
 // @public
 export type DynamicEntityObservationInfo = {
@@ -369,6 +426,76 @@ export type Envelope = {
     yMax: number;
     spatialReference?: SpatialReference;
 };
+
+// @public (undocumented)
+export class ExpoArcgisModule extends NativeModule {
+    // (undocumented)
+    AnalysisOverlayRef: new () => AnalysisOverlayRef;
+    // (undocumented)
+    DistanceMeasurementRef: new (props: Pick<DistanceMeasurementProps, 'startLocation' | 'endLocation'>) => DistanceMeasurementRef;
+    // (undocumented)
+    DynamicEntityLayerRef: new (props: DynamicEntityLayerProps) => DynamicEntityLayerRef;
+    // (undocumented)
+    FeatureLayerRef: new (props: FeatureLayerProps) => FeatureLayerRef;
+    // (undocumented)
+    GeoElementLineOfSightRef: new (observer: GraphicRef, target: GraphicRef) => GeoElementLineOfSightRef;
+    // (undocumented)
+    GeoElementViewshedRef: new (graphic: GraphicRef, props: GeoElementViewshedProps) => GeoElementViewshedRef;
+    // (undocumented)
+    GeometryEditorRef: new () => GeometryEditorRef;
+    // (undocumented)
+    GraphicRef: new (props: GraphicProps) => GraphicRef;
+    // (undocumented)
+    GraphicsOverlayRef: new () => GraphicsOverlayRef;
+    // (undocumented)
+    IntegratedMeshLayerRef: new (props: IntegratedMeshLayerProps) => LayerRef;
+    // (undocumented)
+    KmlLayerRef: new (props: KmlLayerProps) => KmlLayerRef;
+    // (undocumented)
+    LineOfSightRef: new (props: Pick<LineOfSightProps, 'observer' | 'target'>) => LineOfSightRef;
+    // (undocumented)
+    MapImageLayerRef: new (props: MapImageLayerProps) => LayerRef;
+    // (undocumented)
+    MapRef: new (props?: MapProps) => MapRef;
+    oauthComplete(redirectUrl: string): Promise<void>;
+    oauthStart(portalUrl: string, clientId: string, redirectUrl: string): Promise<string>;
+    // (undocumented)
+    Ogc3DTilesLayerRef: new (props: Ogc3DTilesLayerProps) => LayerRef;
+    // (undocumented)
+    OgcFeatureLayerRef: new (props: OgcFeatureLayerProps) => LayerRef;
+    // (undocumented)
+    OpenStreetMapLayerRef: new () => LayerRef;
+    // (undocumented)
+    PointCloudLayerRef: new (props: PointCloudLayerProps) => PointCloudLayerRef;
+    // (undocumented)
+    RasterLayerRef: new (props: RasterLayerProps) => RasterLayerRef;
+    // (undocumented)
+    SceneLayerRef: new (props: SceneLayerProps) => LayerRef;
+    // (undocumented)
+    SceneRef: new (props?: SceneProps) => SceneRef;
+    setAllowUntrustedHosts(allow: boolean): void;
+    setApiKey(apiKey: string): void;
+    setAppCredential(portalUrl: string, clientId: string, clientSecret: string): Promise<void>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "expo-arcgis" does not have an export "setApiKey"
+    setLicense(licenseKey: string): string;
+    setTokenCredential(username: string, password: string, tokenExpirationMinutes: number | null): void;
+    signInWithOAuth(portalUrl: string, clientId: string, redirectUrl: string): Promise<void>;
+    signOut(): Promise<void>;
+    // (undocumented)
+    TiledLayerRef: new (props: TileLayerProps) => LayerRef;
+    // (undocumented)
+    VectorTiledLayerRef: new (props: VectorTileLayerProps) => LayerRef;
+    // (undocumented)
+    ViewshedRef: new (props: ViewshedProps) => ViewshedRef;
+    // (undocumented)
+    WebTiledLayerRef: new (props: WebTiledLayerProps) => LayerRef;
+    // (undocumented)
+    WfsLayerRef: new (props: WfsLayerProps) => LayerRef;
+    // (undocumented)
+    WmsLayerRef: new (props: WmsLayerProps) => LayerRef;
+    // (undocumented)
+    WmtsLayerRef: new (props: WmtsLayerProps) => LayerRef;
+}
 
 // @public
 export type Feature = {
@@ -489,6 +616,59 @@ export type FeatureLayerProps = LayerProps & {
 };
 
 // @public
+export class FeatureLayerRef extends LayerRef {
+    // (undocumented)
+    addAttachment(objectId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+    // (undocumented)
+    addFeature(attributes: Record<string, unknown>, geometry?: Geometry, apply?: boolean): Promise<number | null>;
+    // (undocumented)
+    addFeatureWithSubtype(subtypeName: string, attributes?: Record<string, unknown>, geometry?: Geometry, apply?: boolean): Promise<number | null>;
+    // (undocumented)
+    addFeatureWithTemplate(templateName: string, attributes?: Record<string, unknown>, geometry?: Geometry, apply?: boolean): Promise<number | null>;
+    // (undocumented)
+    applyEdits(): Promise<EditResult[]>;
+    // (undocumented)
+    clearSelection(): void;
+    contingentValues(attributes: Record<string, unknown>, fieldName: string): Promise<{
+        name: string;
+        code: unknown;
+    }[]>;
+    // (undocumented)
+    deleteAttachment(objectId: number, attachmentId: number): Promise<void>;
+    // (undocumented)
+    deleteFeature(objectId: number, apply?: boolean): Promise<void>;
+    // (undocumented)
+    fetchAttachment(objectId: number, attachmentId: number): Promise<string>;
+    getContingentValues(objectId: number, fieldName: string): Promise<ContingentValuesResult>;
+    // (undocumented)
+    getDictionarySymbolStyleSchema(): Promise<string | null>;
+    // (undocumented)
+    getServiceGeodatabase(): Promise<ServiceGeodatabaseRef>;
+    // (undocumented)
+    queryAttachments(objectId: number): Promise<AttachmentInfo[]>;
+    // (undocumented)
+    queryExtent(query?: QueryParameters): Promise<Geometry | null>;
+    // (undocumented)
+    queryFeatureCount(query?: QueryParameters): Promise<number>;
+    // (undocumented)
+    queryFeatures(query?: QueryParameters): Promise<Feature[]>;
+    // (undocumented)
+    queryFeatureTemplates(): Promise<FeatureTemplate[]>;
+    // (undocumented)
+    queryRelatedFeatures(objectId: number): Promise<RelatedFeaturesResult[]>;
+    // (undocumented)
+    queryStatistics(query: StatisticsQueryParameters): Promise<StatisticRecord[]>;
+    // (undocumented)
+    selectFeatures(objectIds: number[]): Promise<void>;
+    // (undocumented)
+    undoLocalEdits(): Promise<void>;
+    // (undocumented)
+    updateAttachment(objectId: number, attachmentId: number, name: string, contentType: string, dataBase64: string): Promise<void>;
+    // (undocumented)
+    updateFeature(objectId: number, changes: Record<string, unknown>, apply?: boolean): Promise<void>;
+}
+
+// @public
 export type FeatureReduction = ClusterReduction;
 
 // @public
@@ -586,6 +766,10 @@ export type GeoElementLineOfSightProps = {
 };
 
 // @public
+export class GeoElementLineOfSightRef extends AnalysisRef<LineOfSightEvents> {
+}
+
+// @public
 export type GeoElementViewshedProps = {
     horizontalAngle: number;
     verticalAngle: number;
@@ -596,8 +780,6 @@ export type GeoElementViewshedProps = {
     frustumOutlineVisible?: boolean;
 };
 
-// Warning: (ae-forgotten-export) The symbol "AnalysisRef" needs to be exported by the entry point index.d.ts
-//
 // @public
 export class GeoElementViewshedRef extends AnalysisRef {
 }
@@ -622,12 +804,27 @@ export const GeometryEditor: ForwardRefExoticComponent<GeometryEditorProps & Ref
 export type GeometryEditorElementKind = 'vertex' | 'mid-vertex' | 'part' | 'geometry';
 
 // @public
+export type GeometryEditorEvents = {
+    onGeometryChange(payload: {
+        geometry?: Geometry;
+    }): void;
+    onInteractionPreview(payload: {
+        preview?: GeometryEditorInteractionPreview;
+    }): void;
+};
+
+// @public
 export type GeometryEditorHandle = {
     undo(): void;
     redo(): void;
     clear(): void;
     deleteSelectedElement(): void;
     stop(): Geometry | null;
+};
+
+// @public
+export type GeometryEditorHost = {
+    setGeometryEditor(editor: GeometryEditorRef | null): void;
 };
 
 // @public
@@ -648,6 +845,24 @@ export type GeometryEditorProps = {
     onGeometryChange?: (geometry: Geometry | null) => void;
     onInteractionPreview?: (preview: GeometryEditorInteractionPreview | null) => void;
 };
+
+// @public
+export class GeometryEditorRef extends SharedObject<GeometryEditorEvents> {
+    // (undocumented)
+    clearGeometry(): void;
+    // (undocumented)
+    deleteSelectedElement(): void;
+    // (undocumented)
+    redo(): void;
+    // (undocumented)
+    setTool(name: string): void;
+    // (undocumented)
+    start(type: string): void;
+    // (undocumented)
+    stop(): Geometry | null;
+    // (undocumented)
+    undo(): void;
+}
 
 // @public
 export type GeometryEditorTool = 'vertex' | 'freehand' | 'reticleVertex' | 'arrow' | 'ellipse' | 'rectangle' | 'triangle';
@@ -786,6 +1001,9 @@ export const geoprocessor: {
 };
 
 // @public
+export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost;
+
+// @public
 export const Graphic: ForwardRefExoticComponent<GraphicProps & RefAttributes<GraphicRef>>;
 
 // @public
@@ -847,11 +1065,25 @@ export type IdentifyResult = {
 export function ImageOverlay(input: ImageOverlayProps): null;
 
 // @public
+export type ImageOverlayHost = {
+    addImageOverlay(overlay: ImageOverlayRef): void;
+    removeImageOverlay(overlay: ImageOverlayRef): void;
+};
+
+// @public
 export type ImageOverlayProps = {
     imagePath: string;
     extent: Envelope;
     opacity?: number;
 };
+
+// @public
+export class ImageOverlayRef extends SharedObject {
+    // (undocumented)
+    setFrame(imagePath: string, extent: Envelope, opacity?: number): void;
+    // (undocumented)
+    setOpacity(opacity: number): void;
+}
 
 // @public
 export type InsetsViewpointAdjustment = 'none' | 'preserve-center';
@@ -866,8 +1098,13 @@ export type IntegratedMeshLayerProps = LayerProps & {
     url: string;
 };
 
-// Warning: (ae-forgotten-export) The symbol "JobEvents" needs to be exported by the entry point index.d.ts
-//
+// @public
+export type JobEvents = {
+    onProgress(payload: {
+        progress: number;
+    }): void;
+};
+
 // @public
 export class JobRef<R> extends SharedObject<JobEvents> {
     // (undocumented)
@@ -893,6 +1130,18 @@ export type KmlLayerHandle = {
 export type KmlLayerProps = LayerProps & {
     url: string;
 };
+
+// @public
+export class KmlLayerRef extends LayerRef {
+    // (undocumented)
+    getNodes(): Promise<KmlNodeInfo[]>;
+    // (undocumented)
+    pauseTour(): void;
+    // (undocumented)
+    playTour(): void;
+    // (undocumented)
+    resetTour(): void;
+}
 
 // @public
 export type KmlNodeInfo = {
@@ -937,11 +1186,22 @@ export function LineOfSight(props: LineOfSightProps | (GeoElementLineOfSightProp
 })): null;
 
 // @public
+export type LineOfSightEvents = {
+    onTargetVisibilityChange(payload: {
+        visibility: TargetVisibility;
+    }): void;
+};
+
+// @public
 export type LineOfSightProps = {
     observer: PointGeometry;
     target: PointGeometry;
     onTargetVisibilityChange?: (visibility: TargetVisibility) => void;
 };
+
+// @public
+export class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {
+}
 
 // @public
 export type LocationDisplay = {
@@ -1024,8 +1284,6 @@ export class MapRef extends SharedObject {
     removeLayer(layer: LayerRef<any>): void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "MapSettingsProps" needs to be exported by the entry point index.d.ts
-//
 // @public
 export function MapSettings(input: PropsWithChildren<MapSettingsProps>): JSX.Element;
 
@@ -1033,6 +1291,11 @@ export function MapSettings(input: PropsWithChildren<MapSettingsProps>): JSX.Ele
 export type MapSettingsConfig = {
     apiKey?: string;
     license?: string;
+};
+
+// @public (undocumented)
+export type MapSettingsProps = {
+    config?: MapSettingsConfig;
 };
 
 // @public
@@ -1355,8 +1618,12 @@ export type PointCloudLayerProps = LayerProps & {
     filters?: PointCloudFilter[];
 };
 
-// Warning: (ae-forgotten-export) The symbol "PointCloudRendererBase" needs to be exported by the entry point index.d.ts
-//
+// @public
+export class PointCloudLayerRef extends LayerRef {
+    // (undocumented)
+    getAttributes(): Promise<PointCloudAttribute[]>;
+}
+
 // @public
 export type PointCloudRenderer =
 /** Colours points straight from an RGB attribute. */
@@ -1381,6 +1648,14 @@ export type PointCloudRenderer =
     uniqueValues: PointCloudColorUniqueValue[];
     transformType?: PointCloudAttributeTransformType;
 });
+
+// @public
+export type PointCloudRendererBase = {
+    attributeName: string;
+    colorModulation?: PointCloudColorModulation;
+    pointsPerInch?: number;
+    sizeAlgorithm?: PointCloudSizeAlgorithm;
+};
 
 // @public
 export type PointCloudReturnType = 'single' | 'first-of-many' | 'last-of-many' | 'last';
@@ -1517,6 +1792,18 @@ export type RasterLayerProps = LayerProps & {
     source: RasterSource;
     rasterFunction?: string;
 };
+
+// @public
+export class RasterLayerRef extends LayerRef {
+    // (undocumented)
+    buildPyramids(parameters?: BuildRasterPyramidsParameters): Promise<RasterPyramidInfo>;
+    // (undocumented)
+    closeRaster(): void;
+    // (undocumented)
+    deletePyramids(): Promise<void>;
+    // (undocumented)
+    getPyramidInfo(): Promise<RasterPyramidInfo | null>;
+}
 
 // @public
 export type RasterPyramidCompressionType = 'default' | 'deflate' | 'jpeg' | 'jpeg-ycbcr' | 'lzw' | 'none';
@@ -1769,6 +2056,34 @@ export type ServiceGeodatabaseHandle = {
     supportsBranchVersioning(): boolean;
     getFeatureLayer(layerId: number): FeatureLayerHandle;
 };
+
+// @public
+export class ServiceGeodatabaseRef extends SharedObject {
+    // (undocumented)
+    applyEdits(): Promise<EditResult[]>;
+    // (undocumented)
+    createVersion(params: CreateVersionParams): Promise<ServiceVersionInfo>;
+    // (undocumented)
+    fetchVersions(): Promise<ServiceVersionInfo[]>;
+    // (undocumented)
+    getDefaultVersionName(): string;
+    // (undocumented)
+    getFeatureLayer(layerId: number): FeatureLayerRef;
+    // (undocumented)
+    getSharedTemplates(): Promise<SharedTemplateInfo[]>;
+    // (undocumented)
+    getVersionName(): string;
+    // (undocumented)
+    hasLocalEdits(): boolean;
+    // (undocumented)
+    refresh(): Promise<void>;
+    // (undocumented)
+    supportsBranchVersioning(): boolean;
+    // (undocumented)
+    switchVersion(name: string): Promise<void>;
+    // (undocumented)
+    undoLocalEdits(): Promise<void>;
+}
 
 // @public
 export type ServiceVersionInfo = {
@@ -2037,8 +2352,6 @@ export type UniqueValueRenderer = {
 // @public (undocumented)
 export function useGeoModel(): GeoModelRef;
 
-// Warning: (ae-forgotten-export) The symbol "GeoViewHost" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function useGeoView(): GeoViewHost;
 
@@ -2207,6 +2520,10 @@ export type ViewshedProps = {
     maxDistance?: number;
     frustumOutlineVisible?: boolean;
 };
+
+// @public
+export class ViewshedRef extends AnalysisRef {
+}
 
 // @public
 export type VisualVariable = SizeVisualVariable | ColorVisualVariable | RotationVisualVariable | OpacityVisualVariable;

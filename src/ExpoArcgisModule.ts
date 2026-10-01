@@ -192,7 +192,7 @@ export declare class GeodatabaseRef extends SharedObject {
 }
 
 /** Events emitted by a `DynamicEntityLayerRef` as its data source connects / disconnects. */
-type DynamicEntityLayerEvents = {
+export type DynamicEntityLayerEvents = {
   onConnectionStatusChange: (event: { status: ConnectionStatus }) => void;
   onDynamicEntityChange: (event: DynamicEntityChange) => void;
 };
@@ -227,7 +227,7 @@ export declare class ImageOverlayRef extends SharedObject {
 }
 
 /** Events emitted by a `GeometryEditorRef` as the user sketches. */
-type GeometryEditorEvents = {
+export type GeometryEditorEvents = {
   onGeometryChange(payload: { geometry?: Geometry }): void;
   onInteractionPreview(payload: { preview?: GeometryEditorInteractionPreview }): void;
 };
@@ -249,7 +249,7 @@ export declare class ViewshedRef extends AnalysisRef {}
 export declare class GeoElementViewshedRef extends AnalysisRef {}
 
 /** Events emitted by a `LineOfSightRef` or `GeoElementLineOfSightRef` as target visibility changes. */
-type LineOfSightEvents = {
+export type LineOfSightEvents = {
   onTargetVisibilityChange(payload: { visibility: TargetVisibility }): void;
 };
 
@@ -263,7 +263,7 @@ export declare class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
 export declare class GeoElementLineOfSightRef extends AnalysisRef<LineOfSightEvents> {}
 
 /** Events emitted by a `DistanceMeasurementRef` as the measured distances change. */
-type DistanceMeasurementEvents = {
+export type DistanceMeasurementEvents = {
   onMeasurementChange(payload: {
     directDistance: number;
     horizontalDistance: number;
@@ -348,7 +348,7 @@ export declare class UtilityNetworkRef extends SharedObject {
 }
 
 /** Events emitted by a `JobRef` as a long-running job progresses. */
-type JobEvents = { onProgress(payload: { progress: number }): void };
+export type JobEvents = { onProgress(payload: { progress: number }): void };
 
 /**
  * Handle for a long-running ArcGIS job (e.g. an offline-map download). Await `result()` to run it
@@ -362,7 +362,7 @@ export declare class JobRef<R> extends SharedObject<JobEvents> {
 /** The geo model that operational layers attach to — a `<Map>` or a `<Scene>`. */
 export type GeoModelRef = MapRef | SceneRef;
 
-declare class ExpoArcgisModule extends NativeModule {
+export declare class ExpoArcgisModule extends NativeModule {
   /** Sets the ArcGIS API key (access token) used to authenticate with ArcGIS services. */
   setApiKey(apiKey: string): void;
   /**

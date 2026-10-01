@@ -1161,7 +1161,7 @@ export type PointCloudColorUniqueValue = {
 };
 
 /** Properties shared by every point cloud renderer — mirrors the `PointCloudRenderer` base. */
-type PointCloudRendererBase = {
+export type PointCloudRendererBase = {
   /** Attribute the renderer reads (e.g. `CLASS_CODE`, `INTENSITY`, `RGB`). */
   attributeName: string;
   /** Optional attribute-driven brightness modulation. */
