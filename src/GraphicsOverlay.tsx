@@ -2,7 +2,7 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 
 import type { Renderer, SceneProperties } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicsOverlayRef } from './ExpoArcgisModule';
-import { GraphicsOverlayContext, useGeoView } from './contexts';
+import { GraphicsOverlayContext, useGeoViewFor } from './contexts';
 import { detachQuietly } from './utils/detachQuietly';
 
 export type GraphicsOverlayProps = {
@@ -25,7 +25,7 @@ export function GraphicsOverlay({
   sceneProperties,
   children,
 }: PropsWithChildren<GraphicsOverlayProps>) {
-  const view = useGeoView();
+  const view = useGeoViewFor('GraphicsOverlay');
   const ref = useRef<GraphicsOverlayRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.GraphicsOverlayRef();

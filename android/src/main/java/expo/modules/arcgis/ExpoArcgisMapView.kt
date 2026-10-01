@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
@@ -30,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class MapLoadedEventPayload(@Field val spatialReferenceWkid: Int? = null) : Record
@@ -83,6 +85,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
   private var loadJob: Job? = null
   private var observedLifecycle: Lifecycle? = null
+  private var lifecycleOwner: LifecycleOwner? = null
 
   init {
     // Emit tap events with the map location (projected to WGS84).
@@ -325,11 +328,13 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     // The view-based MapView renders only while observing a lifecycle.
-    val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
+    val owner = findViewTreeLifecycleOwner()
+    val lifecycle = owner?.lifecycle
     if (lifecycle != null && lifecycle !== observedLifecycle) {
       observedLifecycle?.removeObserver(mapView)
       lifecycle.addObserver(mapView)
       observedLifecycle = lifecycle
+      lifecycleOwner = owner
     }
   }
 
@@ -338,6 +343,23 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     loadJob?.cancel()
     observedLifecycle?.removeObserver(mapView)
     observedLifecycle = null
+  }
+
+  /**
+   * Releases the view for good once React unmounts it (Expo's OnViewDestroys). A detach is not
+   * enough to go on: react-native-screens also detaches screens it is about to show again.
+   *
+   * The SDK frees a GeoView's render thread and GPU surface only in `onDestroy`, which would run
+   * from the activity lifecycle — but the view stops observing that on detach, so without this
+   * every unmounted map leaked them (logcat: "onSurfaceTextureDestroyed without dispose"), and the
+   * scope's collectors kept the whole view reachable.
+   */
+  fun destroy() {
+    scope.cancel()
+    observedLifecycle?.removeObserver(mapView)
+    observedLifecycle = null
+    (lifecycleOwner ?: appContext.currentActivity as? LifecycleOwner)?.let { mapView.onDestroy(it) }
+    lifecycleOwner = null
   }
 }
 

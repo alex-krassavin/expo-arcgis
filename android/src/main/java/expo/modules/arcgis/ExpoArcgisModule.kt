@@ -402,6 +402,8 @@ class ExpoArcgisModule : Module() {
 private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView::class) {
   Events("onMapLoaded", "onMapLoadError", "onTap", "onLocationChange")
 
+  OnViewDestroys { view: ExpoArcgisMapView -> view.destroy() }
+
   Prop("map") { view: ExpoArcgisMapView, ref: MapRef? ->
     view.setMap(ref)
   }
@@ -469,6 +471,8 @@ private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView
 private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisSceneView::class) {
   Name("ExpoArcgisSceneView")
   Events("onSceneLoaded", "onSceneLoadError", "onTap")
+
+  OnViewDestroys { view: ExpoArcgisSceneView -> view.destroy() }
 
   Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->
     view.setScene(ref)

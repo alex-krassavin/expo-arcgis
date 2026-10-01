@@ -7,7 +7,7 @@ import type {
   DynamicEntityLayerProps,
 } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type DynamicEntityLayerRef } from './ExpoArcgisModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -21,7 +21,7 @@ import { detachQuietly } from './utils/detachQuietly';
  */
 export const DynamicEntityLayer = forwardRef<DynamicEntityLayerHandle, DynamicEntityLayerProps>(
   function DynamicEntityLayer({ onConnectionStatusChange, onDynamicEntityChange, ...layerProps }, handle) {
-    const model = useGeoModel();
+    const model = useGeoModelFor('DynamicEntityLayer');
     const ref = useRef<DynamicEntityLayerRef | undefined>(undefined);
     if (!ref.current) {
       ref.current = new ExpoArcgisModule.DynamicEntityLayerRef(layerProps);

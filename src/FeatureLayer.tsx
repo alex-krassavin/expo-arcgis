@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { FeatureLayerHandle, FeatureLayerProps } from './ExpoArcgis.types';
 import ExpoArcgisExtrasModule from './ExpoArcgisExtrasModule';
 import type { FeatureLayerRef } from './ExpoArcgisModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -15,7 +15,7 @@ import { detachQuietly } from './utils/detachQuietly';
  */
 export const FeatureLayer = forwardRef<FeatureLayerHandle, FeatureLayerProps>(
   function FeatureLayer(props, handle) {
-    const model = useGeoModel();
+    const model = useGeoModelFor('FeatureLayer');
     const ref = useRef<FeatureLayerRef | undefined>(undefined);
     // An externally-provided `layer` (e.g. from a geodatabase/version) is owned by its producer, so
     // it's used as-is and never released here; otherwise build one from `url` / `source`.

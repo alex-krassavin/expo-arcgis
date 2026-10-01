@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { GraphicProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicRef } from './ExpoArcgisModule';
-import { useGraphicsOverlay } from './contexts';
+import { useGraphicsOverlayFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -14,7 +14,7 @@ import { detachQuietly } from './utils/detachQuietly';
  * `<Viewshed graphic={ref}>` / `<LineOfSight observerGraphic={ref}>`.
  */
 export const Graphic = forwardRef<GraphicRef, GraphicProps>(function Graphic(props, fwdRef) {
-  const overlay = useGraphicsOverlay();
+  const overlay = useGraphicsOverlayFor('Graphic');
   const ref = useRef<GraphicRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.GraphicRef(props);

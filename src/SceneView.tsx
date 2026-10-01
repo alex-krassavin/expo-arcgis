@@ -12,8 +12,11 @@ import {
 
 import type { SceneViewHandle, SceneViewProps } from './ExpoArcgis.types';
 import type { SceneRef, GraphicsOverlayRef, AnalysisOverlayRef } from './ExpoArcgisModule';
-import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
+import { GeoViewContext, useGeoModelFor, type GeoViewHost } from './contexts';
 import { sharedObjectId } from './utils/sharedObjectId';
+import { unhandledLoadError } from './utils/unhandledLoadError';
+
+const warnLoadError = unhandledLoadError('SceneView', 'onSceneLoadError');
 
 type NativeSceneViewProps = SceneViewProps & {
   /** The native scene handle (SharedObject), passed by reference as a view prop. */
@@ -35,7 +38,7 @@ const NativeSceneView = requireNativeView<NativeSceneViewProps>('ExpoArcgis', 'E
  */
 export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneViewProps>>(
   function SceneView({ children, orbitGraphic, ...props }, handle) {
-    const scene = useGeoModel() as SceneRef;
+    const scene = useGeoModelFor('SceneView') as SceneRef;
     // The native view exposes an async `retryLoad` function callable through its ref.
     const nativeRef = useRef<any>(null);
 
@@ -69,6 +72,7 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         analysisOverlays={analysisOverlays.map(sharedObjectId)}
         orbitGraphic={sharedObjectId(orbitGraphic)}
         {...props}
+        onSceneLoadError={props.onSceneLoadError ?? warnLoadError}
       >
         <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
       </NativeSceneView>

@@ -3,7 +3,7 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 import type { LayerProps } from './ExpoArcgis.types';
 import ExpoArcgisGeometryModule from './ExpoArcgisGeometryModule';
 import type { GeoModelRef, GroupLayerRef } from './ExpoArcgisModule';
-import { GeoModelContext, useGeoModel } from './contexts';
+import { GeoModelContext, useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -15,7 +15,7 @@ import { detachQuietly } from './utils/detachQuietly';
  * `<GroupLayer>`s) declared inside add themselves to the group instead of the map.
  */
 export function GroupLayer({ children, ...props }: PropsWithChildren<LayerProps>) {
-  const model = useGeoModel();
+  const model = useGeoModelFor('GroupLayer');
   const ref = useRef<GroupLayerRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisGeometryModule.GroupLayerRef(props);

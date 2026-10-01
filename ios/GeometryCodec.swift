@@ -19,12 +19,17 @@ func geometryFromDict(_ dict: [String: Any]) -> Geometry? {
   switch dict["type"] as? String {
   case "point":
     return codecPoint(dict, spatialReference: sr)
+  // `init(points:)` and `init(parts:)` take the spatial reference from what they are given, so an
+  // empty geometry — the editor's polygon before its first vertex — would come out without one.
+  // Pass it explicitly; Android's geodetic operations throw on a geometry that has none.
   case "multipoint":
-    return Multipoint(points: codecPointArray(dict["points"], spatialReference: sr))
+    return Multipoint(points: codecPointArray(dict["points"], spatialReference: sr), spatialReference: sr)
   case "polyline":
-    return Polyline(parts: codecParts(dict, spatialReference: sr))
+    let parts = codecParts(dict, spatialReference: sr)
+    return parts.isEmpty ? Polyline(points: [Point](), spatialReference: sr) : Polyline(parts: parts)
   case "polygon":
-    return Polygon(parts: codecParts(dict, spatialReference: sr))
+    let parts = codecParts(dict, spatialReference: sr)
+    return parts.isEmpty ? Polygon(points: [Point](), spatialReference: sr) : Polygon(parts: parts)
   case "envelope":
     return Envelope(
       xMin: codecNumber(dict["xMin"]), yMin: codecNumber(dict["yMin"]),
