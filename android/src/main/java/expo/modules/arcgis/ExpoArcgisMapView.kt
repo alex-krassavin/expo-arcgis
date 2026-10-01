@@ -1,32 +1,45 @@
 package expo.modules.arcgis
 
 import android.content.Context
-import android.view.ViewGroup
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
-import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.geometry.Polyline
+import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.location.Location
 import com.arcgismaps.location.LocationDataSource
 import com.arcgismaps.location.LocationDisplayAutoPanMode
 import com.arcgismaps.location.SimulatedLocationDataSource
 import com.arcgismaps.location.SimulationParameters
 import com.arcgismaps.location.SystemLocationDataSource
-import java.time.Instant
+import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.TimeExtent
 import com.arcgismaps.mapping.Viewpoint
+import com.arcgismaps.mapping.view.GraphicsOverlay
+import com.arcgismaps.mapping.view.Grid
+import com.arcgismaps.mapping.view.ImageOverlay
 import com.arcgismaps.mapping.view.InsetsViewpointAdjustmentType
-import com.arcgismaps.mapping.view.MapView
+import com.arcgismaps.mapping.view.LocationDisplay
 import com.arcgismaps.mapping.view.ScreenCoordinate
+import com.arcgismaps.mapping.view.geometryeditor.GeometryEditor
+import com.arcgismaps.toolkit.geoviewcompose.MapView
+import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
+import com.arcgismaps.toolkit.geoviewcompose.ViewpointPersistence
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
+import java.time.Instant
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,45 +80,87 @@ class LocationEventPayload(
   @Field val timestamp: Double = 0.0,
 ) : Record
 
-/** Declarative 2D map host. Renders the [MapRef] passed as the `map` view prop. */
-class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
+/**
+ * Declarative 2D map host. Renders the [MapRef] passed as the `map` view prop in the ArcGIS Toolkit's
+ * composable MapView — the counterpart of the SwiftUI `MapView` the iOS host renders. The props
+ * become Compose state; operations that need the drawn view go through its [MapViewProxy].
+ */
+class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostView(context, appContext) {
   private val onMapLoaded by EventDispatcher<MapLoadedEventPayload>()
   private val onMapLoadError by EventDispatcher<MapLoadErrorEventPayload>()
   private val onTap by EventDispatcher<TapEventPayload>()
   private val onLocationChange by EventDispatcher<LocationEventPayload>()
 
-  private val mapView = MapView(context).also {
-    it.layoutParams = ViewGroup.LayoutParams(
-      ViewGroup.LayoutParams.MATCH_PARENT,
-      ViewGroup.LayoutParams.MATCH_PARENT
-    )
-    addView(it)
-  }
-
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
   private var loadJob: Job? = null
-  private var observedLifecycle: Lifecycle? = null
-  private var lifecycleOwner: LifecycleOwner? = null
+
+  /** Identify, viewpoint animations: everything that needs the drawn MapView. */
+  private val proxy = MapViewProxy()
+  /** The view's device-location display; `locationDisplay` configures it. */
+  private val locationDisplay = LocationDisplay()
+
+  // What the MapView renders — one state per prop. The overlay lists are `shown…`: a property named
+  // like its prop setter would clash with it on the JVM (the same erased `set…(List)` signature).
+  private var map by mutableStateOf<ArcGISMap?>(null)
+  private var shownGraphicsOverlays by mutableStateOf<List<GraphicsOverlay>>(emptyList())
+  private var shownImageOverlays by mutableStateOf<List<ImageOverlay>>(emptyList())
+  private var geometryEditor by mutableStateOf<GeometryEditor?>(null)
+  private var grid by mutableStateOf<Grid?>(null)
+  private var insets by mutableStateOf(PaddingValues(0.dp))
+  private var insetsAdjustment by mutableStateOf<InsetsViewpointAdjustmentType>(InsetsViewpointAdjustmentType.NoAdjustment)
+  private var timeExtent by mutableStateOf<TimeExtent?>(null)
+  /** The last viewpoint from JS. Animated to once the MapView is composed: the prop can come first. */
+  private var requestedViewpoint by mutableStateOf<Viewpoint?>(null)
+
+  /**
+   * Centre of the last reported viewpoint, for `getCenter()`. Read from the viewpoint, like iOS, so
+   * it accounts for `contentInsets`. Not Compose state: it changes on every frame of a pan.
+   */
+  private var currentCenter: Point? = null
+
+  private val composeView = geoViewComposeHost(context) { Content() }.also { addView(it) }
+
+  @Composable
+  private fun Content() {
+    val map = map ?: return
+    MapView(
+      arcGISMap = map,
+      modifier = Modifier.fillMaxSize(),
+      // Like the view-based MapView: the viewpoint is the map's or the app's, never a saved one.
+      viewpointPersistence = ViewpointPersistence.None,
+      graphicsOverlays = shownGraphicsOverlays,
+      imageOverlays = shownImageOverlays,
+      locationDisplay = locationDisplay,
+      geometryEditor = geometryEditor,
+      mapViewProxy = proxy,
+      insets = insets,
+      insetsViewpointAdjustment = insetsAdjustment,
+      grid = grid,
+      timeExtent = timeExtent,
+      onViewpointChangedForCenterAndScale = { currentCenter = it.targetGeometry as? Point },
+      onSingleTapConfirmed = { event ->
+        // A 2D tap resolves to the map in practice, but report nothing rather than a fabricated
+        // (0, 0) on the off chance it does not. Matches iOS and the SceneView.
+        event.mapPoint?.let { mapPoint ->
+          val wgs84 = GeometryEngine.projectOrNull(mapPoint, SpatialReference.wgs84()) as? Point ?: mapPoint
+          onTap(
+            TapEventPayload(
+              mapPoint = PointRecord(wgs84.y, wgs84.x),
+              screenPoint = ScreenPointRecord(event.screenCoordinate.x, event.screenCoordinate.y)
+            )
+          )
+        }
+      },
+    )
+    LaunchedEffect(requestedViewpoint) {
+      requestedViewpoint?.let { proxy.setViewpointAnimated(it, 0.5.seconds) }
+    }
+  }
 
   init {
-    // Emit tap events with the map location (projected to WGS84).
-    scope.launch {
-      mapView.onSingleTapConfirmed.collect { event ->
-        // A 2D tap resolves to the map in practice, but report nothing rather than a fabricated
-        // (0, 0) on the off chance it does not. Matches iOS and the SceneView above.
-        val mapPoint = event.mapPoint ?: return@collect
-        val wgs84 = GeometryEngine.projectOrNull(mapPoint, SpatialReference.wgs84()) as? Point ?: mapPoint
-        onTap(
-          TapEventPayload(
-            mapPoint = PointRecord(wgs84.y, wgs84.x),
-            screenPoint = ScreenPointRecord(event.screenCoordinate.x, event.screenCoordinate.y)
-          )
-        )
-      }
-    }
     // Emit a location event on each device-location update.
     scope.launch {
-      mapView.locationDisplay.location.collect { location ->
+      locationDisplay.location.collect { location ->
         location?.let { onLocationChange(locationPayload(it)) }
       }
     }
@@ -119,11 +174,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     ref.onMapChanged = { newMap -> applyMap(newMap) }
   }
 
-  private fun applyMap(map: com.arcgismaps.mapping.ArcGISMap) {
-    mapView.map = map
+  private fun applyMap(newMap: ArcGISMap) {
+    map = newMap
     loadJob?.cancel()
     loadJob = scope.launch {
-      map.load()
+      newMap.load()
         .onSuccess { onMapLoaded(MapLoadedEventPayload()) }
         .onFailure { error ->
           onMapLoadError(MapLoadErrorEventPayload(error.message ?: "Failed to load map"))
@@ -133,13 +188,11 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Receives the graphics overlays declared as `<GraphicsOverlay>` children of the `<MapView>`. */
   fun setGraphicsOverlays(refs: List<GraphicsOverlayRef>) {
-    mapView.graphicsOverlays.clear()
-    mapView.graphicsOverlays.addAll(refs.map { it.overlay })
+    shownGraphicsOverlays = refs.map { it.overlay }
   }
 
   fun setImageOverlays(refs: List<ImageOverlayRef>) {
-    mapView.imageOverlays.clear()
-    mapView.imageOverlays.addAll(refs.map { it.overlay })
+    shownImageOverlays = refs.map { it.overlay }
   }
 
   /** Animates the view to a runtime viewpoint sent from JS. */
@@ -148,13 +201,12 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     val lat = (vp["latitude"] as? Number)?.toDouble() ?: return
     val lon = (vp["longitude"] as? Number)?.toDouble() ?: return
     val scale = (vp["scale"] as? Number)?.toDouble() ?: return
-    scope.launch { mapView.setViewpointAnimated(Viewpoint(lat, lon, scale), 0.5f) }
+    requestedViewpoint = Viewpoint(lat, lon, scale)
   }
 
   /** Sets the coordinate grid overlay from JS (null hides it). */
   fun setGrid(config: Map<String, Any?>?) {
-    mapView.grid = buildGrid(config)
-      ?: com.arcgismaps.mapping.view.LatitudeLongitudeGrid().apply { isVisible = false }
+    grid = buildGrid(config)
   }
 
   /**
@@ -163,13 +215,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
    * framing targets it.
    */
   fun setContentInsets(config: Map<String, Any?>?) {
-    fun edge(key: String) = (config?.get(key) as? Number)?.toDouble() ?: 0.0
-    mapView.setViewInsets(edge("left"), edge("right"), edge("top"), edge("bottom"))
+    fun edge(key: String) = ((config?.get(key) as? Number)?.toFloat() ?: 0f).dp
+    // Absolute: `left` stays left in a right-to-left layout, as with the view-based MapView.
+    insets = PaddingValues.Absolute(edge("left"), edge("top"), edge("right"), edge("bottom"))
   }
 
   /** How the viewpoint reacts when the insets change (ArcGIS 300.1). */
   fun setInsetsViewpointAdjustment(value: String?) {
-    mapView.insetsViewpointAdjustment = if (value == "preserve-center") {
+    insetsAdjustment = if (value == "preserve-center") {
       InsetsViewpointAdjustmentType.PreserveCenter
     } else {
       InsetsViewpointAdjustmentType.NoAdjustment
@@ -178,15 +231,14 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Filters time-aware layers to a time window from JS (null shows all time steps). */
   fun setTimeExtent(config: Map<String, Any?>?) {
-    if (config == null) { mapView.setTimeExtent(null); return }
+    if (config == null) { timeExtent = null; return }
     val startMs = (config["startTime"] as? Number)?.toLong() ?: return
     val endMs = (config["endTime"] as? Number)?.toLong() ?: return
-    mapView.setTimeExtent(TimeExtent(Instant.ofEpochMilli(startMs), Instant.ofEpochMilli(endMs)))
+    timeExtent = TimeExtent(Instant.ofEpochMilli(startMs), Instant.ofEpochMilli(endMs))
   }
 
   /** Enables/configures the device location display from JS (null disables it). */
   fun setLocationDisplay(config: Map<String, Any?>?) {
-    val locationDisplay = mapView.locationDisplay
     if (config == null) {
       scope.launch { locationDisplay.dataSource.stop() }
       return
@@ -210,7 +262,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
       return SimulatedLocationDataSource(route, SimulationParameters(Instant.now(), speed, 0.0, 0.0))
     }
     // 'system' / unspecified: swap back only if currently simulated, otherwise keep the source.
-    return if (mapView.locationDisplay.dataSource is SimulatedLocationDataSource) SystemLocationDataSource() else null
+    return if (locationDisplay.dataSource is SimulatedLocationDataSource) SystemLocationDataSource() else null
   }
 
   private fun locationPayload(location: Location): LocationEventPayload = LocationEventPayload(
@@ -224,61 +276,38 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Binds an interactive GeometryEditor for sketching (null clears it). */
   fun setGeometryEditor(ref: GeometryEditorRef?) {
-    mapView.geometryEditor = ref?.editor
+    geometryEditor = ref?.editor
   }
 
   /** Identifies the features under a screen point (one result per layer with hits). */
   fun identify(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
     val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
     val y = (screenPoint["y"] as? Number)?.toDouble() ?: 0.0
-    val tolerance = (options?.get("tolerance") as? Number)?.toDouble() ?: 12.0
+    val tolerance = (options?.get("tolerance") as? Number)?.toFloat() ?: 12f
     val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
     scope.launch {
-      mapView.identifyLayers(ScreenCoordinate(x, y), tolerance, false, maxResults)
+      proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults)
         .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it) }) }
         .onFailure { promise.reject("IDENTIFY_ERROR", it.message ?: "Identify failed", it) }
     }
   }
 
-      fun getCenter(promise: Promise) {
-        val width = mapView.width.toDouble()
-        val height = mapView.height.toDouble()
-
-        val screenCenter = ScreenCoordinate(
-            width / 2.0,
-            height / 2.0
-        )
-
-        val mapPoint = mapView.screenToLocation(screenCenter)
-
-        if (mapPoint == null) {
-            promise.resolve(null)
-            return
-        }
-
-        val wgs84 =
-            GeometryEngine.projectOrNull(
-                mapPoint,
-                SpatialReference.wgs84()
-            ) as? Point ?: mapPoint
-
-        promise.resolve(
-            mapOf(
-                "latitude" to wgs84.y,
-                "longitude" to wgs84.x
-            )
-        )
-    }
+  /** The geographic centre of the visible map (WGS84), or null before the view has drawn. */
+  fun getCenter(promise: Promise) {
+    val center = currentCenter ?: run { promise.resolve(null); return }
+    val wgs84 = GeometryEngine.projectOrNull(center, SpatialReference.wgs84()) as? Point ?: center
+    promise.resolve(mapOf("latitude" to wgs84.y, "longitude" to wgs84.x))
+  }
 
   /** Identifies popups under a screen point — evaluates each and returns `{ title, fields }`. */
   fun identifyPopups(screenPoint: Map<String, Any?>, options: Map<String, Any?>?, promise: Promise) {
     val x = (screenPoint["x"] as? Number)?.toDouble() ?: 0.0
     val y = (screenPoint["y"] as? Number)?.toDouble() ?: 0.0
-    val tolerance = (options?.get("tolerance") as? Number)?.toDouble() ?: 12.0
+    val tolerance = (options?.get("tolerance") as? Number)?.toFloat() ?: 12f
     val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
     scope.launch {
       try {
-        val results = mapView.identifyLayers(ScreenCoordinate(x, y), tolerance, false, maxResults).getOrThrow()
+        val results = proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults).getOrThrow()
         promise.resolve(serializePopups(results))
       } catch (e: Exception) {
         promise.reject("IDENTIFY_ERROR", e.message ?: "Identify failed", e)
@@ -288,7 +317,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result. */
   fun retryLoad(promise: Promise) {
-    val map = mapView.map ?: run { promise.resolve(null); return }
+    val map = map ?: run { promise.resolve(null); return }
     scope.launch {
       map.retryLoad()
         .onSuccess { onMapLoaded(MapLoadedEventPayload()); promise.resolve(null) }
@@ -301,7 +330,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Returns the names of the displayed map's bookmarks (e.g. those saved in a loaded web map). */
   fun getBookmarkNames(promise: Promise) {
-    val map = mapView.map ?: run { promise.resolve(emptyList<String>()); return }
+    val map = map ?: run { promise.resolve(emptyList<String>()); return }
     scope.launch {
       map.load()
         .onSuccess { promise.resolve(map.bookmarks.map { it.name }) }
@@ -311,13 +340,13 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
 
   /** Navigates to the named bookmark's viewpoint; resolves whether a matching bookmark was found. */
   fun setBookmark(name: String, promise: Promise) {
-    val map = mapView.map ?: run { promise.resolve(false); return }
+    val map = map ?: run { promise.resolve(false); return }
     scope.launch {
       try {
         map.load().getOrThrow()
         val viewpoint = map.bookmarks.firstOrNull { it.name == name }?.viewpoint
           ?: run { promise.resolve(false); return@launch }
-        mapView.setViewpointAnimated(viewpoint, 0.5f)
+        proxy.setViewpointAnimated(viewpoint, 0.5.seconds)
         promise.resolve(true)
       } catch (e: Exception) {
         promise.reject("BOOKMARK_ERROR", e.message ?: "Failed", e)
@@ -325,41 +354,19 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(con
     }
   }
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-    // The view-based MapView renders only while observing a lifecycle.
-    val owner = findViewTreeLifecycleOwner()
-    val lifecycle = owner?.lifecycle
-    if (lifecycle != null && lifecycle !== observedLifecycle) {
-      observedLifecycle?.removeObserver(mapView)
-      lifecycle.addObserver(mapView)
-      observedLifecycle = lifecycle
-      lifecycleOwner = owner
-    }
-  }
-
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-    loadJob?.cancel()
-    observedLifecycle?.removeObserver(mapView)
-    observedLifecycle = null
-  }
-
   /**
    * Releases the view for good once React unmounts it (Expo's OnViewDestroys). A detach is not
    * enough to go on: react-native-screens also detaches screens it is about to show again.
    *
-   * The SDK frees a GeoView's render thread and GPU surface only in `onDestroy`, which would run
-   * from the activity lifecycle — but the view stops observing that on detach, so without this
-   * every unmounted map leaked them (logcat: "onSurfaceTextureDestroyed without dispose"), and the
-   * scope's collectors kept the whole view reachable.
+   * Disposing the composition destroys the GeoView — the SDK frees its render thread and GPU
+   * surface only then — and cancelling the scope lets go of the view. The ComposeView is removed
+   * too: the screen can stay attached through its exit animation, and a ComposeView measured after
+   * `disposeComposition()` composes its content again — a second map for a screen that is leaving.
    */
   fun destroy() {
     scope.cancel()
-    observedLifecycle?.removeObserver(mapView)
-    observedLifecycle = null
-    (lifecycleOwner ?: appContext.currentActivity as? LifecycleOwner)?.let { mapView.onDestroy(it) }
-    lifecycleOwner = null
+    composeView.disposeComposition()
+    removeView(composeView)
   }
 }
 

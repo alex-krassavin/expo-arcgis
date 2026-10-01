@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Android: `<MapView>` and `<SceneView>` now render through the ArcGIS Maps SDK for Kotlin Toolkit's
+  composable `MapView` / `SceneView` (geoview-compose). Android now has the structure iOS already
+  has with the SwiftUI views: a declarative view plus a proxy. Props, events and functions are
+  unchanged.
+- Android: the core now depends on Jetpack Compose and the Toolkit's `geoview-compose`. Expect roughly
+  2–4 MB more APK before R8 shrinking.
+
+### Fixed
+
+- Android: `getCenter()` returns the centre of the visible map, as on iOS. It used to project the
+  view's midpoint, which ignored `contentInsets`.
+
 ## 0.6.1 — 2026-10-01
 
 ### Added

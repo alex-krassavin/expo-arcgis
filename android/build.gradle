@@ -1,7 +1,21 @@
+// The map and scene views are the ArcGIS Maps SDK for Kotlin Toolkit's Compose MapView/SceneView
+// (geoview-compose). The Compose compiler plugin has to match the app's Kotlin, so it is added the
+// way expo-modules-core adds it for its own Compose views.
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${rootProject.ext.kotlinVersion}")
+  }
+}
+
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
 }
+
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 group = 'expo.modules.arcgis'
 version = '0.1.0'
@@ -21,15 +35,18 @@ android {
     versionCode 1
     versionName "0.1.0"
   }
+  buildFeatures {
+    compose true
+  }
   lint {
     abortOnError false
   }
 }
 
-// ArcGIS Maps SDK 300.1 is built with Kotlin 2.3.20. Allow this module to read its newer metadata
-// even when the app's Kotlin compiler is older (Expo SDK 56 and 57 ship Kotlin 2.1.20). Set on the
-// compile tasks rather than through `android { kotlinOptions }`: that block is deprecated, and AGP 9's
-// built-in Kotlin — which Expo SDK 58 still opts out of — doesn't provide it at all.
+// ArcGIS Maps SDK 300.1 and its Toolkit are built with Kotlin 2.3. Allow this module to read their
+// newer metadata even when the app's Kotlin compiler is older (Expo SDK 56 and 57 ship Kotlin 2.1.20).
+// Set on the compile tasks rather than through `android { kotlinOptions }`: that block is deprecated,
+// and AGP 9's built-in Kotlin — which Expo SDK 58 still opts out of — doesn't provide it at all.
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
   compilerOptions.freeCompilerArgs.add("-Xskip-metadata-version-check")
 }
@@ -38,4 +55,13 @@ dependencies {
   // ArcGIS Maps SDK for Kotlin — core MapView/GeoView, basemaps, layers, graphics.
   // Requires the consuming app to set minSdk >= 28 and compileSdk >= 37 (config plugin).
   implementation 'com.esri:arcgis-maps-kotlin:300.1.0'
+
+  // The Toolkit's Compose MapView/SceneView, released in step with the SDK (same BOM version). They
+  // are what the Swift SDK's SwiftUI MapView/SceneView are on iOS: a declarative view with a proxy.
+  implementation platform('com.esri:arcgis-maps-kotlin-toolkit-bom:300.1.0')
+  implementation 'com.esri:arcgis-maps-kotlin-toolkit-geoview-compose'
+
+  implementation platform('androidx.compose:compose-bom:2026.04.01')
+  implementation 'androidx.compose.ui:ui'
+  implementation 'androidx.compose.foundation:foundation'
 }
