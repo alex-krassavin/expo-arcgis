@@ -26,7 +26,7 @@ import { detachQuietly } from './utils/detachQuietly';
 export function Viewshed(
   props: ViewshedProps | (GeoElementViewshedProps & { graphic: GraphicRef })
 ) {
-  const overlay = useAnalysisOverlay();
+  const overlay = useAnalysisOverlay('Viewshed');
   const analysisRef = useRef<ViewshedRef | GeoElementViewshedRef | undefined>(undefined);
 
   if (!analysisRef.current) {

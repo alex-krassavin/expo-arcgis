@@ -18,7 +18,7 @@ export function DistanceMeasurement({
   endLocation,
   onMeasurementChange,
 }: DistanceMeasurementProps) {
-  const overlay = useAnalysisOverlay();
+  const overlay = useAnalysisOverlay('DistanceMeasurement');
   const ref = useRef<DistanceMeasurementRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.DistanceMeasurementRef({ startLocation, endLocation });

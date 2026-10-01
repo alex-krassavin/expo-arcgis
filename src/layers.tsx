@@ -28,11 +28,13 @@ import { createLayerComponent } from './createLayerComponent';
 
 /** Declarative `ArcGISVectorTiledLayer` (vector tile service / style). 2D (and 3D). */
 export const VectorTileLayer = createLayerComponent<VectorTileLayerProps>(
+  'VectorTileLayer',
   (props) => new ExpoArcgisModule.VectorTiledLayerRef(props)
 );
 
 /** Declarative `IntegratedMeshLayer` (3D integrated mesh from a scene service). */
 export const IntegratedMeshLayer = createLayerComponent<IntegratedMeshLayerProps>(
+  'IntegratedMeshLayer',
   (props) => new ExpoArcgisModule.IntegratedMeshLayerRef(props)
 );
 
@@ -41,51 +43,61 @@ export const IntegratedMeshLayer = createLayerComponent<IntegratedMeshLayerProps
  * `renderer` / `filters` mirror the point cloud rendering API added in ArcGIS Maps SDK 300.1.
  */
 export const PointCloudLayer = createLayerComponent<PointCloudLayerProps, PointCloudLayerHandle>(
+  'PointCloudLayer',
   (props) => new ExpoArcgisModule.PointCloudLayerRef(props)
 );
 
 /** Declarative OGC 3D Tiles layer (3D). */
 export const Ogc3DTilesLayer = createLayerComponent<Ogc3DTilesLayerProps>(
+  'Ogc3DTilesLayer',
   (props) => new ExpoArcgisModule.Ogc3DTilesLayerRef(props)
 );
 
 /** Declarative `WebTiledLayer` from a `{level}/{row}/{col}` tile URL template. */
 export const WebTiledLayer = createLayerComponent<WebTiledLayerProps>(
+  'WebTiledLayer',
   (props) => new ExpoArcgisModule.WebTiledLayerRef(props)
 );
 
 /** Declarative `OpenStreetMapLayer` (built-in OSM tiles as an operational layer). */
 export const OpenStreetMapLayer = createLayerComponent<OpenStreetMapLayerProps>(
+  'OpenStreetMapLayer',
   () => new ExpoArcgisModule.OpenStreetMapLayerRef()
 );
 
 /** Declarative WMS layer (Web Map Service: URL + visible layer names). */
 export const WmsLayer = createLayerComponent<WmsLayerProps>(
+  'WmsLayer',
   (props) => new ExpoArcgisModule.WmsLayerRef(props)
 );
 
 /** Declarative WMTS layer (Web Map Tile Service: URL + layer id). */
 export const WmtsLayer = createLayerComponent<WmtsLayerProps>(
+  'WmtsLayer',
   (props) => new ExpoArcgisModule.WmtsLayerRef(props)
 );
 
 /** Declarative `RasterLayer` from a remote image service or a local raster file. */
 export const RasterLayer = createLayerComponent<RasterLayerProps, RasterLayerHandle>(
+  'RasterLayer',
   (props) => new ExpoArcgisModule.RasterLayerRef(props)
 );
 
 /** Declarative `KmlLayer` from a remote `.kml`/`.kmz` URL or a local file. */
 export const KmlLayer = createLayerComponent<KmlLayerProps, KmlLayerHandle>(
+  'KmlLayer',
   (props) => new ExpoArcgisModule.KmlLayerRef(props)
 );
 
 /** Declarative WFS layer (Web Feature Service: URL + feature-type/table name). */
 export const WfsLayer = createLayerComponent<WfsLayerProps>(
+  'WfsLayer',
   (props) => new ExpoArcgisModule.WfsLayerRef(props)
 );
 
 /** Declarative OGC API - Features layer (landing-page URL + collection id). */
 export const OgcFeatureLayer = createLayerComponent<OgcFeatureLayerProps>(
+  'OgcFeatureLayer',
   (props) => new ExpoArcgisModule.OgcFeatureLayerRef(props)
 );
 
@@ -93,31 +105,37 @@ export const OgcFeatureLayer = createLayerComponent<OgcFeatureLayerProps>(
 // secondary native module (ExpoArcgisGeometry) to keep the main module under the JVM 64 KB limit.
 /** Declarative annotation layer (map text as annotation features) from a feature service URL. */
 export const AnnotationLayer = createLayerComponent<AnnotationLayerProps>(
+  'AnnotationLayer',
   (props) => new ExpoArcgisGeometryModule.AnnotationLayerRef(props)
 );
 
 /** Declarative dimension layer (engineering/measurement dimensions) from a feature service URL. */
 export const DimensionLayer = createLayerComponent<DimensionLayerProps>(
+  'DimensionLayer',
   (props) => new ExpoArcgisGeometryModule.DimensionLayerRef(props)
 );
 
 /** Declarative 3D building scene layer from a scene service URL. */
 export const BuildingSceneLayer = createLayerComponent<BuildingSceneLayerProps>(
+  'BuildingSceneLayer',
   (props) => new ExpoArcgisGeometryModule.BuildingSceneLayerRef(props)
 );
 
 /** Declarative oriented imagery layer (positioned/oriented photos) from a feature service URL. */
 export const OrientedImageryLayer = createLayerComponent<OrientedImageryLayerProps>(
+  'OrientedImageryLayer',
   (props) => new ExpoArcgisGeometryModule.OrientedImageryLayerRef(props)
 );
 
 /** Declarative subtype feature layer (one sublayer per subtype) from a feature service URL. */
 export const SubtypeFeatureLayer = createLayerComponent<SubtypeFeatureLayerProps>(
+  'SubtypeFeatureLayer',
   (props) => new ExpoArcgisGeometryModule.SubtypeFeatureLayerRef(props)
 );
 
 /** In-memory `FeatureCollectionLayer` — built from a client-side `fields` schema + `features`. */
 export const FeatureCollectionLayer = createLayerComponent<FeatureCollectionLayerProps>(
+  'FeatureCollectionLayer',
   (props) => new ExpoArcgisGeometryModule.FeatureCollectionLayerRef(props)
 );
 
@@ -127,5 +145,6 @@ export const FeatureCollectionLayer = createLayerComponent<FeatureCollectionLaye
  * once loaded. `path` and `tableName` are construction-only; remount to change.
  */
 export const GeoPackageLayer = createLayerComponent<GeoPackageLayerProps>(
+  'GeoPackageLayer',
   (props) => new ExpoArcgisGeometryModule.GeoPackageLayerRef(props)
 );

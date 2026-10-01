@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { GeometryEditorHandle, GeometryEditorProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GeometryEditorRef } from './ExpoArcgisModule';
-import { useGeoView } from './contexts';
+import { useGeoViewFor } from './contexts';
 import { detachQuietly } from './utils/detachQuietly';
 
 /**
@@ -18,7 +18,7 @@ export const GeometryEditor = forwardRef<GeometryEditorHandle, GeometryEditorPro
     { type, active = true, tool, onGeometryChange, onInteractionPreview },
     handle
   ) {
-    const view = useGeoView();
+    const view = useGeoViewFor('GeometryEditor');
     const ref = useRef<GeometryEditorRef | undefined>(undefined);
     if (!ref.current) {
       ref.current = new ExpoArcgisModule.GeometryEditorRef();

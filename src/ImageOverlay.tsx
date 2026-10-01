@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { ImageOverlayProps } from './ExpoArcgis.types';
 import ExtrasModule from './ExpoArcgisExtrasModule';
 import type { ImageOverlayRef } from './ExpoArcgisModule';
-import { useGeoView } from './contexts';
+import { useGeoViewFor } from './contexts';
 import { detachQuietly } from './utils/detachQuietly';
 
 /**
@@ -12,7 +12,7 @@ import { detachQuietly } from './utils/detachQuietly';
  * sequence of georeferenced images. No-op inside a `<SceneView>`.
  */
 export function ImageOverlay({ imagePath, extent, opacity }: ImageOverlayProps) {
-  const view = useGeoView();
+  const view = useGeoViewFor('ImageOverlay');
   const ref = useRef<ImageOverlayRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExtrasModule.ImageOverlayRef();

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import type { SceneLayerProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type LayerRef } from './ExpoArcgisModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -10,7 +10,7 @@ import { detachQuietly } from './utils/detachQuietly';
 
 /** Declarative operational `ArcGISSceneLayer` (3D). Adds itself to the nearest `<Scene>` / `<Map>`. */
 export function SceneLayer(props: SceneLayerProps) {
-  const model = useGeoModel();
+  const model = useGeoModelFor('SceneLayer');
   const ref = useRef<LayerRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.SceneLayerRef(props);

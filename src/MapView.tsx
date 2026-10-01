@@ -17,8 +17,11 @@ import type {
   GeometryEditorRef,
   ImageOverlayRef,
 } from './ExpoArcgisModule';
-import { GeoViewContext, useGeoModel, type GeoViewHost } from './contexts';
+import { GeoViewContext, useGeoModelFor, type GeoViewHost } from './contexts';
 import { sharedObjectId } from './utils/sharedObjectId';
+import { unhandledLoadError } from './utils/unhandledLoadError';
+
+const warnLoadError = unhandledLoadError('MapView', 'onMapLoadError');
 
 type NativeMapViewProps = MapViewProps & {
   /** The native map handle (SharedObject), passed by reference as a view prop. */
@@ -42,7 +45,7 @@ const NativeMapView = requireNativeView<NativeMapViewProps>('ExpoArcgis');
  */
 export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>>(
   function MapView({ children, ...props }, handle) {
-    const map = useGeoModel() as MapRef;
+    const map = useGeoModelFor('MapView') as MapRef;
     // The native view exposes an async `identify` function callable through its ref.
     const nativeRef = useRef<any>(null);
 
@@ -79,6 +82,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         imageOverlays={imageOverlays.map(sharedObjectId)}
         geometryEditor={sharedObjectId(geometryEditor)}
         {...props}
+        onMapLoadError={props.onMapLoadError ?? warnLoadError}
       >
         <GeoViewContext.Provider value={host}>{children}</GeoViewContext.Provider>
       </NativeMapView>

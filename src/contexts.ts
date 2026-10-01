@@ -15,10 +15,24 @@ import type {
  */
 export const GeoModelContext = createContext<GeoModelRef | undefined>(undefined);
 
+/**
+ * How a misplaced component is named in the error. The library's own components pass their name
+ * (`useGeoModelFor('FeatureLayer')`), so the message says which one it is; the public hooks keep
+ * their signatures and fall back to "This component".
+ */
+function describe(component: string | undefined) {
+  return component ? `<${component}>` : 'This component';
+}
+
 export function useGeoModel(): GeoModelRef {
+  return useGeoModelFor();
+}
+
+/** `useGeoModel` that names the calling component if it is used outside a `<Map>` / `<Scene>`. */
+export function useGeoModelFor(component?: string): GeoModelRef {
   const model = useContext(GeoModelContext);
   if (!model) {
-    throw new Error('This component must be used within a <Map> or <Scene>.');
+    throw new Error(`[expo-arcgis] ${describe(component)} must be inside a <Map> or <Scene>.`);
   }
   return model;
 }
@@ -56,9 +70,23 @@ export type GeoViewHost = GraphicsOverlayHost &
 export const GeoViewContext = createContext<GeoViewHost | undefined>(undefined);
 
 export function useGeoView(): GeoViewHost {
+  return useGeoViewFor();
+}
+
+/** `useGeoView` that names the calling component if it is used outside a `<MapView>` / `<SceneView>`. */
+export function useGeoViewFor(component?: string): GeoViewHost {
   const host = useContext(GeoViewContext);
+  const model = useContext(GeoModelContext);
   if (!host) {
-    throw new Error('<GraphicsOverlay> / <GeometryEditor> must be used within a <MapView> or <SceneView>.');
+    // The usual slip: declared next to the view inside <Map> / <Scene>, which is where layers go.
+    // Overlays and editors are properties of the view, so they have to be its children.
+    throw new Error(
+      model
+        ? `[expo-arcgis] ${describe(component)} is inside <Map>/<Scene> but not inside the view. ` +
+            'Overlays and editors belong to the view: move it between <MapView> and </MapView> ' +
+            '(or <SceneView> and </SceneView>).'
+        : `[expo-arcgis] ${describe(component)} must be inside a <MapView> or <SceneView>.`
+    );
   }
   return host;
 }
@@ -67,9 +95,14 @@ export function useGeoView(): GeoViewHost {
 export const GraphicsOverlayContext = createContext<GraphicsOverlayRef | undefined>(undefined);
 
 export function useGraphicsOverlay(): GraphicsOverlayRef {
+  return useGraphicsOverlayFor();
+}
+
+/** `useGraphicsOverlay` that names the calling component if it is used outside a `<GraphicsOverlay>`. */
+export function useGraphicsOverlayFor(component?: string): GraphicsOverlayRef {
   const overlay = useContext(GraphicsOverlayContext);
   if (!overlay) {
-    throw new Error('<Graphic> must be used within a <GraphicsOverlay>.');
+    throw new Error(`[expo-arcgis] ${describe(component)} must be inside a <GraphicsOverlay>.`);
   }
   return overlay;
 }
@@ -77,10 +110,10 @@ export function useGraphicsOverlay(): GraphicsOverlayRef {
 /** The nearest `<AnalysisOverlay>`. Visual analyses (`<Viewshed>` / `<LineOfSight>`) attach here. */
 export const AnalysisOverlayContext = createContext<AnalysisOverlayRef | undefined>(undefined);
 
-export function useAnalysisOverlay(): AnalysisOverlayRef {
+export function useAnalysisOverlay(component: string): AnalysisOverlayRef {
   const overlay = useContext(AnalysisOverlayContext);
   if (!overlay) {
-    throw new Error('<Viewshed> / <LineOfSight> must be used within an <AnalysisOverlay>.');
+    throw new Error(`[expo-arcgis] <${component}> must be inside an <AnalysisOverlay>.`);
   }
   return overlay;
 }

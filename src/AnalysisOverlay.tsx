@@ -2,7 +2,7 @@ import { useEffect, useRef, type PropsWithChildren } from 'react';
 
 import type { AnalysisOverlayProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type AnalysisOverlayRef } from './ExpoArcgisModule';
-import { AnalysisOverlayContext, useGeoView } from './contexts';
+import { AnalysisOverlayContext, useGeoViewFor } from './contexts';
 import { detachQuietly } from './utils/detachQuietly';
 
 /**
@@ -11,7 +11,7 @@ import { detachQuietly } from './utils/detachQuietly';
  * children. (Visual analyses are 3D only; inside a `<MapView>` this is a no-op.)
  */
 export function AnalysisOverlay({ visible, children }: PropsWithChildren<AnalysisOverlayProps>) {
-  const view = useGeoView();
+  const view = useGeoViewFor('AnalysisOverlay');
   const ref = useRef<AnalysisOverlayRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.AnalysisOverlayRef();

@@ -30,7 +30,7 @@ export function LineOfSight(
     | LineOfSightProps
     | (GeoElementLineOfSightProps & { observerGraphic: GraphicRef; targetGraphic: GraphicRef })
 ) {
-  const overlay = useAnalysisOverlay();
+  const overlay = useAnalysisOverlay('LineOfSight');
   const analysisRef = useRef<LineOfSightRef | GeoElementLineOfSightRef | undefined>(undefined);
 
   if (!analysisRef.current) {

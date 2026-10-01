@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import type { MapImageLayerProps } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type LayerRef } from './ExpoArcgisModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -10,7 +10,7 @@ import { detachQuietly } from './utils/detachQuietly';
 
 /** Declarative operational `ArcGISMapImageLayer`. Adds itself to the nearest `<Map>` / `<Scene>`. */
 export function MapImageLayer(props: MapImageLayerProps) {
-  const model = useGeoModel();
+  const model = useGeoModelFor('MapImageLayer');
   const ref = useRef<LayerRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.MapImageLayerRef(props);

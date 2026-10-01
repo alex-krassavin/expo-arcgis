@@ -4,7 +4,7 @@ import type { UtilityNetworkHandle, UtilityNetworkProps } from './ExpoArcgis.typ
 import type { MapRef, UtilityNetworkRef } from './ExpoArcgisModule';
 // UtilityNetworkRef is registered in the Extras native module (main-module 64 KB budget).
 import ExtrasModule from './ExpoArcgisExtrasModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 
 /**
  * Declarative `UtilityNetwork`. Loads from `serviceGeodatabaseUrl`, attaches itself to the nearest
@@ -13,7 +13,7 @@ import { useGeoModel } from './contexts';
  */
 export const UtilityNetwork = forwardRef<UtilityNetworkHandle, UtilityNetworkProps>(
   function UtilityNetwork({ serviceGeodatabaseUrl, onLoad, onLoadError }, handle) {
-    const map = useGeoModel() as MapRef;
+    const map = useGeoModelFor('UtilityNetwork') as MapRef;
     const ref = useRef<UtilityNetworkRef | undefined>(undefined);
     if (!ref.current) {
       ref.current = new ExtrasModule.UtilityNetworkRef({ serviceGeodatabaseUrl });

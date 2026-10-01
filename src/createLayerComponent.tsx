@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type { LayerRef } from './ExpoArcgisModule';
-import { useGeoModel } from './contexts';
+import { useGeoModelFor } from './contexts';
 import { usePrevious } from './hooks/usePrevious';
 import { useUpdateEffect } from './hooks/useUpdateEffect';
 import { getPropsDiffs } from './utils/getPropsDiffs';
@@ -12,14 +12,19 @@ import { detachQuietly } from './utils/detachQuietly';
  * Mirrors `<TileLayer>` / `<MapImageLayer>`: creates the ref once, attaches it to the nearest
  * `<Map>` / `<Scene>` via `useGeoModel`, reconciles prop changes via `applyProps`, and forwards the
  * native ref (typed `H`) so a layer's inspection/query methods are callable through a `ref`.
+ *
+ * `name` is the component's public name. It becomes the `displayName`, so React's component stacks
+ * and DevTools say `VectorTileLayer` instead of the shared inner `Layer`, and it names the
+ * component in the error when it is used outside a `<Map>` / `<Scene>`.
  */
 export function createLayerComponent<P extends object, H = unknown>(
+  name: string,
   makeRef: (props: P) => LayerRef
 ) {
-  return forwardRef<H, P>(function Layer(rawProps, handle) {
+  const Component = forwardRef<H, P>(function Layer(rawProps, handle) {
     // forwardRef types props as `PropsWithoutRef<P>`; our `P` has no ref prop, so treat it as `P`.
     const props = rawProps as P;
-    const model = useGeoModel();
+    const model = useGeoModelFor(name);
     const ref = useRef<LayerRef | undefined>(undefined);
     if (!ref.current) {
       ref.current = makeRef(props);
@@ -52,4 +57,6 @@ export function createLayerComponent<P extends object, H = unknown>(
 
     return null;
   });
+  Component.displayName = name;
+  return Component;
 }
