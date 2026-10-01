@@ -3,6 +3,7 @@ package expo.modules.arcgis
 import android.content.Context
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
@@ -25,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /** Declarative 3D scene host. Renders the [SceneRef] passed as the `scene` view prop. */
@@ -44,6 +46,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
   private var loadJob: Job? = null
   private var observedLifecycle: Lifecycle? = null
+  private var lifecycleOwner: LifecycleOwner? = null
 
   init {
     scope.launch {
@@ -283,11 +286,13 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    val lifecycle = findViewTreeLifecycleOwner()?.lifecycle
+    val owner = findViewTreeLifecycleOwner()
+    val lifecycle = owner?.lifecycle
     if (lifecycle != null && lifecycle !== observedLifecycle) {
       observedLifecycle?.removeObserver(sceneView)
       lifecycle.addObserver(sceneView)
       observedLifecycle = lifecycle
+      lifecycleOwner = owner
     }
   }
 
@@ -296,6 +301,15 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(c
     loadJob?.cancel()
     observedLifecycle?.removeObserver(sceneView)
     observedLifecycle = null
+  }
+
+  /** Releases the view for good once React unmounts it — see [ExpoArcgisMapView.destroy]. */
+  fun destroy() {
+    scope.cancel()
+    observedLifecycle?.removeObserver(sceneView)
+    observedLifecycle = null
+    (lifecycleOwner ?: appContext.currentActivity as? LifecycleOwner)?.let { sceneView.onDestroy(it) }
+    lifecycleOwner = null
   }
 }
 
