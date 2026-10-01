@@ -112,10 +112,17 @@ function buildAndroid(appDir, codeql) {
   run('npx', ['expo', 'prebuild', '-p', 'android', '--no-install'], { cwd: appDir });
   const gradleArgs = [':expo-arcgis:compileDebugKotlin'];
   if (process.env.CI || codeql) gradleArgs.push('--no-daemon');
-  // A Kotlin file reaches the CodeQL database only through a kotlinc run the tracer sees: no task
-  // may be up to date or come from a cache, and kotlinc stays inside the traced Gradle process
-  // instead of a Kotlin daemon that an earlier, untraced build may have left running.
-  if (codeql) gradleArgs.push('--rerun-tasks', '-Pkotlin.compiler.execution.strategy=in-process');
+  if (codeql) {
+    gradleArgs.push(
+      // A Kotlin file reaches the CodeQL database only through a kotlinc run the tracer sees, so no
+      // task may be up to date or come from a cache.
+      '--rerun-tasks',
+      // CodeQL's extractor runs as a kotlinc plugin inside the Kotlin daemon, which inherits these
+      // settings. The template's 2 GiB heap / 512 MiB metaspace is sized for the compile alone
+      // (github/codeql#19374).
+      '-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g'
+    );
+  }
   run('./gradlew', gradleArgs, { cwd: path.join(appDir, 'android') });
 }
 
