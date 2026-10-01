@@ -30,14 +30,25 @@ authentication.
 
 ## Requirements
 
-ArcGIS Maps SDK 300.1 sets the floor for any app using this module:
-
-| | Minimum |
+| | Supported |
 |---|---|
-| iOS | **18.0**, built with **Xcode 26** |
-| Android | **API 28** (Android 9), compileSdk **37** — Esri deprecated API 28 in 300.1; the next SDK release requires API 29 |
-| Expo | SDK **54+** (New Architecture). Verified on Expo **56** / RN **0.82** / React **19** |
+| Expo | SDK **56**, **57** and **58** (New Architecture) |
+| iOS | **18.0+**, built with **Xcode 26** or **27** |
+| Android | **API 28+** (Android 9), compileSdk **37** — Esri deprecated API 28 in ArcGIS 300.1; the next SDK release requires API 29 |
 | Auth | An [ArcGIS API key](https://developers.arcgis.com/documentation/security-and-authentication/api-key-authentication/) (or token / OAuth) |
+
+Every change is built in a fresh app on each supported Expo SDK — Android, iOS, and a typecheck +
+bundle — so the table is what CI checks, not a guess:
+
+| Expo SDK | React Native |
+|---|---|
+| 58 | 0.88 (verified on the beta, 0.88.0-rc.3) |
+| 57 | 0.86 |
+| 56 | 0.85 |
+
+The iOS and Android minimums come from ArcGIS Maps SDK 300.1; the config plugin raises your app to
+them. On **Xcode 27**, Expo SDK 56 builds only from **56.0.23** on (`npx expo install --fix`) —
+earlier `expo-modules-jsi` releases don't compile with its Swift.
 
 This is a native module — it does **not** run in Expo Go. Use a development build (`expo prebuild` + `run:ios`/`run:android`).
 
@@ -137,7 +148,7 @@ You can also set the key imperatively: `import ExpoArcgis from 'expo-arcgis'; Ex
 ```sh
 cd example
 npm install
-ARCGIS_API_KEY=your_key npx expo run:android   # or run:ios (needs Xcode 26)
+ARCGIS_API_KEY=your_key npx expo run:android   # or run:ios (needs Xcode 26+)
 ```
 
 ## License
