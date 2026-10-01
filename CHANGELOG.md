@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- Extension points for packages built on expo-arcgis, which draw native UI over the map. They are
+  additive, so nothing changes for apps.
+  - JS: `AccessoryHost` (`addAccessory` / `removeAccessory`), now part of `GeoViewHost`. The nearest
+    `<MapView>` renders an accessory, such as a compass or a scalebar, in its own overlay.
+    `<SceneView>` doesn't show accessories yet and warns in development.
+  - Native: `GeoViewAccessory` and `GeoViewState` on both platforms. `MapRef`'s map is observable
+    (`@Published` on iOS, `mapFlow` on Android). On Android, `ComposeHostView` and
+    `geoViewComposeHost` are public.
+
 ### Changed
 
 - Android: `<MapView>` and `<SceneView>` now render through the ArcGIS Maps SDK for Kotlin Toolkit's
@@ -13,6 +24,10 @@
 
 ### Fixed
 
+- iOS: on React Native 0.88 (Expo SDK 58), pods that depend on ExpoArcgis failed with "module map
+  file … not found". React Native's Swift Package support moves our pod's build products but updates
+  the module map path only in the app's settings. The config plugin's Podfile `post_install` step
+  now updates it in the pods' settings too.
 - React Native views inside `<MapView>` or `<SceneView>` render above the map, where their layout
   puts them. On Android they covered the whole view and left the map zero width; on iOS the map
   hid them.
