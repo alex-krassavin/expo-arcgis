@@ -32,7 +32,6 @@ import com.arcgismaps.toolkit.geoviewcompose.SceneViewProxy
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +46,7 @@ import kotlinx.coroutines.launch
  * Toolkit's composable SceneView — the counterpart of the SwiftUI `SceneView` the iOS host renders.
  * The props become Compose state; operations that need the drawn view go through its [SceneViewProxy].
  */
-class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
+class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHostView(context, appContext) {
   private val onSceneLoaded by EventDispatcher<MapLoadedEventPayload>()
   private val onSceneLoadError by EventDispatcher<MapLoadErrorEventPayload>()
   private val onTap by EventDispatcher<TapEventPayload>()

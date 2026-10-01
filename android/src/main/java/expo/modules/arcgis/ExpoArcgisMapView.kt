@@ -38,7 +38,6 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -86,7 +85,7 @@ class LocationEventPayload(
  * composable MapView — the counterpart of the SwiftUI `MapView` the iOS host renders. The props
  * become Compose state; operations that need the drawn view go through its [MapViewProxy].
  */
-class ExpoArcgisMapView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
+class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostView(context, appContext) {
   private val onMapLoaded by EventDispatcher<MapLoadedEventPayload>()
   private val onMapLoadError by EventDispatcher<MapLoadErrorEventPayload>()
   private val onTap by EventDispatcher<TapEventPayload>()
