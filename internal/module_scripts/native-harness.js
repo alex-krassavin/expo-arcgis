@@ -115,9 +115,13 @@ function createApp(appDir, sdk, moduleSources) {
   ]);
   run('npm', ['install', '--no-audit', '--no-fund'], { cwd: appDir });
   // One install, so each package's `expo-arcgis` peer resolves to the core installed with it. A
-  // tarball installs as a copy. The checkout (--codeql) installs as a symlink — npm's default for a
-  // directory, pinned here — which autolinking resolves to the repository's real path.
-  const link = fs.statSync(moduleSources[0]).isDirectory() ? ['--install-links=false'] : [];
+  // tarball installs as a copy. The checkout (--codeql) installs as symlinks — npm's default for a
+  // directory, pinned here — which autolinking resolves to the repository's real paths. Without
+  // scripts: npm would run every linked package's `prepare` at once, and the core's empties build/
+  // while the toolkit's compiles against it. Both were built by `npm ci` at the root already.
+  const link = fs.statSync(moduleSources[0]).isDirectory()
+    ? ['--install-links=false', '--ignore-scripts']
+    : [];
   run('npm', ['install', '--no-audit', '--no-fund', ...link, ...moduleSources], { cwd: appDir });
 
   const appJsonPath = path.join(appDir, 'app.json');
