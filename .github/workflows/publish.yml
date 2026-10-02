@@ -1,17 +1,16 @@
 name: Publish
 
-# Publishes one package of the monorepo (packages/<name>) to npm, with provenance. It runs:
-# - When a GitHub Release is published. Its tag names the package and version:
-#   `<name>@<version>` (e.g. `expo-arcgis-toolkit@0.1.0`), or `v<version>` for the core,
-#   expo-arcgis.
-# - On manual dispatch, for the package picked below, optionally as a dry run (pack and validate,
-#   no publish).
-# The version published is the one in packages/<name>/package.json, so bump it and commit first.
-# A prerelease version (with a `-`, e.g. 0.8.0-beta.1) goes to the `next` dist-tag; any other to
-# `latest`.
+# Publishes one package of the monorepo (packages/<name>) to npm, with provenance. Run it by hand
+# (Actions → Publish → Run workflow) from main and pick the package. The version published is the
+# one in packages/<name>/package.json, so bump it and commit first.
+#
+# After npm, it publishes the package's GitHub Release, tagged `v<version>` for the core
+# (expo-arcgis) and `<name>@<version>` for the others, with the version's CHANGELOG section as
+# notes. A draft already prepared for that tag is published as it is.
+#
+# A prerelease version (with a `-`, e.g. 0.8.0-beta.1) goes to the `next` dist-tag, any other to
+# `latest`. A dry run builds, validates and packs, then stops.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       package:
@@ -36,10 +35,10 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Publish ${{ inputs.package }}${{ inputs.dry-run && ' (dry run)' || '' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # the GitHub Release and its tag
       id-token: write # npm provenance
     steps:
       - uses: actions/checkout@v7
@@ -50,59 +49,51 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
 
-      # Which package, at which version. A release tag must match the package's own version, and a
-      # private package isn't published. Event values reach the script through env, not
-      # interpolation.
+      # Which package, at which version, and whether it may go out: only from main, never a
+      # private package, never a version npm already has. Inputs reach the script through env.
       - name: Resolve the package
         id: target
         env:
-          EVENT: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          INPUT_PACKAGE: ${{ inputs.package }}
+          PACKAGE: ${{ inputs.package }}
+          DRY_RUN: ${{ inputs.dry-run }}
         run: |
-          expected=""
-          if [ "$EVENT" = "release" ]; then
-            case "$RELEASE_TAG" in
-              v[0-9]*) package="expo-arcgis"; expected="${RELEASE_TAG#v}" ;;
-              ?*@[0-9]*) package="${RELEASE_TAG%@*}"; expected="${RELEASE_TAG##*@}" ;;
-              *)
-                echo "::error::Release tag '$RELEASE_TAG' is neither v<version> (the core) nor <name>@<version>."
-                exit 1 ;;
-            esac
-          else
-            package="$INPUT_PACKAGE"
-          fi
-          dir="packages/$package"
+          dir="packages/$PACKAGE"
           if [ ! -f "$dir/package.json" ]; then
-            echo "::error::There is no package '$package' in packages/."
+            echo "::error::There is no package '$PACKAGE' in packages/."
             exit 1
           fi
           name=$(node -p "require('./$dir/package.json').name")
           version=$(node -p "require('./$dir/package.json').version")
           private=$(node -p "Boolean(require('./$dir/package.json').private)")
-          if [ "$name" != "$package" ]; then
-            echo "::error::$dir/package.json is named '$name', not '$package'."
+          if [ "$name" != "$PACKAGE" ]; then
+            echo "::error::$dir/package.json is named '$name', not '$PACKAGE'."
             exit 1
           fi
-          if [ -n "$expected" ] && [ "$expected" != "$version" ]; then
-            echo "::error::Release tag '$RELEASE_TAG' says $expected, but $dir/package.json says $version. Bump it and re-tag."
+          if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Publish from main, not $GITHUB_REF (a dry run may use any branch)."
             exit 1
           fi
           if [ "$private" = "true" ]; then
             echo "::error::$name is private (\"private\": true in $dir/package.json): remove it to publish."
             exit 1
           fi
+          if npm view "$name@$version" version > /dev/null 2>&1; then
+            echo "::error::$name@$version is already on npm. Bump the version in $dir/package.json first."
+            exit 1
+          fi
           case "$version" in
             *-*) dist_tag="next" ;;
             *) dist_tag="latest" ;;
           esac
+          if [ "$name" = "expo-arcgis" ]; then tag="v$version"; else tag="$name@$version"; fi
           {
             echo "dir=$dir"
             echo "name=$name"
             echo "version=$version"
             echo "dist-tag=$dist_tag"
+            echo "tag=$tag"
           } >> "$GITHUB_OUTPUT"
-          echo "Publishing $name@$version from $dir to the '$dist_tag' dist-tag."
+          echo "$name@$version from $dir, to the '$dist_tag' dist-tag, released as $tag."
 
       # One install for the workspaces. The core's `prepare` builds its build/ and plugin/build,
       # which the packages built on it compile against when `npm publish` runs their `prepack`.
@@ -133,9 +124,16 @@ jobs:
             console.log(`${pack.name}@${pack.version}: ${files.length} files, README "${title}"`);
           '
 
+      - name: Dry run
+        if: ${{ inputs.dry-run }}
+        working-directory: ${{ steps.target.outputs.dir }}
+        env:
+          DIST_TAG: ${{ steps.target.outputs.dist-tag }}
+        run: npm publish --dry-run --access public --tag "$DIST_TAG"
+
       # `npm publish` runs `prepare` / `prepack` again, so the tarball is built fresh from source.
       # --provenance ties the package to this workflow run (supply-chain attestation).
-      - name: Publish
+      - name: Publish to npm
         if: ${{ !inputs.dry-run }}
         working-directory: ${{ steps.target.outputs.dir }}
         env:
@@ -143,9 +141,33 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public --tag "$DIST_TAG"
 
-      - name: Dry run
-        if: ${{ inputs.dry-run }}
-        working-directory: ${{ steps.target.outputs.dir }}
+      - name: GitHub Release
+        if: ${{ !inputs.dry-run }}
         env:
+          GH_TOKEN: ${{ github.token }}
+          DIR: ${{ steps.target.outputs.dir }}
+          NAME: ${{ steps.target.outputs.name }}
+          VERSION: ${{ steps.target.outputs.version }}
+          TAG: ${{ steps.target.outputs.tag }}
           DIST_TAG: ${{ steps.target.outputs.dist-tag }}
-        run: npm publish --dry-run --access public --tag "$DIST_TAG"
+        run: |
+          draft=$(gh release view "$TAG" --json isDraft --jq .isDraft 2> /dev/null || echo none)
+          if [ "$draft" = "true" ]; then
+            gh release edit "$TAG" --draft=false
+            echo "Published the prepared draft release $TAG."
+          elif [ "$draft" = "false" ]; then
+            echo "Release $TAG already exists."
+          else
+            # The version's CHANGELOG section: from `## <version>` to the next `## `.
+            awk -v heading="## $VERSION" '
+              index($0, heading) == 1 { found = 1; next }
+              found && /^## / { exit }
+              found
+            ' "$DIR/CHANGELOG.md" > "$RUNNER_TEMP/notes.md" 2> /dev/null || true
+            [ -s "$RUNNER_TEMP/notes.md" ] || echo "See $DIR/CHANGELOG.md." > "$RUNNER_TEMP/notes.md"
+            prerelease=""
+            [ "$DIST_TAG" = "next" ] && prerelease="--prerelease"
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$NAME $VERSION" \
+              --notes-file "$RUNNER_TEMP/notes.md" $prerelease
+            echo "Created release $TAG."
+          fi
