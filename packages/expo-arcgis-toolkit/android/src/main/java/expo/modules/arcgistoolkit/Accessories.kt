@@ -21,6 +21,7 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
 import java.util.Locale
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 /** The JS `AccessoryAlignment`, as Compose places it. Leading/trailing follow the layout direction. */
 internal fun accessoryAlignment(value: Any?, fallback: Alignment): Alignment = when (value) {
@@ -36,7 +37,7 @@ internal fun accessoryAlignment(value: Any?, fallback: Alignment): Alignment = w
   else -> fallback
 }
 
-/** The Toolkit's `Compass` over a `<MapView>`. Tapping it turns the map back to north, as on iOS. */
+/** The Toolkit's `Compass` over a `<MapView>` or `<SceneView>`. Tapping it turns the view back to north, as on iOS. */
 class CompassAccessory(appContext: AppContext) : SharedObject(appContext), GeoViewAccessory {
   override var alignment by mutableStateOf<Alignment>(Alignment.TopEnd)
     private set
@@ -53,7 +54,20 @@ class CompassAccessory(appContext: AppContext) : SharedObject(appContext), GeoVi
   @Composable
   override fun Content(view: GeoViewState) {
     val scope = rememberCoroutineScope()
-    val onClick: () -> Unit = { scope.launch { view.mapViewProxy.setViewpointRotation(0.0) } }
+    val onClick: () -> Unit = {
+      scope.launch {
+        val sceneViewProxy = view.sceneViewProxy
+        val camera = view.camera
+        if (sceneViewProxy != null) {
+          // A scene turns back to north by its camera: same position, pitch and roll, heading 0.
+          if (camera != null) {
+            sceneViewProxy.setViewpointCameraAnimated(camera.rotateTo(0.0, camera.pitch, camera.roll), 0.5.seconds)
+          }
+        } else {
+          view.mapViewProxy.setViewpointRotation(0.0)
+        }
+      }
+    }
     val modifier = Modifier.padding(16.dp)
     val size = size
     if (size != null) {
