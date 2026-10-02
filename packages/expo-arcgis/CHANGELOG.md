@@ -4,6 +4,10 @@
 
 ### Added
 
+- For packages built on expo-arcgis (iOS):
+  - `JobRef.job` is the native job;
+  - `JobRef(restoring:)` makes a handle for a job of a kind the core makes, such as one that
+    expo-arcgis-toolkit's `jobManager` restored after a relaunch.
 - `<MapView map>`: a map to show instead of the nearest `<Map>`'s, such as an offline map area that
   expo-arcgis-toolkit's `<OfflineMapAreas>` hands out. A `MapRef` can wrap a map that already
   exists, for packages built on expo-arcgis.
@@ -58,6 +62,8 @@
 
 ### Changed
 
+- `JobRef.result()` doesn't start a job that is already running, such as one a job manager resumed;
+  it follows it to its end.
 - Accessories along a view's bottom edge stay above its attribution bar.
 - Android: where no React child of a `<MapView>` / `<SceneView>` is hit, React Native's touch hit test
   goes on to the map (`box-none`). Touches on content drawn inside the map, such as a callout's,

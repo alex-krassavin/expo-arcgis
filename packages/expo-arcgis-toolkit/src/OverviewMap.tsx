@@ -27,7 +27,7 @@ export type OverviewMapProps = {
  * @platform ios — the Kotlin Toolkit has no overview map; on Android it renders nothing.
  */
 export function OverviewMap(props: OverviewMapProps) {
-  return availableOn('ios', 'OverviewMap') ? <OverviewMapAccessory {...props} /> : null;
+  return availableOn('ios', '<OverviewMap>') ? <OverviewMapAccessory {...props} /> : null;
 }
 
 function OverviewMapAccessory({

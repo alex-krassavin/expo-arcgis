@@ -60,7 +60,7 @@ const NativeLegend =
  * @platform android — the Swift Toolkit has no legend; on iOS it renders nothing.
  */
 export function Legend(props: LegendProps) {
-  return availableOn('android', 'Legend') ? <LegendView {...props} /> : null;
+  return availableOn('android', '<Legend>') ? <LegendView {...props} /> : null;
 }
 
 function LegendView({ geoView, typography, ...props }: LegendProps) {

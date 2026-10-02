@@ -90,9 +90,9 @@ struct OfflineMapAreasContent: View {
   }
 }
 
-/// Starts the Toolkit's offline manager while the app launches: its job manager registers a
-/// background task, which iOS only allows then. Also hands it the background downloads' session
-/// events when iOS relaunches the app for them.
+/// Starts the Toolkit's offline manager and shared job manager while the app launches: each
+/// registers a background task, which iOS only allows then. Also hands the SDK's background
+/// downloads their session events when iOS relaunches the app for them.
 public final class ExpoArcgisToolkitAppDelegate: ExpoAppDelegateSubscriber {
   /// The identifier of the offline manager's background status checks. The app's Info.plist must
   /// permit it (expo-arcgis-toolkit's config plugin adds it): iOS stops an app that registers a
@@ -113,6 +113,7 @@ public final class ExpoArcgisToolkitAppDelegate: ExpoAppDelegateSubscriber {
       _ = OfflineManager.shared
       Self.offlineManagerStarted = true
     }
+    MainActor.assumeIsolated { JobManagerFunctions.startAtLaunch() }
     return true
   }
 
@@ -128,6 +129,10 @@ public final class ExpoArcgisToolkitAppDelegate: ExpoAppDelegateSubscriber {
     }
     Task {
       await ArcGISEnvironment.backgroundURLSession.handleEventsForBackgroundTask()
+      // As the Toolkit's job manager example does on such a relaunch.
+      await MainActor.run {
+        if JobManagerFunctions.started { JobManager.shared.resumeAllPausedJobs() }
+      }
       completionHandler()
     }
   }

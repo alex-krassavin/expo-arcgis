@@ -55,6 +55,14 @@
     `onDismiss`.
 - A config plugin (`"plugins": ["expo-arcgis-toolkit"]`) adds the iOS camera and microphone
   usage descriptions. The feature form needs them for attachments and barcode scanning.
+- `jobManager` (iOS): the Swift Toolkit's shared job manager for expo-arcgis's long jobs (the
+  `offline` functions' and geoprocessing's `JobRef`s).
+  - It keeps the jobs added to it across app launches, gives them background time, and can check
+    their status in the background.
+  - After a relaunch, `jobs()` hands the kept jobs back.
+  - `add`, `remove`, `resumeAllPausedJobs`, `saveState` and `setBackgroundStatusCheckInterval`.
+  - It starts at app launch, which its background task requires. The config plugin's
+    `"jobManager": true` permits that task.
 - `OfflineMapAreas`: the Toolkit's offline map areas on both platforms. It works on the nearest
   `<Map>`'s offline-enabled web map.
   - It downloads its preplanned areas and areas drawn on demand, keeps them on the device, and

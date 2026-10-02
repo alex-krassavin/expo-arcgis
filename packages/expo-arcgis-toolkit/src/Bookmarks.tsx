@@ -57,7 +57,7 @@ const NativeBookmarks =
  * @platform ios — the Kotlin Toolkit has no bookmarks; on Android it renders nothing.
  */
 export function Bookmarks(props: BookmarksProps) {
-  return availableOn('ios', 'Bookmarks') ? <BookmarksView {...props} /> : null;
+  return availableOn('ios', '<Bookmarks>') ? <BookmarksView {...props} /> : null;
 }
 
 function BookmarksView({ geoView, onSelectionChange, onIsPresentedChange, ...props }: BookmarksProps) {

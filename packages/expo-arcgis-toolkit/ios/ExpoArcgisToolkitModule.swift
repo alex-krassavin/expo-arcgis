@@ -11,6 +11,27 @@ public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
 
+    // The Toolkit's shared job manager (iOS only), for expo-arcgis's jobs.
+    // The job manager is main-actor isolated: these run on the main queue.
+    AsyncFunction("jobManagerJobs") { () throws -> [JobRef] in
+      try MainActor.assumeIsolated { try JobManagerFunctions.jobs() }
+    }.runOnQueue(.main)
+    AsyncFunction("jobManagerAdd") { (job: JobRef) in
+      try MainActor.assumeIsolated { try JobManagerFunctions.add(job) }
+    }.runOnQueue(.main)
+    AsyncFunction("jobManagerRemove") { (job: JobRef) in
+      try MainActor.assumeIsolated { try JobManagerFunctions.remove(job) }
+    }.runOnQueue(.main)
+    AsyncFunction("jobManagerResumeAllPausedJobs") {
+      try MainActor.assumeIsolated { try JobManagerFunctions.manager().resumeAllPausedJobs() }
+    }.runOnQueue(.main)
+    AsyncFunction("jobManagerSaveState") {
+      try MainActor.assumeIsolated { try JobManagerFunctions.manager().saveState() }
+    }.runOnQueue(.main)
+    AsyncFunction("jobManagerSetBackgroundStatusCheckInterval") { (seconds: Double?) in
+      try MainActor.assumeIsolated { try JobManagerFunctions.setBackgroundStatusCheckInterval(seconds) }
+    }.runOnQueue(.main)
+
     Class(CompassAccessory.self) {
       Constructor { CompassAccessory() }
       AsyncFunction("update") { (accessory: CompassAccessory, props: [String: Any]) in
