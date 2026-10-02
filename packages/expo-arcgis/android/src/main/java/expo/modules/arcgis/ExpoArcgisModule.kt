@@ -500,6 +500,10 @@ private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisScene
 
   OnViewDestroys { view: ExpoArcgisSceneView -> view.destroy() }
 
+  Prop("accessories") { view: ExpoArcgisSceneView, refs: List<SharedObject> ->
+    view.setAccessories(refs)
+  }
+
   reactChildrenAboveMap { it.reactChildren }
 
   Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->

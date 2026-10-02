@@ -15,12 +15,15 @@ import androidx.compose.ui.Modifier
 import com.arcgismaps.geometry.Polygon
 import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISMap
+import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.Viewpoint
+import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
+import com.arcgismaps.toolkit.geoviewcompose.SceneViewProxy
 
 /**
- * UI that a package built on expo-arcgis draws over a `<MapView>`: the ArcGIS Toolkit's compass,
- * scalebar… (expo-arcgis-toolkit). The package's shared object implements this; JS hands it to the
+ * UI that a package built on expo-arcgis draws over a `<MapView>` or `<SceneView>`: the ArcGIS
+ * Toolkit's compass, scalebar… (expo-arcgis-toolkit). The package's shared object implements this; JS hands it to the
  * view (`GeoViewHost.addAccessory`), and the view composes it over the map at [alignment], inside the
  * view's `contentInsets`.
  */
@@ -34,22 +37,36 @@ interface GeoViewAccessory {
 }
 
 /**
- * The live state of a `<MapView>`, for its accessories. Compose state, so an accessory that reads it
- * recomposes when it changes — and nothing else does: the map doesn't read it.
+ * The live state of a `<MapView>` or `<SceneView>`, for its accessories. Compose state, so an
+ * accessory that reads it recomposes when it changes — and nothing else does: the view doesn't
+ * read it.
  */
 class GeoViewState internal constructor(
-  /** Operations on the map view (viewpoint animations, identify…). */
-  val mapViewProxy: MapViewProxy
+  /**
+   * Operations on the map view (viewpoint animations, identify…). A `<SceneView>`'s is unattached:
+   * use [sceneViewProxy].
+   */
+  val mapViewProxy: MapViewProxy,
+  /** Operations on the scene view (camera animations, identify…); null for a `<MapView>`. */
+  val sceneViewProxy: SceneViewProxy? = null,
 ) {
-  /** The map the view shows. */
+  /** The map a `<MapView>` shows. */
   var map by mutableStateOf<ArcGISMap?>(null)
+    internal set
+
+  /** The scene a `<SceneView>` shows. */
+  var scene by mutableStateOf<ArcGISScene?>(null)
+    internal set
+
+  /** A `<SceneView>`'s camera. */
+  var camera by mutableStateOf<Camera?>(null)
     internal set
 
   /** The view's viewpoint, by center and scale. */
   var viewpoint by mutableStateOf<Viewpoint?>(null)
     internal set
 
-  /** The map's rotation, in degrees. */
+  /** The map's rotation, in degrees; for a `<SceneView>`, its viewpoint's rotation. */
   var rotation by mutableDoubleStateOf(0.0)
     internal set
 

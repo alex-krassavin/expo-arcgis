@@ -31,6 +31,10 @@ final class MapViewModel: ObservableObject {
   /// The view's live state for its accessories — published apart from this model, see GeoViewState.
   let viewState = GeoViewState()
 
+  init() {
+    viewState.locationDisplay = locationDisplay
+  }
+
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
   var onTap: ((_ latitude: Double, _ longitude: Double, _ screenX: Double, _ screenY: Double) -> Void)?

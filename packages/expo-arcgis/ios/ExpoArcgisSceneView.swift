@@ -20,6 +20,10 @@ final class SceneViewModel: ObservableObject {
   @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
+  /// The UI other packages draw over the scene (expo-arcgis-toolkit's compass…).
+  @Published private(set) var accessories: [GeoViewAccessory] = []
+  /// The view's live state for its accessories — published apart from this model, see GeoViewState.
+  let viewState = GeoViewState()
   /// Last camera the view reported. Plain storage, not published — reading it must not redraw.
   var currentCamera: Camera?
 
@@ -29,6 +33,11 @@ final class SceneViewModel: ObservableObject {
 
   func setScene(_ scene: ArcGIS.Scene?) {
     self.scene = scene
+    viewState.scene = scene
+  }
+
+  func setAccessories(_ accessories: [GeoViewAccessory]) {
+    self.accessories = accessories
   }
 
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
@@ -78,8 +87,20 @@ struct ExpoArcgisSceneContainer: View {
             let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
             model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
-          .onCameraChanged { model.currentCamera = $0 }
-          .onAppear { model.proxy = proxy }
+          .onCameraChanged { camera in
+            model.currentCamera = camera
+            model.viewState.camera = camera
+          }
+          .onViewpointChanged(kind: .centerAndScale) { model.viewState.viewpoint = $0 }
+          .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
+          .overlay {
+            GeoViewAccessories(
+              accessories: model.accessories, insets: EdgeInsets(), state: model.viewState)
+          }
+          .onAppear {
+            model.proxy = proxy
+            model.viewState.sceneViewProxy = proxy
+          }
           .task(id: ObjectIdentifier(scene)) {
             do {
               try await scene.load()
@@ -256,6 +277,11 @@ class ExpoArcgisSceneView: ExpoView {
 
   /// Sets the coordinate grid overlay from JS (nil clears it).
   func setGrid(_ dict: [String: Any]?) { model.setGrid(buildGrid(dict)) }
+
+  /// Receives the accessories other packages declare as `<SceneView>` children (expo-arcgis-toolkit).
+  func setAccessories(_ refs: [SharedObject]) {
+    model.setAccessories(refs.compactMap { $0 as? GeoViewAccessory })
+  }
 
   /// Filters time-aware layers to a time window from JS (nil shows all time steps).
   func setTimeExtent(_ dict: [String: Any]?) {

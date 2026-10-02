@@ -62,9 +62,9 @@ export type ImageOverlayHost = {
 };
 
 /**
- * Lets a package built on expo-arcgis draw UI over the nearest `<MapView>` — the ArcGIS Toolkit's
- * compass, scalebar… (expo-arcgis-toolkit). An accessory is that package's native shared object;
- * the view renders it in its own overlay, with the view's live state. Not on `<SceneView>` yet.
+ * Lets a package built on expo-arcgis draw UI over the nearest `<MapView>` or `<SceneView>` — the
+ * ArcGIS Toolkit's compass, scalebar… (expo-arcgis-toolkit). An accessory is that package's native
+ * shared object; the view renders it in its own overlay, with the view's live state.
  */
 export type AccessoryHost = {
   // `SharedObject` is the class; an accessory is an instance of one of its subclasses.
