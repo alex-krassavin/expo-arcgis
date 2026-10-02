@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Builds expo-arcgis inside a fresh consumer app for one Expo SDK — the way users get it.
 //
-//   node internal/module_scripts/native-harness.js --sdk 58 --platform android
-//   node internal/module_scripts/native-harness.js --sdk 57 --platform ios --spm-cache ~/spm-cache
-//   node internal/module_scripts/native-harness.js --sdk 56 --platform js
+//   node scripts/native-harness.js --sdk 58 --platform android
+//   node scripts/native-harness.js --sdk 57 --platform ios --spm-cache ~/spm-cache
+//   node scripts/native-harness.js --sdk 56 --platform js
 //
 // The module is packed with `npm pack` (only what npm would publish) and installed into a new
 // `blank-typescript@sdk-N` app, whose native projects then come from `expo prebuild` — so the
@@ -14,35 +14,39 @@
 // Platforms: `android` compiles the module's Kotlin, `ios` compiles its Swift (ExpoArcgis scheme),
 // `js` typechecks and bundles an app that imports the library.
 //
-// The packages released next to the core (packages/*, e.g. expo-arcgis-toolkit) are Expo modules
-// built on it. They are packed and installed with the core, and their native code compiles too.
+// The core is packages/expo-arcgis. The packages released next to it (the rest of packages/*, e.g.
+// expo-arcgis-toolkit) are Expo modules built on it. They are packed and installed with the core,
+// and their native code compiles too.
 //
-//   node internal/module_scripts/native-harness.js --codeql --platform android
+//   node scripts/native-harness.js --codeql --platform android
 //
 // `--codeql` is the build behind a CodeQL database (.github/workflows/codeql.yml). The app links
-// this checkout instead of a packed copy, so the compilers — and so the alerts — see the repository's
-// own paths; a copy under node_modules would put every alert on a file the repository doesn't have.
+// the packages in this checkout instead of packed copies, so the compilers — and so the alerts —
+// see the repository's own paths; a copy under node_modules would put every alert on a file the
+// repository doesn't have.
 // Every compile is also forced to run where CodeQL's tracer sees it.
 //
-//   node internal/module_scripts/native-harness.js --codeql --platform ios --reuse-app
+//   node scripts/native-harness.js --codeql --platform ios --reuse-app
 //
-// `--reuse-app` (iOS) rebuilds the app the previous run left in --dir, recompiling only the modules'
-// own Swift. CodeQL's Swift job runs the harness once before the tracer starts, then traces only this
-// rebuild: under the tracer, Esri's Toolkit package (a dependency) never finished compiling.
-const { execFileSync } = require('child_process');
+// `--reuse-app` (iOS) recompiles only the modules' own Swift, in the app the previous --codeql run
+// left in --dir. That run records each module's swiftc command from its xcodebuild log; this one
+// replays them, with no xcodebuild. CodeQL's Swift job runs the harness once before the tracer
+// starts, then traces only the replay. Under the tracer, xcodebuild rebuilt every dependency and
+// never got through Esri's Toolkit package.
+const { execFileSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '../..');
+const ROOT = path.resolve(__dirname, '..');
+const CORE = path.join(ROOT, 'packages', 'expo-arcgis');
 const APP_ID = 'dev.expoarcgis.harness';
 
-/** The packages built on the core (packages/*): their directories and npm names. */
-const PACKAGES = (
-  fs.existsSync(path.join(ROOT, 'packages')) ? fs.readdirSync(path.join(ROOT, 'packages')) : []
-)
+/** The packages built on the core (the rest of packages/*): their directories and npm names. */
+const PACKAGES = fs
+  .readdirSync(path.join(ROOT, 'packages'))
   .map((dir) => path.join(ROOT, 'packages', dir))
-  .filter((dir) => fs.existsSync(path.join(dir, 'package.json')))
+  .filter((dir) => dir !== CORE && fs.existsSync(path.join(dir, 'package.json')))
   .map((dir) => ({ dir, name: require(path.join(dir, 'package.json')).name }));
 
 /** The CocoaPods pods a module directory declares (`ios/<Pod>.podspec`). */
@@ -69,7 +73,8 @@ function parseArgs(argv) {
     // A linked checkout resolves its own imports — the config plugin's `expo/config-plugins`, the
     // peers autolinking walks — from this repository's node_modules, so the app has to be on the
     // same SDK.
-    const sdk = require(path.join(ROOT, 'node_modules/expo/package.json')).version.split('.')[0];
+    const expo = require(require.resolve('expo/package.json', { paths: [CORE] }));
+    const sdk = expo.version.split('.')[0];
     if (args.sdk !== undefined && args.sdk !== sdk) {
       console.error(`--codeql builds against this repository's own Expo SDK (${sdk}).`);
       process.exit(1);
@@ -107,6 +112,29 @@ function run(cmd, args, options = {}) {
 }
 
 /** Packs the package in `source` into `dir`; returns the tarball's path. */
+/** Runs a command like `run`, showing its output live and also writing it to `log`. No shell. */
+function runLogged(cmd, args, log, options = {}) {
+  console.log(`\n$ ${[cmd, ...args].join(' ')}   (in ${options.cwd}, log: ${log})`);
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(log);
+    const child = spawn(cmd, args, {
+      ...options,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, CI: '1', EXPO_NO_GIT_STATUS: '1', ...options.env },
+    });
+    const forward = (out) => (chunk) => {
+      out.write(chunk);
+      file.write(chunk);
+    };
+    child.stdout.on('data', forward(process.stdout));
+    child.stderr.on('data', forward(process.stderr));
+    child.on('error', reject);
+    child.on('close', (code) =>
+      file.end(() => (code === 0 ? resolve() : reject(new Error(`${cmd} exited with ${code} (${log})`))))
+    );
+  });
+}
+
 function pack(source, dir) {
   const out = run('npm', ['pack', '--pack-destination', dir], { cwd: source, capture: true });
   return path.join(dir, out.trim().split('\n').pop().trim());
@@ -195,19 +223,18 @@ function buildAndroid(appDir, codeql) {
   run('./gradlew', gradleArgs, { cwd: path.join(appDir, 'android') });
 }
 
-function buildIos(appDir, spmCache, codeql, reuse) {
+async function buildIos(appDir, spmCache, codeql, reuse) {
   const iosDir = path.join(appDir, 'ios');
   // CocoaPods aborts on a non-UTF-8 locale.
   const utf8 = { LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
+  // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
+  const pods = [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn);
   if (reuse) {
-    // Everything is built. Marking the modules' own Swift as changed recompiles those files, and
-    // only those.
-    const now = new Date();
-    for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
-  } else {
-    run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
-    run('pod', ['install'], { cwd: iosDir, env: utf8 });
+    replaySwiftCompiles(appDir);
+    return;
   }
+  run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
+  run('pod', ['install'], { cwd: iosDir, env: utf8 });
   const workspace = fs.readdirSync(iosDir).find((f) => f.endsWith('.xcworkspace'));
   const xcodeArgs = [
     '-workspace',
@@ -223,8 +250,8 @@ function buildIos(appDir, spmCache, codeql, reuse) {
   if (spmCache) xcodeArgs.push('-clonedSourcePackagesDirPath', spmCache);
   if (codeql) {
     xcodeArgs.push(
-      // The app's own DerivedData, fresh unless --reuse-app: a file that is already up to date
-      // isn't compiled, so isn't extracted.
+      // The app's own, fresh DerivedData: a file that is already up to date isn't compiled, so
+      // isn't extracted.
       '-derivedDataPath',
       path.join(appDir, 'DerivedData'),
       // What CodeQL's own Swift autobuilder passes, so every file goes through a swift-frontend
@@ -237,10 +264,98 @@ function buildIos(appDir, spmCache, codeql, reuse) {
     );
   }
   run('xcodebuild', ['-version'], { cwd: iosDir });
-  // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
-  for (const scheme of [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn)) {
-    run('xcodebuild', [...xcodeArgs, '-scheme', scheme, 'build'], { cwd: iosDir, env: utf8 });
+  const compiles = {};
+  for (const scheme of pods) {
+    const args = [...xcodeArgs, '-scheme', scheme, 'build'];
+    if (!codeql) {
+      run('xcodebuild', args, { cwd: iosDir, env: utf8 });
+      continue;
+    }
+    // Keep the log: it holds the swiftc command of each module's Swift compile, for --reuse-app.
+    const log = path.join(appDir, `xcodebuild-${scheme}.log`);
+    await runLogged('xcodebuild', args, log, { cwd: iosDir, env: utf8 });
+    Object.assign(compiles, swiftCompilesIn(fs.readFileSync(log, 'utf8'), pods));
   }
+  if (codeql) {
+    const missing = pods.filter((pod) => !compiles[pod]);
+    if (missing.length > 0) {
+      throw new Error(`No CompileSwiftSources task for ${missing.join(', ')} in the xcodebuild logs`);
+    }
+    fs.writeFileSync(path.join(appDir, SWIFT_COMPILES), JSON.stringify(compiles, null, 2));
+  }
+}
+
+/** Where a --codeql iOS build records its modules' swiftc commands for --reuse-app. */
+const SWIFT_COMPILES = 'codeql-swift-compiles.json';
+
+/**
+ * The `CompileSwiftSources` tasks of the given Pods targets in an xcodebuild log. With
+ * SWIFT_USE_INTEGRATED_DRIVER=NO, xcodebuild prints each one as the task line, then indented, in
+ * shell syntax: a `cd`, sometimes `export`s, and one swiftc command.
+ */
+function swiftCompilesIn(log, targets) {
+  const compiles = {};
+  const lines = log.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const task = lines[i].match(
+      /^CompileSwiftSources normal \S+ com\.apple\.xcode\.tools\.swift\.compiler \(in target '([^']+)' from project 'Pods'\)/
+    );
+    if (!task || !targets.includes(task[1])) continue;
+    const script = [];
+    for (let j = i + 1; j < lines.length && lines[j].startsWith('    '); j++) {
+      script.push(lines[j].slice(4));
+    }
+    compiles[task[1]] = script.join('\n');
+  }
+  return compiles;
+}
+
+/**
+ * Recompiles the modules' own Swift with the swiftc commands the previous --codeql run recorded,
+ * against the modules and products it built. No xcodebuild: under CodeQL's tracer it rebuilt every
+ * dependency, from React Native's codegen to Esri's Toolkit package.
+ */
+function replaySwiftCompiles(appDir) {
+  const recorded = path.join(appDir, SWIFT_COMPILES);
+  if (!fs.existsSync(recorded)) {
+    throw new Error(`--reuse-app needs a previous --codeql iOS run in the same --dir (${recorded})`);
+  }
+  // swiftc compiles incrementally: marking every module source as changed recompiles them all.
+  const now = new Date();
+  for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
+  for (const [target, script] of Object.entries(JSON.parse(fs.readFileSync(recorded, 'utf8')))) {
+    const { cwd, env, argv } = recordedCommand(script);
+    if (path.basename(argv[0] ?? '') !== 'swiftc') {
+      throw new Error(`The recorded compile of ${target} doesn't run swiftc:\n${script}`);
+    }
+    console.log(`\n$ ${argv.join(' ')}   (in ${cwd}; ${target}, recorded by the previous run)`);
+    const result = spawnSync(argv[0], argv.slice(1), {
+      cwd,
+      env: { ...process.env, ...env },
+      stdio: 'inherit',
+    });
+    if (result.status !== 0) throw new Error(`The recorded swiftc command for ${target} failed`);
+  }
+}
+
+/**
+ * A recorded xcodebuild task as a process: the directory of its `cd`, its `export`s and its command
+ * split into arguments. xcodebuild escapes with backslashes, never quotes, so no shell is needed.
+ */
+function recordedCommand(script) {
+  const words = (line) =>
+    (line.match(/(?:\\.|[^\s\\])+/g) ?? []).map((word) => word.replace(/\\(.)/g, '$1'));
+  const command = { cwd: undefined, env: {}, argv: [] };
+  for (const line of script.split('\n')) {
+    const [first, ...rest] = words(line);
+    if (first === undefined) continue;
+    if (first === 'cd') command.cwd = rest.join(' ');
+    else if (first === 'export') {
+      const [name, ...value] = rest.join(' ').split('=');
+      command.env[name] = value.join('=');
+    } else command.argv = [first, ...rest];
+  }
+  return command;
 }
 
 // Enough of the API to make the typecheck and the bundle reach the library's main entry points,
@@ -284,7 +399,7 @@ function buildJs(appDir) {
 
 /** The `ext` files under `sourceDir` (e.g. `ios`) of the core and every package. */
 function moduleSourceFiles(sourceDir, ext) {
-  return [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) => {
+  return [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) => {
     const root = path.join(dir, sourceDir);
     return fs.existsSync(root)
       ? fs
@@ -333,17 +448,24 @@ function checkCodeqlExtraction(platform) {
 const args = parseArgs(process.argv.slice(2));
 fs.mkdirSync(args.dir, { recursive: true });
 const moduleSources = args.codeql
-  ? [ROOT, ...PACKAGES.map((pkg) => pkg.dir)]
+  ? [CORE, ...PACKAGES.map((pkg) => pkg.dir)]
   : [
-      args.tarball ? path.resolve(args.tarball) : pack(ROOT, args.dir),
+      args.tarball ? path.resolve(args.tarball) : pack(CORE, args.dir),
       ...PACKAGES.map((pkg) => pack(pkg.dir, args.dir)),
     ];
 const appDir = path.join(args.dir, `sdk${args.sdk}-${args.platform}`);
 if (!args.reuseApp) createApp(appDir, args.sdk, moduleSources);
 
-if (args.platform === 'android') buildAndroid(appDir, args.codeql);
-else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql, args.reuseApp);
-else buildJs(appDir);
+async function main() {
+  if (args.platform === 'android') buildAndroid(appDir, args.codeql);
+  else if (args.platform === 'ios') await buildIos(appDir, args.spmCache, args.codeql, args.reuseApp);
+  else buildJs(appDir);
 
-console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
-if (args.codeql) checkCodeqlExtraction(args.platform);
+  console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
+  if (args.codeql) checkCodeqlExtraction(args.platform);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

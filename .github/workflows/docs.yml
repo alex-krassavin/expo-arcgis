@@ -7,7 +7,7 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'src/**' # the TypeDoc API reference is generated from the module source
+      - 'packages/expo-arcgis/src/**' # the TypeDoc API reference is generated from the core's source
       - 'example/**' # sample pages embed the example sources
       - '.github/workflows/docs.yml'
   workflow_dispatch:
@@ -34,8 +34,9 @@ jobs:
           cache: npm
           cache-dependency-path: '**/package-lock.json'
 
-      # Module deps + build — TypeDoc resolves the API from ../src and needs react/react-native types.
-      - name: Install + build module
+      # Workspace deps + builds: TypeDoc reads the API from packages/expo-arcgis/src and needs the
+      # react/react-native types.
+      - name: Install + build the packages
         run: npm ci
 
       - name: Install docs deps

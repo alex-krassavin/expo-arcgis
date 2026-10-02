@@ -71,10 +71,10 @@ export default defineConfig({
         },
       ],
       plugins: [
-        // Generates the API Reference under src/content/docs/api/ from the module's typed source.
+        // Generates the API Reference under src/content/docs/api/ from the core's typed source.
         starlightTypeDoc({
-          entryPoints: ['../src/index.ts'],
-          tsconfig: '../tsconfig.json',
+          entryPoints: ['../packages/expo-arcgis/src/index.ts'],
+          tsconfig: '../packages/expo-arcgis/tsconfig.json',
           typeDoc: {
             skipErrorChecking: true,
             excludeInternal: true,

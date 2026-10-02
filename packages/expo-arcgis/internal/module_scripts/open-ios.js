@@ -9,7 +9,8 @@ if (process.platform !== 'darwin') {
   process.exit(1);
 }
 
-const projectPath = path.join(process.cwd(), 'example', 'ios');
+// The example app lives at the repository root, next to packages/.
+const projectPath = path.resolve(__dirname, '../../../../example', 'ios');
 const child = spawn('xed', [projectPath], { stdio: 'inherit' });
 
 child.once('error', (error) => {

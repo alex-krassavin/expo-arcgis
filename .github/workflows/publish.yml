@@ -1,7 +1,8 @@
 name: Publish
 
 # Publishes to npm when a GitHub Release is published (tag → release), or on manual dispatch.
-# The published version is whatever is in package.json — bump it and commit before releasing.
+# Publishes the core, packages/expo-arcgis: the version is whatever its package.json says, so bump
+# it and commit before releasing.
 on:
   release:
     types: [published]
@@ -27,22 +28,24 @@ jobs:
       - name: Verify tag matches package.json version
         if: github.event_name == 'release'
         run: |
-          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          PKG_VERSION="v$(node -p "require('./packages/expo-arcgis/package.json').version")"
           if [ "$PKG_VERSION" != "${{ github.ref_name }}" ]; then
-            echo "::error::Release tag ${{ github.ref_name }} != package.json $PKG_VERSION — bump package.json and re-tag."
+            echo "::error::Release tag ${{ github.ref_name }} != packages/expo-arcgis/package.json $PKG_VERSION — bump it and re-tag."
             exit 1
           fi
 
-      # `npm ci` runs `prepare` → builds build/ + plugin/build.
-      - name: Install (builds build/ + plugin/build)
+      # `npm ci` runs the core's `prepare` → its build/ + plugin/build.
+      - name: Install (builds the core)
         run: npm ci
 
       - name: Validate published package
+        working-directory: packages/expo-arcgis
         run: npm run check:package
 
       # `npm publish` re-runs `prepare`, so the tarball is built fresh from source.
       # --provenance ties the package to this workflow run (supply-chain attestation).
       - name: Publish
+        working-directory: packages/expo-arcgis
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

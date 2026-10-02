@@ -18,12 +18,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "rootDir": "./src",
-    "outDir": "./build",
-    // Inside this repository, `expo-arcgis` is the core at the root. Its declarations come from the
-    // core's own build (`npm ci` at the root runs `prepare`); an app gets the published package.
-    "paths": {
-      "expo-arcgis": ["../../build/index.d.ts"]
-    }
+    // `expo-arcgis` resolves to the core's workspace (packages/expo-arcgis) and its build/, which
+    // the core's `prepare` writes during `npm ci` at the root. So this package builds on `prepack`
+    // (or `npm run build`), not on install, where npm runs both packages' scripts at once.
+    "outDir": "./build"
   },
   "include": ["./src"]
 }
