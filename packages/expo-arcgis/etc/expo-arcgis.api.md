@@ -1032,7 +1032,9 @@ export class GraphicRef extends SharedObject {
 }
 
 // @public
-export function GraphicsOverlay(input: PropsWithChildren<GraphicsOverlayProps>): JSX.Element;
+export const GraphicsOverlay: ForwardRefExoticComponent<GraphicsOverlayProps & {
+children?: ReactNode | undefined;
+} & RefAttributes<GraphicsOverlayRef>>;
 
 // @public
 export type GraphicsOverlayHost = {

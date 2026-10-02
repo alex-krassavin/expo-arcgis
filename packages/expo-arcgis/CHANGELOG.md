@@ -18,6 +18,9 @@
   - Get it with `useGeoViewRef(geoView?)`. It returns the view a `<MapView>` / `<SceneView>` ref
     points to, or else the nearest view.
   - It is also on the views' handles (`MapViewHandle.geoView`, `SceneViewHandle.geoView`).
+- `<GraphicsOverlay>` takes a `ref`: its `GraphicsOverlayRef`. Components can draw into it, such
+  as expo-arcgis-toolkit's `<Search resultsOverlay>`. On iOS the ref's native `overlay` is public
+  for packages built on expo-arcgis (it already was on Android).
 
 ### Changed
 

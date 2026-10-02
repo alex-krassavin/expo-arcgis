@@ -1,4 +1,4 @@
-import { useEffect, useRef, type PropsWithChildren } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, type PropsWithChildren } from 'react';
 
 import type { Renderer, SceneProperties } from './ExpoArcgis.types';
 import ExpoArcgisModule, { type GraphicsOverlayRef } from './ExpoArcgisModule';
@@ -19,17 +19,19 @@ export type GraphicsOverlayProps = {
 /**
  * Declarative graphics overlay. Mirrors the native `GraphicsOverlay` — a view can hold several.
  * Registers itself with the nearest `<MapView>` / `<SceneView>` and hosts `<Graphic>` children.
+ * Its `ref` is the overlay's `GraphicsOverlayRef`, for components that draw into it
+ * (expo-arcgis-toolkit's `<Search resultsOverlay>`).
  */
-export function GraphicsOverlay({
-  renderer,
-  sceneProperties,
-  children,
-}: PropsWithChildren<GraphicsOverlayProps>) {
+export const GraphicsOverlay = forwardRef<
+  GraphicsOverlayRef,
+  PropsWithChildren<GraphicsOverlayProps>
+>(function GraphicsOverlay({ renderer, sceneProperties, children }, handle) {
   const view = useGeoViewFor('GraphicsOverlay');
   const ref = useRef<GraphicsOverlayRef | undefined>(undefined);
   if (!ref.current) {
     ref.current = new ExpoArcgisModule.GraphicsOverlayRef();
   }
+  useImperativeHandle(handle, () => ref.current!, []);
 
   useEffect(() => {
     const overlay = ref.current!;
@@ -51,6 +53,8 @@ export function GraphicsOverlay({
   }, [sceneProperties]);
 
   return (
-    <GraphicsOverlayContext.Provider value={ref.current}>{children}</GraphicsOverlayContext.Provider>
+    <GraphicsOverlayContext.Provider value={ref.current}>
+      {children}
+    </GraphicsOverlayContext.Provider>
   );
-}
+});
