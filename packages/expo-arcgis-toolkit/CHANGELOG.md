@@ -12,6 +12,10 @@
   (`onSelectionChange`). It takes the Toolkit's own settings: on iOS `automaticSelectionMode`
   (selects by what's in view), `automaticSingleSiteSelectionDisabled` and `levelSelectorWidth`; on
   Android `uiProperties` (colors, button size, which buttons show, how many levels show).
+- `Bookmarks` (iOS): lists the bookmarks of a view's map or scene, or the ones given (`bookmarks`),
+  and moves the view to the one picked. It reports the pick (`onSelectionChange`) and its requests
+  to be hidden (`onIsPresentedChange`). It is a panel bound to a view: place it inside the
+  `<MapView>` / `<SceneView>`, or anywhere with the view's ref as `geoView`.
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 

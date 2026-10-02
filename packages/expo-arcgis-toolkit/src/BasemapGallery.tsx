@@ -2,6 +2,8 @@ import { requireNativeView } from 'expo';
 import { useGeoModel } from 'expo-arcgis';
 import type { ViewProps } from 'react-native';
 
+import { registryId } from './registryId';
+
 export type BasemapGalleryProps = ViewProps;
 
 type NativeBasemapGalleryProps = ViewProps & {
@@ -29,10 +31,4 @@ const NativeBasemapGallery = requireNativeView<NativeBasemapGalleryProps>(
 export function BasemapGallery(props: BasemapGalleryProps) {
   const geoModel = useGeoModel();
   return <NativeBasemapGallery {...props} geoModel={registryId(geoModel)} />;
-}
-
-/** A shared object's registry id, which survives the view-prop pipeline on every SDK 56 patch. */
-function registryId(value: unknown): unknown {
-  const id = (value as { __expo_shared_object_id__?: number } | null)?.__expo_shared_object_id__;
-  return typeof id === 'number' ? id : value;
 }
