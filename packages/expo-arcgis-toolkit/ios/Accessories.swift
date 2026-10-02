@@ -215,3 +215,127 @@ private func autoPanMode(_ value: String) -> LocationDisplay.AutoPanMode {
   default: return .off
   }
 }
+
+/// The Toolkit's `FloorFilter` over a `<MapView>` or `<SceneView>` showing floor-aware data: it picks
+/// a site, a facility and a level, and shows only that level's features. Choosing a site or facility
+/// moves the view to it. Each selection is sent to JS (`selectionChange`).
+final class FloorFilterAccessory: SharedObject, GeoViewAccessory, ObservableObject {
+  @Published private(set) var alignment: Alignment = .bottomLeading
+  @Published private(set) var automaticSelectionMode: FloorFilterAutomaticSelectionMode = .always
+  @Published private(set) var automaticSingleSiteSelectionDisabled = false
+  /// The Toolkit's own width when nil.
+  @Published private(set) var levelSelectorWidth: CGFloat?
+
+  func update(_ props: [String: Any]) {
+    alignment = accessoryAlignment(props["alignment"], default: .bottomLeading)
+    automaticSelectionMode = floorFilterAutomaticSelectionMode(props["automaticSelectionMode"] as? String)
+    automaticSingleSiteSelectionDisabled = props["automaticSingleSiteSelectionDisabled"] as? Bool ?? false
+    levelSelectorWidth = (props["levelSelectorWidth"] as? NSNumber).map { CGFloat($0.doubleValue) }
+  }
+
+  func body(in view: GeoViewState) -> AnyView {
+    AnyView(FloorFilterAccessoryView(accessory: self, view: view))
+  }
+
+  fileprivate func selectionChanged(_ selection: FloorFilterSelection?) {
+    emit(event: "selectionChange", arguments: floorFilterSelectionPayload(selection))
+  }
+}
+
+private struct FloorFilterAccessoryView: View {
+  @ObservedObject var accessory: FloorFilterAccessory
+  @ObservedObject var view: GeoViewState
+  /// The view's map or scene's floor manager, once the map or scene has loaded.
+  @State private var floorManager: FloorManager?
+  @State private var selection: FloorFilterSelection?
+
+  var body: some View {
+    // A ZStack, not a Group: a Group's modifiers go to its children, so with no floor manager yet
+    // there would be no child to run the `.task` that loads it.
+    ZStack {
+      if let floorManager {
+        floorFilter(floorManager)
+          .padding()
+          .onChange(of: selection) { accessory.selectionChanged(selection) }
+      }
+    }
+    .task(id: geoModelID) {
+      // A map or scene has a floor manager only once loaded, and only with floor-aware data.
+      let geoModel: GeoModel? = view.map ?? view.scene
+      try? await geoModel?.load()
+      floorManager = geoModel?.floorManager
+    }
+  }
+
+  private func floorFilter(_ floorManager: FloorManager) -> FloorFilter {
+    let floorFilter = FloorFilter(
+      floorManager: floorManager,
+      alignment: accessory.alignment,
+      automaticSelectionMode: accessory.automaticSelectionMode,
+      viewpoint: viewpoint,
+      isNavigating: Binding(get: { view.isNavigating }, set: { _ in }),
+      selection: $selection
+    )
+    .automaticSingleSiteSelectionDisabled(accessory.automaticSingleSiteSelectionDisabled)
+    guard let width = accessory.levelSelectorWidth else { return floorFilter }
+    return floorFilter.levelSelectorWidth(width)
+  }
+
+  private var geoModelID: ObjectIdentifier? {
+    let geoModel: GeoModel? = view.map ?? view.scene
+    return geoModel.map { ObjectIdentifier($0) }
+  }
+
+  /// The view's viewpoint: the floor filter reads it to select by what's in view, and sets it to
+  /// move the view to a site or facility.
+  private var viewpoint: Binding<Viewpoint?> {
+    Binding(
+      get: { view.viewpoint },
+      set: { viewpoint in
+        guard let viewpoint else { return }
+        Task {
+          if let proxy = view.mapViewProxy {
+            await proxy.setViewpoint(viewpoint, duration: 0.5)
+          } else if let proxy = view.sceneViewProxy {
+            await proxy.setViewpoint(viewpoint, duration: 0.5)
+          }
+        }
+      }
+    )
+  }
+}
+
+private func floorFilterAutomaticSelectionMode(_ value: String?) -> FloorFilterAutomaticSelectionMode {
+  switch value {
+  case "alwaysNotClearing": return .alwaysNotClearing
+  case "never": return .never
+  default: return .always
+  }
+}
+
+/// A floor filter selection for JS: the selected site, and its facility and level when selected.
+private func floorFilterSelectionPayload(_ selection: FloorFilterSelection?) -> [String: Any] {
+  func site(_ site: FloorSite?) -> [String: Any]? {
+    site.map { ["id": $0.id, "name": $0.name] }
+  }
+  func facility(_ facility: FloorFacility?) -> [String: Any]? {
+    facility.map { ["id": $0.id, "name": $0.name] }
+  }
+  switch selection {
+  case .site(let selected):
+    return ["site": site(selected) as Any]
+  case .facility(let selected):
+    return ["site": site(selected.site) as Any, "facility": facility(selected) as Any]
+  case .level(let level):
+    return [
+      "site": site(level.facility?.site) as Any,
+      "facility": facility(level.facility) as Any,
+      "level": [
+        "id": level.id, "longName": level.longName, "shortName": level.shortName,
+        "verticalOrder": level.verticalOrder,
+      ],
+    ]
+  case nil:
+    return [:]
+  }
+}

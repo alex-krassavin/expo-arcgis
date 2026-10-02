@@ -2,8 +2,8 @@ import ExpoModulesCore
 
 /// ArcGIS Maps SDK Toolkit components for expo-arcgis.
 ///
-/// Compass, Scalebar, OverviewMap and LocationButton are accessories: shared objects the JS
-/// components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
+/// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
+/// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
 /// (expo-arcgis's `GeoViewAccessory`). BasemapGallery is a view of its own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
@@ -33,6 +33,13 @@ public class ExpoArcgisToolkitModule: Module {
     Class(LocationButtonAccessory.self) {
       Constructor { LocationButtonAccessory() }
       AsyncFunction("update") { (accessory: LocationButtonAccessory, props: [String: Any]) in
+        accessory.update(props)
+      }.runOnQueue(.main)
+    }
+
+    Class(FloorFilterAccessory.self) {
+      Constructor { FloorFilterAccessory() }
+      AsyncFunction("update") { (accessory: FloorFilterAccessory, props: [String: Any]) in
         accessory.update(props)
       }.runOnQueue(.main)
     }

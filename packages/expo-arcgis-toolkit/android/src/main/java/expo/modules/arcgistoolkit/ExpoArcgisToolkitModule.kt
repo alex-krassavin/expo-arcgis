@@ -30,6 +30,13 @@ class ExpoArcgisToolkitModule : Module() {
       }.runOnQueue(Queues.MAIN)
     }
 
+    Class(FloorFilterAccessory::class) {
+      Constructor { FloorFilterAccessory(appContext) }
+      AsyncFunction("update") { accessory: FloorFilterAccessory, props: Map<String, Any?> ->
+        accessory.update(props)
+      }.runOnQueue(Queues.MAIN)
+    }
+
     View(BasemapGalleryView::class) {
       Prop("geoModel") { view: BasemapGalleryView, ref: SharedObject? ->
         view.setGeoModel(ref)

@@ -22,6 +22,13 @@ final class BasemapGalleryView: ExpoView {
     self.hostingController = hostingController
   }
 
+  // The SwiftUI inside presents from its hosting controller (sheets, popovers, alerts), which needs
+  // a parent for that.
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    if let hostingController { updateHostingControllerParent(hostingController) }
+  }
+
   /// Receives the nearest `<Map>`'s native object, and follows it when its map is replaced (a mobile
   /// map package loads asynchronously).
   func setGeoModel(_ ref: SharedObject?) {
