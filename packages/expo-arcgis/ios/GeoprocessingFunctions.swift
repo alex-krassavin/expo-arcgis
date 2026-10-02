@@ -91,7 +91,7 @@ private func buildGeoprocessingParameter(_ d: [String: Any]) -> GeoprocessingPar
   }
 }
 
-private func serializeOutputs(_ outputs: [String: GeoprocessingParameter]) async throws -> [String: Any] {
+func serializeOutputs(_ outputs: [String: GeoprocessingParameter]) async throws -> [String: Any] {
   var result: [String: Any] = [:]
   for (name, param) in outputs {
     result[name] = try await serializeGeoprocessingParameter(param)
