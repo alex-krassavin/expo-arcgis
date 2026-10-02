@@ -20,7 +20,8 @@ rebuild the native app (`npx expo prebuild --clean`).
 Components drawn over a view go **inside** its `<MapView>` or `<SceneView>`. Panels are views of
 their own, which you lay out:
 - A panel for a map, such as `BasemapGallery`, goes anywhere inside the `<Map>`.
-- A panel for a view, such as `Bookmarks`, goes inside its `<MapView>` / `<SceneView>`, over the map.
+- A panel for a view, such as `Bookmarks` or `Legend`, goes inside its `<MapView>` / `<SceneView>`,
+  over the map.
   It can also go anywhere else, with the view's ref as its `geoView`.
 
 | Component | Kind | iOS | Android |
@@ -32,6 +33,7 @@ their own, which you lay out:
 | `FloorFilter` | over a map or scene view (floor-aware data) | ✓ | ✓ |
 | `BasemapGallery` | panel for a map | ✓ | ✓ |
 | `Bookmarks` | panel for a map or scene view | ✓ | — |
+| `Legend` | panel for a map or scene view | — | ✓ |
 
 A component the Toolkit has on one platform only renders nothing on the other, and warns once in
 development.

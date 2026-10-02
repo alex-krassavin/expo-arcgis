@@ -1,5 +1,6 @@
 package expo.modules.arcgistoolkit
 
+import expo.modules.arcgis.GeoViewRef
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -8,9 +9,9 @@ import expo.modules.kotlin.sharedobjects.SharedObject
 /**
  * ArcGIS Maps SDK Toolkit components for expo-arcgis.
  *
- * Compass and Scalebar are accessories: shared objects the JS components hand to the nearest
- * `<MapView>`, which composes them over the map (expo-arcgis's `GeoViewAccessory`). BasemapGallery
- * is a view of its own.
+ * Compass, Scalebar and FloorFilter are accessories: shared objects the JS components hand to the
+ * nearest `<MapView>` / `<SceneView>`, which composes them over itself (expo-arcgis's
+ * `GeoViewAccessory`). BasemapGallery and Legend are views of their own.
  */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -42,6 +43,16 @@ class ExpoArcgisToolkitModule : Module() {
         view.setGeoModel(ref)
       }
       OnViewDestroys { view: BasemapGalleryView -> view.destroy() }
+    }
+
+    View(LegendView::class) {
+      // The view the legend is for: expo-arcgis's GeoViewRef of a <MapView> / <SceneView>.
+      Prop("geoView") { view: LegendView, ref: GeoViewRef? -> view.setGeoView(ref) }
+      Prop("reverseLayerOrder") { view: LegendView, value: Boolean? -> view.setReverseLayerOrder(value) }
+      Prop("respectScaleRange") { view: LegendView, value: Boolean? -> view.setRespectScaleRange(value) }
+      Prop("title") { view: LegendView, value: String? -> view.setTitle(value) }
+      Prop("typography") { view: LegendView, value: Map<String, Any?>? -> view.setTypography(value) }
+      OnViewDestroys { view: LegendView -> view.destroy() }
     }
   }
 }
