@@ -30,6 +30,8 @@ final class MapViewModel: ObservableObject {
   @Published private(set) var accessories: [GeoViewAccessory] = []
   /// The view's live state for its accessories — published apart from this model, see GeoViewState.
   let viewState = GeoViewState()
+  /// The `<Callout>` the map shows, published apart from this model as well.
+  let callout = CalloutHost()
 
   init() {
     viewState.locationDisplay = locationDisplay
@@ -109,6 +111,12 @@ func buildGrid(_ dict: [String: Any]?) -> ArcGIS.Grid? {
 /// SwiftUI host for the ArcGIS `MapView`. Loads the map, reports the result, and forwards taps.
 struct ExpoArcgisMapContainer: View {
   @ObservedObject var model: MapViewModel
+  @ObservedObject var callout: CalloutHost
+
+  init(model: MapViewModel) {
+    _model = ObservedObject(wrappedValue: model)
+    _callout = ObservedObject(wrappedValue: model.callout)
+  }
 
   var body: some View {
     if let map = model.map {
@@ -135,6 +143,10 @@ struct ExpoArcgisMapContainer: View {
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
           .grid(model.grid)
+          // A `<Callout>` among the view's React children: its content, in the SDK's callout.
+          .callout(placement: $callout.placement) { _ in
+            if let view = callout.view { CalloutContent(view: view) }
+          }
           .onSingleTapGesture { screenPoint, mapPoint in
             // MapView delivers a non-optional `Point` (a 2D tap always maps to the surface).
             // `GeometryEngine.project` is generic, so it returns `Point?` for a `Point` input.
@@ -229,12 +241,15 @@ class ExpoArcgisMapView: ExpoView {
   // first: as is, they would sit under the map. Shifted past it, they render above the map, and
   // touches that miss them still reach it. React Native keeps the order when it wraps the subviews
   // in a container (for `overflow` or `filter` styles), so the hosting view stays first.
+  // A `<Callout>` child shows in the map's callout instead (see `CalloutHost`).
   override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.mountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = model.callout.mount(childComponentView, at: index) else { return }
+    super.mountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.unmountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = model.callout.unmount(childComponentView, at: index) else { return }
+    super.unmountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   /// Retries loading the map (Loadable pattern) — useful after a network outage. Re-emits the result.

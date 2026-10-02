@@ -398,21 +398,24 @@ class ExpoArcgisModule : Module() {
     sceneViewDefinition()
 
     localSceneViewDefinition()
+
+    calloutViewDefinition()
   }
 }
 
 /**
- * Routes a geo view's React children into its [ReactChildrenLayer], above the map. Fabric manages
- * children by index, so it also counts, looks up and removes them through the layer.
+ * Routes a geo view's React children through its [GeoViewReactChildren]: into its
+ * [ReactChildrenLayer], above the map, except a `<Callout>`, which shows in the Toolkit's callout.
+ * Fabric manages children by index, so it also counts, looks up and removes them there.
  */
 private inline fun <reified T : ComposeHostView> ViewDefinitionBuilder<T>.reactChildrenAboveMap(
-  crossinline layer: (T) -> ViewGroup
+  crossinline children: (T) -> GeoViewReactChildren
 ) = GroupView<T> {
-  AddChildView { parent, child: View, index -> layer(parent).addView(child, index) }
-  GetChildCount { parent -> layer(parent).childCount }
-  GetChildViewAt { parent, index -> layer(parent).getChildAt(index) }
-  RemoveChildView { parent, child: View -> layer(parent).removeView(child) }
-  RemoveChildViewAt { parent, index -> layer(parent).removeViewAt(index) }
+  AddChildView { parent, child: View, index -> children(parent).add(child, index) }
+  GetChildCount { parent -> children(parent).count }
+  GetChildViewAt { parent, index -> children(parent).childAt(index) }
+  RemoveChildView { parent, child: View -> children(parent).remove(child) }
+  RemoveChildViewAt { parent, index -> children(parent).removeAt(index) }
 }
 
 /**
@@ -632,4 +635,31 @@ private fun ModuleDefinitionBuilder.localSceneViewDefinition() = View(ExpoArcgis
   AsyncFunction("getCamera") { view: ExpoArcgisLocalSceneView ->
     view.getCamera()
   }
+}
+
+/**
+ * `<Callout>`: React content a <MapView> / <SceneView> shows in the Toolkit's callout. The geo view
+ * takes this view out of the children it draws over the map and hands it to the callout.
+ */
+private fun ModuleDefinitionBuilder.calloutViewDefinition() = View(ExpoArcgisCalloutView::class) {
+  Name("ExpoArcgisCalloutView")
+
+  Prop("location") { view: ExpoArcgisCalloutView, value: Map<String, Any?>? -> view.setLocation(value) }
+
+  // A <Graphic> (GraphicRef) or an identified feature (FeatureRef).
+  Prop("geoElement") { view: ExpoArcgisCalloutView, ref: SharedObject? -> view.setGeoElement(ref) }
+
+  Prop("tapLocation") { view: ExpoArcgisCalloutView, value: Map<String, Any?>? -> view.setTapLocation(value) }
+
+  Prop("offset") { view: ExpoArcgisCalloutView, value: Map<String, Any?>? -> view.setOffset(value) }
+
+  Prop("rotateOffsetWithGeoView") { view: ExpoArcgisCalloutView, value: Boolean? ->
+    view.setRotateOffsetWithGeoView(value)
+  }
+
+  Prop("leaderPosition") { view: ExpoArcgisCalloutView, value: String? -> view.setLeaderPosition(value) }
+
+  Prop("colors") { view: ExpoArcgisCalloutView, value: Map<String, Any?>? -> view.setColors(value) }
+
+  Prop("shapes") { view: ExpoArcgisCalloutView, value: Map<String, Any?>? -> view.setShapes(value) }
 }

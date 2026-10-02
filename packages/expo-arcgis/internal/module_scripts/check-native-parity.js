@@ -24,6 +24,10 @@ const THROWING_CONSTRUCTOR =
   'expo-modules-core on Android refuses to register a SharedObject class without a Constructor ' +
   '(crash at app start); iOS has no such rule. These refs are only ever created natively, so the ' +
   'Android constructor throws.';
+// The Kotlin Toolkit's callout has leader, color and shape settings; the Swift SDK's callout has
+// none (it places its leader itself, in the system look).
+const KOTLIN_CALLOUT = 'Kotlin-only callout styling (LeaderPosition, CalloutColors, CalloutShapes)';
+
 const EXPECTED = {
   ios: {
     'ExpoArcgis: AsyncFunction signInWithOAuth': OAUTH,
@@ -31,6 +35,9 @@ const EXPECTED = {
   android: {
     'ExpoArcgis: AsyncFunction oauthStart': OAUTH,
     'ExpoArcgis: AsyncFunction oauthComplete': OAUTH,
+    'ExpoArcgis/ExpoArcgisCalloutView: Prop colors': KOTLIN_CALLOUT,
+    'ExpoArcgis/ExpoArcgisCalloutView: Prop leaderPosition': KOTLIN_CALLOUT,
+    'ExpoArcgis/ExpoArcgisCalloutView: Prop shapes': KOTLIN_CALLOUT,
     'ExpoArcgisExtras/FeatureRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisExtras/GeodatabaseRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisExtras/PopupRef: Constructor': THROWING_CONSTRUCTOR,

@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.facebook.react.uimanager.PointerEvents
+import com.facebook.react.uimanager.ReactPointerEventsView
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 
@@ -52,8 +54,12 @@ abstract class ComposeHostView(context: Context, appContext: AppContext) : ExpoV
  * ComposeHostView layout would stretch them over it. The module routes them here instead
  * (`reactChildrenAboveMap` in ExpoArcgisModule). Like React Native's own views, this layer leaves its
  * children where Fabric puts them, and it handles no touches: those that hit no child reach the map.
+ * For React Native's own hit test it is `box-none` as well, so that a touch on no child goes on to
+ * the views under it — the map, and a `<Callout>`'s React content inside it.
  */
-internal class ReactChildrenLayer(context: Context) : ViewGroup(context) {
+internal class ReactChildrenLayer(context: Context) : ViewGroup(context), ReactPointerEventsView {
+  override val pointerEvents = PointerEvents.BOX_NONE
+
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.getSize(heightMeasureSpec))
   }
