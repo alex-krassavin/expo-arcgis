@@ -5,8 +5,8 @@ import ExpoModulesCore
 ///
 /// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
-/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer, Search and
-/// UtilityNetworkTrace are views of their own.
+/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer,
+/// FeatureFormView, PopupView, Search and UtilityNetworkTrace are views of their own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -79,6 +79,29 @@ public class ExpoArcgisToolkitModule: Module {
       Prop("mapPoint") { (view: UtilityNetworkTraceView, value: [String: Any]?) in
         view.setMapPoint(value)
       }
+    }
+
+    View(FeatureFormPanelView.self) {
+      Events("onDismiss", "onEditingEvent")
+      // The feature to edit: expo-arcgis's FeatureRef, from a view's identify.
+      Prop("feature") { (view: FeatureFormPanelView, ref: FeatureRef?) in view.setFeature(ref) }
+      Prop("dismissible") { (view: FeatureFormPanelView, value: Bool?) in view.setDismissible(value) }
+      Prop("editingButtons") { (view: FeatureFormPanelView, value: String?) in
+        view.setEditingButtons(value)
+      }
+      Prop("validationErrorVisibility") { (view: FeatureFormPanelView, value: String?) in
+        view.setValidationErrorVisibility(value)
+      }
+      Prop("isNavigationEnabled") { (view: FeatureFormPanelView, value: Bool?) in
+        view.setNavigationEnabled(value)
+      }
+    }
+
+    View(PopupPanelView.self) {
+      Events("onDismiss", "onPopupChange")
+      // The popup to show: expo-arcgis's PopupRef, from a view's identifyPopups.
+      Prop("popup") { (view: PopupPanelView, ref: PopupRef?) in view.setPopup(ref) }
+      Prop("dismissible") { (view: PopupPanelView, value: Bool?) in view.setDismissible(value) }
     }
 
     View(SearchPanelView.self) {

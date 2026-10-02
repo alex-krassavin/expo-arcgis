@@ -59,6 +59,8 @@ dependencies {
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-indoors'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-legend'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-utilitynetworks'
+  implementation 'com.esri:arcgis-maps-kotlin-toolkit-popup'
+  implementation 'com.esri:arcgis-maps-kotlin-toolkit-featureforms'
   // The core's GeoViewState hands accessories its MapViewProxy.
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-geoview-compose'
 
