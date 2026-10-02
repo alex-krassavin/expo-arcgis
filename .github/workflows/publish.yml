@@ -1,12 +1,38 @@
 name: Publish
 
-# Publishes to npm when a GitHub Release is published (tag → release), or on manual dispatch.
-# Publishes the core, packages/expo-arcgis: the version is whatever its package.json says, so bump
-# it and commit before releasing.
+# Publishes one package of the monorepo (packages/<name>) to npm, with provenance. It runs:
+# - When a GitHub Release is published. Its tag names the package and version:
+#   `<name>@<version>` (e.g. `expo-arcgis-toolkit@0.1.0`), or `v<version>` for the core,
+#   expo-arcgis.
+# - On manual dispatch, for the package picked below, optionally as a dry run (pack and validate,
+#   no publish).
+# The version published is the one in packages/<name>/package.json, so bump it and commit first.
+# A prerelease version (with a `-`, e.g. 0.8.0-beta.1) goes to the `next` dist-tag; any other to
+# `latest`.
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      package:
+        description: The package to publish (packages/<name>)
+        type: choice
+        options:
+          - expo-arcgis
+          - expo-arcgis-toolkit
+        default: expo-arcgis
+      dry-run:
+        description: Dry run — build, validate and pack, but don't publish
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One publish at a time; never cancel one halfway.
+concurrency:
+  group: publish
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -14,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # required for npm provenance
+      id-token: write # npm provenance
     steps:
       - uses: actions/checkout@v7
 
@@ -24,28 +50,102 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
 
-      # Guard against publishing a version that doesn't match the release tag (expects vX.Y.Z).
-      - name: Verify tag matches package.json version
-        if: github.event_name == 'release'
+      # Which package, at which version. A release tag must match the package's own version, and a
+      # private package isn't published. Event values reach the script through env, not
+      # interpolation.
+      - name: Resolve the package
+        id: target
+        env:
+          EVENT: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_PACKAGE: ${{ inputs.package }}
         run: |
-          PKG_VERSION="v$(node -p "require('./packages/expo-arcgis/package.json').version")"
-          if [ "$PKG_VERSION" != "${{ github.ref_name }}" ]; then
-            echo "::error::Release tag ${{ github.ref_name }} != packages/expo-arcgis/package.json $PKG_VERSION — bump it and re-tag."
+          expected=""
+          if [ "$EVENT" = "release" ]; then
+            case "$RELEASE_TAG" in
+              v[0-9]*) package="expo-arcgis"; expected="${RELEASE_TAG#v}" ;;
+              ?*@[0-9]*) package="${RELEASE_TAG%@*}"; expected="${RELEASE_TAG##*@}" ;;
+              *)
+                echo "::error::Release tag '$RELEASE_TAG' is neither v<version> (the core) nor <name>@<version>."
+                exit 1 ;;
+            esac
+          else
+            package="$INPUT_PACKAGE"
+          fi
+          dir="packages/$package"
+          if [ ! -f "$dir/package.json" ]; then
+            echo "::error::There is no package '$package' in packages/."
             exit 1
           fi
+          name=$(node -p "require('./$dir/package.json').name")
+          version=$(node -p "require('./$dir/package.json').version")
+          private=$(node -p "Boolean(require('./$dir/package.json').private)")
+          if [ "$name" != "$package" ]; then
+            echo "::error::$dir/package.json is named '$name', not '$package'."
+            exit 1
+          fi
+          if [ -n "$expected" ] && [ "$expected" != "$version" ]; then
+            echo "::error::Release tag '$RELEASE_TAG' says $expected, but $dir/package.json says $version. Bump it and re-tag."
+            exit 1
+          fi
+          if [ "$private" = "true" ]; then
+            echo "::error::$name is private (\"private\": true in $dir/package.json): remove it to publish."
+            exit 1
+          fi
+          case "$version" in
+            *-*) dist_tag="next" ;;
+            *) dist_tag="latest" ;;
+          esac
+          {
+            echo "dir=$dir"
+            echo "name=$name"
+            echo "version=$version"
+            echo "dist-tag=$dist_tag"
+          } >> "$GITHUB_OUTPUT"
+          echo "Publishing $name@$version from $dir to the '$dist_tag' dist-tag."
 
-      # `npm ci` runs the core's `prepare` → its build/ + plugin/build.
+      # One install for the workspaces. The core's `prepare` builds its build/ and plugin/build,
+      # which the packages built on it compile against when `npm publish` runs their `prepack`.
       - name: Install (builds the core)
         run: npm ci
 
-      - name: Validate published package
-        working-directory: packages/expo-arcgis
-        run: npm run check:package
+      - name: Validate the package (publint, are-the-types-wrong)
+        working-directory: ${{ steps.target.outputs.dir }}
+        run: npm run check:package --if-present
 
-      # `npm publish` re-runs `prepare`, so the tarball is built fresh from source.
+      # npm takes the README from the package's own directory. Make sure the tarball has one, and
+      # that it is this package's (titled `# <name>`), not the repository's.
+      - name: Check the README that ships
+        working-directory: ${{ steps.target.outputs.dir }}
+        env:
+          NAME: ${{ steps.target.outputs.name }}
+        run: |
+          npm pack --dry-run --json --ignore-scripts > "$RUNNER_TEMP/pack.json"
+          node -e '
+            const fs = require("fs");
+            const [pack] = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/pack.json", "utf8"));
+            const files = pack.files.map((file) => file.path);
+            if (!files.includes("README.md")) throw new Error("The tarball has no README.md");
+            const title = fs.readFileSync("README.md", "utf8").split("\n")[0].trim();
+            if (title !== "# " + process.env.NAME) {
+              throw new Error(`README.md starts with "${title}", not "# ${process.env.NAME}"`);
+            }
+            console.log(`${pack.name}@${pack.version}: ${files.length} files, README "${title}"`);
+          '
+
+      # `npm publish` runs `prepare` / `prepack` again, so the tarball is built fresh from source.
       # --provenance ties the package to this workflow run (supply-chain attestation).
       - name: Publish
-        working-directory: packages/expo-arcgis
-        run: npm publish --provenance --access public
+        if: ${{ !inputs.dry-run }}
+        working-directory: ${{ steps.target.outputs.dir }}
         env:
+          DIST_TAG: ${{ steps.target.outputs.dist-tag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
+
+      - name: Dry run
+        if: ${{ inputs.dry-run }}
+        working-directory: ${{ steps.target.outputs.dir }}
+        env:
+          DIST_TAG: ${{ steps.target.outputs.dist-tag }}
+        run: npm publish --dry-run --access public --tag "$DIST_TAG"
