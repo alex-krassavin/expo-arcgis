@@ -442,6 +442,12 @@ private fun ModuleDefinitionBuilder.mapViewDefinition() = View(ExpoArcgisMapView
     view.setAccessories(refs)
   }
 
+  // The view's GeoViewRef: JS creates it with the view and hands it to the views of packages built
+  // on expo-arcgis (expo-arcgis-toolkit's panels), which bind to this view through it.
+  Prop("geoView") { view: ExpoArcgisMapView, ref: GeoViewRef? ->
+    view.setGeoViewRef(ref)
+  }
+
   Prop("viewpoint") { view: ExpoArcgisMapView, vp: Map<String, Any?>? ->
     view.setViewpoint(vp)
   }
@@ -502,6 +508,12 @@ private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisScene
 
   Prop("accessories") { view: ExpoArcgisSceneView, refs: List<SharedObject> ->
     view.setAccessories(refs)
+  }
+
+  // The view's GeoViewRef: JS creates it with the view and hands it to the views of packages built
+  // on expo-arcgis (expo-arcgis-toolkit's panels), which bind to this view through it.
+  Prop("geoView") { view: ExpoArcgisSceneView, ref: GeoViewRef? ->
+    view.setGeoViewRef(ref)
   }
 
   reactChildrenAboveMap { it.reactChildren }

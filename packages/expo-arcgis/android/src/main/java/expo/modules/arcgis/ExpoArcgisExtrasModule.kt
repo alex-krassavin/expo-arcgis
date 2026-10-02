@@ -201,6 +201,12 @@ class ExpoArcgisExtrasModule : Module() {
       }
     }
 
+    // A <MapView> / <SceneView> for the views of packages built on expo-arcgis, which bind to it
+    // (created by the view in JS, handed to the native view as its `geoView` prop).
+    Class(GeoViewRef::class) {
+      Constructor { GeoViewRef(appContext) }
+    }
+
     // Georeferenced image overlay (added to a <MapView> via <ImageOverlay>).
     Class(ImageOverlayRef::class) {
       Constructor { ImageOverlayRef(appContext) }

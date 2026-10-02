@@ -201,6 +201,16 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
     shownAccessories = refs.filterIsInstance<GeoViewAccessory>()
   }
 
+  /** The view's [GeoViewRef], which carries its state to the views of packages built on expo-arcgis. */
+  private var geoViewRef: GeoViewRef? = null
+
+  fun setGeoViewRef(ref: GeoViewRef?) {
+    if (ref === geoViewRef) return
+    geoViewRef?.state = null
+    geoViewRef = ref
+    ref?.state = viewState
+  }
+
   /** Receives the native map (by reference) from the `<Map>` SharedObject. */
   fun setMap(ref: MapRef?) {
     ref ?: return
@@ -400,6 +410,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
    * `disposeComposition()` composes its content again — a second map for a screen that is leaving.
    */
   fun destroy() {
+    geoViewRef?.state = null
     scope.cancel()
     composeView.disposeComposition()
     removeView(composeView)

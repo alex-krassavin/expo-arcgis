@@ -325,12 +325,22 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
     }
   }
 
-  /** Sets the coordinate grid overlay from JS (null hides it). */
   /** Receives the accessories other packages declare as `<SceneView>` children (expo-arcgis-toolkit). */
   fun setAccessories(refs: List<SharedObject>) {
     shownAccessories = refs.filterIsInstance<GeoViewAccessory>()
   }
 
+  /** The view's [GeoViewRef], which carries its state to the views of packages built on expo-arcgis. */
+  private var geoViewRef: GeoViewRef? = null
+
+  fun setGeoViewRef(ref: GeoViewRef?) {
+    if (ref === geoViewRef) return
+    geoViewRef?.state = null
+    geoViewRef = ref
+    ref?.state = viewState
+  }
+
+  /** Sets the coordinate grid overlay from JS (null hides it). */
   fun setGrid(config: Map<String, Any?>?) {
     grid = buildGrid(config)
   }
@@ -369,6 +379,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   /** Releases the view for good once React unmounts it — see [ExpoArcgisMapView.destroy]. */
   fun destroy() {
+    geoViewRef?.state = null
     scope.cancel()
     composeView.disposeComposition()
     removeView(composeView)

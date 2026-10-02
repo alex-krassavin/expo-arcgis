@@ -10,6 +10,7 @@ import { NativeModule } from 'expo';
 import { PropsWithChildren } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
+import { RefObject } from 'react';
 import { SharedObject } from 'expo-modules-core';
 import type { StyleProp } from 'react-native';
 import type { ViewStyle } from 'react-native';
@@ -1007,7 +1008,13 @@ export const geoprocessor: {
 };
 
 // @public
-export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost & AccessoryHost;
+export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost & AccessoryHost & {
+    geoView: GeoViewRef;
+};
+
+// @public
+export class GeoViewRef extends SharedObject {
+}
 
 // @public
 export const Graphic: ForwardRefExoticComponent<GraphicProps & RefAttributes<GraphicRef>>;
@@ -1311,6 +1318,7 @@ children?: ReactNode | undefined;
 
 // @public
 export type MapViewHandle = {
+    readonly geoView: GeoViewRef;
     identify(screenPoint: {
         x: number;
         y: number;
@@ -1971,6 +1979,7 @@ children?: ReactNode | undefined;
 
 // @public
 export type SceneViewHandle = {
+    readonly geoView: GeoViewRef;
     identify(screenPoint: {
         x: number;
         y: number;
@@ -2360,6 +2369,9 @@ export function useGeoModel(): GeoModelRef;
 
 // @public (undocumented)
 export function useGeoView(): GeoViewHost;
+
+// @public
+export function useGeoViewRef(geoView?: RefObject<MapViewHandle | SceneViewHandle | null>): GeoViewRef | null;
 
 // @public (undocumented)
 export function useGraphicsOverlay(): GraphicsOverlayRef;

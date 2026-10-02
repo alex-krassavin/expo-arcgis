@@ -281,6 +281,21 @@ class ExpoArcgisMapView: ExpoView {
     model.setAccessories(refs.compactMap { $0 as? GeoViewAccessory })
   }
 
+  /// The view's `GeoViewRef`, which carries its state to the views of packages built on
+  /// expo-arcgis.
+  private var geoViewRef: GeoViewRef?
+
+  func setGeoViewRef(_ ref: GeoViewRef?) {
+    guard ref !== geoViewRef else { return }
+    geoViewRef?.state = nil
+    geoViewRef = ref
+    ref?.state = model.viewState
+  }
+
+  deinit {
+    geoViewRef?.state = nil
+  }
+
   /// Receives the native map (by reference) from the `<Map>` SharedObject.
   func setMap(_ ref: MapRef?) {
     model.setMap(ref?.map)

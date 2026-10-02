@@ -437,6 +437,12 @@ public class ExpoArcgisModule: Module {
         view.setAccessories(refs)
       }
 
+      // The view's GeoViewRef: JS creates it with the view and hands it to the views of packages
+      // built on expo-arcgis (expo-arcgis-toolkit's panels), which bind to this view through it.
+      Prop("geoView") { (view: ExpoArcgisMapView, ref: GeoViewRef?) in
+        view.setGeoViewRef(ref)
+      }
+
       Prop("viewpoint") { (view: ExpoArcgisMapView, viewpoint: [String: Any]?) in
         view.setViewpoint(viewpoint)
       }
@@ -495,6 +501,12 @@ public class ExpoArcgisModule: Module {
 
       Prop("accessories") { (view: ExpoArcgisSceneView, refs: [SharedObject]) in
         view.setAccessories(refs)
+      }
+
+      // The view's GeoViewRef: JS creates it with the view and hands it to the views of packages
+      // built on expo-arcgis (expo-arcgis-toolkit's panels), which bind to this view through it.
+      Prop("geoView") { (view: ExpoArcgisSceneView, ref: GeoViewRef?) in
+        view.setGeoViewRef(ref)
       }
 
       Prop("scene") { (view: ExpoArcgisSceneView, ref: SceneRef?) in

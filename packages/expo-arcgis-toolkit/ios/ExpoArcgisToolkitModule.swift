@@ -1,10 +1,11 @@
+import ExpoArcgis
 import ExpoModulesCore
 
 /// ArcGIS Maps SDK Toolkit components for expo-arcgis.
 ///
 /// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
-/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery is a view of its own.
+/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery and Bookmarks are views of their own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -47,6 +48,17 @@ public class ExpoArcgisToolkitModule: Module {
     View(BasemapGalleryView.self) {
       Prop("geoModel") { (view: BasemapGalleryView, ref: SharedObject?) in
         view.setGeoModel(ref)
+      }
+    }
+
+    View(BookmarksView.self) {
+      Events("onSelectionChange", "onIsPresentedChange")
+      // The view the bookmarks belong to: expo-arcgis's GeoViewRef of a <MapView> / <SceneView>.
+      Prop("geoView") { (view: BookmarksView, ref: GeoViewRef?) in
+        view.setGeoView(ref)
+      }
+      Prop("bookmarks") { (view: BookmarksView, items: [[String: Any]]?) in
+        view.setBookmarks(items)
       }
     }
   }

@@ -12,7 +12,13 @@ import {
 } from 'react';
 
 import type { SceneViewHandle, SceneViewProps } from './ExpoArcgis.types';
-import type { SceneRef, GraphicsOverlayRef, AnalysisOverlayRef } from './ExpoArcgisModule';
+import ExtrasModule from './ExpoArcgisExtrasModule';
+import type {
+  SceneRef,
+  GeoViewRef,
+  GraphicsOverlayRef,
+  AnalysisOverlayRef,
+} from './ExpoArcgisModule';
 import { GeoViewContext, useGeoModelFor, type GeoViewHost } from './contexts';
 import { sharedObjectId } from './utils/sharedObjectId';
 import { unhandledLoadError } from './utils/unhandledLoadError';
@@ -28,6 +34,8 @@ type NativeSceneViewProps = SceneViewProps & {
   analysisOverlays: AnalysisOverlayRef[];
   /** UI other packages draw over the scene (expo-arcgis-toolkit's compass…), passed by reference. */
   accessories: InstanceType<SharedObject>[];
+  /** The view for the views of other packages that bind to it (expo-arcgis-toolkit's panels). */
+  geoView: GeoViewRef;
   /** Ref to the native view, whose `retryLoad` async function is callable through it. */
   ref?: Ref<unknown>;
   children?: ReactNode;
@@ -49,8 +57,11 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
     const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
     const [analysisOverlays, setAnalysisOverlays] = useState<AnalysisOverlayRef[]>([]);
     const [accessories, setAccessories] = useState<InstanceType<SharedObject>[]>([]);
+    // The view for packages built on expo-arcgis whose own views bind to it (`useGeoViewRef`).
+    const geoView = useMemo(() => new ExtrasModule.GeoViewRef(), []);
     const host = useMemo<GeoViewHost>(
       () => ({
+        geoView,
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
         remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
         // The SDK binds a GeometryEditor to MapView only; 3D scene editing is not supported.
@@ -67,11 +78,16 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         removeAccessory: (accessory) =>
           setAccessories((prev) => prev.filter((a) => a !== accessory)),
       }),
-      []
+      [geoView]
     );
 
-    // The native view exposes `retryLoad` on its ref, so hand that ref over directly.
-    useImperativeHandle(handle, () => nativeRef.current as SceneViewHandle, []);
+    // The native view exposes `retryLoad` on its ref, so hand that ref over, with the view's
+    // GeoViewRef. (It's attached before this layout-phase handle runs, so reading it here is safe.)
+    useImperativeHandle(
+      handle,
+      () => Object.assign(nativeRef.current, { geoView }) as SceneViewHandle,
+      [geoView]
+    );
 
     return (
       <NativeSceneView
@@ -80,6 +96,7 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         graphicsOverlays={overlays.map(sharedObjectId)}
         analysisOverlays={analysisOverlays.map(sharedObjectId)}
         accessories={accessories.map(sharedObjectId)}
+        geoView={sharedObjectId(geoView)}
         orbitGraphic={sharedObjectId(orbitGraphic)}
         {...props}
         onSceneLoadError={props.onSceneLoadError ?? warnLoadError}

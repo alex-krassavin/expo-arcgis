@@ -13,6 +13,11 @@
   - the attribution bar's height.
 - For packages built on expo-arcgis that host SwiftUI in their own views (iOS):
   `updateHostingControllerParent(_:)`, which lets the hosting controller present.
+- `GeoViewRef`: each `<MapView>` / `<SceneView>` makes one, carrying the view's `GeoViewState`, so
+  that the views of packages built on expo-arcgis can bind to it (expo-arcgis-toolkit's panels).
+  - Get it with `useGeoViewRef(geoView?)`. It returns the view a `<MapView>` / `<SceneView>` ref
+    points to, or else the nearest view.
+  - It is also on the views' handles (`MapViewHandle.geoView`, `SceneViewHandle.geoView`).
 
 ### Changed
 

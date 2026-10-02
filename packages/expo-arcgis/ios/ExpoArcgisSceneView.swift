@@ -292,6 +292,21 @@ class ExpoArcgisSceneView: ExpoView {
     model.setAccessories(refs.compactMap { $0 as? GeoViewAccessory })
   }
 
+  /// The view's `GeoViewRef`, which carries its state to the views of packages built on
+  /// expo-arcgis.
+  private var geoViewRef: GeoViewRef?
+
+  func setGeoViewRef(_ ref: GeoViewRef?) {
+    guard ref !== geoViewRef else { return }
+    geoViewRef?.state = nil
+    geoViewRef = ref
+    ref?.state = model.viewState
+  }
+
+  deinit {
+    geoViewRef?.state = nil
+  }
+
   /// Filters time-aware layers to a time window from JS (nil shows all time steps).
   func setTimeExtent(_ dict: [String: Any]?) {
     guard let dict,
