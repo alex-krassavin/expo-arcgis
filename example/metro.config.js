@@ -21,7 +21,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
-  'my-module': '..',
+  'my-module': '../packages/expo-arcgis',
 };
 
 config.watchFolders = [path.resolve(__dirname, '..')];

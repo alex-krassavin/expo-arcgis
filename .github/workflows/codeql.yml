@@ -44,7 +44,7 @@ jobs:
           # Kotlin and Swift are extracted from the compiler runs CodeQL observes, so these two
           # build the module: the SDK gates' harness in --codeql mode, which links this checkout
           # into an app on the repository's own Expo SDK, and fails unless every module source
-          # reached the database (internal/module_scripts/native-harness.js).
+          # reached the database (scripts/native-harness.js).
           - label: Kotlin
             language: java-kotlin
             build-mode: manual
@@ -86,7 +86,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle', 'packages/*/android/build.gradle') }}
+          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('packages/*/android/build.gradle') }}
           restore-keys: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-
 
       - if: matrix.language == 'swift'
@@ -94,7 +94,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/spm-cache
-          key: spm-${{ runner.os }}-${{ hashFiles('ios/*.podspec', 'packages/*/ios/*.podspec') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('packages/*/ios/*.podspec') }}
           restore-keys: spm-${{ runner.os }}-
 
       # CodeQL's tracer only sees Swift compiled after init. Before it starts, build the app and
@@ -104,7 +104,7 @@ jobs:
       - if: matrix.language == 'swift'
         name: Build the app and its dependencies (untraced)
         run: >
-          node internal/module_scripts/native-harness.js --codeql
+          node scripts/native-harness.js --codeql
           --platform ios --dir ${{ runner.temp }}/harness --spm-cache ~/spm-cache
 
       - uses: github/codeql-action/init@v4
@@ -116,13 +116,13 @@ jobs:
       - if: matrix.language == 'java-kotlin'
         name: Build the module's Kotlin
         run: >
-          node internal/module_scripts/native-harness.js --codeql
+          node scripts/native-harness.js --codeql
           --platform android --dir ${{ runner.temp }}/harness
 
       - if: matrix.language == 'swift'
         name: Build the module's Swift
         run: >
-          node internal/module_scripts/native-harness.js --codeql --reuse-app
+          node scripts/native-harness.js --codeql --reuse-app
           --platform ios --dir ${{ runner.temp }}/harness --spm-cache ~/spm-cache
 
       - uses: github/codeql-action/analyze@v4

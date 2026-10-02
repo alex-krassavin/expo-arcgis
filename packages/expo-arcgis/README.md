@@ -145,7 +145,11 @@ You can also set the key imperatively: `import ExpoArcgis from 'expo-arcgis'; Ex
 
 ## Example app
 
+The repository's [`example/`](https://github.com/alex-krassavin/expo-arcgis/tree/main/example) app
+runs every sample. From a clone of the repository:
+
 ```sh
+npm install                                    # the packages, built on install
 cd example
 npm install
 ARCGIS_API_KEY=your_key npx expo run:android   # or run:ios (needs Xcode 26+)

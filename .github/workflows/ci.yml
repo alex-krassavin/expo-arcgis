@@ -28,39 +28,50 @@ jobs:
           node-version: 24
           cache: npm
 
-      # `npm ci` runs the `prepare` script, which builds build/ and plugin/build via tsc.
-      - name: Install (builds build/ + plugin/build)
+      # One install for the workspaces. The core's `prepare` builds its build/ and plugin/build.
+      - name: Install (builds the core)
         run: npm ci
 
+      # The packages built on the core build on `prepack` (npm runs install scripts of
+      # workspaces at the same time, so theirs couldn't wait for the core's build/). Their tsc
+      # build typechecks them against the core.
+      - name: Build the packages built on the core
+        run: npm run build -w expo-arcgis-toolkit
+
       - name: Typecheck
+        working-directory: packages/expo-arcgis
         run: npx tsc --noEmit
 
       # Not `npm test plugin`: that helper passes `--rootDir plugin` alongside a relative
       # `--config`, which mis-resolves to the root jest-expo preset and reports a false pass.
       - name: Config plugin tests
+        working-directory: packages/expo-arcgis
         run: npx jest --config plugin/jest.config.js
 
       # publint + are-the-types-wrong (the exact gate from `npm run check:package`).
       - name: Validate published package
+        working-directory: packages/expo-arcgis
         run: npm run check:package
 
       # Each platform compiles on its own, so a function or prop registered on only one of them
       # passes every build and fails at runtime on the other (how getCenter shipped in #19).
       - name: Native API parity (iOS ↔ Android)
+        working-directory: packages/expo-arcgis
         run: npm run check:parity
 
-      # etc/expo-arcgis.api.md is the public API contract. Any change to it — even an additive one —
-      # has to be committed on purpose, so it is visible in review; a removed or retyped prop
-      # breaks every app that uses it.
+      # packages/expo-arcgis/etc/expo-arcgis.api.md is the public API contract. Any change to it —
+      # even an additive one — has to be committed on purpose, so it is visible in review; a removed
+      # or retyped prop breaks every app that uses it.
       - name: Public API report
+        working-directory: packages/expo-arcgis
         run: |
           npm run check:api || {
-            echo "::error file=etc/expo-arcgis.api.md::The public API changed. If that is intended, run 'npm run update:api' and commit etc/expo-arcgis.api.md — then make sure nothing existing was removed or retyped."
+            echo "::error file=packages/expo-arcgis/etc/expo-arcgis.api.md::The public API changed. If that is intended, run 'npm run update:api' and commit etc/expo-arcgis.api.md — then make sure nothing existing was removed or retyped."
             exit 1
           }
 
   # The SDK gates. Each job packs the module, installs the tarball into a fresh
-  # `blank-typescript@sdk-N` app and builds it there (internal/module_scripts/native-harness.js) —
+  # `blank-typescript@sdk-N` app and builds it there (scripts/native-harness.js) —
   # so the published file list, the config plugin and the native sources all meet that SDK's own
   # template, React Native and expo-modules-core. TS compiling says nothing about whether the
   # Kotlin and Swift still build: every SDK bump and most feature PRs have broken one platform or
@@ -100,7 +111,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-${{ hashFiles('android/build.gradle', 'packages/*/android/build.gradle') }}
+          key: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-${{ hashFiles('packages/*/android/build.gradle') }}
           restore-keys: gradle-${{ runner.os }}-sdk${{ matrix.sdk }}-
 
       # Dev dependencies are needed to pack: `npm pack` runs `prepare`, which compiles build/.
@@ -109,7 +120,7 @@ jobs:
 
       - name: Compile module Kotlin in an Expo SDK ${{ matrix.sdk }} app
         run: >
-          node internal/module_scripts/native-harness.js
+          node scripts/native-harness.js
           --sdk ${{ matrix.sdk }} --platform android --dir ${{ runner.temp }}/harness
 
   ios:
@@ -138,7 +149,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/spm-cache
-          key: spm-${{ runner.os }}-${{ hashFiles('ios/*.podspec', 'packages/*/ios/*.podspec') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('packages/*/ios/*.podspec') }}
           restore-keys: spm-${{ runner.os }}-
 
       - name: Install module
@@ -148,7 +159,7 @@ jobs:
       # Simulator only: no signing identity is needed and none is available here.
       - name: Compile module Swift in an Expo SDK ${{ matrix.sdk }} app
         run: >
-          node internal/module_scripts/native-harness.js
+          node scripts/native-harness.js
           --sdk ${{ matrix.sdk }} --platform ios --dir ${{ runner.temp }}/harness
           --spm-cache ~/spm-cache
 
@@ -175,5 +186,5 @@ jobs:
 
       - name: Typecheck + bundle an Expo SDK ${{ matrix.sdk }} app
         run: >
-          node internal/module_scripts/native-harness.js
+          node scripts/native-harness.js
           --sdk ${{ matrix.sdk }} --platform js --dir ${{ runner.temp }}/harness

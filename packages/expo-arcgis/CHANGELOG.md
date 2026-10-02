@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Repository
+
+- The repository is now a monorepo. This package's source moved to `packages/expo-arcgis`, next to
+  the packages built on it. What npm ships is unchanged.
+
 ### Added
 
 - Extension points for packages built on expo-arcgis, which draw native UI over the map. They are

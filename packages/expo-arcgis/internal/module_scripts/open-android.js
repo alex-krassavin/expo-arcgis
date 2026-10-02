@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-const projectPath = path.join(process.cwd(), 'example', 'android');
+// The example app lives at the repository root, next to packages/.
+const projectPath = path.resolve(__dirname, '../../../../example', 'android');
 
 function openApp(command, args, options = {}) {
   const detached = options.detached ?? true;

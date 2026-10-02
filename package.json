@@ -1,0 +1,23 @@
+{
+  "name": "expo-arcgis-monorepo",
+  "private": true,
+  "description": "expo-arcgis, the ArcGIS Maps SDK for React Native as Expo modules, and the packages built on it",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test -w expo-arcgis",
+    "check:package": "npm run check:package -w expo-arcgis",
+    "check:api": "npm run check:api -w expo-arcgis",
+    "update:api": "npm run update:api -w expo-arcgis",
+    "check:parity": "npm run check:parity -w expo-arcgis",
+    "harness": "node scripts/native-harness.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-krassavin/expo-arcgis.git"
+  },
+  "author": "krassavin <walonade@icloud.com>",
+  "license": "MIT"
+}

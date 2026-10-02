@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsc -p .",
-    "prepare": "tsc -p ."
+    "prepack": "npm run build"
   },
   "keywords": [
     "react-native",

@@ -40,7 +40,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alex-krassavin/expo-arcgis.git"
+    "url": "git+https://github.com/alex-krassavin/expo-arcgis.git",
+    "directory": "packages/expo-arcgis"
   },
   "bugs": {
     "url": "https://github.com/alex-krassavin/expo-arcgis/issues"

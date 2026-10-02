@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Builds expo-arcgis inside a fresh consumer app for one Expo SDK — the way users get it.
 //
-//   node internal/module_scripts/native-harness.js --sdk 58 --platform android
-//   node internal/module_scripts/native-harness.js --sdk 57 --platform ios --spm-cache ~/spm-cache
-//   node internal/module_scripts/native-harness.js --sdk 56 --platform js
+//   node scripts/native-harness.js --sdk 58 --platform android
+//   node scripts/native-harness.js --sdk 57 --platform ios --spm-cache ~/spm-cache
+//   node scripts/native-harness.js --sdk 56 --platform js
 //
 // The module is packed with `npm pack` (only what npm would publish) and installed into a new
 // `blank-typescript@sdk-N` app, whose native projects then come from `expo prebuild` — so the
@@ -14,17 +14,19 @@
 // Platforms: `android` compiles the module's Kotlin, `ios` compiles its Swift (ExpoArcgis scheme),
 // `js` typechecks and bundles an app that imports the library.
 //
-// The packages released next to the core (packages/*, e.g. expo-arcgis-toolkit) are Expo modules
-// built on it. They are packed and installed with the core, and their native code compiles too.
+// The core is packages/expo-arcgis. The packages released next to it (the rest of packages/*, e.g.
+// expo-arcgis-toolkit) are Expo modules built on it. They are packed and installed with the core,
+// and their native code compiles too.
 //
-//   node internal/module_scripts/native-harness.js --codeql --platform android
+//   node scripts/native-harness.js --codeql --platform android
 //
 // `--codeql` is the build behind a CodeQL database (.github/workflows/codeql.yml). The app links
-// this checkout instead of a packed copy, so the compilers — and so the alerts — see the repository's
-// own paths; a copy under node_modules would put every alert on a file the repository doesn't have.
+// the packages in this checkout instead of packed copies, so the compilers — and so the alerts —
+// see the repository's own paths; a copy under node_modules would put every alert on a file the
+// repository doesn't have.
 // Every compile is also forced to run where CodeQL's tracer sees it.
 //
-//   node internal/module_scripts/native-harness.js --codeql --platform ios --reuse-app
+//   node scripts/native-harness.js --codeql --platform ios --reuse-app
 //
 // `--reuse-app` (iOS) rebuilds the app the previous run left in --dir, recompiling only the modules'
 // own Swift. CodeQL's Swift job runs the harness once before the tracer starts, then traces only this
@@ -34,15 +36,15 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '../..');
+const ROOT = path.resolve(__dirname, '..');
+const CORE = path.join(ROOT, 'packages', 'expo-arcgis');
 const APP_ID = 'dev.expoarcgis.harness';
 
-/** The packages built on the core (packages/*): their directories and npm names. */
-const PACKAGES = (
-  fs.existsSync(path.join(ROOT, 'packages')) ? fs.readdirSync(path.join(ROOT, 'packages')) : []
-)
+/** The packages built on the core (the rest of packages/*): their directories and npm names. */
+const PACKAGES = fs
+  .readdirSync(path.join(ROOT, 'packages'))
   .map((dir) => path.join(ROOT, 'packages', dir))
-  .filter((dir) => fs.existsSync(path.join(dir, 'package.json')))
+  .filter((dir) => dir !== CORE && fs.existsSync(path.join(dir, 'package.json')))
   .map((dir) => ({ dir, name: require(path.join(dir, 'package.json')).name }));
 
 /** The CocoaPods pods a module directory declares (`ios/<Pod>.podspec`). */
@@ -69,7 +71,8 @@ function parseArgs(argv) {
     // A linked checkout resolves its own imports — the config plugin's `expo/config-plugins`, the
     // peers autolinking walks — from this repository's node_modules, so the app has to be on the
     // same SDK.
-    const sdk = require(path.join(ROOT, 'node_modules/expo/package.json')).version.split('.')[0];
+    const expo = require(require.resolve('expo/package.json', { paths: [CORE] }));
+    const sdk = expo.version.split('.')[0];
     if (args.sdk !== undefined && args.sdk !== sdk) {
       console.error(`--codeql builds against this repository's own Expo SDK (${sdk}).`);
       process.exit(1);
@@ -238,7 +241,7 @@ function buildIos(appDir, spmCache, codeql, reuse) {
   }
   run('xcodebuild', ['-version'], { cwd: iosDir });
   // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
-  for (const scheme of [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn)) {
+  for (const scheme of [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn)) {
     run('xcodebuild', [...xcodeArgs, '-scheme', scheme, 'build'], { cwd: iosDir, env: utf8 });
   }
 }
@@ -284,7 +287,7 @@ function buildJs(appDir) {
 
 /** The `ext` files under `sourceDir` (e.g. `ios`) of the core and every package. */
 function moduleSourceFiles(sourceDir, ext) {
-  return [ROOT, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) => {
+  return [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap((dir) => {
     const root = path.join(dir, sourceDir);
     return fs.existsSync(root)
       ? fs
@@ -333,9 +336,9 @@ function checkCodeqlExtraction(platform) {
 const args = parseArgs(process.argv.slice(2));
 fs.mkdirSync(args.dir, { recursive: true });
 const moduleSources = args.codeql
-  ? [ROOT, ...PACKAGES.map((pkg) => pkg.dir)]
+  ? [CORE, ...PACKAGES.map((pkg) => pkg.dir)]
   : [
-      args.tarball ? path.resolve(args.tarball) : pack(ROOT, args.dir),
+      args.tarball ? path.resolve(args.tarball) : pack(CORE, args.dir),
       ...PACKAGES.map((pkg) => pack(pkg.dir, args.dir)),
     ];
 const appDir = path.join(args.dir, `sdk${args.sdk}-${args.platform}`);
