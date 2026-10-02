@@ -1,7 +1,7 @@
 import type { SharedObject } from 'expo-modules-core';
 import { createContext, useContext, useEffect, useState, type RefObject } from 'react';
 
-import type { MapViewHandle, SceneViewHandle } from './ExpoArcgis.types';
+import type { GeoViewHandle } from './ExpoArcgis.types';
 import type {
   AnalysisOverlayRef,
   GeoModelRef,
@@ -93,13 +93,11 @@ export function useGeoView(): GeoViewHost {
 
 /**
  * The view that a view of a package built on expo-arcgis binds to (expo-arcgis-toolkit's panels):
- * the one `geoView` points to (a `<MapView>` / `<SceneView>` ref), else the nearest one, for a view
- * placed inside it. Null when there is neither, or when the view `geoView` points to isn't mounted
- * by the time the calling component mounts.
+ * the one `geoView` points to (a `<MapView>`, `<SceneView>` or `<LocalSceneView>` ref), else the
+ * nearest one, for a view placed inside it. Null when there is neither, or when the view `geoView`
+ * points to isn't mounted by the time the calling component mounts.
  */
-export function useGeoViewRef(
-  geoView?: RefObject<MapViewHandle | SceneViewHandle | null>
-): GeoViewRef | null {
+export function useGeoViewRef(geoView?: RefObject<GeoViewHandle | null>): GeoViewRef | null {
   const nearest = useContext(GeoViewContext)?.geoView ?? null;
   // React fills a ref in once the view mounts, after this component renders: read it in an effect.
   const [pointed, setPointed] = useState<GeoViewRef | null>(null);

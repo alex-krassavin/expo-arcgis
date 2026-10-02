@@ -14,12 +14,16 @@ public final class SceneRef: SharedObject {
   private var currentBasemapLanguage: String?
   private var currentBasemapWorldview: String?
 
-  /// Builds the scene from a portal item (web scene) when provided, otherwise an empty scene.
-  init(portalItem: [String: Any]?) {
+  /// Builds the scene from a portal item (web scene) when provided, otherwise an empty scene in
+  /// the given viewing mode (`"local"` for a `<LocalSceneView>`; global by default). A web scene
+  /// brings its own viewing mode.
+  init(portalItem: [String: Any]?, viewingMode: String? = nil) {
     // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
     // `<Map portalItem>` and `<FeatureLayer portalItem>` — see `portalItemFromDict`.
     if let item = portalItemFromDict(portalItem) {
       scene = ArcGIS.Scene(item: item)
+    } else if viewingMode == "local" {
+      scene = ArcGIS.Scene(viewingMode: .local)
     } else {
       scene = ArcGIS.Scene()
     }

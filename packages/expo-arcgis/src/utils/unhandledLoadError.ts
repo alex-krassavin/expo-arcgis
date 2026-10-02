@@ -6,7 +6,7 @@ import type { MapLoadErrorEventPayload } from '../ExpoArcgis.types';
  * nothing in the log: the iOS SDK doesn't log it at all. Development builds only; once the app
  * handles the event, reporting it is the app's call.
  */
-export function unhandledLoadError(view: 'MapView' | 'SceneView', prop: string) {
+export function unhandledLoadError(view: 'MapView' | 'SceneView' | 'LocalSceneView', prop: string) {
   if (!__DEV__) return undefined;
   return ({ nativeEvent }: { nativeEvent: MapLoadErrorEventPayload }) => {
     console.warn(

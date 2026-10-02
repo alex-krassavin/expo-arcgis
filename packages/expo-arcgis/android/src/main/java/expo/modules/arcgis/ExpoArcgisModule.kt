@@ -110,7 +110,11 @@ class ExpoArcgisModule : Module() {
     // Declarative 3D scene model — a SharedObject the JS <Scene> constructs and reconciles.
     Class(SceneRef::class) {
       Constructor { props: Map<String, Any?>? ->
-        SceneRef(appContext, props?.get("portalItem") as? Map<String, Any?>)
+        SceneRef(
+          appContext,
+          props?.get("portalItem") as? Map<String, Any?>,
+          props?.get("viewingMode") as? String,
+        )
           .also { ref -> props?.let { ref.applyProps(it) } }
       }
       Function("applyProps") { ref: SceneRef, changed: Map<String, Any?> ->
@@ -392,6 +396,8 @@ class ExpoArcgisModule : Module() {
     mapViewDefinition()
 
     sceneViewDefinition()
+
+    localSceneViewDefinition()
   }
 }
 
@@ -592,4 +598,38 @@ private fun readApiKeyResource(context: Context): String? {
   val id = context.resources.getIdentifier("arcgis_api_key", "string", context.packageName)
   if (id == 0) return null
   return context.getString(id).ifBlank { null }
+}
+
+/** Local 3D scene host (the SDK's LocalSceneView) — for a scene whose viewing mode is local. */
+private fun ModuleDefinitionBuilder.localSceneViewDefinition() = View(ExpoArcgisLocalSceneView::class) {
+  Name("ExpoArcgisLocalSceneView")
+  Events("onSceneLoaded", "onSceneLoadError", "onTap")
+
+  OnViewDestroys { view: ExpoArcgisLocalSceneView -> view.destroy() }
+
+  reactChildrenAboveMap { it.reactChildren }
+
+  Prop("scene") { view: ExpoArcgisLocalSceneView, ref: SceneRef? ->
+    view.setScene(ref)
+  }
+
+  Prop("camera") { view: ExpoArcgisLocalSceneView, camera: Map<String, Any?>? ->
+    view.setCamera(camera)
+  }
+
+  Prop("accessories") { view: ExpoArcgisLocalSceneView, refs: List<SharedObject> ->
+    view.setAccessories(refs)
+  }
+
+  Prop("geoView") { view: ExpoArcgisLocalSceneView, ref: GeoViewRef? ->
+    view.setGeoViewRef(ref)
+  }
+
+  AsyncFunction("retryLoad") { view: ExpoArcgisLocalSceneView, promise: Promise ->
+    view.retryLoad(promise)
+  }
+
+  AsyncFunction("getCamera") { view: ExpoArcgisLocalSceneView ->
+    view.getCamera()
+  }
 }

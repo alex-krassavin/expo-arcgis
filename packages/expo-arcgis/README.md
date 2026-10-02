@@ -12,7 +12,7 @@ authentication.
 
 | Area | What's covered |
 |---|---|
-| **2D / 3D** | `<MapView>` + `<Map>`; `<SceneView>` + `<Scene>` (surface, camera, web scenes, light/shadows) |
+| **2D / 3D** | `<MapView>` + `<Map>`; `<SceneView>` + `<Scene>` (surface, camera, web scenes, light/shadows); `<LocalSceneView>` for local scenes |
 | **Layers** | Feature, Tile, MapImage, Vector-tile, Raster, WMS, WMTS, KML, Scene, IntegratedMesh, PointCloud, OGC 3D Tiles, WebTiled, OpenStreetMap, WFS, OGC API Features, DynamicEntity (stream), Annotation, Dimension, BuildingScene (3D), OrientedImagery, SubtypeFeature, **Group** (container), **FeatureCollection** (in-memory), **GeoPackage** (local `.gpkg`) |
 | **Graphics** | `<GraphicsOverlay>` + `<Graphic>`, symbols (simple marker/line/fill, text, 3D scene symbol, picture-marker), renderers (simple / unique-value / class-breaks), labels, clustering |
 | **Geometry** | `geometryEngine` (buffer, project, distance, intersect, …), `coordinateFormatter`, codec for all geometry types |
@@ -127,7 +127,7 @@ const [hit] = await geocoder.geocode('Los Angeles');
 
 ## API overview
 
-- **Views & models** — `MapSettings`, `Map`, `Scene`, `MapView`, `SceneView`
+- **Views & models** — `MapSettings`, `Map`, `Scene`, `MapView`, `SceneView`, `LocalSceneView`
 - **Layers** — `FeatureLayer`, `TileLayer`, `MapImageLayer`, `SceneLayer`, `VectorTileLayer`,
   `IntegratedMeshLayer`, `PointCloudLayer`, `Ogc3DTilesLayer`, `WebTiledLayer`, `OpenStreetMapLayer`,
   `WmsLayer`, `WmtsLayer`, `RasterLayer`, `KmlLayer`, `WfsLayer`, `OgcFeatureLayer`, `DynamicEntityLayer`,

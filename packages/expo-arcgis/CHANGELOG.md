@@ -4,6 +4,19 @@
 
 ### Added
 
+- `<LocalSceneView>`: the SDK's `LocalSceneView`, for a scene whose viewing mode is local, such as a
+  local web scene or `<Scene viewingMode="local">`.
+  - Like `<SceneView>`, it takes the nearest `<Scene>`, a `camera`, `onSceneLoaded`,
+    `onSceneLoadError` and `onTap`. It renders React children above the scene, and it has
+    `retryLoad()` and `getCamera()` on its ref.
+  - Packages built on expo-arcgis draw over it and bind their panels to it (expo-arcgis-toolkit's
+    building explorer). `GeoViewState` carries its `localSceneViewProxy`.
+  - The SDK's local scene view has no graphics, image or analysis overlays and no geometry
+    editor, so those children do nothing in it.
+- `<Scene viewingMode>`: `'global'` (the default) or `'local'`. It applies when the scene is made;
+  a web scene brings its own.
+- `GeoViewHandle`: the handle of any geo view (`MapViewHandle | SceneViewHandle |
+  LocalSceneViewHandle`), which `useGeoViewRef` takes.
 - `<SceneView>` shows accessories, as `<MapView>` does: expo-arcgis-toolkit's compass and overview
   map draw over a scene.
 - For packages built on expo-arcgis, `GeoViewState` carries more of the view's state:
