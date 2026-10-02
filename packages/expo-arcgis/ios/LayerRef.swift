@@ -61,6 +61,12 @@ public final class FeatureLayerRef: LayerRef {
     super.init(layer: FeatureLayer(featureTable: table))
   }
 
+  /// A handle to a feature layer that already exists, such as a web map's (`FeatureRef.getLayer`).
+  init(layer: FeatureLayer) {
+    providedTable = layer.featureTable
+    super.init(layer: layer)
+  }
+
   /// The layer's feature table. A portal-item layer only gains one once it has loaded, so this
   /// loads it on first use; every caller is already async. Throws rather than returning nil so a
   /// caller cannot silently no-op on a layer that failed to load.

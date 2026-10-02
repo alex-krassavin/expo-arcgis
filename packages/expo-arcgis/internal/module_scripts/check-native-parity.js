@@ -31,7 +31,9 @@ const EXPECTED = {
   android: {
     'ExpoArcgis: AsyncFunction oauthStart': OAUTH,
     'ExpoArcgis: AsyncFunction oauthComplete': OAUTH,
+    'ExpoArcgisExtras/FeatureRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisExtras/GeodatabaseRef: Constructor': THROWING_CONSTRUCTOR,
+    'ExpoArcgisExtras/PopupRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisExtras/RouteTrackerRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisExtras/ServiceGeodatabaseRef: Constructor': THROWING_CONSTRUCTOR,
     'ExpoArcgisGeometry/JobRef: Constructor': THROWING_CONSTRUCTOR,

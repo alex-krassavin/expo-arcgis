@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import type { GeoViewRef, GraphicRef, JobRef } from './ExpoArcgisModule';
+import type { FeatureRef, GeoViewRef, GraphicRef, JobRef, PopupRef } from './ExpoArcgisModule';
 
 /**
  * Esri basemap styles available out of the box. These map to the native
@@ -535,11 +535,20 @@ export type VectorTileFeature = {
 };
 
 /** One layer's hits from a `<MapView>` `identify` (the features under a screen point). */
+/** An identified feature: its attributes and geometry, and the native feature by reference. */
+export type IdentifiedFeature = Feature & {
+  /**
+   * The native feature, for components that work on the feature itself (expo-arcgis-toolkit's
+   * `<FeatureFormView>`) and for `getLayer()`.
+   */
+  ref: FeatureRef;
+};
+
 export type IdentifyResult = {
   /** Name of the layer the features belong to. */
   layerName: string;
   /** Identified features in that layer. Empty for a `<VectorTileLayer>` — see `vectorTileFeatures`. */
-  features: Feature[];
+  features: IdentifiedFeature[];
   /**
    * Hits on a `<VectorTileLayer>`, which ArcGIS 300.1 made identifiable. Empty for every other
    * layer type, so existing callers reading `features` are unaffected.
@@ -571,6 +580,8 @@ export type PopupResult = {
   fields: { label: string; value: string }[];
   /** Images and charts the popup defines, in author order. Empty when it defines none. */
   media: PopupMediaInfo[];
+  /** The native popup, for components that show it (expo-arcgis-toolkit's `<PopupView>`). */
+  ref: PopupRef;
 };
 
 /** Imperative handle exposed by `<MapView>` via `ref`. */

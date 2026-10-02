@@ -4,6 +4,15 @@
 
 ### Added
 
+- **Identified features and popups by reference.**
+  - Each feature in a view's `identify` results carries `ref`: a `FeatureRef`, the native feature.
+  - Each `identifyPopups` result carries `ref`: a `PopupRef`, the native popup, with its `title`.
+  - Components work on these refs, such as expo-arcgis-toolkit's `<PopupView popup>` and
+    `<FeatureFormView feature>`.
+  - `featureRef.getLayer()` returns the feature's layer as a `FeatureLayerRef` (`applyEdits()`,
+    `getServiceGeodatabase()`), even for a web map's layer.
+  - Additive: `IdentifyResult.features` are `IdentifiedFeature`s (a `Feature` plus `ref`), and
+    `PopupResult` gains `ref`.
 - `<LocalSceneView>`: the SDK's `LocalSceneView`, for a scene whose viewing mode is local, such as a
   local web scene or `<Scene viewingMode="local">`.
   - Like `<SceneView>`, it takes the nearest `<Scene>`, a `camera`, `onSceneLoaded`,

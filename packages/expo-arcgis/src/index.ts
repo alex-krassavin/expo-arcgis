@@ -14,6 +14,8 @@ export type {
   AnalysisOverlayRef,
   GeometryEditorRef,
   GeoViewRef,
+  FeatureRef,
+  PopupRef,
   ImageOverlayRef,
   ExpoArcgisModule,
   GeometryEditorEvents,

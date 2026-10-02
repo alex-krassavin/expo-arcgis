@@ -679,6 +679,11 @@ export class FeatureLayerRef extends LayerRef {
 export type FeatureReduction = ClusterReduction;
 
 // @public
+export class FeatureRef extends SharedObject {
+    getLayer(): Promise<FeatureLayerRef | null>;
+}
+
+// @public
 export type FeatureTableSource = {
     type: 'service';
     url: string;
@@ -1073,9 +1078,14 @@ export type GridConfig = {
 export function GroupLayer(input: PropsWithChildren<LayerProps>): JSX.Element;
 
 // @public
+export type IdentifiedFeature = Feature & {
+    ref: FeatureRef;
+};
+
+// @public (undocumented)
 export type IdentifyResult = {
     layerName: string;
-    features: Feature[];
+    features: IdentifiedFeature[];
     vectorTileFeatures: VectorTileFeature[];
 };
 
@@ -1755,6 +1765,11 @@ export type PopupMediaInfo = {
 };
 
 // @public
+export class PopupRef extends SharedObject {
+    readonly title: string;
+}
+
+// @public
 export type PopupResult = {
     title: string;
     fields: {
@@ -1762,6 +1777,7 @@ export type PopupResult = {
         value: string;
     }[];
     media: PopupMediaInfo[];
+    ref: PopupRef;
 };
 
 // @public

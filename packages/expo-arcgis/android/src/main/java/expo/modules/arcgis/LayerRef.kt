@@ -106,6 +106,10 @@ class FeatureLayerRef private constructor(
   constructor(appContext: AppContext, table: FeatureTable) :
     this(appContext, FeatureLayer.createWithFeatureTable(table), table)
 
+  /** A handle to a feature layer that already exists, such as a web map's ([FeatureRef.getLayer]). */
+  constructor(appContext: AppContext, existing: FeatureLayer) :
+    this(appContext, existing, existing.featureTable)
+
   /** Builds the layer from declarative props (a feature-service URL, portal item, or shapefile). */
   constructor(appContext: AppContext, props: Map<String, Any?>) : this(appContext, featureLayerParts(props))
 
