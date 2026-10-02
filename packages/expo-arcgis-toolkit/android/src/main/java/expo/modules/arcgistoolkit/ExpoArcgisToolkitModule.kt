@@ -1,6 +1,7 @@
 package expo.modules.arcgistoolkit
 
 import expo.modules.arcgis.GeoViewRef
+import expo.modules.arcgis.GraphicsOverlayRef
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -11,7 +12,7 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  *
  * Compass, Scalebar and FloorFilter are accessories: shared objects the JS components hand to the
  * nearest `<MapView>` / `<SceneView>`, which composes them over itself (expo-arcgis's
- * `GeoViewAccessory`). BasemapGallery and Legend are views of their own.
+ * `GeoViewAccessory`). BasemapGallery, Legend and UtilityNetworkTrace are views of their own.
  */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -43,6 +44,17 @@ class ExpoArcgisToolkitModule : Module() {
         view.setGeoModel(ref)
       }
       OnViewDestroys { view: BasemapGalleryView -> view.destroy() }
+    }
+
+    View(UtilityNetworkTraceView::class) {
+      // The view the trace is for: expo-arcgis's GeoViewRef of a <MapView>.
+      Prop("geoView") { view: UtilityNetworkTraceView, ref: GeoViewRef? -> view.setGeoView(ref) }
+      // The overlay the app declared for the trace (a <GraphicsOverlay> in the map view).
+      Prop("graphicsOverlay") { view: UtilityNetworkTraceView, ref: GraphicsOverlayRef? ->
+        view.setGraphicsOverlay(ref)
+      }
+      Prop("mapPoint") { view: UtilityNetworkTraceView, value: Map<String, Any?>? -> view.setMapPoint(value) }
+      OnViewDestroys { view: UtilityNetworkTraceView -> view.destroy() }
     }
 
     View(LegendView::class) {

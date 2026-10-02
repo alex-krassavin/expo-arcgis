@@ -37,6 +37,13 @@
   - It is a panel bound to a view, like `Bookmarks`.
 - The panels take a ref to any geo view as `geoView`: a `<MapView>`, a `<SceneView>` or a
   `<LocalSceneView>`.
+- `UtilityNetworkTrace`: the Toolkit's utility network trace on both platforms (Swift
+  `UtilityNetworkTrace`, Kotlin `Trace`), for a map view whose web map has utility networks.
+  - It runs their named trace configurations from starting points the user taps on the map, and
+    several traces can be compared.
+  - As in the SDK, the app provides the `<GraphicsOverlay>` it draws into (`graphicsOverlay`) and
+    the map's taps (`mapPoint`, from the `<MapView>`'s `onTap`).
+  - It is a panel bound to a view, like `Bookmarks`.
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 

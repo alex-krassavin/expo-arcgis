@@ -58,6 +58,7 @@ dependencies {
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-basemapgallery'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-indoors'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-legend'
+  implementation 'com.esri:arcgis-maps-kotlin-toolkit-utilitynetworks'
   // The core's GeoViewState hands accessories its MapViewProxy.
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-geoview-compose'
 
