@@ -6,8 +6,23 @@
 
 - `<SceneView>` shows accessories, as `<MapView>` does: expo-arcgis-toolkit's compass and overview
   map draw over a scene.
-- For packages built on expo-arcgis: `GeoViewState` carries a `<SceneView>`'s proxy, scene and
-  camera. On iOS it also carries a `<MapView>`'s location display.
+- For packages built on expo-arcgis, `GeoViewState` carries more of the view's state:
+  - a `<SceneView>`'s proxy, scene and camera;
+  - on iOS, a `<MapView>`'s location display;
+  - whether the view is navigating;
+  - the attribution bar's height.
+- For packages built on expo-arcgis that host SwiftUI in their own views (iOS):
+  `updateHostingControllerParent(_:)`, which lets the hosting controller present.
+
+### Changed
+
+- Accessories along a view's bottom edge stay above its attribution bar.
+
+### Fixed
+
+- iOS: sheets, popovers and alerts from SwiftUI inside a `<MapView>` or `<SceneView>` (the
+  toolkit's floor filter site list) show. The view's hosting controller is now a child of the
+  screen's view controller, which UIKit presents from.
 
 ## 0.7.0 — 2026-10-02
 

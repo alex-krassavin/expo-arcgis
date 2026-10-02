@@ -39,6 +39,10 @@ public final class GeoViewState: ObservableObject {
   @Published public internal(set) var unitsPerPoint: Double?
   @Published public internal(set) var spatialReference: SpatialReference?
   @Published public internal(set) var visibleArea: ArcGIS.Polygon?
+  /// Whether the user is panning, zooming or rotating the view, or it is animating.
+  @Published public internal(set) var isNavigating = false
+  /// Height of the attribution bar along the view's bottom edge. Accessories stay above it.
+  @Published public internal(set) var attributionBarHeight: CGFloat = 0
 }
 
 /// Draws a map view's accessories over it, each at its alignment.
@@ -55,6 +59,7 @@ struct GeoViewAccessories: View {
       }
     }
     .padding(insets)
+    .padding(.bottom, state.attributionBarHeight)
   }
 
   private struct Item: Identifiable {

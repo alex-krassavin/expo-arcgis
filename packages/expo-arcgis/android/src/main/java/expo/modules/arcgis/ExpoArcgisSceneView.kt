@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
@@ -102,6 +103,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   @Composable
   private fun SceneContent(scene: ArcGISScene) {
+    val density = LocalDensity.current
     SceneView(
       arcGISScene = scene,
       modifier = Modifier.fillMaxSize(),
@@ -123,6 +125,10 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
         viewState.rotation = it.rotation
       },
       onSpatialReferenceChanged = { viewState.spatialReference = it },
+      onNavigationChanged = { viewState.isNavigating = it },
+      onAttributionBarLayoutChanged = { event ->
+        viewState.attributionBarHeight = with(density) { (event.bottom - event.top).toDp() }
+      },
       onSingleTapConfirmed = { event ->
         scope.launch {
           // `mapPoint` is frequently null on a SceneView — a 3D tap can miss the globe entirely, and
