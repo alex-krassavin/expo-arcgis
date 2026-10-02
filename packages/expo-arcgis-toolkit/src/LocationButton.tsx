@@ -29,7 +29,7 @@ export type LocationButtonProps = {
  * @platform ios — the Kotlin Toolkit has no location button; on Android it renders nothing.
  */
 export function LocationButton(props: LocationButtonProps) {
-  return availableOn('ios', 'LocationButton') ? <LocationButtonAccessory {...props} /> : null;
+  return availableOn('ios', '<LocationButton>') ? <LocationButtonAccessory {...props} /> : null;
 }
 
 function LocationButtonAccessory({ alignment = 'topLeading', autoPanModes }: LocationButtonProps) {

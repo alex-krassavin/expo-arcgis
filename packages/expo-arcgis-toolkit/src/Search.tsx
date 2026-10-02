@@ -124,7 +124,7 @@ const NativeSearch =
  * @platform ios — the Kotlin Toolkit has no search; on Android it renders nothing.
  */
 export function Search(props: SearchProps) {
-  return availableOn('ios', 'Search') ? <SearchPanel {...props} /> : null;
+  return availableOn('ios', '<Search>') ? <SearchPanel {...props} /> : null;
 }
 
 function SearchPanel({

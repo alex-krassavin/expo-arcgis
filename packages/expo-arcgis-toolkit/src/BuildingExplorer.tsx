@@ -59,7 +59,7 @@ const NativeBuildingExplorer =
  * @platform ios — the Kotlin Toolkit has no building explorer; on Android it renders nothing.
  */
 export function BuildingExplorer(props: BuildingExplorerProps) {
-  return availableOn('ios', 'BuildingExplorer') ? <BuildingExplorerPanel {...props} /> : null;
+  return availableOn('ios', '<BuildingExplorer>') ? <BuildingExplorerPanel {...props} /> : null;
 }
 
 function BuildingExplorerPanel({ geoView, onSelectionChange, ...props }: BuildingExplorerProps) {

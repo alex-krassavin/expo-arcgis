@@ -27,7 +27,8 @@ The plugin adds what the components need from the app:
 
 To word the descriptions yourself, pass `{ "cameraUsageDescription": "…",
 "microphoneUsageDescription": "…" }`; `false` leaves one out. `"offlineMapAreas": false` leaves out
-what `OfflineMapAreas` needs.
+what `OfflineMapAreas` needs. `"jobManager": true` permits the job manager's background task, which
+`jobManager` needs.
 
 ## Components
 
@@ -51,6 +52,7 @@ their own, which you lay out:
 | `Legend` | panel for a map or scene view | — | ✓ |
 | `FeatureFormView` | panel (a feature from `identify`) | ✓ | ✓ |
 | `OfflineMapAreas` | panel for a web map (`<Map portalItem>`) | ✓ | ✓ |
+| `jobManager` | app-level: keeps long jobs across launches | ✓ | — |
 | `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |

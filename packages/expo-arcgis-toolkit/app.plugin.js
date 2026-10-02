@@ -9,6 +9,9 @@ const OFFLINE_TASKS = [
   '$(PRODUCT_BUNDLE_IDENTIFIER).cpt.jobs.*',
 ];
 
+// The background task of the Swift Toolkit's shared job manager (jobManager).
+const JOB_MANAGER_TASK = 'com.esri.ArcGISToolkit.jobManager.statusCheck';
+
 // What the Kotlin Toolkit's offline downloads (foreground WorkManager jobs) need.
 const OFFLINE_PERMISSIONS = [
   'android.permission.FOREGROUND_SERVICE',
@@ -27,6 +30,7 @@ function addAll(list, values) {
  * - iOS: usage descriptions for the feature form's camera and microphone (attachments, barcodes);
  *   and, for OfflineMapAreas, the offline manager's background task and background fetch.
  * - Android: OfflineMapAreas' download permissions.
+ * - With `jobManager: true` (iOS), the shared job manager's background task and background fetch.
  *
  * Entries the app already has are kept. Pass `false` to leave a description out, or
  * `offlineMapAreas: false` to leave out what OfflineMapAreas needs.
@@ -36,6 +40,7 @@ function addAll(list, values) {
  *   cameraUsageDescription?: string | false,
  *   microphoneUsageDescription?: string | false,
  *   offlineMapAreas?: boolean,
+ *   jobManager?: boolean,
  * }} [props]
  */
 function withArcGISToolkit(config, props = {}) {
@@ -46,6 +51,7 @@ function withArcGISToolkit(config, props = {}) {
     props.microphoneUsageDescription ??
     'Allow $(PRODUCT_NAME) to record audio for video attachments.';
   const offline = props.offlineMapAreas !== false;
+  const jobManager = props.jobManager === true;
 
   config = withInfoPlist(config, (cfg) => {
     if (camera !== false) {
@@ -55,10 +61,11 @@ function withArcGISToolkit(config, props = {}) {
       cfg.modResults.NSMicrophoneUsageDescription =
         cfg.modResults.NSMicrophoneUsageDescription ?? microphone;
     }
-    if (offline) {
+    const tasks = [...(offline ? OFFLINE_TASKS : []), ...(jobManager ? [JOB_MANAGER_TASK] : [])];
+    if (tasks.length) {
       cfg.modResults.BGTaskSchedulerPermittedIdentifiers = addAll(
         cfg.modResults.BGTaskSchedulerPermittedIdentifiers,
-        OFFLINE_TASKS
+        tasks
       );
       cfg.modResults.UIBackgroundModes = addAll(cfg.modResults.UIBackgroundModes, ['fetch']);
     }

@@ -16,6 +16,7 @@ export {
   type FloorFilterUIProperties,
 } from './FloorFilter';
 export { BasemapGallery, type BasemapGalleryProps } from './BasemapGallery';
+export { jobManager } from './jobManager';
 export { Bookmarks, type BookmarksProps, type Bookmark } from './Bookmarks';
 export {
   BuildingExplorer,
