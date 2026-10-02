@@ -132,13 +132,18 @@ class ExpoArcgisLocalSceneView: ExpoView {
     if let hostingController { updateHostingControllerParent(hostingController) }
   }
 
-  // React children render above the scene, as in `ExpoArcgisSceneView`.
+  // React children render above the scene, as in `ExpoArcgisSceneView`. A `<Callout>` doesn't: the
+  // SDK's local scene view supports no callout, so it shows nowhere, as on Android.
+  private let callouts = CalloutHost()
+
   override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.mountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = callouts.mount(childComponentView, at: index) else { return }
+    super.mountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.unmountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = callouts.unmount(childComponentView, at: index) else { return }
+    super.unmountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   /// Receives the native scene (by reference) from the `<Scene>` SharedObject.

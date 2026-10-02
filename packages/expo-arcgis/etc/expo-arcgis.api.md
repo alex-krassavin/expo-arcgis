@@ -4,6 +4,7 @@
 
 ```ts
 
+import { ColorValue } from 'react-native';
 import { ForwardRefExoticComponent } from 'react';
 import { JSX } from 'react';
 import { NativeModule } from 'expo';
@@ -12,8 +13,8 @@ import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
 import { RefObject } from 'react';
 import { SharedObject } from 'expo-modules-core';
-import type { StyleProp } from 'react-native';
-import type { ViewStyle } from 'react-native';
+import { StyleProp } from 'react-native';
+import { ViewStyle } from 'react-native';
 
 // @public
 export type AccessoryHost = {
@@ -109,6 +110,40 @@ export type BuildRasterPyramidsParameters = {
     jpegCompressionQuality?: number;
     maximumLevelCount?: number;
     skipFirstLevel?: boolean;
+};
+
+// @public
+export function Callout(input: PropsWithChildren<CalloutProps>): JSX.Element;
+
+// @public (undocumented)
+export type CalloutProps = {
+    location?: CalloutLocation | null;
+    geoElement?: GraphicRef | FeatureRef | null;
+    tapLocation?: CalloutLocation | null;
+    offset?: {
+        x: number;
+        y: number;
+    };
+    rotateOffsetWithGeoView?: boolean;
+    style?: StyleProp<ViewStyle>;
+    leaderPosition?: 'automatic' | 'upperLeftCorner' | 'upperMiddle' | 'upperRightCorner' | 'rightMiddle' | 'lowerRightCorner' | 'lowerMiddle' | 'lowerLeftCorner' | 'leftMiddle';
+    colors?: {
+        backgroundColor?: ColorValue;
+        borderColor?: ColorValue;
+    };
+    shapes?: {
+        cornerRadius?: number;
+        borderWidth?: number;
+        leaderSize?: {
+            width: number;
+            height: number;
+        };
+        contentPadding?: number;
+        minSize?: {
+            width: number;
+            height: number;
+        };
+    };
 };
 
 // @public
@@ -2640,6 +2675,10 @@ export type WmtsLayerProps = LayerProps & {
     url: string;
     layerId: string;
 };
+
+// Warnings were encountered during analysis:
+//
+// src/Callout.tsx:20:3 - (ae-forgotten-export) The symbol "CalloutLocation" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

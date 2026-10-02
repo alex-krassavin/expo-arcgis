@@ -4,6 +4,15 @@
 
 ### Added
 
+- **`<Callout>`: the SDK's callout, with React content.**
+  - Place it directly inside a `<MapView>` or `<SceneView>`. It points at a `location`, or at a
+    `geoElement` (a `<Graphic>` ref or an identified feature's `ref`) and follows it.
+  - Its React children show inside the SDK's own callout (iOS `.callout(placement:)`, Android the
+    Toolkit's `Callout` composable), and stay interactive.
+  - Settings: `tapLocation`, `offset` and `rotateOffsetWithGeoView`. In a scene, a location's
+    `altitude`. Android adds the Kotlin Toolkit's `leaderPosition`, `colors` and `shapes`.
+  - A view shows one callout at a time. A `<LocalSceneView>` shows none: the Swift SDK's local scene
+    view doesn't support callouts.
 - **Identified features and popups by reference.**
   - Each feature in a view's `identify` results carries `ref`: a `FeatureRef`, the native feature.
   - Each `identifyPopups` result carries `ref`: a `PopupRef`, the native popup, with its `title`.
@@ -47,6 +56,10 @@
 ### Changed
 
 - Accessories along a view's bottom edge stay above its attribution bar.
+- Android: where no React child of a `<MapView>` / `<SceneView>` is hit, React Native's touch hit test
+  goes on to the map (`box-none`). Touches on content drawn inside the map, such as a callout's,
+  reach React. The core now depends on `react-android`, at the app's version, as Expo's own modules
+  do.
 
 ### Fixed
 

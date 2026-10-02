@@ -86,8 +86,8 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   private val composeView = geoViewComposeHost(context) { Content() }.also { addView(it) }
 
-  /** The view's React children, above the map (see [ReactChildrenLayer]). */
-  internal val reactChildren = ReactChildrenLayer(context).also { addView(it) }
+  /** The view's React children, above the map, or in its callout (see [GeoViewReactChildren]). */
+  internal val reactChildren = GeoViewReactChildren(context).also { addView(it.layer) }
 
   @Composable
   private fun Content() {
@@ -148,6 +148,8 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
           )
         }
       },
+      // A `<Callout>` among the view's React children: its content, in the Toolkit's callout.
+      content = { ReactCallout(reactChildren.callout) },
     )
   }
 

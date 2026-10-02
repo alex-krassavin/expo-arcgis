@@ -66,8 +66,8 @@ class ExpoArcgisLocalSceneView(context: Context, appContext: AppContext) : Compo
 
   private val composeView = geoViewComposeHost(context) { Content() }.also { addView(it) }
 
-  /** The view's React children, above the scene (see [ReactChildrenLayer]). */
-  internal val reactChildren = ReactChildrenLayer(context).also { addView(it) }
+  /** The view's React children, above the scene, or in its callout (see [GeoViewReactChildren]). */
+  internal val reactChildren = GeoViewReactChildren(context).also { addView(it.layer) }
 
   @Composable
   private fun Content() {

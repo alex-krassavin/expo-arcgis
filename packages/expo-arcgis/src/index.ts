@@ -56,6 +56,7 @@ export { Scene } from './Scene';
 export { MapView } from './MapView';
 export { SceneView } from './SceneView';
 export { LocalSceneView } from './LocalSceneView';
+export { Callout, type CalloutProps } from './Callout';
 export { FeatureLayer } from './FeatureLayer';
 export { TileLayer } from './TileLayer';
 export { MapImageLayer } from './MapImageLayer';

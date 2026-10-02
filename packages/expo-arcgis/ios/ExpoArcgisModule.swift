@@ -580,6 +580,33 @@ public class ExpoArcgisModule: Module {
       }
     }
 
+    // `<Callout>`: React content a <MapView> / <SceneView> shows in the SDK's callout. The geo view
+    // takes this view out of the children it draws over the map and hands it to the callout.
+    View(ExpoArcgisCalloutView.self) {
+      ViewName("ExpoArcgisCalloutView")
+
+      Prop("location") { (view: ExpoArcgisCalloutView, value: [String: Any]?) in
+        view.setLocation(value)
+      }
+
+      // A <Graphic> (GraphicRef) or an identified feature (FeatureRef).
+      Prop("geoElement") { (view: ExpoArcgisCalloutView, ref: SharedObject?) in
+        view.setGeoElement(ref)
+      }
+
+      Prop("tapLocation") { (view: ExpoArcgisCalloutView, value: [String: Any]?) in
+        view.setTapLocation(value)
+      }
+
+      Prop("offset") { (view: ExpoArcgisCalloutView, value: [String: Any]?) in
+        view.setOffset(value)
+      }
+
+      Prop("rotateOffsetWithGeoView") { (view: ExpoArcgisCalloutView, value: Bool?) in
+        view.setRotateOffsetWithGeoView(value)
+      }
+    }
+
     // Local 3D scene host (the SDK's LocalSceneView) — for a scene whose viewing mode is local.
     View(ExpoArcgisLocalSceneView.self) {
       ViewName("ExpoArcgisLocalSceneView")

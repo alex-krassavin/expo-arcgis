@@ -24,6 +24,8 @@ final class SceneViewModel: ObservableObject {
   @Published private(set) var accessories: [GeoViewAccessory] = []
   /// The view's live state for its accessories — published apart from this model, see GeoViewState.
   let viewState = GeoViewState()
+  /// The `<Callout>` the scene shows, published apart from this model as well.
+  let callout = CalloutHost()
   /// Last camera the view reported. Plain storage, not published — reading it must not redraw.
   var currentCamera: Camera?
 
@@ -63,6 +65,12 @@ final class SceneViewModel: ObservableObject {
 /// SwiftUI host for the ArcGIS `SceneView`. Loads the scene, reports the result, and forwards taps.
 struct ExpoArcgisSceneContainer: View {
   @ObservedObject var model: SceneViewModel
+  @ObservedObject var callout: CalloutHost
+
+  init(model: SceneViewModel) {
+    _model = ObservedObject(wrappedValue: model)
+    _callout = ObservedObject(wrappedValue: model.callout)
+  }
 
   var body: some View {
     if let scene = model.scene {
@@ -81,6 +89,10 @@ struct ExpoArcgisSceneContainer: View {
           // fresh `GlobeCameraController`, which is the SDK's default navigation controller.
           .cameraController(model.cameraController ?? GlobeCameraController())
           .grid(model.grid)
+          // A `<Callout>` among the view's React children: its content, in the SDK's callout.
+          .callout(placement: $callout.placement) { _ in
+            if let view = callout.view { CalloutContent(view: view) }
+          }
           .onSingleTapGesture { screenPoint, scenePoint in
             // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
             guard let scenePoint else { return }
@@ -167,12 +179,15 @@ class ExpoArcgisSceneView: ExpoView {
   // first: as is, they would sit under the map. Shifted past it, they render above the map, and
   // touches that miss them still reach it. React Native keeps the order when it wraps the subviews
   // in a container (for `overflow` or `filter` styles), so the hosting view stays first.
+  // A `<Callout>` child shows in the scene's callout instead (see `CalloutHost`).
   override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.mountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = model.callout.mount(childComponentView, at: index) else { return }
+    super.mountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
-    super.unmountChildComponentView(childComponentView, index: index + 1)
+    guard let drawn = model.callout.unmount(childComponentView, at: index) else { return }
+    super.unmountChildComponentView(childComponentView, index: drawn + 1)
   }
 
   /// Receives the native scene (by reference) from the `<Scene>` SharedObject.

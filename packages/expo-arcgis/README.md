@@ -127,7 +127,7 @@ const [hit] = await geocoder.geocode('Los Angeles');
 
 ## API overview
 
-- **Views & models** — `MapSettings`, `Map`, `Scene`, `MapView`, `SceneView`, `LocalSceneView`
+- **Views & models** — `MapSettings`, `Map`, `Scene`, `MapView`, `SceneView`, `LocalSceneView`, `Callout`
 - **Layers** — `FeatureLayer`, `TileLayer`, `MapImageLayer`, `SceneLayer`, `VectorTileLayer`,
   `IntegratedMeshLayer`, `PointCloudLayer`, `Ogc3DTilesLayer`, `WebTiledLayer`, `OpenStreetMapLayer`,
   `WmsLayer`, `WmtsLayer`, `RasterLayer`, `KmlLayer`, `WfsLayer`, `OgcFeatureLayer`, `DynamicEntityLayer`,
