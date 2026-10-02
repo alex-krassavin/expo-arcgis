@@ -4,6 +4,9 @@
 
 ### Added
 
+- `<MapView map>`: a map to show instead of the nearest `<Map>`'s, such as an offline map area that
+  expo-arcgis-toolkit's `<OfflineMapAreas>` hands out. A `MapRef` can wrap a map that already
+  exists, for packages built on expo-arcgis.
 - **`<Callout>`: the SDK's callout, with React content.**
   - Place it directly inside a `<MapView>` or `<SceneView>`. It points at a `location`, or at a
     `geoElement` (a `<Graphic>` ref or an identified feature's `ref`) and follows it.

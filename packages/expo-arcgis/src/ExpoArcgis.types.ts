@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import type { FeatureRef, GeoViewRef, GraphicRef, JobRef, PopupRef } from './ExpoArcgisModule';
+import type { FeatureRef, GeoViewRef, GraphicRef, JobRef, MapRef, PopupRef } from './ExpoArcgisModule';
 
 /**
  * Esri basemap styles available out of the box. These map to the native
@@ -151,6 +151,12 @@ export type InsetsViewpointAdjustment = 'none' | 'preserve-center';
 
 export type MapViewProps = {
   style?: StyleProp<ViewStyle>;
+  /**
+   * The map to show instead of the nearest `<Map>`'s: one a component hands out, such as an offline
+   * map area from expo-arcgis-toolkit's `<OfflineMapAreas>`. Without a `<Map>` around the view, it is
+   * the one it shows. The `<Map>`'s layers and basemap stay on the `<Map>`'s own map.
+   */
+  map?: MapRef | null;
   /**
    * Reserves space at the view's edges for UI drawn over the map — a bottom sheet, a toolbar.
    * The map still draws full-bleed underneath; attribution and the location symbol move inside

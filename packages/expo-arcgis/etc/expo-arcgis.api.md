@@ -1430,6 +1430,7 @@ export type MapViewInsets = {
 // @public (undocumented)
 export type MapViewProps = {
     style?: StyleProp<ViewStyle>;
+    map?: MapRef | null;
     contentInsets?: MapViewInsets;
     insetsViewpointAdjustment?: InsetsViewpointAdjustment;
     viewpoint?: Viewpoint;
