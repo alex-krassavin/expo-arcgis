@@ -1,25 +1,29 @@
 name: Publish
 
-# Publishes one package of the monorepo (packages/<name>) to npm, with provenance. Run it by hand
-# (Actions → Publish → Run workflow) from main and pick the package. The version published is the
-# one in packages/<name>/package.json, so bump it and commit first.
+# Publishes packages of the monorepo (packages/<name>) to npm, with provenance. Run it by hand
+# (Actions → Publish → Run workflow) from main and tick the packages to publish — workflow_dispatch
+# has no multi-select, so each package is a checkbox named after its directory. They go out one at
+# a time, the core (expo-arcgis) first. Each publishes the version in its package.json, so bump it
+# and commit first.
 #
-# After npm, it publishes the package's GitHub Release, tagged `v<version>` for the core
-# (expo-arcgis) and `<name>@<version>` for the others, with the version's CHANGELOG section as
-# notes. A draft already prepared for that tag is published as it is.
+# After npm, each package gets its GitHub Release, tagged `v<version>` for the core and
+# `<name>@<version>` for the others, with the version's CHANGELOG section as notes. A draft already
+# prepared for that tag is published as it is.
 #
 # A prerelease version (with a `-`, e.g. 0.8.0-beta.1) goes to the `next` dist-tag, any other to
 # `latest`. A dry run builds, validates and packs, then stops.
 on:
   workflow_dispatch:
     inputs:
-      package:
-        description: The package to publish (packages/<name>)
-        type: choice
-        options:
-          - expo-arcgis
-          - expo-arcgis-toolkit
-        default: expo-arcgis
+      # One checkbox per package, named after its directory under packages/.
+      expo-arcgis:
+        description: expo-arcgis (the core)
+        type: boolean
+        default: false
+      expo-arcgis-toolkit:
+        description: expo-arcgis-toolkit
+        type: boolean
+        default: false
       dry-run:
         description: Dry run — build, validate and pack, but don't publish
         type: boolean
@@ -34,9 +38,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish ${{ inputs.package }}${{ inputs.dry-run && ' (dry run)' || '' }}
+  plan:
+    name: Pick the packages
     runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.pick.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Every ticked input but dry-run names a package directory. The core goes first: the others
+      # are built on it.
+      - name: Pick the ticked packages
+        id: pick
+        env:
+          INPUTS: ${{ toJSON(inputs) }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const inputs = JSON.parse(process.env.INPUTS);
+            const picked = Object.keys(inputs)
+              .filter((key) => key !== "dry-run" && (inputs[key] === true || inputs[key] === "true"))
+              .sort((a, b) => (a === "expo-arcgis" ? -1 : b === "expo-arcgis" ? 1 : a.localeCompare(b)));
+            if (picked.length === 0) {
+              console.log("::error::Tick at least one package to publish.");
+              process.exit(1);
+            }
+            for (const name of picked) {
+              if (!fs.existsSync(`packages/${name}/package.json`)) {
+                console.log(`::error::There is no package ${name} in packages/.`);
+                process.exit(1);
+              }
+            }
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `packages=${JSON.stringify(picked)}\n`);
+            console.log(`In order: ${picked.join(", ")}`);
+          '
+
+  publish:
+    needs: plan
+    name: Publish ${{ matrix.package }}${{ inputs.dry-run && ' (dry run)' || '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      # One at a time, in the planned order, and stop at the first failure: a package built on
+      # the core shouldn't go out when the core didn't.
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
     permissions:
       contents: write # the GitHub Release and its tag
       id-token: write # npm provenance
@@ -49,19 +96,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
 
-      # Which package, at which version, and whether it may go out: only from main, never a
-      # private package, never a version npm already has. Inputs reach the script through env.
+      # Which version, and whether it may go out: only from main, never a private package, never
+      # a version npm already has. A dry run only warns about the last two, so it can check any
+      # package's build and tarball. Values reach the script through env.
       - name: Resolve the package
         id: target
         env:
-          PACKAGE: ${{ inputs.package }}
+          PACKAGE: ${{ matrix.package }}
           DRY_RUN: ${{ inputs.dry-run }}
         run: |
           dir="packages/$PACKAGE"
-          if [ ! -f "$dir/package.json" ]; then
-            echo "::error::There is no package '$PACKAGE' in packages/."
-            exit 1
-          fi
           name=$(node -p "require('./$dir/package.json').name")
           version=$(node -p "require('./$dir/package.json').version")
           private=$(node -p "Boolean(require('./$dir/package.json').private)")
@@ -73,13 +117,14 @@ jobs:
             echo "::error::Publish from main, not $GITHUB_REF (a dry run may use any branch)."
             exit 1
           fi
+          blocked() {
+            if [ "$DRY_RUN" = "true" ]; then echo "::warning::$1"; else echo "::error::$1"; exit 1; fi
+          }
           if [ "$private" = "true" ]; then
-            echo "::error::$name is private (\"private\": true in $dir/package.json): remove it to publish."
-            exit 1
+            blocked "$name is private (\"private\": true in $dir/package.json): remove it to publish."
           fi
           if npm view "$name@$version" version > /dev/null 2>&1; then
-            echo "::error::$name@$version is already on npm. Bump the version in $dir/package.json first."
-            exit 1
+            blocked "$name@$version is already on npm. Bump the version in $dir/package.json first."
           fi
           case "$version" in
             *-*) dist_tag="next" ;;
@@ -124,12 +169,12 @@ jobs:
             console.log(`${pack.name}@${pack.version}: ${files.length} files, README "${title}"`);
           '
 
+      # The tarball as `npm publish` would build it (prepare / prepack included), without the
+      # registry: this works for a private package too.
       - name: Dry run
         if: ${{ inputs.dry-run }}
         working-directory: ${{ steps.target.outputs.dir }}
-        env:
-          DIST_TAG: ${{ steps.target.outputs.dist-tag }}
-        run: npm publish --dry-run --access public --tag "$DIST_TAG"
+        run: npm pack --dry-run
 
       # `npm publish` runs `prepare` / `prepack` again, so the tarball is built fresh from source.
       # --provenance ties the package to this workflow run (supply-chain attestation).
