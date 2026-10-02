@@ -5,7 +5,7 @@ import ExpoModulesCore
 ///
 /// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
-/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery and Bookmarks are views of their own.
+/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks and Search are views of their own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -59,6 +59,33 @@ public class ExpoArcgisToolkitModule: Module {
       }
       Prop("bookmarks") { (view: BookmarksView, items: [[String: Any]]?) in
         view.setBookmarks(items)
+      }
+    }
+
+    View(SearchPanelView.self) {
+      Events("onQueryChange")
+      // The view the search is for: expo-arcgis's GeoViewRef of a <MapView> / <SceneView>.
+      Prop("geoView") { (view: SearchPanelView, ref: GeoViewRef?) in view.setGeoView(ref) }
+      Prop("sources") { (view: SearchPanelView, items: [[String: Any]]?) in view.setSources(items) }
+      // The overlay the app declared for the results (a <GraphicsOverlay> in the view).
+      Prop("resultsOverlay") { (view: SearchPanelView, ref: GraphicsOverlayRef?) in
+        view.setResultsOverlay(ref)
+      }
+      Prop("enableResultListView") { (view: SearchPanelView, value: Bool?) in
+        view.setEnableResultListView(value)
+      }
+      Prop("prompt") { (view: SearchPanelView, value: String?) in view.setPrompt(value) }
+      Prop("noResultsMessage") { (view: SearchPanelView, value: String?) in
+        view.setNoResultsMessage(value)
+      }
+      Prop("currentQuery") { (view: SearchPanelView, value: String?) in view.setCurrentQuery(value) }
+      Prop("resultMode") { (view: SearchPanelView, value: String?) in view.setResultMode(value) }
+      Prop("repeatSearch") { (view: SearchPanelView, value: Bool?) in view.setRepeatSearch(value) }
+      Prop("queryCenterFromView") { (view: SearchPanelView, value: Bool?) in
+        view.setQueryCenterFromView(value)
+      }
+      Prop("queryCenter") { (view: SearchPanelView, value: [String: Any]?) in
+        view.setQueryCenter(value)
       }
     }
   }
