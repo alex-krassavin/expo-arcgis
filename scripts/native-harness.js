@@ -33,7 +33,7 @@
 // replays them, with no xcodebuild. CodeQL's Swift job runs the harness once before the tracer
 // starts, then traces only the replay. Under the tracer, xcodebuild rebuilt every dependency and
 // never got through Esri's Toolkit package.
-const { execFileSync, spawnSync } = require('child_process');
+const { execFileSync, spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -112,6 +112,29 @@ function run(cmd, args, options = {}) {
 }
 
 /** Packs the package in `source` into `dir`; returns the tarball's path. */
+/** Runs a command like `run`, showing its output live and also writing it to `log`. No shell. */
+function runLogged(cmd, args, log, options = {}) {
+  console.log(`\n$ ${[cmd, ...args].join(' ')}   (in ${options.cwd}, log: ${log})`);
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(log);
+    const child = spawn(cmd, args, {
+      ...options,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, CI: '1', EXPO_NO_GIT_STATUS: '1', ...options.env },
+    });
+    const forward = (out) => (chunk) => {
+      out.write(chunk);
+      file.write(chunk);
+    };
+    child.stdout.on('data', forward(process.stdout));
+    child.stderr.on('data', forward(process.stderr));
+    child.on('error', reject);
+    child.on('close', (code) =>
+      file.end(() => (code === 0 ? resolve() : reject(new Error(`${cmd} exited with ${code} (${log})`))))
+    );
+  });
+}
+
 function pack(source, dir) {
   const out = run('npm', ['pack', '--pack-destination', dir], { cwd: source, capture: true });
   return path.join(dir, out.trim().split('\n').pop().trim());
@@ -200,7 +223,7 @@ function buildAndroid(appDir, codeql) {
   run('./gradlew', gradleArgs, { cwd: path.join(appDir, 'android') });
 }
 
-function buildIos(appDir, spmCache, codeql, reuse) {
+async function buildIos(appDir, spmCache, codeql, reuse) {
   const iosDir = path.join(appDir, 'ios');
   // CocoaPods aborts on a non-UTF-8 locale.
   const utf8 = { LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
@@ -250,14 +273,7 @@ function buildIos(appDir, spmCache, codeql, reuse) {
     }
     // Keep the log: it holds the swiftc command of each module's Swift compile, for --reuse-app.
     const log = path.join(appDir, `xcodebuild-${scheme}.log`);
-    console.log(`\n$ xcodebuild ${args.join(' ')}   (in ${iosDir}, log: ${log})`);
-    const tee = 'xcodebuild "$@" 2>&1 | tee "$LOG"';
-    const result = spawnSync('bash', ['-o', 'pipefail', '-c', tee, 'xcodebuild', ...args], {
-      cwd: iosDir,
-      stdio: 'inherit',
-      env: { ...process.env, CI: '1', ...utf8, LOG: log },
-    });
-    if (result.status !== 0) throw new Error(`xcodebuild failed for ${scheme} (${log})`);
+    await runLogged('xcodebuild', args, log, { cwd: iosDir, env: utf8 });
     Object.assign(compiles, swiftCompilesIn(fs.readFileSync(log, 'utf8'), pods));
   }
   if (codeql) {
@@ -273,9 +289,9 @@ function buildIos(appDir, spmCache, codeql, reuse) {
 const SWIFT_COMPILES = 'codeql-swift-compiles.json';
 
 /**
- * The `CompileSwiftSources` tasks of the given Pods targets in an xcodebuild log, as shell scripts.
- * With SWIFT_USE_INTEGRATED_DRIVER=NO, xcodebuild prints each one as the task line, then indented,
- * ready to paste into a shell: a `cd`, sometimes `export`s, and one swiftc command.
+ * The `CompileSwiftSources` tasks of the given Pods targets in an xcodebuild log. With
+ * SWIFT_USE_INTEGRATED_DRIVER=NO, xcodebuild prints each one as the task line, then indented, in
+ * shell syntax: a `cd`, sometimes `export`s, and one swiftc command.
  */
 function swiftCompilesIn(log, targets) {
   const compiles = {};
@@ -308,10 +324,38 @@ function replaySwiftCompiles(appDir) {
   const now = new Date();
   for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
   for (const [target, script] of Object.entries(JSON.parse(fs.readFileSync(recorded, 'utf8')))) {
-    console.log(`\n$ swiftc for ${target} (recorded by the previous run)\n${script}`);
-    const result = spawnSync('bash', ['-e', '-c', script], { stdio: 'inherit' });
+    const { cwd, env, argv } = recordedCommand(script);
+    if (path.basename(argv[0] ?? '') !== 'swiftc') {
+      throw new Error(`The recorded compile of ${target} doesn't run swiftc:\n${script}`);
+    }
+    console.log(`\n$ ${argv.join(' ')}   (in ${cwd}; ${target}, recorded by the previous run)`);
+    const result = spawnSync(argv[0], argv.slice(1), {
+      cwd,
+      env: { ...process.env, ...env },
+      stdio: 'inherit',
+    });
     if (result.status !== 0) throw new Error(`The recorded swiftc command for ${target} failed`);
   }
+}
+
+/**
+ * A recorded xcodebuild task as a process: the directory of its `cd`, its `export`s and its command
+ * split into arguments. xcodebuild escapes with backslashes, never quotes, so no shell is needed.
+ */
+function recordedCommand(script) {
+  const words = (line) =>
+    (line.match(/(?:\\.|[^\s\\])+/g) ?? []).map((word) => word.replace(/\\(.)/g, '$1'));
+  const command = { cwd: undefined, env: {}, argv: [] };
+  for (const line of script.split('\n')) {
+    const [first, ...rest] = words(line);
+    if (first === undefined) continue;
+    if (first === 'cd') command.cwd = rest.join(' ');
+    else if (first === 'export') {
+      const [name, ...value] = rest.join(' ').split('=');
+      command.env[name] = value.join('=');
+    } else command.argv = [first, ...rest];
+  }
+  return command;
 }
 
 // Enough of the API to make the typecheck and the bundle reach the library's main entry points,
@@ -412,9 +456,16 @@ const moduleSources = args.codeql
 const appDir = path.join(args.dir, `sdk${args.sdk}-${args.platform}`);
 if (!args.reuseApp) createApp(appDir, args.sdk, moduleSources);
 
-if (args.platform === 'android') buildAndroid(appDir, args.codeql);
-else if (args.platform === 'ios') buildIos(appDir, args.spmCache, args.codeql, args.reuseApp);
-else buildJs(appDir);
+async function main() {
+  if (args.platform === 'android') buildAndroid(appDir, args.codeql);
+  else if (args.platform === 'ios') await buildIos(appDir, args.spmCache, args.codeql, args.reuseApp);
+  else buildJs(appDir);
 
-console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
-if (args.codeql) checkCodeqlExtraction(args.platform);
+  console.log(`\n✓ expo-arcgis ${args.platform} build passed against Expo SDK ${args.sdk}`);
+  if (args.codeql) checkCodeqlExtraction(args.platform);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
