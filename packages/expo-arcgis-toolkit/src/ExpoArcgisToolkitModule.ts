@@ -17,6 +17,7 @@ declare class ExpoArcgisToolkitModule extends NativeModule {
   OverviewMapAccessory: typeof AccessoryRef;
   /** iOS only. */
   LocationButtonAccessory: typeof AccessoryRef;
+  FloorFilterAccessory: typeof AccessoryRef;
 }
 
 export default requireNativeModule<ExpoArcgisToolkitModule>('ExpoArcgisToolkit');

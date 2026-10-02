@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.arcgismaps.geometry.GeometryEngine
 import com.arcgismaps.geometry.Point
@@ -143,6 +144,7 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
 
   @Composable
   private fun MapContent(map: ArcGISMap) {
+    val density = LocalDensity.current
     MapView(
       arcGISMap = map,
       modifier = Modifier.fillMaxSize(),
@@ -165,6 +167,10 @@ class ExpoArcgisMapView(context: Context, appContext: AppContext) : ComposeHostV
       onUnitsPerDipChanged = { viewState.unitsPerDip = it },
       onSpatialReferenceChanged = { viewState.spatialReference = it },
       onVisibleAreaChanged = { viewState.visibleArea = it },
+      onNavigationChanged = { viewState.isNavigating = it },
+      onAttributionBarLayoutChanged = { event ->
+        viewState.attributionBarHeight = with(density) { (event.bottom - event.top).toDp() }
+      },
       onSingleTapConfirmed = { event ->
         // A 2D tap resolves to the map in practice, but report nothing rather than a fabricated
         // (0, 0) on the off chance it does not. Matches iOS and the SceneView.

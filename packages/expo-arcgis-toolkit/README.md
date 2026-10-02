@@ -26,6 +26,7 @@ their own: lay them out anywhere inside the `<Map>`.
 | `Scalebar` | over a map view | ✓ | ✓ |
 | `OverviewMap` | over a map or scene view | ✓ | — |
 | `LocationButton` | over a map view | ✓ | — |
+| `FloorFilter` | over a map or scene view (floor-aware data) | ✓ | ✓ |
 | `BasemapGallery` | panel | ✓ | ✓ |
 
 A component the Toolkit has on one platform only renders nothing on the other, and warns once in

@@ -93,6 +93,8 @@ struct ExpoArcgisSceneContainer: View {
           }
           .onViewpointChanged(kind: .centerAndScale) { model.viewState.viewpoint = $0 }
           .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
+          .onNavigatingChanged { model.viewState.isNavigating = $0 }
+          .onAttributionBarHeightChanged { model.viewState.attributionBarHeight = $0 }
           .overlay {
             GeoViewAccessories(
               accessories: model.accessories, insets: EdgeInsets(), state: model.viewState)
@@ -152,6 +154,13 @@ class ExpoArcgisSceneView: ExpoView {
     hostingController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(hostingController.view)
     self.hostingController = hostingController
+  }
+
+  // The SwiftUI inside presents from its hosting controller (sheets, popovers, alerts), which needs
+  // a parent for that.
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    if let hostingController { updateHostingControllerParent(hostingController) }
   }
 
   // Fabric mounts React children by index among the subviews, where the map's hosting view comes

@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.arcgismaps.geometry.Polygon
 import com.arcgismaps.geometry.SpatialReference
 import com.arcgismaps.mapping.ArcGISMap
@@ -79,6 +80,14 @@ class GeoViewState internal constructor(
 
   var visibleArea by mutableStateOf<Polygon?>(null)
     internal set
+
+  /** Whether the user is panning, zooming or rotating the view, or it is animating. */
+  var isNavigating by mutableStateOf(false)
+    internal set
+
+  /** Height of the attribution bar along the view's bottom edge. Accessories stay above it. */
+  var attributionBarHeight by mutableStateOf(0.dp)
+    internal set
 }
 
 /** Composes a map view's accessories over it, each at its alignment. */
@@ -88,7 +97,7 @@ internal fun GeoViewAccessories(
   insets: PaddingValues,
   state: GeoViewState,
 ) {
-  Box(Modifier.fillMaxSize().padding(insets)) {
+  Box(Modifier.fillMaxSize().padding(insets).padding(bottom = state.attributionBarHeight)) {
     accessories.forEach { accessory ->
       key(accessory) {
         Box(Modifier.align(accessory.alignment)) { accessory.Content(state) }

@@ -130,6 +130,8 @@ struct ExpoArcgisMapContainer: View {
           .onUnitsPerPointChanged { model.viewState.unitsPerPoint = $0 }
           .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
           .onVisibleAreaChanged { model.viewState.visibleArea = $0 }
+          .onNavigatingChanged { model.viewState.isNavigating = $0 }
+          .onAttributionBarHeightChanged { model.viewState.attributionBarHeight = $0 }
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
           .grid(model.grid)
@@ -214,6 +216,13 @@ class ExpoArcgisMapView: ExpoView {
     hostingController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     addSubview(hostingController.view)
     self.hostingController = hostingController
+  }
+
+  // The SwiftUI inside presents from its hosting controller (sheets, popovers, alerts), which needs
+  // a parent for that.
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    if let hostingController { updateHostingControllerParent(hostingController) }
   }
 
   // Fabric mounts React children by index among the subviews, where the map's hosting view comes
