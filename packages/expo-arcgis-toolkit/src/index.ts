@@ -28,6 +28,11 @@ export {
   type FeatureFormViewProps,
   type FeatureFormEditingEvent,
 } from './FeatureFormView';
+export {
+  OfflineMapAreas,
+  type OfflineMapAreasProps,
+  type OfflineMapAreasHandle,
+} from './OfflineMapAreas';
 export { PopupView, type PopupViewProps } from './PopupView';
 export { Search, type SearchProps, type SearchSource } from './Search';
 export { UtilityNetworkTrace, type UtilityNetworkTraceProps } from './UtilityNetworkTrace';

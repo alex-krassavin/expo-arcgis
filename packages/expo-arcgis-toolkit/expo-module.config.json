@@ -1,9 +1,19 @@
 {
-  "platforms": ["apple", "android"],
+  "platforms": [
+    "apple",
+    "android"
+  ],
   "apple": {
-    "modules": ["ExpoArcgisToolkitModule"]
+    "modules": [
+      "ExpoArcgisToolkitModule"
+    ],
+    "appDelegateSubscribers": [
+      "ExpoArcgisToolkitAppDelegate"
+    ]
   },
   "android": {
-    "modules": ["expo.modules.arcgistoolkit.ExpoArcgisToolkitModule"]
+    "modules": [
+      "expo.modules.arcgistoolkit.ExpoArcgisToolkitModule"
+    ]
   }
 }
