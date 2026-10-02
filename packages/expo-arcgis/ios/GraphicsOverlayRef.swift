@@ -4,7 +4,9 @@ import UIKit
 
 /// SharedObject wrapping a native `GraphicsOverlay` owned by a MapView.
 public class GraphicsOverlayRef: SharedObject {
-  let overlay = GraphicsOverlay()
+  /// The native overlay, for packages built on expo-arcgis that draw into one the app declares
+  /// (expo-arcgis-toolkit's search results).
+  public let overlay = GraphicsOverlay()
 
   func addGraphic(_ ref: GraphicRef) {
     overlay.addGraphic(ref.graphic)

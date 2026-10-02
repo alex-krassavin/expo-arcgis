@@ -20,6 +20,14 @@
   view's current scale. It takes the Toolkit's own settings: `reverseLayerOrder`,
   `respectScaleRange`, `title` and `typography`. It is a panel bound to a view, like `Bookmarks`.
   Layers added later, whether declared in JS or loaded with a web map, join it.
+- `Search` (iOS): the Swift Toolkit's search panel. It suggests as you type, searches its
+  `sources` (the world geocoder by default; locators and smart locators), and moves the view to the
+  results. It draws the results into the `<GraphicsOverlay>` whose ref the app passes as
+  `resultsOverlay`, as in the SDK.
+  - The Toolkit's settings are props: `enableResultListView`, `prompt`, `noResultsMessage`,
+    `currentQuery`, `resultMode`, and `onQueryChange`.
+  - From the view it is bound to, it can offer "Repeat search here" (`repeatSearch`) and
+    prioritize results around the view's center (`queryCenter="view"`, or a fixed point).
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 
