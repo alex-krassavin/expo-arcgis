@@ -1,5 +1,5 @@
 import { requireNativeView } from 'expo';
-import { useGeoViewRef, type MapViewHandle, type SceneViewHandle } from 'expo-arcgis';
+import { useGeoViewRef, type GeoViewHandle } from 'expo-arcgis';
 import type { RefObject } from 'react';
 import { Platform, processColor, type ColorValue, type ViewProps } from 'react-native';
 
@@ -16,10 +16,10 @@ export type LegendTextStyle = {
 
 export type LegendProps = ViewProps & {
   /**
-   * The view the legend is for: a `<MapView>` or `<SceneView>` ref. @default the view the legend is
-   * placed in
+   * The view the legend is for: a `<MapView>`, `<SceneView>` or `<LocalSceneView>` ref.
+   * @default the view the legend is placed in
    */
-  geoView?: RefObject<MapViewHandle | SceneViewHandle | null>;
+  geoView?: RefObject<GeoViewHandle | null>;
   /** Lists the layers from the bottom one up. @default false */
   reverseLayerOrder?: boolean;
   /** Leaves out the layers that don't draw at the view's current scale. @default true */
