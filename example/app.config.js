@@ -7,6 +7,8 @@ module.exports = {
     version: '1.0.0',
     scheme: 'expoarcgisexample',
     orientation: 'portrait',
+    // The sample UI is styled for light mode (also Expo's default; set to quiet expo-doctor).
+    userInterfaceStyle: 'light',
     newArchEnabled: true,
     ios: {
       bundleIdentifier: 'com.example.expoarcgis',
