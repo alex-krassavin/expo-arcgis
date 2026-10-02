@@ -1,4 +1,5 @@
 import { requireNativeView } from 'expo';
+import type { SharedObject } from 'expo-modules-core';
 import {
   forwardRef,
   useImperativeHandle,
@@ -25,6 +26,8 @@ type NativeSceneViewProps = SceneViewProps & {
   graphicsOverlays: GraphicsOverlayRef[];
   /** Analysis overlays declared as `<AnalysisOverlay>` children, passed by reference. */
   analysisOverlays: AnalysisOverlayRef[];
+  /** UI other packages draw over the scene (expo-arcgis-toolkit's compass…), passed by reference. */
+  accessories: InstanceType<SharedObject>[];
   /** Ref to the native view, whose `retryLoad` async function is callable through it. */
   ref?: Ref<unknown>;
   children?: ReactNode;
@@ -45,6 +48,7 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
 
     const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
     const [analysisOverlays, setAnalysisOverlays] = useState<AnalysisOverlayRef[]>([]);
+    const [accessories, setAccessories] = useState<InstanceType<SharedObject>[]>([]);
     const host = useMemo<GeoViewHost>(
       () => ({
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
@@ -58,16 +62,10 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         // Image overlays are bound to <MapView> (2D) only.
         addImageOverlay: () => {},
         removeImageOverlay: () => {},
-        // Accessories (expo-arcgis-toolkit's compass, scalebar…) draw over a <MapView> only, so far.
-        addAccessory: () => {
-          if (__DEV__) {
-            console.warn(
-              '[expo-arcgis] <SceneView> does not show accessories yet (a compass, a scalebar…): ' +
-                'they draw over a <MapView> only.'
-            );
-          }
-        },
-        removeAccessory: () => {},
+        addAccessory: (accessory) =>
+          setAccessories((prev) => (prev.includes(accessory) ? prev : [...prev, accessory])),
+        removeAccessory: (accessory) =>
+          setAccessories((prev) => prev.filter((a) => a !== accessory)),
       }),
       []
     );
@@ -81,6 +79,7 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         scene={sharedObjectId(scene)}
         graphicsOverlays={overlays.map(sharedObjectId)}
         analysisOverlays={analysisOverlays.map(sharedObjectId)}
+        accessories={accessories.map(sharedObjectId)}
         orbitGraphic={sharedObjectId(orbitGraphic)}
         {...props}
         onSceneLoadError={props.onSceneLoadError ?? warnLoadError}

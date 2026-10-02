@@ -21,7 +21,8 @@ export type ScalebarProps = {
 
 /**
  * The ArcGIS Toolkit's scalebar, drawn over its `<MapView>`. It shows the current scale as a
- * distance on the map. Place it inside the `<MapView>`.
+ * distance on the map. Place it inside the `<MapView>`; a `<SceneView>` has no single scale, so
+ * there it renders nothing.
  *
  * ```tsx
  * <MapView style={{ flex: 1 }}>

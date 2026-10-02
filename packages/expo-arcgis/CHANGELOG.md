@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `<SceneView>` shows accessories, as `<MapView>` does: expo-arcgis-toolkit's compass and overview
+  map draw over a scene.
+- For packages built on expo-arcgis: `GeoViewState` carries a `<SceneView>`'s proxy, scene and
+  camera. On iOS it also carries a `<MapView>`'s location display.
+
 ## 0.7.0 — 2026-10-02
 
 ### Repository

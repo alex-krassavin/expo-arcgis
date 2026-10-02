@@ -493,6 +493,10 @@ public class ExpoArcgisModule: Module {
       ViewName("ExpoArcgisSceneView")
       Events("onSceneLoaded", "onSceneLoadError", "onTap")
 
+      Prop("accessories") { (view: ExpoArcgisSceneView, refs: [SharedObject]) in
+        view.setAccessories(refs)
+      }
+
       Prop("scene") { (view: ExpoArcgisSceneView, ref: SceneRef?) in
         view.setScene(ref)
       }

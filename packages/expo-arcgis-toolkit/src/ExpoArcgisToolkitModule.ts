@@ -1,7 +1,8 @@
 import { NativeModule, requireNativeModule, SharedObject } from 'expo-modules-core';
 
 /**
- * A toolkit component drawn over a `<MapView>`: the native object the component hands to the view
+ * A toolkit component drawn over a `<MapView>` or `<SceneView>`: the native object the component
+ * hands to the view
  * (expo-arcgis's `GeoViewHost.addAccessory`).
  */
 export declare class AccessoryRef extends SharedObject {
@@ -12,6 +13,10 @@ export declare class AccessoryRef extends SharedObject {
 declare class ExpoArcgisToolkitModule extends NativeModule {
   CompassAccessory: typeof AccessoryRef;
   ScalebarAccessory: typeof AccessoryRef;
+  /** iOS only. */
+  OverviewMapAccessory: typeof AccessoryRef;
+  /** iOS only. */
+  LocationButtonAccessory: typeof AccessoryRef;
 }
 
 export default requireNativeModule<ExpoArcgisToolkitModule>('ExpoArcgisToolkit');

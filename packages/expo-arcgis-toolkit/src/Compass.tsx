@@ -3,7 +3,7 @@ import type { AccessoryAlignment } from './types';
 import { useAccessory } from './useAccessory';
 
 export type CompassProps = {
-  /** Where in the map view the compass sits. @default 'topTrailing' */
+  /** Where in the view the compass sits. @default 'topTrailing' */
   alignment?: AccessoryAlignment;
   /** Hides the compass while the map points north. @default true */
   autoHide?: boolean;
@@ -12,8 +12,9 @@ export type CompassProps = {
 };
 
 /**
- * The ArcGIS Toolkit's compass, drawn over its `<MapView>`. It shows the map's heading while the map
- * is rotated, and turns the map back to north when tapped. Place it inside the `<MapView>`.
+ * The ArcGIS Toolkit's compass, drawn over its `<MapView>` or `<SceneView>`. It shows the heading
+ * while the view is rotated, and turns the view back to north when tapped (a scene keeps its camera's
+ * position, pitch and roll). Place it inside the view.
  *
  * ```tsx
  * <MapView style={{ flex: 1 }}>

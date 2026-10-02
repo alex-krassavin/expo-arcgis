@@ -1,6 +1,8 @@
 package expo.modules.arcgis
 
 import android.content.Context
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,11 +28,13 @@ import com.arcgismaps.mapping.view.OrbitGeoElementCameraController
 import com.arcgismaps.mapping.view.OrbitLocationCameraController
 import com.arcgismaps.mapping.view.SceneLocationVisibility
 import com.arcgismaps.mapping.view.ScreenCoordinate
+import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
 import com.arcgismaps.toolkit.geoviewcompose.SceneView
 import com.arcgismaps.toolkit.geoviewcompose.SceneViewDefaults
 import com.arcgismaps.toolkit.geoviewcompose.SceneViewProxy
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.Promise
+import expo.modules.kotlin.sharedobjects.SharedObject
 import expo.modules.kotlin.viewevent.EventDispatcher
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
@@ -73,6 +77,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
   /** The camera as last reported, for `getCamera()`. Not Compose state: it changes every frame. */
   private var currentCamera: Camera? = null
 
+  /** The view's live state for its accessories (expo-arcgis-toolkit's compass…). */
+  private val viewState = GeoViewState(MapViewProxy(), proxy)
+
+  /** The UI other packages draw over the scene. */
+  private var shownAccessories by mutableStateOf<List<GeoViewAccessory>>(emptyList())
+
   private val composeView = geoViewComposeHost(context) { Content() }.also { addView(it) }
 
   /** The view's React children, above the map (see [ReactChildrenLayer]). */
@@ -81,6 +91,17 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
   @Composable
   private fun Content() {
     val scene = scene ?: return
+    Box(Modifier.fillMaxSize()) {
+      SceneContent(scene)
+      GeoViewAccessories(shownAccessories, PaddingValues(0.dp), viewState)
+    }
+    LaunchedEffect(requestedCamera) {
+      requestedCamera?.let { proxy.setViewpointCameraAnimated(it, 0.5.seconds) }
+    }
+  }
+
+  @Composable
+  private fun SceneContent(scene: ArcGISScene) {
     SceneView(
       arcGISScene = scene,
       modifier = Modifier.fillMaxSize(),
@@ -93,7 +114,15 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
       timeExtent = timeExtent,
       sunTime = sunTime,
       sunLighting = sunLighting,
-      onCurrentViewpointCameraChanged = { currentCamera = it },
+      onCurrentViewpointCameraChanged = {
+        currentCamera = it
+        viewState.camera = it
+      },
+      onViewpointChangedForCenterAndScale = {
+        viewState.viewpoint = it
+        viewState.rotation = it.rotation
+      },
+      onSpatialReferenceChanged = { viewState.spatialReference = it },
       onSingleTapConfirmed = { event ->
         scope.launch {
           // `mapPoint` is frequently null on a SceneView — a 3D tap can miss the globe entirely, and
@@ -114,9 +143,6 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
         }
       },
     )
-    LaunchedEffect(requestedCamera) {
-      requestedCamera?.let { proxy.setViewpointCameraAnimated(it, 0.5.seconds) }
-    }
   }
 
   /** Receives the native scene (by reference) from the `<Scene>` SharedObject. */
@@ -129,6 +155,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   private fun applyScene(newScene: ArcGISScene) {
     scene = newScene
+    viewState.scene = newScene
     loadJob?.cancel()
     loadJob = scope.launch {
       newScene.load()
@@ -293,6 +320,11 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
   }
 
   /** Sets the coordinate grid overlay from JS (null hides it). */
+  /** Receives the accessories other packages declare as `<SceneView>` children (expo-arcgis-toolkit). */
+  fun setAccessories(refs: List<SharedObject>) {
+    shownAccessories = refs.filterIsInstance<GeoViewAccessory>()
+  }
+
   fun setGrid(config: Map<String, Any?>?) {
     grid = buildGrid(config)
   }
