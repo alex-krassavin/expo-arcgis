@@ -86,7 +86,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle') }}
+          key: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-${{ hashFiles('android/build.gradle', 'packages/*/android/build.gradle') }}
           restore-keys: gradle-${{ runner.os }}-sdk${{ steps.sdk.outputs.major }}-
 
       - if: matrix.language == 'swift'
@@ -94,8 +94,18 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/spm-cache
-          key: spm-${{ runner.os }}-${{ hashFiles('ios/ExpoArcgis.podspec') }}
+          key: spm-${{ runner.os }}-${{ hashFiles('ios/*.podspec', 'packages/*/ios/*.podspec') }}
           restore-keys: spm-${{ runner.os }}-
+
+      # CodeQL's tracer only sees Swift compiled after init. Before it starts, build the app and
+      # every dependency. Esri's Toolkit package is one of them, and it is no source of ours: under
+      # the tracer its build went silent and the job hit its 60 minutes. The traced build below then
+      # recompiles only the modules' own Swift (--reuse-app).
+      - if: matrix.language == 'swift'
+        name: Build the app and its dependencies (untraced)
+        run: >
+          node internal/module_scripts/native-harness.js --codeql
+          --platform ios --dir ${{ runner.temp }}/harness --spm-cache ~/spm-cache
 
       - uses: github/codeql-action/init@v4
         with:
@@ -112,7 +122,7 @@ jobs:
       - if: matrix.language == 'swift'
         name: Build the module's Swift
         run: >
-          node internal/module_scripts/native-harness.js --codeql
+          node internal/module_scripts/native-harness.js --codeql --reuse-app
           --platform ios --dir ${{ runner.temp }}/harness --spm-cache ~/spm-cache
 
       - uses: github/codeql-action/analyze@v4

@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["ExpoArcgisToolkitModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.arcgistoolkit.ExpoArcgisToolkitModule"]
+  }
+}

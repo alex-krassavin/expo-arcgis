@@ -1,6 +1,7 @@
 import {
   ConfigPlugin,
   withInfoPlist,
+  withPodfile,
   withPodfileProperties,
   withXcodeProject,
   XcodeProject,
@@ -21,6 +22,7 @@ export const withArcGISIos: ConfigPlugin<ArcGISPluginProps> = (config, props) =>
   config = withArcGISAppDeploymentTarget(config, target);
   config = withArcGISEmbedFramework(config);
   config = withArcGISSignatureCleanup(config);
+  config = withArcGISFlattenedModuleMaps(config);
 
   if (props.apiKey) {
     config = withArcGISApiKeyInfoPlist(config, props.apiKey);
@@ -174,6 +176,67 @@ export function addSignatureCleanupPhase(project: XcodeProject): void {
     }
   );
   phase.buildPhase.alwaysOutOfDate = 1;
+}
+
+const withArcGISFlattenedModuleMaps: ConfigPlugin = (config) =>
+  withPodfile(config, (cfg) => {
+    cfg.modResults.contents = addFlattenedModuleMapFix(cfg.modResults.contents);
+    return cfg;
+  });
+
+const MODULE_MAP_FIX_BEGIN =
+  '# @generated begin expo-arcgis-flattened-modulemaps - expo prebuild (DO NOT MODIFY)';
+const MODULE_MAP_FIX_END = '# @generated end expo-arcgis-flattened-modulemaps';
+const MODULE_MAP_FIX = [
+  '# React Native 0.88 builds a static pod with Swift package dependencies (`spm_dependency`, as',
+  '# ExpoArcgis has for the ArcGIS SDK) into the shared products dir, which moves its module map from',
+  "# <Pod>/<Pod>.modulemap to <Pod>.modulemap. It rewrites the app's xcconfigs to match but not other",
+  "# pods', so a pod built on ExpoArcgis (expo-arcgis-toolkit, …) can't find ExpoArcgis.modulemap.",
+  'flattened_pods = installer.pods_project.targets.select do |target|',
+  "  target.build_configurations.any? { |c| c.build_settings['CONFIGURATION_BUILD_DIR'] == '${PODS_CONFIGURATION_BUILD_DIR}' }",
+  'end.map(&:name)',
+  "Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', '*', '*.xcconfig')).each do |xcconfig|",
+  '  contents = File.read(xcconfig)',
+  '  fixed = flattened_pods.reduce(contents) do |acc, pod|',
+  '    acc.gsub("${PODS_CONFIGURATION_BUILD_DIR}/#{pod}/#{pod}.modulemap", "${PODS_CONFIGURATION_BUILD_DIR}/#{pod}.modulemap")',
+  '  end',
+  '  File.write(xcconfig, fixed) unless fixed == contents',
+  'end',
+];
+
+/**
+ * Adds, right after the Podfile's `react_native_post_install(...)` call, the rewrite React Native
+ * 0.88 leaves out: the module-map paths of pods it builds into the shared products dir, in the
+ * xcconfigs of the pods that depend on them. A no-op with earlier React Native, which flattens
+ * nothing. Replaces an earlier copy; leaves a Podfile without the call untouched. Exported for tests.
+ */
+export function addFlattenedModuleMapFix(podfile: string): string {
+  const earlier = new RegExp(
+    `\\n[ \\t]*${escapeRegExp(MODULE_MAP_FIX_BEGIN)}[\\s\\S]*?${escapeRegExp(MODULE_MAP_FIX_END)}`
+  );
+  podfile = podfile.replace(earlier, '');
+
+  const call = podfile.indexOf('react_native_post_install(');
+  if (call === -1) return podfile;
+  // The call's matching parenthesis (its arguments contain calls of their own), then its line end.
+  let depth = 0;
+  let close = -1;
+  for (let i = call; i < podfile.length && close === -1; i++) {
+    if (podfile[i] === '(') depth++;
+    else if (podfile[i] === ')' && --depth === 0) close = i;
+  }
+  if (close === -1) return podfile;
+  const lineEnd = podfile.indexOf('\n', close);
+  const at = lineEnd === -1 ? podfile.length : lineEnd;
+  const indent = /^[ \t]*/.exec(podfile.slice(podfile.lastIndexOf('\n', call) + 1))![0];
+  const block = [MODULE_MAP_FIX_BEGIN, ...MODULE_MAP_FIX, MODULE_MAP_FIX_END]
+    .map((line) => indent + line)
+    .join('\n');
+  return `${podfile.slice(0, at)}\n${block}${podfile.slice(at)}`;
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** Finds the application target (falls back to the first target). */

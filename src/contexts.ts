@@ -1,3 +1,4 @@
+import type { SharedObject } from 'expo-modules-core';
 import { createContext, useContext } from 'react';
 
 import type {
@@ -60,11 +61,23 @@ export type ImageOverlayHost = {
   removeImageOverlay(overlay: ImageOverlayRef): void;
 };
 
+/**
+ * Lets a package built on expo-arcgis draw UI over the nearest `<MapView>` — the ArcGIS Toolkit's
+ * compass, scalebar… (expo-arcgis-toolkit). An accessory is that package's native shared object;
+ * the view renders it in its own overlay, with the view's live state. Not on `<SceneView>` yet.
+ */
+export type AccessoryHost = {
+  // `SharedObject` is the class; an accessory is an instance of one of its subclasses.
+  addAccessory(accessory: InstanceType<SharedObject>): void;
+  removeAccessory(accessory: InstanceType<SharedObject>): void;
+};
+
 /** What a `<MapView>` / `<SceneView>` exposes to its children. */
 export type GeoViewHost = GraphicsOverlayHost &
   GeometryEditorHost &
   AnalysisOverlayHost &
-  ImageOverlayHost;
+  ImageOverlayHost &
+  AccessoryHost;
 
 /** The nearest geo view — a `<MapView>` or `<SceneView>`. Overlays / editors attach here. */
 export const GeoViewContext = createContext<GeoViewHost | undefined>(undefined);

@@ -1,4 +1,5 @@
 import { requireNativeView } from 'expo';
+import type { SharedObject } from 'expo-modules-core';
 import {
   forwardRef,
   useImperativeHandle,
@@ -32,6 +33,8 @@ type NativeMapViewProps = MapViewProps & {
   imageOverlays: ImageOverlayRef[];
   /** Interactive geometry editor declared as a `<GeometryEditor>` child, passed by reference. */
   geometryEditor?: GeometryEditorRef | null;
+  /** UI other packages draw over the map (expo-arcgis-toolkit's compass…), passed by reference. */
+  accessories: InstanceType<SharedObject>[];
   /** Ref to the native view, whose `identify` async function is callable through it. */
   ref?: Ref<unknown>;
   children?: ReactNode;
@@ -53,6 +56,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
     const [overlays, setOverlays] = useState<GraphicsOverlayRef[]>([]);
     const [imageOverlays, setImageOverlays] = useState<ImageOverlayRef[]>([]);
     const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
+    const [accessories, setAccessories] = useState<InstanceType<SharedObject>[]>([]);
     const host = useMemo<GeoViewHost>(
       () => ({
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
@@ -65,6 +69,10 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         // Visual analyses (viewshed / line-of-sight) are 3D only — no-op on a 2D map.
         addAnalysisOverlay: () => {},
         removeAnalysisOverlay: () => {},
+        addAccessory: (accessory) =>
+          setAccessories((prev) => (prev.includes(accessory) ? prev : [...prev, accessory])),
+        removeAccessory: (accessory) =>
+          setAccessories((prev) => prev.filter((a) => a !== accessory)),
       }),
       []
     );
@@ -82,6 +90,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         graphicsOverlays={overlays.map(sharedObjectId)}
         imageOverlays={imageOverlays.map(sharedObjectId)}
         geometryEditor={sharedObjectId(geometryEditor)}
+        accessories={accessories.map(sharedObjectId)}
         {...props}
         onMapLoadError={props.onMapLoadError ?? warnLoadError}
       >

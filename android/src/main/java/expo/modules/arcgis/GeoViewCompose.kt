@@ -73,9 +73,10 @@ private object DisposeOnViewDestroyed : ViewCompositionStrategy {
 
 /**
  * The Compose host for a `<MapView>` / `<SceneView>`: fills the React view and renders [content]
- * (the Toolkit's composable MapView or SceneView) until [ComposeView.disposeComposition].
+ * (the Toolkit's composable MapView or SceneView) until [ComposeView.disposeComposition]. Public for
+ * the views of packages built on expo-arcgis (expo-arcgis-toolkit's panels), which dispose the same way.
  */
-internal fun geoViewComposeHost(context: Context, content: @Composable () -> Unit): ComposeView =
+fun geoViewComposeHost(context: Context, content: @Composable () -> Unit): ComposeView =
   ComposeView(context).apply {
     layoutParams = ViewGroup.LayoutParams(
       ViewGroup.LayoutParams.MATCH_PARENT,

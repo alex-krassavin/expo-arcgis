@@ -26,6 +26,10 @@ final class MapViewModel: ObservableObject {
   /// Centre of the last reported viewpoint, for `getCenter()`. Not published on purpose: the
   /// viewpoint changes on every frame of a pan, and republishing would re-render the view with it.
   var currentCenter: Point?
+  /// UI other packages draw over the map (expo-arcgis-toolkit's compass…).
+  @Published private(set) var accessories: [GeoViewAccessory] = []
+  /// The view's live state for its accessories — published apart from this model, see GeoViewState.
+  let viewState = GeoViewState()
 
   var onLoaded: (() -> Void)?
   var onLoadError: ((String) -> Void)?
@@ -34,6 +38,11 @@ final class MapViewModel: ObservableObject {
 
   func setMap(_ map: Map?) {
     self.map = map
+    viewState.map = map
+  }
+
+  func setAccessories(_ accessories: [GeoViewAccessory]) {
+    self.accessories = accessories
   }
 
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
@@ -112,7 +121,11 @@ struct ExpoArcgisMapContainer: View {
           .insetsViewpointAdjustmentType(model.insetsAdjustment)
           .onViewpointChanged(kind: .centerAndScale) { viewpoint in
             model.currentCenter = viewpoint.targetGeometry as? Point
+            model.viewState.viewpoint = viewpoint
           }
+          .onUnitsPerPointChanged { model.viewState.unitsPerPoint = $0 }
+          .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
+          .onVisibleAreaChanged { model.viewState.visibleArea = $0 }
           .locationDisplay(model.locationDisplay)
           .geometryEditor(model.geometryEditor)
           .grid(model.grid)
@@ -122,7 +135,14 @@ struct ExpoArcgisMapContainer: View {
             let wgs84 = GeometryEngine.project(mapPoint, into: .wgs84) ?? mapPoint
             model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
           }
-          .onAppear { model.proxy = proxy }
+          .overlay {
+            GeoViewAccessories(
+              accessories: model.accessories, insets: model.contentInsets, state: model.viewState)
+          }
+          .onAppear {
+            model.proxy = proxy
+            model.viewState.mapViewProxy = proxy
+          }
           .task(id: ObjectIdentifier(map)) {
             do {
               try await map.load()
@@ -241,6 +261,11 @@ class ExpoArcgisMapView: ExpoView {
           let viewpoint = bookmark.viewpoint else { return false }
     model.setViewpoint(viewpoint)
     return true
+  }
+
+  /// Receives the accessories other packages declare as `<MapView>` children (expo-arcgis-toolkit).
+  func setAccessories(_ refs: [SharedObject]) {
+    model.setAccessories(refs.compactMap { $0 as? GeoViewAccessory })
   }
 
   /// Receives the native map (by reference) from the `<Map>` SharedObject.

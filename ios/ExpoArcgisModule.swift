@@ -431,6 +431,12 @@ public class ExpoArcgisModule: Module {
         view.setImageOverlays(refs)
       }
 
+      // UI that packages built on expo-arcgis draw over the map (expo-arcgis-toolkit): their own
+      // shared objects, adopting GeoViewAccessory.
+      Prop("accessories") { (view: ExpoArcgisMapView, refs: [SharedObject]) in
+        view.setAccessories(refs)
+      }
+
       Prop("viewpoint") { (view: ExpoArcgisMapView, viewpoint: [String: Any]?) in
         view.setViewpoint(viewpoint)
       }

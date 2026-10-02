@@ -1,7 +1,11 @@
 import * as path from 'path';
 import * as xcode from 'xcode';
 
-import { addSignatureCleanupPhase, embedArcGISFramework } from '../withArcGISIos';
+import {
+  addFlattenedModuleMapFix,
+  addSignatureCleanupPhase,
+  embedArcGISFramework,
+} from '../withArcGISIos';
 
 // Expo template project (app target with Sources/Frameworks/Resources) plus a tail
 // "Upload dSYMs to Datadog" script phase like the one expo-datadog appends.
@@ -99,5 +103,46 @@ describe(addSignatureCleanupPhase, () => {
 
     const comments = appTargetPhaseComments(project);
     expect(comments.filter((comment) => comment.includes(PHASE_NAME))).toHaveLength(1);
+  });
+});
+
+describe(addFlattenedModuleMapFix, () => {
+  // The post_install block of Expo's Podfile template (SDK 56–58).
+  const PODFILE = [
+    "target 'App' do",
+    '  post_install do |installer|',
+    '    react_native_post_install(',
+    '      installer,',
+    '      config[:reactNativePath],',
+    '      :mac_catalyst_enabled => false,',
+    '      :ccache_enabled => ccache_enabled?(podfile_properties),',
+    '    )',
+    '  end',
+    'end',
+    '',
+  ].join('\n');
+
+  it('rewrites the flattened module maps right after react_native_post_install', () => {
+    const lines = addFlattenedModuleMapFix(PODFILE).split('\n');
+    const callEnd = lines.indexOf('    )');
+    expect(lines[callEnd + 1]).toMatch(/^ {4}# @generated begin expo-arcgis-flattened-modulemaps/);
+    const blockEnd = lines.findIndex((l) =>
+      l.includes('@generated end expo-arcgis-flattened-modulemaps')
+    );
+    // Inside post_install: the block closes before the hook's `end`.
+    expect(lines[blockEnd + 1]).toBe('  end');
+    expect(lines.slice(callEnd + 1, blockEnd).join('\n')).toContain(
+      'acc.gsub("${PODS_CONFIGURATION_BUILD_DIR}/#{pod}/#{pod}.modulemap", "${PODS_CONFIGURATION_BUILD_DIR}/#{pod}.modulemap")'
+    );
+  });
+
+  it('adds the block once however often prebuild runs', () => {
+    const once = addFlattenedModuleMapFix(PODFILE);
+    expect(addFlattenedModuleMapFix(once)).toBe(once);
+  });
+
+  it('leaves a Podfile without react_native_post_install alone', () => {
+    const podfile = "target 'App' do\n  post_install do |installer|\n  end\nend\n";
+    expect(addFlattenedModuleMapFix(podfile)).toBe(podfile);
   });
 });
