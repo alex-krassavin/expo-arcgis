@@ -33,6 +33,7 @@ their own, which you lay out:
 | `FloorFilter` | over a map or scene view (floor-aware data) | ✓ | ✓ |
 | `BasemapGallery` | panel for a map | ✓ | ✓ |
 | `Bookmarks` | panel for a map or scene view | ✓ | — |
+| `BuildingExplorer` | panel for a local scene view | ✓ | — |
 | `Legend` | panel for a map or scene view | — | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 

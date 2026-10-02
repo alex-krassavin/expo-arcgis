@@ -28,6 +28,15 @@
     `currentQuery`, `resultMode`, and `onQueryChange`.
   - From the view it is bound to, it can offer "Repeat search here" (`repeatSearch`) and
     prioritize results around the view's center (`queryCenter="view"`, or a fixed point).
+- `BuildingExplorer` (iOS): the Swift Toolkit's building explorer, for a `<LocalSceneView>` with
+  building scene layers (expo-arcgis's local scene view: in SDK 300 the explorer only supports
+  local scenes).
+  - It browses levels, construction phases and categories, highlights a level, and its "zoom to
+    building" moves the view.
+  - It reports the selected building, level and phase (`onSelectionChange`).
+  - It is a panel bound to a view, like `Bookmarks`.
+- The panels take a ref to any geo view as `geoView`: a `<MapView>`, a `<SceneView>` or a
+  `<LocalSceneView>`.
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 
