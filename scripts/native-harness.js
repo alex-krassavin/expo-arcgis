@@ -28,10 +28,12 @@
 //
 //   node scripts/native-harness.js --codeql --platform ios --reuse-app
 //
-// `--reuse-app` (iOS) rebuilds the app the previous run left in --dir, recompiling only the modules'
-// own Swift. CodeQL's Swift job runs the harness once before the tracer starts, then traces only this
-// rebuild: under the tracer, Esri's Toolkit package (a dependency) never finished compiling.
-const { execFileSync } = require('child_process');
+// `--reuse-app` (iOS) recompiles only the modules' own Swift, in the app the previous --codeql run
+// left in --dir. That run records each module's swiftc command from its xcodebuild log; this one
+// replays them, with no xcodebuild. CodeQL's Swift job runs the harness once before the tracer
+// starts, then traces only the replay. Under the tracer, xcodebuild rebuilt every dependency and
+// never got through Esri's Toolkit package.
+const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -202,15 +204,14 @@ function buildIos(appDir, spmCache, codeql, reuse) {
   const iosDir = path.join(appDir, 'ios');
   // CocoaPods aborts on a non-UTF-8 locale.
   const utf8 = { LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
+  // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
+  const pods = [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn);
   if (reuse) {
-    // Everything is built. Marking the modules' own Swift as changed recompiles those files, and
-    // only those.
-    const now = new Date();
-    for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
-  } else {
-    run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
-    run('pod', ['install'], { cwd: iosDir, env: utf8 });
+    replaySwiftCompiles(appDir);
+    return;
   }
+  run('npx', ['expo', 'prebuild', '-p', 'ios', '--no-install'], { cwd: appDir });
+  run('pod', ['install'], { cwd: iosDir, env: utf8 });
   const workspace = fs.readdirSync(iosDir).find((f) => f.endsWith('.xcworkspace'));
   const xcodeArgs = [
     '-workspace',
@@ -226,8 +227,8 @@ function buildIos(appDir, spmCache, codeql, reuse) {
   if (spmCache) xcodeArgs.push('-clonedSourcePackagesDirPath', spmCache);
   if (codeql) {
     xcodeArgs.push(
-      // The app's own DerivedData, fresh unless --reuse-app: a file that is already up to date
-      // isn't compiled, so isn't extracted.
+      // The app's own, fresh DerivedData: a file that is already up to date isn't compiled, so
+      // isn't extracted.
       '-derivedDataPath',
       path.join(appDir, 'DerivedData'),
       // What CodeQL's own Swift autobuilder passes, so every file goes through a swift-frontend
@@ -240,9 +241,76 @@ function buildIos(appDir, spmCache, codeql, reuse) {
     );
   }
   run('xcodebuild', ['-version'], { cwd: iosDir });
-  // Each module's pod has a scheme of its own: the core's first, then the packages built on it.
-  for (const scheme of [CORE, ...PACKAGES.map((pkg) => pkg.dir)].flatMap(podsIn)) {
-    run('xcodebuild', [...xcodeArgs, '-scheme', scheme, 'build'], { cwd: iosDir, env: utf8 });
+  const compiles = {};
+  for (const scheme of pods) {
+    const args = [...xcodeArgs, '-scheme', scheme, 'build'];
+    if (!codeql) {
+      run('xcodebuild', args, { cwd: iosDir, env: utf8 });
+      continue;
+    }
+    // Keep the log: it holds the swiftc command of each module's Swift compile, for --reuse-app.
+    const log = path.join(appDir, `xcodebuild-${scheme}.log`);
+    console.log(`\n$ xcodebuild ${args.join(' ')}   (in ${iosDir}, log: ${log})`);
+    const tee = 'xcodebuild "$@" 2>&1 | tee "$LOG"';
+    const result = spawnSync('bash', ['-o', 'pipefail', '-c', tee, 'xcodebuild', ...args], {
+      cwd: iosDir,
+      stdio: 'inherit',
+      env: { ...process.env, CI: '1', ...utf8, LOG: log },
+    });
+    if (result.status !== 0) throw new Error(`xcodebuild failed for ${scheme} (${log})`);
+    Object.assign(compiles, swiftCompilesIn(fs.readFileSync(log, 'utf8'), pods));
+  }
+  if (codeql) {
+    const missing = pods.filter((pod) => !compiles[pod]);
+    if (missing.length > 0) {
+      throw new Error(`No CompileSwiftSources task for ${missing.join(', ')} in the xcodebuild logs`);
+    }
+    fs.writeFileSync(path.join(appDir, SWIFT_COMPILES), JSON.stringify(compiles, null, 2));
+  }
+}
+
+/** Where a --codeql iOS build records its modules' swiftc commands for --reuse-app. */
+const SWIFT_COMPILES = 'codeql-swift-compiles.json';
+
+/**
+ * The `CompileSwiftSources` tasks of the given Pods targets in an xcodebuild log, as shell scripts.
+ * With SWIFT_USE_INTEGRATED_DRIVER=NO, xcodebuild prints each one as the task line, then indented,
+ * ready to paste into a shell: a `cd`, sometimes `export`s, and one swiftc command.
+ */
+function swiftCompilesIn(log, targets) {
+  const compiles = {};
+  const lines = log.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const task = lines[i].match(
+      /^CompileSwiftSources normal \S+ com\.apple\.xcode\.tools\.swift\.compiler \(in target '([^']+)' from project 'Pods'\)/
+    );
+    if (!task || !targets.includes(task[1])) continue;
+    const script = [];
+    for (let j = i + 1; j < lines.length && lines[j].startsWith('    '); j++) {
+      script.push(lines[j].slice(4));
+    }
+    compiles[task[1]] = script.join('\n');
+  }
+  return compiles;
+}
+
+/**
+ * Recompiles the modules' own Swift with the swiftc commands the previous --codeql run recorded,
+ * against the modules and products it built. No xcodebuild: under CodeQL's tracer it rebuilt every
+ * dependency, from React Native's codegen to Esri's Toolkit package.
+ */
+function replaySwiftCompiles(appDir) {
+  const recorded = path.join(appDir, SWIFT_COMPILES);
+  if (!fs.existsSync(recorded)) {
+    throw new Error(`--reuse-app needs a previous --codeql iOS run in the same --dir (${recorded})`);
+  }
+  // swiftc compiles incrementally: marking every module source as changed recompiles them all.
+  const now = new Date();
+  for (const file of moduleSourceFiles('ios', '.swift')) fs.utimesSync(file, now, now);
+  for (const [target, script] of Object.entries(JSON.parse(fs.readFileSync(recorded, 'utf8')))) {
+    console.log(`\n$ swiftc for ${target} (recorded by the previous run)\n${script}`);
+    const result = spawnSync('bash', ['-e', '-c', script], { stdio: 'inherit' });
+    if (result.status !== 0) throw new Error(`The recorded swiftc command for ${target} failed`);
   }
 }
 

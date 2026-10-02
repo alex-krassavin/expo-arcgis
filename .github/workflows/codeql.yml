@@ -98,9 +98,10 @@ jobs:
           restore-keys: spm-${{ runner.os }}-
 
       # CodeQL's tracer only sees Swift compiled after init. Before it starts, build the app and
-      # every dependency. Esri's Toolkit package is one of them, and it is no source of ours: under
-      # the tracer its build went silent and the job hit its 60 minutes. The traced build below then
-      # recompiles only the modules' own Swift (--reuse-app).
+      # every dependency, and record the swiftc command of each module's Swift compile. The traced
+      # step below replays only those (--reuse-app). Under the tracer, xcodebuild rebuilt every
+      # dependency, Esri's Toolkit package included (no source of ours), and the job hit its 60
+      # minutes.
       - if: matrix.language == 'swift'
         name: Build the app and its dependencies (untraced)
         run: >
