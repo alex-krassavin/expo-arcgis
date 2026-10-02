@@ -13,6 +13,14 @@ public protocol GeoViewAccessory: AnyObject {
   func body(in view: GeoViewState) -> AnyView
 }
 
+/// A `<MapView>` or `<SceneView>`, for packages built on expo-arcgis whose own views bind to it
+/// (expo-arcgis-toolkit's bookmarks, search…). JS creates it with the view and hands it to those
+/// views (`useGeoViewRef`); the view sets its live state on it.
+public final class GeoViewRef: SharedObject, ObservableObject {
+  /// The view's live state. Nil until the view has it, and once the view is gone.
+  @Published public internal(set) var state: GeoViewState?
+}
+
 /// The live state of a `<MapView>` or `<SceneView>`, for its accessories.
 ///
 /// Kept apart from the view's own model: the viewpoint changes on every frame of a pan, and only the

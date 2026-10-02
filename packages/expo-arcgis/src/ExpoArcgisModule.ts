@@ -220,6 +220,13 @@ export declare class GraphicsOverlayRef extends SharedObject {
   setSceneProperties(sceneProperties: SceneProperties | null): void;
 }
 
+/**
+ * A `<MapView>` or `<SceneView>`, for packages built on expo-arcgis whose own views bind to it
+ * (expo-arcgis-toolkit's panels). Each view makes one; get it with `useGeoViewRef`, or from the
+ * view's ref (`geoView`).
+ */
+export declare class GeoViewRef extends SharedObject {}
+
 /** Reference to a native `ImageOverlay`. Built via the `<ImageOverlay>` component (extras module). */
 export declare class ImageOverlayRef extends SharedObject {
   setFrame(imagePath: string, extent: Envelope, opacity?: number): void;

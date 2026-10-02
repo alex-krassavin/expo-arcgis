@@ -1,10 +1,12 @@
 import type { SharedObject } from 'expo-modules-core';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState, type RefObject } from 'react';
 
+import type { MapViewHandle, SceneViewHandle } from './ExpoArcgis.types';
 import type {
   AnalysisOverlayRef,
   GeoModelRef,
   GeometryEditorRef,
+  GeoViewRef,
   GraphicsOverlayRef,
   ImageOverlayRef,
 } from './ExpoArcgisModule';
@@ -77,13 +79,35 @@ export type GeoViewHost = GraphicsOverlayHost &
   GeometryEditorHost &
   AnalysisOverlayHost &
   ImageOverlayHost &
-  AccessoryHost;
+  AccessoryHost & {
+    /** The view, for packages built on expo-arcgis whose own views bind to it. */
+    geoView: GeoViewRef;
+  };
 
 /** The nearest geo view — a `<MapView>` or `<SceneView>`. Overlays / editors attach here. */
 export const GeoViewContext = createContext<GeoViewHost | undefined>(undefined);
 
 export function useGeoView(): GeoViewHost {
   return useGeoViewFor();
+}
+
+/**
+ * The view that a view of a package built on expo-arcgis binds to (expo-arcgis-toolkit's panels):
+ * the one `geoView` points to (a `<MapView>` / `<SceneView>` ref), else the nearest one, for a view
+ * placed inside it. Null when there is neither, or when the view `geoView` points to isn't mounted
+ * by the time the calling component mounts.
+ */
+export function useGeoViewRef(
+  geoView?: RefObject<MapViewHandle | SceneViewHandle | null>
+): GeoViewRef | null {
+  const nearest = useContext(GeoViewContext)?.geoView ?? null;
+  // React fills a ref in once the view mounts, after this component renders: read it in an effect.
+  const [pointed, setPointed] = useState<GeoViewRef | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the ref is only filled in at commit
+    setPointed(geoView?.current?.geoView ?? null);
+  }, [geoView]);
+  return geoView ? pointed : nearest;
 }
 
 /** `useGeoView` that names the calling component if it is used outside a `<MapView>` / `<SceneView>`. */

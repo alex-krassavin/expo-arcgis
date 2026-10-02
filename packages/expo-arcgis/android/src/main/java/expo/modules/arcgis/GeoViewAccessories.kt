@@ -21,6 +21,8 @@ import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.Camera
 import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
 import com.arcgismaps.toolkit.geoviewcompose.SceneViewProxy
+import expo.modules.kotlin.AppContext
+import expo.modules.kotlin.sharedobjects.SharedObject
 
 /**
  * UI that a package built on expo-arcgis draws over a `<MapView>` or `<SceneView>`: the ArcGIS
@@ -87,6 +89,17 @@ class GeoViewState internal constructor(
 
   /** Height of the attribution bar along the view's bottom edge. Accessories stay above it. */
   var attributionBarHeight by mutableStateOf(0.dp)
+    internal set
+}
+
+/**
+ * A `<MapView>` or `<SceneView>`, for packages built on expo-arcgis whose own views bind to it
+ * (expo-arcgis-toolkit's legend, utility network trace…). JS creates it with the view and hands it
+ * to those views (`useGeoViewRef`); the view sets its live state on it.
+ */
+class GeoViewRef(appContext: AppContext) : SharedObject(appContext) {
+  /** The view's live state. Null until the view has it, and once the view is gone. */
+  var state by mutableStateOf<GeoViewState?>(null)
     internal set
 }
 

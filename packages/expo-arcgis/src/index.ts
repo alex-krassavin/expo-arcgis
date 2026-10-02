@@ -13,6 +13,7 @@ export type {
   AnalysisRef,
   AnalysisOverlayRef,
   GeometryEditorRef,
+  GeoViewRef,
   ImageOverlayRef,
   ExpoArcgisModule,
   GeometryEditorEvents,
@@ -99,6 +100,7 @@ export { portal } from './portal';
 export {
   useGeoModel,
   useGeoView,
+  useGeoViewRef,
   useGraphicsOverlay,
   type GraphicsOverlayHost,
   type GeoViewHost,

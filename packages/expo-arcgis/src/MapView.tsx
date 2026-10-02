@@ -12,8 +12,10 @@ import {
 } from 'react';
 
 import type { MapViewHandle, MapViewProps } from './ExpoArcgis.types';
+import ExtrasModule from './ExpoArcgisExtrasModule';
 import type {
   MapRef,
+  GeoViewRef,
   GraphicsOverlayRef,
   GeometryEditorRef,
   ImageOverlayRef,
@@ -35,6 +37,8 @@ type NativeMapViewProps = MapViewProps & {
   geometryEditor?: GeometryEditorRef | null;
   /** UI other packages draw over the map (expo-arcgis-toolkit's compass…), passed by reference. */
   accessories: InstanceType<SharedObject>[];
+  /** The view for the views of other packages that bind to it (expo-arcgis-toolkit's panels). */
+  geoView: GeoViewRef;
   /** Ref to the native view, whose `identify` async function is callable through it. */
   ref?: Ref<unknown>;
   children?: ReactNode;
@@ -57,8 +61,11 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
     const [imageOverlays, setImageOverlays] = useState<ImageOverlayRef[]>([]);
     const [geometryEditor, setGeometryEditor] = useState<GeometryEditorRef | null>(null);
     const [accessories, setAccessories] = useState<InstanceType<SharedObject>[]>([]);
+    // The view for packages built on expo-arcgis whose own views bind to it (`useGeoViewRef`).
+    const geoView = useMemo(() => new ExtrasModule.GeoViewRef(), []);
     const host = useMemo<GeoViewHost>(
       () => ({
+        geoView,
         add: (overlay) => setOverlays((prev) => (prev.includes(overlay) ? prev : [...prev, overlay])),
         remove: (overlay) => setOverlays((prev) => prev.filter((o) => o !== overlay)),
         addImageOverlay: (overlay) =>
@@ -74,12 +81,16 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         removeAccessory: (accessory) =>
           setAccessories((prev) => prev.filter((a) => a !== accessory)),
       }),
-      []
+      [geoView]
     );
 
-    // The native view exposes `identify` on its ref, so hand that ref over directly. (It's
-    // attached before this layout-phase handle runs, so reading it here is safe.)
-    useImperativeHandle(handle, () => nativeRef.current as MapViewHandle, []);
+    // The native view exposes `identify` on its ref, so hand that ref over, with the view's
+    // GeoViewRef. (It's attached before this layout-phase handle runs, so reading it here is safe.)
+    useImperativeHandle(
+      handle,
+      () => Object.assign(nativeRef.current, { geoView }) as MapViewHandle,
+      [geoView]
+    );
 
     return (
       <NativeMapView
@@ -91,6 +102,7 @@ export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>
         imageOverlays={imageOverlays.map(sharedObjectId)}
         geometryEditor={sharedObjectId(geometryEditor)}
         accessories={accessories.map(sharedObjectId)}
+        geoView={sharedObjectId(geoView)}
         {...props}
         onMapLoadError={props.onMapLoadError ?? warnLoadError}
       >

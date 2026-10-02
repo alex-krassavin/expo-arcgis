@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import type { GraphicRef, JobRef } from './ExpoArcgisModule';
+import type { GeoViewRef, GraphicRef, JobRef } from './ExpoArcgisModule';
 
 /**
  * Esri basemap styles available out of the box. These map to the native
@@ -576,6 +576,11 @@ export type PopupResult = {
 /** Imperative handle exposed by `<MapView>` via `ref`. */
 export type MapViewHandle = {
   /**
+   * The view for packages built on expo-arcgis whose own views bind to it: pass this ref to them as
+   * their `geoView` (expo-arcgis-toolkit's panels).
+   */
+  readonly geoView: GeoViewRef;
+  /**
    * Identifies the features under a screen point (in points, e.g. from `onTap`'s `screenPoint`).
    * Returns one `IdentifyResult` per layer that has hits.
    */
@@ -606,6 +611,11 @@ export type MapViewHandle = {
 
 /** Imperative handle exposed by `<SceneView>` via `ref`. */
 export type SceneViewHandle = {
+  /**
+   * The view for packages built on expo-arcgis whose own views bind to it: pass this ref to them as
+   * their `geoView` (expo-arcgis-toolkit's panels).
+   */
+  readonly geoView: GeoViewRef;
   /** Identifies the features under a screen point (3D; in points, e.g. from `onTap`'s `screenPoint`). */
   identify(
     screenPoint: { x: number; y: number },

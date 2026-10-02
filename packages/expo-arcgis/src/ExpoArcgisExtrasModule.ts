@@ -11,6 +11,7 @@ import type {
 import type {
   FeatureLayerRef,
   GeodatabaseRef,
+  GeoViewRef,
   ImageOverlayRef,
   UtilityNetworkRef,
 } from './ExpoArcgisModule';
@@ -27,6 +28,8 @@ declare class ExpoArcgisExtrasModule extends NativeModule {
   UtilityNetworkRef: new (props: { serviceGeodatabaseUrl: string }) => UtilityNetworkRef;
   /** Built via the `<ImageOverlay>` component; attaches to a `<MapView>` from the main module. */
   ImageOverlayRef: new () => ImageOverlayRef;
+  /** Made by each `<MapView>` / `<SceneView>` (main module) for the views that bind to it. */
+  GeoViewRef: new () => GeoViewRef;
   estimateTileCacheSize(
     tileServiceUrl: string,
     areaOfInterest: Geometry,
