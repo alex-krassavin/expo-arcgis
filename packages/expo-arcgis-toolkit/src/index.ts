@@ -3,8 +3,8 @@
 // Components drawn over a `<MapView>` / `<SceneView>` (place them inside it): Compass, Scalebar
 // (maps only), OverviewMap (iOS), LocationButton (iOS, maps only), FloorFilter.
 // Panels: BasemapGallery (anywhere inside the `<Map>`); Bookmarks (iOS), BuildingExplorer (iOS,
-// local scenes), Legend (Android) and Search (iOS), inside the view, or anywhere with the view's
-// ref as `geoView`.
+// local scenes), Legend (Android), Search (iOS) and UtilityNetworkTrace, inside the view, or
+// anywhere with the view's ref as `geoView`.
 export { Compass, type CompassProps } from './Compass';
 export { Scalebar, type ScalebarProps, type ScalebarStyle } from './Scalebar';
 export { OverviewMap, type OverviewMapProps } from './OverviewMap';
@@ -24,4 +24,5 @@ export {
 } from './BuildingExplorer';
 export { Legend, type LegendProps, type LegendTextStyle } from './Legend';
 export { Search, type SearchProps, type SearchSource } from './Search';
+export { UtilityNetworkTrace, type UtilityNetworkTraceProps } from './UtilityNetworkTrace';
 export type { AccessoryAlignment } from './types';

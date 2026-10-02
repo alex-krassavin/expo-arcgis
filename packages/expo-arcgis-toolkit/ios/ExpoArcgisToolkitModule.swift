@@ -5,8 +5,8 @@ import ExpoModulesCore
 ///
 /// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
-/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer and Search
-/// are views of their own.
+/// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer, Search and
+/// UtilityNetworkTrace are views of their own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -67,6 +67,18 @@ public class ExpoArcgisToolkitModule: Module {
       Events("onSelectionChange")
       // The view the explorer is for: expo-arcgis's GeoViewRef of a <LocalSceneView>.
       Prop("geoView") { (view: BuildingExplorerView, ref: GeoViewRef?) in view.setGeoView(ref) }
+    }
+
+    View(UtilityNetworkTraceView.self) {
+      // The view the trace is for: expo-arcgis's GeoViewRef of a <MapView>.
+      Prop("geoView") { (view: UtilityNetworkTraceView, ref: GeoViewRef?) in view.setGeoView(ref) }
+      // The overlay the app declared for the trace (a <GraphicsOverlay> in the map view).
+      Prop("graphicsOverlay") { (view: UtilityNetworkTraceView, ref: GraphicsOverlayRef?) in
+        view.setGraphicsOverlay(ref)
+      }
+      Prop("mapPoint") { (view: UtilityNetworkTraceView, value: [String: Any]?) in
+        view.setMapPoint(value)
+      }
     }
 
     View(SearchPanelView.self) {

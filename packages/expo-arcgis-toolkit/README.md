@@ -36,6 +36,7 @@ their own, which you lay out:
 | `BuildingExplorer` | panel for a local scene view | ✓ | — |
 | `Legend` | panel for a map or scene view | — | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
+| `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
 
 A component the Toolkit has on one platform only renders nothing on the other, and warns once in
 development.
