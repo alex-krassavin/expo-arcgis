@@ -1,7 +1,9 @@
 package expo.modules.arcgistoolkit
 
+import expo.modules.arcgis.FeatureRef
 import expo.modules.arcgis.GeoViewRef
 import expo.modules.arcgis.GraphicsOverlayRef
+import expo.modules.arcgis.PopupRef
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -12,7 +14,8 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  *
  * Compass, Scalebar and FloorFilter are accessories: shared objects the JS components hand to the
  * nearest `<MapView>` / `<SceneView>`, which composes them over itself (expo-arcgis's
- * `GeoViewAccessory`). BasemapGallery, Legend and UtilityNetworkTrace are views of their own.
+ * `GeoViewAccessory`). BasemapGallery, FeatureFormView, Legend, PopupView and UtilityNetworkTrace are
+ * views of their own.
  */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -44,6 +47,27 @@ class ExpoArcgisToolkitModule : Module() {
         view.setGeoModel(ref)
       }
       OnViewDestroys { view: BasemapGalleryView -> view.destroy() }
+    }
+
+    View(FeatureFormPanelView::class) {
+      Events("onDismiss", "onEditingEvent")
+      // The feature to edit: expo-arcgis's FeatureRef, from a view's identify.
+      Prop("feature") { view: FeatureFormPanelView, ref: FeatureRef? -> view.setFeature(ref) }
+      Prop("showCloseIcon") { view: FeatureFormPanelView, value: Boolean? -> view.setShowCloseIcon(value) }
+      Prop("showFormActions") { view: FeatureFormPanelView, value: Boolean? -> view.setShowFormActions(value) }
+      Prop("validationErrorVisibility") { view: FeatureFormPanelView, value: String? ->
+        view.setValidationErrorVisibility(value)
+      }
+      Prop("isNavigationEnabled") { view: FeatureFormPanelView, value: Boolean? -> view.setNavigationEnabled(value) }
+      OnViewDestroys { view: FeatureFormPanelView -> view.destroy() }
+    }
+
+    View(PopupPanelView::class) {
+      Events("onDismiss", "onPopupChange")
+      // The popup to show: expo-arcgis's PopupRef, from a view's identifyPopups.
+      Prop("popup") { view: PopupPanelView, ref: PopupRef? -> view.setPopup(ref) }
+      Prop("showCloseIcon") { view: PopupPanelView, value: Boolean? -> view.setShowCloseIcon(value) }
+      OnViewDestroys { view: PopupPanelView -> view.destroy() }
     }
 
     View(UtilityNetworkTraceView::class) {

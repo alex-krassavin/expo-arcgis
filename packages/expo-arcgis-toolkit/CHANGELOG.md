@@ -44,6 +44,24 @@
   - As in the SDK, the app provides the `<GraphicsOverlay>` it draws into (`graphicsOverlay`) and
     the map's taps (`mapPoint`, from the `<MapView>`'s `onTap`).
   - It is a panel bound to a view, like `Bookmarks`.
+- `FeatureFormView`: the Toolkit's feature form on both platforms. It edits a feature from a
+  view's `identify` (`feature={feature.ref}`) with the form its layer defines, using the Toolkit's
+  own Save and Discard.
+  - It reports them (`onEditingEvent`). Saving keeps the edits on the feature's table. As in the
+    Toolkit's examples, the app applies them through `feature.getLayer()`: `applyEdits()` on its
+    service geodatabase or on the layer.
+  - The Toolkit's settings are props: `validationErrorVisibility`, `isNavigationEnabled`, iOS
+    `editingButtons`, Android `showFormActions` and `showCloseIcon`. Its close button reports
+    `onDismiss`.
+- A config plugin (`"plugins": ["expo-arcgis-toolkit"]`) adds the iOS camera and microphone
+  usage descriptions. The feature form needs them for attachments and barcode scanning.
+- `PopupView`: the Toolkit's popup view on both platforms. It shows the title, fields, media,
+  attachments and related records of a popup from a view's `identifyPopups`
+  (`popup={result.ref}`), with expressions evaluated.
+  - Its close button reports `onDismiss`; on iOS the button shows only when `onDismiss` is set (the
+    Toolkit's `isPresented`).
+  - Android's `showCloseIcon` is a prop.
+  - It reports the popup it moves to (`onPopupChange`).
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 

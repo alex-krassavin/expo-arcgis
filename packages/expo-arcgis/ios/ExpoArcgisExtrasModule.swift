@@ -200,6 +200,16 @@ public class ExpoArcgisExtrasModule: Module {
       }
     }
 
+    // An identified feature and an identified popup, by reference: they come in the results of a
+    // view's `identify` / `identifyPopups`, for components that work on them (expo-arcgis-toolkit).
+    Class(FeatureRef.self) {
+      AsyncFunction("getLayer") { (ref: FeatureRef) in ref.getLayer() }
+    }
+
+    Class(PopupRef.self) {
+      Property("title") { (ref: PopupRef) in ref.popup.title }
+    }
+
     // A <MapView> / <SceneView> for the views of packages built on expo-arcgis, which bind to it
     // (created by the view in JS, handed to the native view as its `geoView` prop).
     Class(GeoViewRef.self) {

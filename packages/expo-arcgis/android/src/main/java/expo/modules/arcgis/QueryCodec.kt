@@ -16,6 +16,7 @@ import com.arcgismaps.mapping.popup.PopupMediaType
 import com.arcgismaps.mapping.layers.VectorTileFeature
 import com.arcgismaps.mapping.layers.VectorTileStyleLayerType
 import com.arcgismaps.mapping.view.IdentifyLayerResult
+import expo.modules.kotlin.AppContext
 import java.time.Instant
 
 /**
@@ -138,10 +139,15 @@ internal fun applyAttributes(feature: Feature, attributes: Map<*, *>) {
 
 // region Identify
 
-/** Serializes one layer's identify hits — its name and the identified features. */
-internal fun serializeIdentifyResult(result: IdentifyLayerResult): Map<String, Any?> = mapOf(
+/**
+ * Serializes one layer's identify hits — its name and the identified features. Each feature also
+ * carries `ref`, the native feature by reference.
+ */
+internal fun serializeIdentifyResult(result: IdentifyLayerResult, appContext: AppContext): Map<String, Any?> = mapOf(
   "layerName" to result.layerContent.name,
-  "features" to result.geoElements.filterIsInstance<Feature>().map { serializeFeature(it) },
+  "features" to result.geoElements.filterIsInstance<Feature>().map { feature ->
+    serializeFeature(feature) + ("ref" to FeatureRef(appContext, feature))
+  },
   // ArcGIS 300.1 made vector tiled layers identifiable. Their hits are `VectorTileFeature`s, not
   // `Feature`s — no object id, no service schema — so they get their own list rather than being
   // squeezed into `features`, which would change what existing callers read.
@@ -166,7 +172,7 @@ internal fun serializeVectorTileFeature(feature: VectorTileFeature): Map<String,
 )
 
 /** Evaluates each identified popup and flattens its fields into `{ title, fields: [{label, value}] }`. */
-internal suspend fun serializePopups(results: List<IdentifyLayerResult>): List<Map<String, Any?>> {
+internal suspend fun serializePopups(results: List<IdentifyLayerResult>, appContext: AppContext): List<Map<String, Any?>> {
   val output = mutableListOf<Map<String, Any?>>()
   for (result in results) {
     for (popup in result.popups) {
@@ -185,7 +191,10 @@ internal suspend fun serializePopups(results: List<IdentifyLayerResult>): List<M
           element.media.forEach { media.add(serializePopupMedia(it)) }
         }
       }
-      output.add(mapOf("title" to popup.title, "fields" to fields, "media" to media))
+      // `ref` is the native popup by reference, for components that show it.
+      output.add(
+        mapOf("title" to popup.title, "fields" to fields, "media" to media, "ref" to PopupRef(appContext, popup))
+      )
     }
   }
   return output

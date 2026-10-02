@@ -221,6 +221,27 @@ export declare class GraphicsOverlayRef extends SharedObject {
 }
 
 /**
+ * An identified feature by reference: `ref` on each feature in a view's `identify` results. For
+ * components that work on the feature itself (expo-arcgis-toolkit's `<FeatureFormView>`).
+ */
+export declare class FeatureRef extends SharedObject {
+  /**
+   * The feature layer the feature belongs to, as a new handle to it — for `applyEdits()` or
+   * `getServiceGeodatabase()` after editing the feature. `null` when it isn't a feature layer's.
+   */
+  getLayer(): Promise<FeatureLayerRef | null>;
+}
+
+/**
+ * An identified popup by reference: `ref` on each result of a view's `identifyPopups`. For
+ * components that show it (expo-arcgis-toolkit's `<PopupView>`).
+ */
+export declare class PopupRef extends SharedObject {
+  /** The popup's title. */
+  readonly title: string;
+}
+
+/**
  * A `<MapView>` or `<SceneView>`, for packages built on expo-arcgis whose own views bind to it
  * (expo-arcgis-toolkit's panels). Each view makes one; get it with `useGeoViewRef`, or from the
  * view's ref (`geoView`).

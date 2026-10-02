@@ -142,11 +142,14 @@ func sendableValue(_ value: Any) -> (any Sendable)? {
 
 // MARK: - Identify
 
-/// Serializes one layer's identify hits — its name and the identified features.
+/// Serializes one layer's identify hits — its name and the identified features. Each feature also
+/// carries `ref`, the native feature by reference.
 func serializeIdentifyResult(_ result: IdentifyLayerResult) -> [String: Any] {
   [
     "layerName": result.layerContent.name,
-    "features": result.geoElements.compactMap { $0 as? Feature }.map(serializeFeature),
+    "features": result.geoElements.compactMap { $0 as? Feature }.map { feature in
+      serializeFeature(feature).merging(["ref": FeatureRef(feature: feature)]) { _, ref in ref }
+    },
     // ArcGIS 300.1 made vector tiled layers identifiable. Their hits are `VectorTileFeature`s, not
     // `Feature`s — no object id, no service schema — so they get their own list rather than being
     // squeezed into `features`, which would change what existing callers read.
@@ -196,7 +199,10 @@ func serializePopups(_ results: [IdentifyLayerResult]) async -> [[String: Any]] 
           media.append(contentsOf: mediaElement.media.map(serializePopupMedia))
         }
       }
-      output.append(["title": popup.title, "fields": fields, "media": media])
+      // `ref` is the native popup by reference, for components that show it.
+      output.append([
+        "title": popup.title, "fields": fields, "media": media, "ref": PopupRef(popup: popup),
+      ])
     }
   }
   return output

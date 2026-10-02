@@ -13,7 +13,15 @@ npx expo install expo-arcgis expo-arcgis-toolkit
 ```
 
 It builds on expo-arcgis: set that up first (its config plugin, API key and requirements). Then
-rebuild the native app (`npx expo prebuild --clean`).
+add this package's config plugin after it and rebuild the native app (`npx expo prebuild --clean`):
+
+```json
+{ "expo": { "plugins": ["expo-arcgis", "expo-arcgis-toolkit"] } }
+```
+
+The plugin adds the iOS camera and microphone usage descriptions that the feature form needs for
+attachments and barcodes. To word them yourself, pass `{ "cameraUsageDescription": "…",
+"microphoneUsageDescription": "…" }`; `false` leaves one out.
 
 ## Components
 
@@ -35,6 +43,8 @@ their own, which you lay out:
 | `Bookmarks` | panel for a map or scene view | ✓ | — |
 | `BuildingExplorer` | panel for a local scene view | ✓ | — |
 | `Legend` | panel for a map or scene view | — | ✓ |
+| `FeatureFormView` | panel (a feature from `identify`) | ✓ | ✓ |
+| `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
 

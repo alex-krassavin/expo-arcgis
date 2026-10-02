@@ -23,6 +23,12 @@ export {
   type BuildingExplorerSelection,
 } from './BuildingExplorer';
 export { Legend, type LegendProps, type LegendTextStyle } from './Legend';
+export {
+  FeatureFormView,
+  type FeatureFormViewProps,
+  type FeatureFormEditingEvent,
+} from './FeatureFormView';
+export { PopupView, type PopupViewProps } from './PopupView';
 export { Search, type SearchProps, type SearchSource } from './Search';
 export { UtilityNetworkTrace, type UtilityNetworkTraceProps } from './UtilityNetworkTrace';
 export type { AccessoryAlignment } from './types';

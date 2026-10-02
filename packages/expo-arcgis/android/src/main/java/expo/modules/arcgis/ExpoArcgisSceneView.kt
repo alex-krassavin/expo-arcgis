@@ -190,7 +190,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
     val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
     scope.launch {
       proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults)
-        .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it) }) }
+        .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it, appContext) }) }
         .onFailure { promise.reject("IDENTIFY_ERROR", it.message ?: "Identify failed", it) }
     }
   }
@@ -204,7 +204,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
     scope.launch {
       try {
         val results = proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults).getOrThrow()
-        promise.resolve(serializePopups(results))
+        promise.resolve(serializePopups(results, appContext))
       } catch (e: Exception) {
         promise.reject("IDENTIFY_ERROR", e.message ?: "Identify failed", e)
       }
