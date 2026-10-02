@@ -1,8 +1,7 @@
 import { requireNativeView } from 'expo';
 import {
   useGeoViewRef,
-  type MapViewHandle,
-  type SceneViewHandle,
+  type GeoViewHandle,
   type Viewpoint,
 } from 'expo-arcgis';
 import type { RefObject } from 'react';
@@ -21,10 +20,10 @@ export type BookmarksProps = ViewProps & {
   /** The bookmarks to list. @default the bookmarks of the view's map or scene */
   bookmarks?: Bookmark[];
   /**
-   * The view the bookmarks belong to, which moves to the one picked: a `<MapView>` or `<SceneView>`
-   * ref. @default the view the bookmarks are placed in
+   * The view the bookmarks belong to, which moves to the one picked: a `<MapView>`, `<SceneView>` or
+   * `<LocalSceneView>` ref. @default the view the bookmarks are placed in
    */
-  geoView?: RefObject<MapViewHandle | SceneViewHandle | null>;
+  geoView?: RefObject<GeoViewHandle | null>;
   /** Called with the bookmark picked. */
   onSelectionChange?: (bookmark: Bookmark) => void;
   /** Called with `false` when the bookmarks ask to be hidden: after a pick, or on Done. */

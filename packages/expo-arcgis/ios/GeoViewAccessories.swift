@@ -32,6 +32,9 @@ public final class GeoViewState: ObservableObject {
   /// Operations on the scene view (camera animations, identify…). Nil for a `<MapView>`, and until
   /// the view appears.
   public internal(set) var sceneViewProxy: SceneViewProxy?
+  /// Operations on a local scene view (camera animations, identify…). Nil for any other view, and
+  /// until the view appears.
+  public internal(set) var localSceneViewProxy: LocalSceneViewProxy?
   /// A `<MapView>`'s location display, which its `locationDisplay` prop configures. Nil for a
   /// `<SceneView>`.
   public internal(set) var locationDisplay: LocationDisplay?

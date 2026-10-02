@@ -1008,6 +1008,9 @@ export const geoprocessor: {
 };
 
 // @public
+export type GeoViewHandle = MapViewHandle | SceneViewHandle | LocalSceneViewHandle;
+
+// @public
 export type GeoViewHost = GraphicsOverlayHost & GeometryEditorHost & AnalysisOverlayHost & ImageOverlayHost & AccessoryHost & {
     geoView: GeoViewRef;
 };
@@ -1217,6 +1220,33 @@ export type LineOfSightProps = {
 // @public
 export class LineOfSightRef extends AnalysisRef<LineOfSightEvents> {
 }
+
+// @public
+export const LocalSceneView: ForwardRefExoticComponent<LocalSceneViewProps & {
+children?: ReactNode | undefined;
+} & RefAttributes<LocalSceneViewHandle>>;
+
+// @public
+export type LocalSceneViewHandle = {
+    readonly geoView: GeoViewRef;
+    retryLoad(): Promise<void>;
+    getCamera(): Promise<Camera | null>;
+};
+
+// @public
+export type LocalSceneViewProps = {
+    style?: StyleProp<ViewStyle>;
+    camera?: Camera;
+    onSceneLoaded?: (event: {
+        nativeEvent: MapLoadedEventPayload;
+    }) => void;
+    onSceneLoadError?: (event: {
+        nativeEvent: MapLoadErrorEventPayload;
+    }) => void;
+    onTap?: (event: {
+        nativeEvent: TapEventPayload;
+    }) => void;
+};
 
 // @public
 export type LocationDisplay = {
@@ -1953,6 +1983,7 @@ export type SceneProps = {
     camera?: Camera;
     surface?: Surface;
     portalItem?: PortalItem;
+    viewingMode?: 'global' | 'local';
     mobileScenePackagePath?: string;
     bookmarks?: {
         name: string;
@@ -2373,7 +2404,7 @@ export function useGeoModel(): GeoModelRef;
 export function useGeoView(): GeoViewHost;
 
 // @public
-export function useGeoViewRef(geoView?: RefObject<MapViewHandle | SceneViewHandle | null>): GeoViewRef | null;
+export function useGeoViewRef(geoView?: RefObject<GeoViewHandle | null>): GeoViewRef | null;
 
 // @public (undocumented)
 export function useGraphicsOverlay(): GraphicsOverlayRef;

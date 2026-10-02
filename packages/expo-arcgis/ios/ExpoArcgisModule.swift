@@ -105,7 +105,9 @@ public class ExpoArcgisModule: Module {
     // Declarative 3D scene model — a SharedObject the JS <Scene> constructs and reconciles.
     Class(SceneRef.self) {
       Constructor { (props: [String: Any]?) -> SceneRef in
-        let ref = SceneRef(portalItem: props?["portalItem"] as? [String: Any])
+        let ref = SceneRef(
+          portalItem: props?["portalItem"] as? [String: Any],
+          viewingMode: props?["viewingMode"] as? String)
         if let props {
           ref.applyProps(props)
         }
@@ -575,6 +577,36 @@ public class ExpoArcgisModule: Module {
 
       AsyncFunction("identifyPopups") { (view: ExpoArcgisSceneView, screenPoint: [String: Any], options: [String: Any]?) in
         try await view.identifyPopups(screenPoint, options)
+      }
+    }
+
+    // Local 3D scene host (the SDK's LocalSceneView) — for a scene whose viewing mode is local.
+    View(ExpoArcgisLocalSceneView.self) {
+      ViewName("ExpoArcgisLocalSceneView")
+      Events("onSceneLoaded", "onSceneLoadError", "onTap")
+
+      Prop("scene") { (view: ExpoArcgisLocalSceneView, ref: SceneRef?) in
+        view.setScene(ref)
+      }
+
+      Prop("camera") { (view: ExpoArcgisLocalSceneView, camera: [String: Any]?) in
+        view.setCamera(camera)
+      }
+
+      Prop("accessories") { (view: ExpoArcgisLocalSceneView, refs: [SharedObject]) in
+        view.setAccessories(refs)
+      }
+
+      Prop("geoView") { (view: ExpoArcgisLocalSceneView, ref: GeoViewRef?) in
+        view.setGeoViewRef(ref)
+      }
+
+      AsyncFunction("retryLoad") { (view: ExpoArcgisLocalSceneView) in
+        try await view.retryLoad()
+      }
+
+      AsyncFunction("getCamera") { (view: ExpoArcgisLocalSceneView) in
+        view.getCamera()
       }
     }
   }

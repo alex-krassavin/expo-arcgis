@@ -2,8 +2,7 @@ import { requireNativeView } from 'expo';
 import {
   useGeoViewRef,
   type GraphicsOverlayRef,
-  type MapViewHandle,
-  type SceneViewHandle,
+  type GeoViewHandle,
 } from 'expo-arcgis';
 import { useEffect, useState, type RefObject } from 'react';
 import { Platform, type NativeSyntheticEvent, type ViewProps } from 'react-native';
@@ -43,10 +42,11 @@ export type SearchSource =
 
 export type SearchProps = ViewProps & {
   /**
-   * The view the search is for, which moves to the results: a `<MapView>` or `<SceneView>` ref.
+   * The view the search is for, which moves to the results: a `<MapView>`, `<SceneView>` or
+   * `<LocalSceneView>` ref.
    * @default the view the search is placed in
    */
-  geoView?: RefObject<MapViewHandle | SceneViewHandle | null>;
+  geoView?: RefObject<GeoViewHandle | null>;
   /** Where to search. @default the Toolkit's: the world geocoder */
   sources?: SearchSource[];
   /**

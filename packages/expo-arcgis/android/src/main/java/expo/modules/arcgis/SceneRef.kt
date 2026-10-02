@@ -7,6 +7,7 @@ import com.arcgismaps.mapping.ArcGISTiledElevationSource
 import com.arcgismaps.mapping.Bookmark
 import com.arcgismaps.mapping.Basemap
 import com.arcgismaps.mapping.BasemapStyle
+import com.arcgismaps.mapping.view.SceneViewingMode
 import com.arcgismaps.mapping.MobileScenePackage
 import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Surface
@@ -21,8 +22,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /** SharedObject wrapping a native [ArcGISScene] (3D). Mirrors [MapRef]. */
-class SceneRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
-  var scene: ArcGISScene = buildScene(portalItem)
+class SceneRef(
+  appContext: AppContext,
+  portalItem: Map<String, Any?>? = null,
+  viewingMode: String? = null,
+) : SharedObject(appContext) {
+  var scene: ArcGISScene = buildScene(portalItem, viewingMode)
     private set
 
   /** Called when [scene] is replaced asynchronously (e.g. after a mobile scene package loads). */
@@ -139,10 +144,15 @@ private fun buildSurface(s: Map<*, *>): Surface = Surface().apply {
   (s["elevationExaggeration"] as? Number)?.toFloat()?.let { elevationExaggeration = it }
 }
 
-/** Builds the scene from a portal item (web scene) when provided, otherwise an empty scene. */
-private fun buildScene(portalItem: Map<String, Any?>?): ArcGISScene {
+/**
+ * Builds the scene from a portal item (web scene) when provided, otherwise an empty scene in the
+ * given viewing mode (`"local"` for a `<LocalSceneView>`; global by default). A web scene brings its
+ * own viewing mode.
+ */
+private fun buildScene(portalItem: Map<String, Any?>?, viewingMode: String?): ArcGISScene {
   // Same `{ itemId, portalUrl }` shape and anonymous-ArcGIS-Online default as
   // `<Map portalItem>` and `<FeatureLayer portalItem>` — see [portalItemFromDict].
-  val item = portalItemFromDict(portalItem) ?: return ArcGISScene()
+  val item = portalItemFromDict(portalItem)
+    ?: return if (viewingMode == "local") ArcGISScene(SceneViewingMode.Local) else ArcGISScene()
   return ArcGISScene(item)
 }

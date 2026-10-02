@@ -609,6 +609,35 @@ export type MapViewHandle = {
   getCenter(): Promise<{ latitude: number; longitude: number } | null>;
 };
 
+/** Props for `<LocalSceneView>`, the view for a local scene. */
+export type LocalSceneViewProps = {
+  style?: StyleProp<ViewStyle>;
+  /** Animates the view to this 3D camera whenever the value changes (runtime camera control). */
+  camera?: Camera;
+  /** Called once the scene has finished loading successfully. */
+  onSceneLoaded?: (event: { nativeEvent: MapLoadedEventPayload }) => void;
+  /** Called if the scene fails to load. */
+  onSceneLoadError?: (event: { nativeEvent: MapLoadErrorEventPayload }) => void;
+  /** Called when the user taps the scene. */
+  onTap?: (event: { nativeEvent: TapEventPayload }) => void;
+};
+
+/** Imperative handle exposed by `<LocalSceneView>` via `ref`. */
+export type LocalSceneViewHandle = {
+  /**
+   * The view for packages built on expo-arcgis whose own views bind to it: pass this ref to them as
+   * their `geoView` (expo-arcgis-toolkit's panels).
+   */
+  readonly geoView: GeoViewRef;
+  /** Retries loading the scene after a failure. Re-fires `onSceneLoaded`/`onSceneLoadError`. */
+  retryLoad(): Promise<void>;
+  /** The camera as the user has left it, or `null` before the view has reported one. */
+  getCamera(): Promise<Camera | null>;
+};
+
+/** The handle of any geo view: a `<MapView>`, `<SceneView>` or `<LocalSceneView>` ref. */
+export type GeoViewHandle = MapViewHandle | SceneViewHandle | LocalSceneViewHandle;
+
 /** Imperative handle exposed by `<SceneView>` via `ref`. */
 export type SceneViewHandle = {
   /**
@@ -2977,6 +3006,11 @@ export type SceneProps = {
   surface?: Surface;
   /** Load the scene from an ArcGIS web scene. Construction-only (set once; remount to change). */
   portalItem?: PortalItem;
+  /**
+   * The scene's viewing mode: `'local'` for a `<LocalSceneView>`, `'global'` for a `<SceneView>`.
+   * Construction-only. A web scene (`portalItem`) brings its own. @default 'global'
+   */
+  viewingMode?: 'global' | 'local';
   /** Local path to a mobile scene package (`.mspk`); its first scene is shown when loaded. */
   mobileScenePackagePath?: string;
   /**

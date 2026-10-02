@@ -19,6 +19,7 @@ import com.arcgismaps.mapping.ArcGISMap
 import com.arcgismaps.mapping.ArcGISScene
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.Camera
+import com.arcgismaps.toolkit.geoviewcompose.LocalSceneViewProxy
 import com.arcgismaps.toolkit.geoviewcompose.MapViewProxy
 import com.arcgismaps.toolkit.geoviewcompose.SceneViewProxy
 import expo.modules.kotlin.AppContext
@@ -52,6 +53,8 @@ class GeoViewState internal constructor(
   val mapViewProxy: MapViewProxy,
   /** Operations on the scene view (camera animations, identify…); null for a `<MapView>`. */
   val sceneViewProxy: SceneViewProxy? = null,
+  /** Operations on a local scene view (camera animations, identify…); null for any other view. */
+  val localSceneViewProxy: LocalSceneViewProxy? = null,
 ) {
   /** The map a `<MapView>` shows. */
   var map by mutableStateOf<ArcGISMap?>(null)
