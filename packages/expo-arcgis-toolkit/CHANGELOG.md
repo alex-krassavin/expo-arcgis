@@ -55,6 +55,17 @@
     `onDismiss`.
 - A config plugin (`"plugins": ["expo-arcgis-toolkit"]`) adds the iOS camera and microphone
   usage descriptions. The feature form needs them for attachments and barcode scanning.
+- `OfflineMapAreas`: the Toolkit's offline map areas on both platforms. It works on the nearest
+  `<Map>`'s offline-enabled web map.
+  - It downloads its preplanned areas and areas drawn on demand, keeps them on the device, and
+    opens one.
+  - Opening one hands the offline map out as a `MapRef` (`onSelectionChange`), which the app shows
+    in a `<MapView map>`, as `MapView(map: selection ?? onlineMap)` in the SDK.
+  - `ref.goOnline()` returns to the web map.
+  - iOS: the offline manager starts at app launch, which its background task requires, and the
+    SDK's background download session is handed its events on relaunch.
+  - The config plugin adds the background task identifiers and background fetch (iOS) and the
+    download permissions (Android); `offlineMapAreas: false` leaves them out.
 - `PopupView`: the Toolkit's popup view on both platforms. It shows the title, fields, media,
   attachments and related records of a popup from a view's `identifyPopups`
   (`popup={result.ref}`), with expressions evaluated.

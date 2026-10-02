@@ -6,7 +6,7 @@ import ExpoModulesCore
 /// Compass, Scalebar, OverviewMap, LocationButton and FloorFilter are accessories: shared objects
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
 /// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer,
-/// FeatureFormView, PopupView, Search and UtilityNetworkTrace are views of their own.
+/// FeatureFormView, OfflineMapAreas, PopupView, Search and UtilityNetworkTrace are views of their own.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -95,6 +95,16 @@ public class ExpoArcgisToolkitModule: Module {
       Prop("isNavigationEnabled") { (view: FeatureFormPanelView, value: Bool?) in
         view.setNavigationEnabled(value)
       }
+    }
+
+    View(OfflineMapAreasPanelView.self) {
+      Events("onSelectionChange")
+      // The nearest <Map>'s native object: the web map to take offline.
+      Prop("geoModel") { (view: OfflineMapAreasPanelView, ref: SharedObject?) in view.setGeoModel(ref) }
+      AsyncFunction("getSelectedMap") { (view: OfflineMapAreasPanelView) in view.getSelectedMap() }
+        .runOnQueue(.main)
+      AsyncFunction("goOnline") { (view: OfflineMapAreasPanelView) in view.goOnline() }
+        .runOnQueue(.main)
     }
 
     View(PopupPanelView.self) {

@@ -2,6 +2,7 @@ import { requireNativeView } from 'expo';
 import type { SharedObject } from 'expo-modules-core';
 import {
   forwardRef,
+  useContext,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -20,7 +21,7 @@ import type {
   GeometryEditorRef,
   ImageOverlayRef,
 } from './ExpoArcgisModule';
-import { GeoViewContext, useGeoModelFor, type GeoViewHost } from './contexts';
+import { GeoModelContext, GeoViewContext, type GeoViewHost } from './contexts';
 import { sharedObjectId } from './utils/sharedObjectId';
 import { unhandledLoadError } from './utils/unhandledLoadError';
 
@@ -52,8 +53,13 @@ const NativeMapView = requireNativeView<NativeMapViewProps>('ExpoArcgis');
  * children, such as buttons, render above the map where their layout puts them.
  */
 export const MapView = forwardRef<MapViewHandle, PropsWithChildren<MapViewProps>>(
-  function MapView({ children, ...props }, handle) {
-    const map = useGeoModelFor('MapView') as MapRef;
+  function MapView({ children, map: shownMap, ...props }, handle) {
+    // The map handed in (an offline map area…), else the nearest <Map>'s.
+    const nearestMap = useContext(GeoModelContext) as MapRef | undefined;
+    const map = shownMap ?? nearestMap;
+    if (!map) {
+      throw new Error('[expo-arcgis] <MapView> must be inside a <Map>, or be given a `map`.');
+    }
     // The native view exposes an async `identify` function callable through its ref.
     const nativeRef = useRef<any>(null);
 

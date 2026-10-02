@@ -29,6 +29,13 @@ public final class MapRef: SharedObject, ObservableObject {
     super.init()
   }
 
+  /// A handle to a map that already exists, for packages built on expo-arcgis: an offline map area
+  /// that expo-arcgis-toolkit's `OfflineMapAreas` opens, which a `<MapView map>` then shows.
+  public init(map: Map) {
+    self.map = map
+    super.init()
+  }
+
   /// Generic setter dispatched by key — applies only the changed props sent from JS.
   func applyProps(_ changed: [String: Any]) {
     // Collect basemap-related prop changes before iterating so we can rebuild once.

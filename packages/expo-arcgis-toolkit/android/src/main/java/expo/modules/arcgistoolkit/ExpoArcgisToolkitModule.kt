@@ -14,8 +14,8 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  *
  * Compass, Scalebar and FloorFilter are accessories: shared objects the JS components hand to the
  * nearest `<MapView>` / `<SceneView>`, which composes them over itself (expo-arcgis's
- * `GeoViewAccessory`). BasemapGallery, FeatureFormView, Legend, PopupView and UtilityNetworkTrace are
- * views of their own.
+ * `GeoViewAccessory`). BasemapGallery, FeatureFormView, Legend, OfflineMapAreas, PopupView and
+ * UtilityNetworkTrace are views of their own.
  */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -60,6 +60,17 @@ class ExpoArcgisToolkitModule : Module() {
       }
       Prop("isNavigationEnabled") { view: FeatureFormPanelView, value: Boolean? -> view.setNavigationEnabled(value) }
       OnViewDestroys { view: FeatureFormPanelView -> view.destroy() }
+    }
+
+    View(OfflineMapAreasPanelView::class) {
+      Events("onSelectionChange")
+      // The nearest <Map>'s native object: the web map to take offline.
+      Prop("geoModel") { view: OfflineMapAreasPanelView, ref: SharedObject? -> view.setGeoModel(ref) }
+      AsyncFunction("getSelectedMap") { view: OfflineMapAreasPanelView -> view.getSelectedMap() }
+        .runOnQueue(Queues.MAIN)
+      AsyncFunction("goOnline") { view: OfflineMapAreasPanelView -> view.goOnline() }
+        .runOnQueue(Queues.MAIN)
+      OnViewDestroys { view: OfflineMapAreasPanelView -> view.destroy() }
     }
 
     View(PopupPanelView::class) {

@@ -27,8 +27,15 @@ import kotlinx.coroutines.launch
  * SharedObject wrapping a native [ArcGISMap]. Constructed and reconciled declaratively from the
  * JS `<Map>` component; the `<MapView>` reads [map] by reference to render it.
  */
-class MapRef(appContext: AppContext, portalItem: Map<String, Any?>? = null) : SharedObject(appContext) {
-  private val mapState = MutableStateFlow(buildMap(portalItem))
+class MapRef(appContext: AppContext, map: ArcGISMap) : SharedObject(appContext) {
+  /** Builds the map from a portal item (web map) when provided, otherwise an empty map. */
+  constructor(appContext: AppContext, portalItem: Map<String, Any?>? = null) :
+    this(appContext, buildMap(portalItem))
+
+  // The primary constructor takes a map that already exists, for packages built on expo-arcgis: an
+  // offline map area that expo-arcgis-toolkit's `OfflineMapAreas` opens, which a `<MapView map>`
+  // then shows.
+  private val mapState = MutableStateFlow(map)
 
   /** The map. Replaced asynchronously when a mobile map package loads; [mapFlow] follows that. */
   val map: ArcGISMap get() = mapState.value

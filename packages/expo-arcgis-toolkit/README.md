@@ -19,9 +19,15 @@ add this package's config plugin after it and rebuild the native app (`npx expo 
 { "expo": { "plugins": ["expo-arcgis", "expo-arcgis-toolkit"] } }
 ```
 
-The plugin adds the iOS camera and microphone usage descriptions that the feature form needs for
-attachments and barcodes. To word them yourself, pass `{ "cameraUsageDescription": "…",
-"microphoneUsageDescription": "…" }`; `false` leaves one out.
+The plugin adds what the components need from the app:
+- the iOS camera and microphone usage descriptions, for the feature form's attachments and barcodes;
+- for `OfflineMapAreas`, the iOS background task identifiers and background fetch, and the Android
+  download permissions. On Android 13+, request the notification permission at runtime to see
+  download progress.
+
+To word the descriptions yourself, pass `{ "cameraUsageDescription": "…",
+"microphoneUsageDescription": "…" }`; `false` leaves one out. `"offlineMapAreas": false` leaves out
+what `OfflineMapAreas` needs.
 
 ## Components
 
@@ -44,6 +50,7 @@ their own, which you lay out:
 | `BuildingExplorer` | panel for a local scene view | ✓ | — |
 | `Legend` | panel for a map or scene view | — | ✓ |
 | `FeatureFormView` | panel (a feature from `identify`) | ✓ | ✓ |
+| `OfflineMapAreas` | panel for a web map (`<Map portalItem>`) | ✓ | ✓ |
 | `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
