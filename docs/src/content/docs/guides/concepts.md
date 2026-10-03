@@ -1,6 +1,7 @@
 ---
 title: Concepts
 description: How the declarative, SDK-faithful API is organized.
+seoTitle: "Concepts: ArcGIS object model as components · expo-arcgis"
 ---
 
 `expo-arcgis` mirrors the ArcGIS Maps SDK object model as React components — one component per SDK

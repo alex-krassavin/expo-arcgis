@@ -197,6 +197,7 @@ const tag = (t) =>
     </div>
     <div class="ea-contact">
       <span class="ea-built">Built on the native ArcGIS Maps SDK</span>
+      <span class="ea-built">Docs for AI: <a class="ea-ai-link" href={`${base}/llms.txt`}>llms.txt</a></span>
     </div>
   </section>
 </div>
@@ -291,6 +292,8 @@ const tag = (t) =>
   .ea-footer-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .ea-contact { max-width: 1180px; margin: 0 auto; padding: 26px 32px 56px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; font-size: 14.5px; color: #9DB0A8; }
   .ea-built { font-family: var(--sl-font-mono); font-size: 12px; letter-spacing: 0.04em; color: #6B7D75; }
+  .ea-ai-link { color: #9DB0A8; text-decoration: underline; text-decoration-color: rgba(157, 176, 168, 0.4); text-underline-offset: 3px; }
+  .ea-ai-link:hover { color: #5FE3D5; text-decoration-color: currentColor; }
 
   @media (max-width: 50rem) {
     .ea-band-inner { grid-template-columns: 1fr; gap: 32px; }

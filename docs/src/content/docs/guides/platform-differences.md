@@ -1,6 +1,7 @@
 ---
 title: Platform differences
 description: What the ArcGIS Maps SDKs and Toolkits have on one platform only, and how expo-arcgis and expo-arcgis-toolkit handle it.
+seoTitle: "iOS and Android differences · expo-arcgis"
 ---
 
 The API is the same on iOS and Android. Where the native SDKs or Toolkits differ, it follows each
