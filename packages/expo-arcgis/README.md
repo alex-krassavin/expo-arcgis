@@ -138,7 +138,9 @@ const [hit] = await geocoder.geocode('Los Angeles');
 - **Graphics & analysis** — `GraphicsOverlay`, `Graphic`, `AnalysisOverlay`, `Viewshed`, `LineOfSight`,
   `DistanceMeasurement`, `GeometryEditor`, `UtilityNetwork`
 - **Namespaces** — `geometryEngine`, `coordinateFormatter`, `geocoder`, `router`, `geoprocessor`, `offline`
-- **Auth** — `setTokenCredential`, `signInWithOAuth`, `setAppCredential`, `signOut`
+- **Auth** — `setTokenCredential`, `signInWithOAuth`, `setAppCredential`, `signOut`,
+  `enablePersistentCredentialStore` (sign-ins kept across launches); prompts for them come from
+  expo-arcgis-toolkit's `<Authenticator>`
 - **Hooks** — `useMapSettings`, `useGeoModel`, `useGeoView`, `useGraphicsOverlay`
 
 You can also set the key imperatively: `import ExpoArcgis from 'expo-arcgis'; ExpoArcgis.setApiKey('KEY')`.

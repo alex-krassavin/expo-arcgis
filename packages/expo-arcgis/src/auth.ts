@@ -30,12 +30,20 @@ export function setTokenCredential(
  *
  * - `true`  → trust all server-trust challenges (bypass certificate validation).
  * - `false` → remove the override and restore normal TLS validation (the default).
+ *
+ * On iOS, App Transport Security rejects an untrusted host before this handler sees it. Allow the
+ * host in Info.plist as well: `NSAppTransportSecurity` › `NSExceptionDomains` › the host ›
+ * `NSExceptionAllowsInsecureHTTPLoads`.
  */
 export function setAllowUntrustedHosts(allow: boolean): void {
   Module.setAllowUntrustedHosts(allow);
 }
 
-/** Clears the stored login and all cached credentials (token + OAuth). */
+/**
+ * Revokes the OAuth tokens, then clears the stored login and all cached credentials: the ArcGIS
+ * ones (token, OAuth) and the network ones (logins to IWA servers, client certificates, trusted
+ * hosts).
+ */
 export function signOut(): Promise<void> {
   return Module.signOut();
 }
@@ -96,11 +104,41 @@ export async function signInWithOAuth(
   }
 }
 
+/** When the iOS keychain lets the app read the credentials it keeps (the SDK's `KeychainAccess`). */
+export type KeychainAccess =
+  | 'afterFirstUnlock'
+  | 'afterFirstUnlockThisDeviceOnly'
+  | 'whenUnlocked'
+  | 'whenUnlockedThisDeviceOnly'
+  | 'whenPasscodeSetThisDeviceOnly';
+
+/** Options of `enablePersistentCredentialStore`: the SDK's `makePersistent` parameters. */
+export type PersistentCredentialStoreOptions = {
+  /**
+   * When the keychain lets the app read the credentials.
+   * @default 'afterFirstUnlock'
+   * @platform ios
+   */
+  access?: KeychainAccess;
+  /**
+   * Whether the keychain syncs the credentials with iCloud.
+   * @default false
+   * @platform ios
+   */
+  synchronizesWithiCloud?: boolean;
+};
+
 /**
- * Swaps the in-memory credential store for a **persistent** one backed by the platform secure
- * storage (iOS Keychain / Android EncryptedSharedPreferences). After this call any credential
- * added to the store — via `setTokenCredential`, `signInWithOAuth`, `setAppCredential`, or the
- * automatic challenge-handler — will survive app restarts.
+ * Swaps the in-memory credential stores for **persistent** ones, kept in the platform's secure
+ * storage (the iOS keychain, Android's encrypted storage). There are two:
+ *
+ * - the ArcGIS credential store: tokens and OAuth sign-ins;
+ * - the network credential store: logins to IWA servers, client certificates and trusted hosts,
+ *   which the toolkit's `<Authenticator>` adds.
+ *
+ * After this call, any credential added to them survives app restarts: via `setTokenCredential`,
+ * `signInWithOAuth`, `setAppCredential`, the automatic challenge handler, or an `<Authenticator>`.
+ * The Swift Toolkit's `setupPersistentCredentialStorage` does the same.
  *
  * Call once on app start, before any secured resource is loaded. Awaiting it ensures the swap
  * is complete before the SDK attempts to make any authenticated request.
@@ -108,15 +146,17 @@ export async function signInWithOAuth(
  * Registered on the geometry module (not the main module) to stay within the Android JVM 64 KB
  * method-size limit.
  */
-export function enablePersistentCredentialStore(): Promise<void> {
-  return GeometryModule.enablePersistentCredentialStore();
+export function enablePersistentCredentialStore(
+  options?: PersistentCredentialStoreOptions
+): Promise<void> {
+  return GeometryModule.enablePersistentCredentialStore(options ?? null);
 }
 
 /**
- * Removes all credentials from the current store (persistent or in-memory) and resets it to a
- * fresh in-memory store. Combines the effect of `signOut` (clears runtime credentials) and
- * additionally discards any credentials persisted on the device. Call this when the user
- * explicitly logs out and you want to ensure no credentials are left on disk.
+ * Removes all credentials from both credential stores, persistent or in-memory: the ArcGIS ones
+ * (token, OAuth) and the network ones (logins to IWA servers, client certificates, trusted hosts).
+ * Persistent stores stay persistent, but empty. Call it when the user explicitly logs out and no
+ * credential may be left on the device. The Swift Toolkit's `clearCredentialStores` does the same.
  *
  * Note: this does **not** revoke OAuth tokens on the server — it only removes them locally.
  *

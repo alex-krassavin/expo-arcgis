@@ -50,6 +50,8 @@ export {
   clearCredentialStore,
   setServiceCredential,
   type OpenAuthSession,
+  type KeychainAccess,
+  type PersistentCredentialStoreOptions,
 } from './auth';
 export { Map } from './Map';
 export { Scene } from './Scene';

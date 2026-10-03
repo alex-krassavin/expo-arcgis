@@ -183,14 +183,24 @@ public class ExpoArcgisGeometryModule: Module {
       Function("applyProps") { (ref: GeoPackageLayerRef, changed: [String: Any]) in ref.applyProps(changed) }
     }
 
-    // Auth — persistent credential store (survives app restarts via iOS Keychain).
+    // Auth — persistent credential stores (survive app restarts via iOS Keychain): the ArcGIS one
+    // and the network one, as the Swift Toolkit's `setupPersistentCredentialStorage` makes them.
     // Registered here (not in the main module) because the main module is at the JVM 64 KB limit.
-    AsyncFunction("enablePersistentCredentialStore") { () -> Void in
-      let store = try await ArcGISCredentialStore.makePersistent(access: .afterFirstUnlock)
-      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = store
+    AsyncFunction("enablePersistentCredentialStore") { (options: [String: Any]?) -> Void in
+      let access = keychainAccess(options?["access"] as? String)
+      let synchronizesWithiCloud = options?["synchronizesWithiCloud"] as? Bool ?? false
+      let arcGISStore = try await ArcGISCredentialStore.makePersistent(
+        access: access, synchronizesWithiCloud: synchronizesWithiCloud
+      )
+      let networkStore = try await NetworkCredentialStore.makePersistent(
+        access: access, synchronizesWithiCloud: synchronizesWithiCloud
+      )
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = arcGISStore
+      await ArcGISEnvironment.authenticationManager.setNetworkCredentialStore(networkStore)
     }
     AsyncFunction("clearCredentialStore") { () -> Void in
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
+      await ArcGISEnvironment.authenticationManager.networkCredentialStore.removeAll()
     }
 
     // Portal — search a Portal and fetch basemaps, exposed as the JS `portal` namespace.

@@ -2,6 +2,7 @@ package expo.modules.arcgis
 
 import com.arcgismaps.ArcGISEnvironment
 import com.arcgismaps.httpcore.authentication.ArcGISCredentialStore
+import com.arcgismaps.httpcore.authentication.NetworkCredentialStore
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -177,14 +178,18 @@ class ExpoArcgisGeometryModule : Module() {
       Function("applyProps") { ref: GeoPackageLayerRef, changed: Map<String, Any?> -> ref.applyProps(changed) }
     }
 
-    // Auth — persistent credential store (survives app restarts via Android encrypted storage).
+    // Auth — persistent credential stores (survive app restarts via Android encrypted storage): the
+    // ArcGIS one and the network one. The options are the iOS keychain's.
     // Registered here (not in the main module) because the main module is at the JVM 64 KB limit.
-    AsyncFunction("enablePersistentCredentialStore") Coroutine { ->
-      val store = ArcGISCredentialStore.createWithPersistence().getOrThrow()
-      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = store
+    AsyncFunction("enablePersistentCredentialStore") Coroutine { _: Map<String, Any?>? ->
+      val arcGISStore = ArcGISCredentialStore.createWithPersistence().getOrThrow()
+      val networkStore = NetworkCredentialStore.createWithPersistence().getOrThrow()
+      ArcGISEnvironment.authenticationManager.arcGISCredentialStore = arcGISStore
+      ArcGISEnvironment.authenticationManager.networkCredentialStore = networkStore
     }
     AsyncFunction("clearCredentialStore") Coroutine { ->
       ArcGISEnvironment.authenticationManager.arcGISCredentialStore.removeAll()
+      ArcGISEnvironment.authenticationManager.networkCredentialStore.removeAll().getOrThrow()
     }
 
     // Portal — search a Portal and fetch basemaps, exposed as the JS `portal` namespace.

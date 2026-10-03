@@ -1,6 +1,7 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
 import type { GroupLayerRef, JobRef, LayerRef } from './ExpoArcgisModule';
+import type { PersistentCredentialStoreOptions } from './auth';
 import type {
   AnnotationLayerProps,
   BasemapInfo,
@@ -185,7 +186,7 @@ declare class ExpoArcgisGeometryModule extends NativeModule {
 
   // Auth — persistent credential store.  Registered here (not on the main module) to keep both
   // native `definition()` methods under the Android JVM 64 KB limit.
-  enablePersistentCredentialStore(): Promise<void>;
+  enablePersistentCredentialStore(options: PersistentCredentialStoreOptions | null): Promise<void>;
   clearCredentialStore(): Promise<void>;
 
   // Extended operational layers — registered here (not on the main module) to keep both native
