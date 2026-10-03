@@ -13,6 +13,7 @@ import com.arcgismaps.mapping.PortalItem
 import com.arcgismaps.mapping.Surface
 import com.arcgismaps.mapping.Viewpoint
 import com.arcgismaps.mapping.view.Camera
+import com.arcgismaps.mapping.NavigationConstraint
 import com.arcgismaps.portal.Portal
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.sharedobjects.SharedObject
@@ -142,6 +143,11 @@ private fun buildSurface(s: Map<*, *>): Surface = Surface().apply {
     }
   }
   (s["elevationExaggeration"] as? Number)?.toFloat()?.let { elevationExaggeration = it }
+  (s["opacity"] as? Number)?.toFloat()?.let { opacity = it }
+  when (s["navigationConstraint"]) {
+    "unconstrained" -> navigationConstraint = NavigationConstraint.None
+    "stayAbove" -> navigationConstraint = NavigationConstraint.StayAbove
+  }
 }
 
 /**

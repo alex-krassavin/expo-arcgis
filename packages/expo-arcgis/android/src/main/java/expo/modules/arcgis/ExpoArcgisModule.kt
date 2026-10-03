@@ -527,6 +527,11 @@ private fun ModuleDefinitionBuilder.sceneViewDefinition() = View(ExpoArcgisScene
     view.setGeoViewRef(ref)
   }
 
+  // A package's composable that shows the scene instead (expo-arcgis-toolkit's AR views).
+  Prop("container") { view: ExpoArcgisSceneView, ref: SharedObject? ->
+    view.setContainer(ref)
+  }
+
   reactChildrenAboveMap { it.reactChildren }
 
   Prop("scene") { view: ExpoArcgisSceneView, ref: SceneRef? ->

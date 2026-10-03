@@ -49,7 +49,7 @@ const NativeSceneView = requireNativeView<NativeSceneViewProps>('ExpoArcgis', 'E
  * React children, such as buttons, render above the scene where their layout puts them.
  */
 export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneViewProps>>(
-  function SceneView({ children, orbitGraphic, ...props }, handle) {
+  function SceneView({ children, orbitGraphic, container, ...props }, handle) {
     const scene = useGeoModelFor('SceneView') as SceneRef;
     // The native view exposes an async `retryLoad` function callable through its ref.
     const nativeRef = useRef<any>(null);
@@ -98,6 +98,7 @@ export const SceneView = forwardRef<SceneViewHandle, PropsWithChildren<SceneView
         accessories={accessories.map(sharedObjectId)}
         geoView={sharedObjectId(geoView)}
         orbitGraphic={sharedObjectId(orbitGraphic)}
+        container={sharedObjectId(container ?? null)}
         {...props}
         onSceneLoadError={props.onSceneLoadError ?? warnLoadError}
       >

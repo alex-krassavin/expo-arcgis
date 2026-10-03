@@ -20,6 +20,10 @@ final class SceneViewModel: ObservableObject {
   @Published var timeExtent: ArcGIS.TimeExtent?
   /// The view proxy captured from `SceneViewReader`, used for `identify` (not published).
   var proxy: SceneViewProxy?
+  /// The view of another package that shows the scene (expo-arcgis-toolkit's AR views), if any.
+  @Published private(set) var container: SceneViewContainer?
+  /// Whether the view state has the proxy of the container's SceneView yet.
+  private var containerProxyShared = false
   /// The UI other packages draw over the scene (expo-arcgis-toolkit's compass…).
   @Published private(set) var accessories: [GeoViewAccessory] = []
   /// The view's live state for its accessories — published apart from this model, see GeoViewState.
@@ -40,6 +44,22 @@ final class SceneViewModel: ObservableObject {
 
   func setAccessories(_ accessories: [GeoViewAccessory]) {
     self.accessories = accessories
+  }
+
+  func setContainer(_ container: SceneViewContainer?) {
+    guard container !== self.container else { return }
+    self.container = container
+    containerProxyShared = false
+  }
+
+  /// Takes the proxy a container's SceneViewReader passes as it builds the SceneView: identify and
+  /// screen projections go through it. The container builds the SceneView while SwiftUI draws, so
+  /// the published view state gets the proxy afterwards.
+  func takeContainerProxy(_ proxy: SceneViewProxy) {
+    self.proxy = proxy
+    guard !containerProxyShared else { return }
+    containerProxyShared = true
+    DispatchQueue.main.async { self.viewState.sceneViewProxy = proxy }
   }
 
   func setGraphicsOverlays(_ overlays: [GraphicsOverlay]) {
@@ -74,62 +94,78 @@ struct ExpoArcgisSceneContainer: View {
 
   var body: some View {
     if let scene = model.scene {
-      SceneViewReader { proxy in
-        SceneView(
-          scene: scene,
-          timeExtent: Binding(get: { model.timeExtent }, set: { model.timeExtent = $0 }),
-          graphicsOverlays: model.graphicsOverlays,
-          analysisOverlays: model.analysisOverlays
-        )
-          // ArcGIS lighting modifiers return `SceneView`, so they precede the SwiftUI modifiers.
-          .sunLighting(model.sunLighting)
-          .atmosphereEffect(model.atmosphereEffect)
-          .sunDate(model.sunDate)
-          // `.cameraController` returns `SceneView` (keeps the chain). A nil prop falls back to a
-          // fresh `GlobeCameraController`, which is the SDK's default navigation controller.
-          .cameraController(model.cameraController ?? GlobeCameraController())
-          .grid(model.grid)
-          // A `<Callout>` among the view's React children: its content, in the SDK's callout.
-          .callout(placement: $callout.placement) { _ in
-            if let view = callout.view { CalloutContent(view: view) }
-          }
-          .onSingleTapGesture { screenPoint, scenePoint in
-            // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
-            guard let scenePoint else { return }
-            let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
-            model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
-          }
-          .onCameraChanged { camera in
-            model.currentCamera = camera
-            model.viewState.camera = camera
-          }
-          .onViewpointChanged(kind: .centerAndScale) { model.viewState.viewpoint = $0 }
-          .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
-          .onNavigatingChanged { model.viewState.isNavigating = $0 }
-          .onAttributionBarHeightChanged { model.viewState.attributionBarHeight = $0 }
-          .overlay {
-            GeoViewAccessories(
-              accessories: model.accessories, insets: EdgeInsets(), state: model.viewState)
-          }
-          .onAppear {
-            model.proxy = proxy
-            model.viewState.sceneViewProxy = proxy
-          }
-          .task(id: ObjectIdentifier(scene)) {
-            do {
-              try await scene.load()
-              model.onLoaded?()
-            } catch is CancellationError {
-              // Superseded by a newer scene; ignore.
-            } catch {
-              model.onLoadError?(error.localizedDescription)
+      if let container = model.container {
+        // A package's view shows the scene (expo-arcgis-toolkit's AR views) and sets the camera.
+        container.body { proxy in
+          model.takeContainerProxy(proxy)
+          return sceneView(scene)
+        }
+          .task(id: ObjectIdentifier(scene)) { await load(scene) }
+      } else {
+        SceneViewReader { proxy in
+          sceneView(scene)
+            .overlay {
+              GeoViewAccessories(
+                accessories: model.accessories, insets: EdgeInsets(), state: model.viewState)
             }
-          }
-          .task(id: model.cameraVersion) {
-            guard let camera = model.camera else { return }
-            _ = await proxy.setViewpointCamera(camera, duration: 0.5)
-          }
+            .onAppear {
+              model.proxy = proxy
+              model.viewState.sceneViewProxy = proxy
+            }
+            .task(id: ObjectIdentifier(scene)) { await load(scene) }
+            .task(id: model.cameraVersion) {
+              guard let camera = model.camera else { return }
+              _ = await proxy.setViewpointCamera(camera, duration: 0.5)
+            }
+        }
       }
+    }
+  }
+
+  /// The SceneView with what the view's props and events set. Its modifiers are all ArcGIS ones,
+  /// which return `SceneView`: a container's closure takes one.
+  private func sceneView(_ scene: ArcGIS.Scene) -> SceneView {
+    SceneView(
+      scene: scene,
+      timeExtent: Binding(get: { model.timeExtent }, set: { model.timeExtent = $0 }),
+      graphicsOverlays: model.graphicsOverlays,
+      analysisOverlays: model.analysisOverlays
+    )
+      .sunLighting(model.sunLighting)
+      .atmosphereEffect(model.atmosphereEffect)
+      .sunDate(model.sunDate)
+      // A nil prop falls back to a fresh `GlobeCameraController`, which is the SDK's default
+      // navigation controller.
+      .cameraController(model.cameraController ?? GlobeCameraController())
+      .grid(model.grid)
+      // A `<Callout>` among the view's React children: its content, in the SDK's callout.
+      .callout(placement: $callout.placement) { _ in
+        if let view = callout.view { CalloutContent(view: view) }
+      }
+      .onSingleTapGesture { screenPoint, scenePoint in
+        // SceneView delivers an optional `Point` (a 3D tap can miss the globe).
+        guard let scenePoint else { return }
+        let wgs84 = GeometryEngine.project(scenePoint, into: .wgs84) ?? scenePoint
+        model.onTap?(wgs84.y, wgs84.x, Double(screenPoint.x), Double(screenPoint.y))
+      }
+      .onCameraChanged { camera in
+        model.currentCamera = camera
+        model.viewState.camera = camera
+      }
+      .onViewpointChanged(kind: .centerAndScale) { model.viewState.viewpoint = $0 }
+      .onSpatialReferenceChanged { model.viewState.spatialReference = $0 }
+      .onNavigatingChanged { model.viewState.isNavigating = $0 }
+      .onAttributionBarHeightChanged { model.viewState.attributionBarHeight = $0 }
+  }
+
+  private func load(_ scene: ArcGIS.Scene) async {
+    do {
+      try await scene.load()
+      model.onLoaded?()
+    } catch is CancellationError {
+      // Superseded by a newer scene; ignore.
+    } catch {
+      model.onLoadError?(error.localizedDescription)
     }
   }
 }
@@ -305,6 +341,11 @@ class ExpoArcgisSceneView: ExpoView {
   /// Receives the accessories other packages declare as `<SceneView>` children (expo-arcgis-toolkit).
   func setAccessories(_ refs: [SharedObject]) {
     model.setAccessories(refs.compactMap { $0 as? GeoViewAccessory })
+  }
+
+  /// Receives the view of another package that shows the scene (expo-arcgis-toolkit's AR views).
+  func setContainer(_ ref: SharedObject?) {
+    model.setContainer(ref as? SceneViewContainer)
   }
 
   /// The view's `GeoViewRef`, which carries its state to the views of packages built on

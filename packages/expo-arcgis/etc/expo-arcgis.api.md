@@ -2072,6 +2072,9 @@ children?: ReactNode | undefined;
 } & RefAttributes<SceneViewHandle>>;
 
 // @public
+export type SceneViewContainer = InstanceType<SharedObject>;
+
+// @public
 export type SceneViewHandle = {
     readonly geoView: GeoViewRef;
     identify(screenPoint: {
@@ -2117,6 +2120,7 @@ export type SceneViewProps = {
     onTap?: (event: {
         nativeEvent: TapEventPayload;
     }) => void;
+    container?: SceneViewContainer | null;
 };
 
 // @public
@@ -2373,6 +2377,8 @@ export type SunLighting = 'off' | 'light' | 'lightAndShadows';
 export type Surface = {
     elevationSources?: ElevationSource[];
     elevationExaggeration?: number;
+    opacity?: number;
+    navigationConstraint?: 'stayAbove' | 'unconstrained';
 };
 
 // @public

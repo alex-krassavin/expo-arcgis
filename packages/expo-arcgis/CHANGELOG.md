@@ -59,6 +59,14 @@
 - `<GraphicsOverlay>` takes a `ref`: its `GraphicsOverlayRef`. Components can draw into it, such
   as expo-arcgis-toolkit's `<Search resultsOverlay>`. On iOS the ref's native `overlay` is public
   for packages built on expo-arcgis (it already was on Android).
+- `<SceneView container>`: a view of another package that shows the scene instead, for packages
+  built on expo-arcgis: expo-arcgis-toolkit's augmented reality views. Natively, the container is a
+  `SceneViewContainer`. On iOS it gets the `SceneView` the core builds, for the Toolkit's AR views'
+  `sceneView` closure. On Android it gets the SceneView's parameters and does identify and screen
+  projections through its own proxy. The core still loads the scene and reports the view's events.
+- `<Scene surface>` takes the SDK's `opacity` and `navigationConstraint` (`stayAbove` or
+  `unconstrained`). Augmented reality views use them: a transparent surface shows the camera feed,
+  and an unconstrained camera can go below the surface.
 - `enablePersistentCredentialStore(options?)` takes the iOS keychain's settings: `access`
   (`KeychainAccess`, `'afterFirstUnlock'` as before) and `synchronizesWithiCloud`.
 
