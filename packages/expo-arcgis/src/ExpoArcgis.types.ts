@@ -1,3 +1,4 @@
+import type { SharedObject } from 'expo-modules-core';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import type { FeatureRef, GeoViewRef, GraphicRef, JobRef, MapRef, PopupRef } from './ExpoArcgisModule';
@@ -2997,6 +2998,16 @@ export type Surface = {
   elevationSources?: ElevationSource[];
   /** Vertical exaggeration multiplier (default `1`). */
   elevationExaggeration?: number;
+  /**
+   * The surface's opacity, basemap included, from 0 to 1. Augmented reality views make it 0, so the
+   * camera feed shows through. @default 1
+   */
+  opacity?: number;
+  /**
+   * Whether the camera stays above the surface (`stayAbove`) or can go below it (`unconstrained`),
+   * as augmented reality views need. @default 'stayAbove'
+   */
+  navigationConstraint?: 'stayAbove' | 'unconstrained';
 };
 
 /** Props for the `<Scene>` model component — mirror the native ArcGISScene/Scene. */
@@ -3101,4 +3112,17 @@ export type SceneViewProps = {
   onSceneLoadError?: (event: { nativeEvent: MapLoadErrorEventPayload }) => void;
   /** Called when the user taps the scene. */
   onTap?: (event: { nativeEvent: TapEventPayload }) => void;
+  /**
+   * A view of a package built on expo-arcgis that shows the scene instead of the plain scene view:
+   * expo-arcgis-toolkit's augmented reality views pass theirs. It controls the camera, so `camera`
+   * and `cameraController` don't apply, and the view shows no accessories; on Android, no
+   * `<Callout>` either. Apps use those views rather than set it.
+   */
+  container?: SceneViewContainer | null;
 };
+
+/**
+ * A shared object of a package built on expo-arcgis that shows a `<SceneView>`'s scene in its own
+ * view, such as expo-arcgis-toolkit's augmented reality views (the native `SceneViewContainer`).
+ */
+export type SceneViewContainer = InstanceType<SharedObject>;

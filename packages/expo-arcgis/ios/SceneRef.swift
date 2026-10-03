@@ -140,5 +140,13 @@ func buildSurface(_ s: [String: Any]) -> Surface {
   if let exaggeration = (s["elevationExaggeration"] as? NSNumber)?.floatValue {
     surface.elevationExaggeration = exaggeration
   }
+  if let opacity = (s["opacity"] as? NSNumber)?.floatValue {
+    surface.opacity = opacity
+  }
+  switch s["navigationConstraint"] as? String {
+  case "unconstrained": surface.navigationConstraint = .unconstrained
+  case "stayAbove": surface.navigationConstraint = .stayAbove
+  default: break
+  }
   return surface
 }

@@ -30,6 +30,12 @@ To word the descriptions yourself, pass `{ "cameraUsageDescription": "…",
 what `OfflineMapAreas` needs. `"jobManager": true` permits the job manager's background task, which
 `jobManager` needs.
 
+`"ar": true` adds what the augmented reality views need: on iOS, the camera and location
+descriptions; on Android, the camera and location permissions and ARCore's entry. ARCore is then
+optional. `"ar": { "arcore": "required" }` makes it required, so Google Play shows the app on ARCore
+devices only. `"arcoreApiKey"` sets the Google Cloud API key for the world-scale view's `geospatial`
+tracking.
+
 `"oAuthRedirectUris": ["my-app://auth"]` declares the Kotlin Toolkit's `AuthenticationActivity` for
 these redirect URIs. On Android, `Authenticator`'s OAuth and IAP sign-ins need it: list each
 configuration's `redirectUrl`. Give them a scheme of their own, not the app's `scheme`. iOS needs
@@ -59,6 +65,9 @@ their own, which you lay out:
 | `OfflineMapAreas` | panel for a web map (`<Map portalItem>`) | ✓ | ✓ |
 | `jobManager` | app-level: keeps long jobs across launches | ✓ | — |
 | `Authenticator` | app-level: prompts for authentication challenges | ✓ | ✓ |
+| `TableTopSceneView` | augmented reality scene view: the scene on a table | ✓ | ✓ |
+| `FlyoverSceneView` | augmented reality scene view: fly over the scene | ✓ | ✓ |
+| `WorldScaleSceneView` | augmented reality scene view: the scene in the world around you | ✓ | ✓ |
 | `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
@@ -157,6 +166,34 @@ unmounts. While it is mounted, a login stored with `setTokenCredential` and
 `setAsNetworkAuthenticationChallengeHandler={false}` leaves those challenges to them. Its ref's
 `signOut()` is the Toolkit's sign-out: it revokes the OAuth tokens, signs out of the IAPs, and
 clears the credential stores.
+
+## Augmented reality
+
+`TableTopSceneView`, `FlyoverSceneView` and `WorldScaleSceneView` are expo-arcgis's `<SceneView>`
+shown in augmented reality: iOS uses ARKit, Android ARCore. Place one inside a `<Scene>`. Overlays go
+inside it, and its events (`onTap`…) and ref (`identify`…) work as a scene view's do. The device's
+movement controls the camera, so `camera` and `cameraController` don't apply.
+
+For the camera feed to show through the scene, make the scene's surface transparent. Tabletop and
+world-scale views also need a camera that can go below the surface:
+
+```tsx
+import { Scene, SceneLayer } from 'expo-arcgis';
+import { TableTopSceneView } from 'expo-arcgis-toolkit';
+
+<Scene surface={{ opacity: 0, navigationConstraint: 'unconstrained' }}>
+  <SceneLayer url="<a 3D object scene service>" />
+  <TableTopSceneView
+    anchorPoint={{ latitude: 45.5326, longitude: -122.6835 }}
+    translationFactor={1000}
+    clippingDistance={400}
+  />
+</Scene>
+```
+
+AR needs a device: the iOS simulator has no ARKit, and an Android emulator has no ARCore unless
+Google Play Services for AR is installed. The Android views report why they failed to initialize
+(`onInitializationStatusChange`).
 
 ## License
 

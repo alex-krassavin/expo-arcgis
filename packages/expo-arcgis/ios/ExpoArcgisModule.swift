@@ -513,6 +513,11 @@ public class ExpoArcgisModule: Module {
         view.setGeoViewRef(ref)
       }
 
+      // A package's view that shows the scene instead (expo-arcgis-toolkit's AR views).
+      Prop("container") { (view: ExpoArcgisSceneView, ref: SharedObject?) in
+        view.setContainer(ref)
+      }
+
       Prop("scene") { (view: ExpoArcgisSceneView, ref: SceneRef?) in
         view.setScene(ref)
       }

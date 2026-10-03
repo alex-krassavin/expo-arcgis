@@ -47,3 +47,12 @@ export { PopupView, type PopupViewProps } from './PopupView';
 export { Search, type SearchProps, type SearchSource } from './Search';
 export { UtilityNetworkTrace, type UtilityNetworkTraceProps } from './UtilityNetworkTrace';
 export type { AccessoryAlignment } from './types';
+// Augmented reality views: each is a `<SceneView>` shown in AR, inside a `<Scene>`.
+export { FlyoverSceneView, type FlyoverSceneViewProps } from './FlyoverSceneView';
+export { TableTopSceneView, type TableTopSceneViewProps } from './TableTopSceneView';
+export {
+  WorldScaleSceneView,
+  type WorldScaleSceneViewProps,
+  type CalibrationButtonAlignment,
+} from './WorldScaleSceneView';
+export type { ArLocation, ArInitializationStatus, ArSceneViewProps } from './arTypes';

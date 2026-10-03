@@ -44,6 +44,29 @@ class ExpoArcgisToolkitModule : Module() {
       }.runOnQueue(Queues.MAIN)
     }
 
+    // The augmented reality views' containers: expo-arcgis's SceneViewContainer, which a
+    // <SceneView> hands its SceneView's parameters to.
+    Class(FlyoverContainer::class) {
+      Constructor { FlyoverContainer(appContext) }
+      AsyncFunction("update") { container: FlyoverContainer, props: Map<String, Any?> ->
+        container.update(props)
+      }.runOnQueue(Queues.MAIN)
+    }
+
+    Class(TableTopContainer::class) {
+      Constructor { TableTopContainer(appContext) }
+      AsyncFunction("update") { container: TableTopContainer, props: Map<String, Any?> ->
+        container.update(props)
+      }.runOnQueue(Queues.MAIN)
+    }
+
+    Class(WorldScaleContainer::class) {
+      Constructor { WorldScaleContainer(appContext) }
+      AsyncFunction("update") { container: WorldScaleContainer, props: Map<String, Any?> ->
+        container.update(props)
+      }.runOnQueue(Queues.MAIN)
+    }
+
     View(AuthenticatorView::class) {
       Prop("oAuthUserConfigurations") { view: AuthenticatorView, items: List<Map<String, Any?>>? ->
         view.setOAuthUserConfigurations(items)

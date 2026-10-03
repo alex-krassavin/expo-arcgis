@@ -61,6 +61,14 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   /** Identify, camera animations, screen projections: everything that needs the drawn SceneView. */
   private val proxy = SceneViewProxy()
+  private val proxyOperations = SceneViewProxyOperations(proxy)
+
+  /** The composable of another package that shows the scene (expo-arcgis-toolkit's AR views), if any. */
+  private var container by mutableStateOf<SceneViewContainer?>(null)
+
+  /** Identify and screen projections, through the view that draws the scene. */
+  private val operations: SceneViewOperations
+    get() = container?.operations ?: proxyOperations
 
   // What the SceneView renders — one state per prop (overlay lists `shown…`, as in the MapView).
   private var scene by mutableStateOf<ArcGISScene?>(null)
@@ -92,6 +100,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
   @Composable
   private fun Content() {
     val scene = scene ?: return
+    val container = container
+    if (container != null) {
+      // A package's composable shows the scene (expo-arcgis-toolkit's AR views), and sets the camera.
+      container.Content(sceneViewParameters(scene))
+      return
+    }
     Box(Modifier.fillMaxSize()) {
       SceneContent(scene)
       GeoViewAccessories(shownAccessories, PaddingValues(0.dp), viewState)
@@ -103,16 +117,38 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
 
   @Composable
   private fun SceneContent(scene: ArcGISScene) {
-    val density = LocalDensity.current
+    val parameters = sceneViewParameters(scene)
     SceneView(
       arcGISScene = scene,
       modifier = Modifier.fillMaxSize(),
-      graphicsOverlays = shownGraphicsOverlays,
+      graphicsOverlays = parameters.graphicsOverlays,
       sceneViewProxy = proxy,
       grid = grid,
       cameraController = cameraController,
-      analysisOverlays = shownAnalysisOverlays,
+      analysisOverlays = parameters.analysisOverlays,
       atmosphereEffect = atmosphereEffect,
+      timeExtent = parameters.timeExtent,
+      sunTime = parameters.sunTime,
+      sunLighting = parameters.sunLighting,
+      onCurrentViewpointCameraChanged = parameters.onCurrentViewpointCameraChanged,
+      onViewpointChangedForCenterAndScale = parameters.onViewpointChangedForCenterAndScale,
+      onSpatialReferenceChanged = parameters.onSpatialReferenceChanged,
+      onNavigationChanged = parameters.onNavigationChanged,
+      onAttributionBarLayoutChanged = parameters.onAttributionBarLayoutChanged,
+      onSingleTapConfirmed = parameters.onSingleTapConfirmed,
+      // A `<Callout>` among the view's React children: its content, in the Toolkit's callout.
+      content = { ReactCallout(reactChildren.callout) },
+    )
+  }
+
+  /** What the view's props and events give the SceneView, or a container's composable. */
+  @Composable
+  private fun sceneViewParameters(scene: ArcGISScene): SceneViewParameters {
+    val density = LocalDensity.current
+    return SceneViewParameters(
+      arcGISScene = scene,
+      graphicsOverlays = shownGraphicsOverlays,
+      analysisOverlays = shownAnalysisOverlays,
       timeExtent = timeExtent,
       sunTime = sunTime,
       sunLighting = sunLighting,
@@ -135,7 +171,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
           // the event does not resolve taps that land on scene content. `screenToLocation` accounts
           // for both the base surface and scene content, so try it before giving up.
           val scenePoint = event.mapPoint
-            ?: proxy.screenToLocation(event.screenCoordinate).getOrNull()
+            ?: operations.screenToLocation(event.screenCoordinate).getOrNull()
             // Report nothing rather than a fabricated (0, 0), which a caller cannot tell apart from
             // a genuine tap in the Gulf of Guinea. Matches iOS, which skips the event on a miss.
             ?: return@launch
@@ -148,9 +184,12 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
           )
         }
       },
-      // A `<Callout>` among the view's React children: its content, in the Toolkit's callout.
-      content = { ReactCallout(reactChildren.callout) },
     )
+  }
+
+  /** Receives the composable of another package that shows the scene (expo-arcgis-toolkit's AR views). */
+  fun setContainer(ref: SharedObject?) {
+    container = ref as? SceneViewContainer
   }
 
   /** Receives the native scene (by reference) from the `<Scene>` SharedObject. */
@@ -191,7 +230,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
     val tolerance = (options?.get("tolerance") as? Number)?.toFloat() ?: 12f
     val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
     scope.launch {
-      proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults)
+      operations.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults)
         .onSuccess { results -> promise.resolve(results.map { serializeIdentifyResult(it, appContext) }) }
         .onFailure { promise.reject("IDENTIFY_ERROR", it.message ?: "Identify failed", it) }
     }
@@ -205,7 +244,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
     val maxResults = (options?.get("maxResults") as? Number)?.toInt() ?: 1
     scope.launch {
       try {
-        val results = proxy.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults).getOrThrow()
+        val results = operations.identifyLayers(ScreenCoordinate(x, y), tolerance.dp, false, maxResults).getOrThrow()
         promise.resolve(serializePopups(results, appContext))
       } catch (e: Exception) {
         promise.reject("IDENTIFY_ERROR", e.message ?: "Identify failed", e)
@@ -252,7 +291,7 @@ class ExpoArcgisSceneView(context: Context, appContext: AppContext) : ComposeHos
    */
   fun screenPoint(location: Map<String, Any?>): Map<String, Any?>? {
     val point = geometryFromDict(location) as? Point ?: return null
-    val result = proxy.locationToScreen(point) ?: return null
+    val result = operations.locationToScreen(point) ?: return null
     return mapOf(
       "x" to result.screenPoint.x,
       "y" to result.screenPoint.y,
