@@ -48,14 +48,12 @@ jobs:
         working-directory: docs
         run: npm run build
 
-      # A custom domain serves the repo at the domain ROOT, but the app uses base `/expo-arcgis`.
-      # Publish the app under /expo-arcgis/ and redirect the bare root there, so
-      # https://<domain>/ → https://<domain>/expo-arcgis/.
-      - name: Stage site with root → /expo-arcgis redirect
+      # The site is the root of the custom domain mapforge.dev, for both packages: the build goes
+      # out as is, with no base path and no redirect.
+      - name: Stage site
         run: |
-          rm -rf _site && mkdir -p _site/expo-arcgis
-          cp -a docs/dist/. _site/expo-arcgis/
-          printf '<!doctype html>\n<meta charset="utf-8">\n<title>expo-arcgis</title>\n<meta http-equiv="refresh" content="0; url=/expo-arcgis/">\n<link rel="canonical" href="/expo-arcgis/">\n<script>location.replace("/expo-arcgis/")</script>\n<a href="/expo-arcgis/">Go to expo-arcgis &rarr;</a>\n' > _site/index.html
+          rm -rf _site && mkdir -p _site
+          cp -a docs/dist/. _site/
           printf 'mapforge.dev\n' > _site/CNAME
 
       - uses: actions/upload-pages-artifact@v5
