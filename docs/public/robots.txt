@@ -1,7 +1,15 @@
-# The docs are for search engines and AI alike: search, AI answers and training
-# (https://contentsignals.org).
-User-agent: *
-Content-Signal: ai-train=yes, search=yes, ai-input=yes
-Allow: /
+# expo-arcgis — https://mapforge.dev
+#
+# The documentation is open. Search engines may index it, and AI systems may
+# read it to answer questions and may train on it (Content Signals,
+# https://contentsignals.org). A Markdown edition for language models is at
+# https://mapforge.dev/llms.txt, with llms-full.txt and llms-small.txt beside it.
 
-Sitemap: https://mapforge.dev/sitemap-index.xml
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Allow: /
+# The search box's own index, fetched by the page as you type; not pages.
+Disallow: /pagefind/
+
+# One file with every page (the index, /sitemap-index.xml, lists the same).
+Sitemap: https://mapforge.dev/sitemap.xml

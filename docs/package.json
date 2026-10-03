@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "prebuild": "node scripts/gen-sample-pages.mjs",
-    "build": "astro build",
+    "build": "astro build && node scripts/sitemap-single.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
