@@ -15,9 +15,11 @@ const inToolkit =
 const inApi = !inToolkit && path.startsWith(`${base}/api/`);
 const inGuides =
   !inToolkit && (path.startsWith(`${base}/guides`) || path.startsWith(`${base}/samples`));
+// The landing page has no sidebar, so no menu on a phone: its tabs stay there.
+const isHome = path === `${base}/` || path === base;
 ---
 
-<div class="ea-header">
+<div class:list={['ea-header', { 'ea-header--home': isHome }]}>
   <a href={`${base}/`} class="ea-logo">
     <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
       <path d="M4.5 22V7l9.5 9.5L23.5 7v15" stroke="#0E9C8E" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"></path>

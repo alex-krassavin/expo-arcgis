@@ -23,7 +23,10 @@ Then add this package's config plugin after expo-arcgis's, and regenerate the na
 // app.config.js
 module.exports = {
   expo: {
-    plugins: [['expo-arcgis', { apiKey: process.env.ARCGIS_API_KEY }], 'expo-arcgis-toolkit'],
+    plugins: [
+      ['expo-arcgis', { apiKey: process.env.ARCGIS_API_KEY }],
+      'expo-arcgis-toolkit',
+    ],
   },
 };
 ```
@@ -76,7 +79,8 @@ By default, the plugin adds:
 | `WorldScaleSceneView` | augmented reality: the scene in the world around you | ✓ | ✓ | [AR world scale](/samples/toolkit-ar-world-scale/) |
 
 A component that the Toolkit has on one platform only renders nothing on the other platform, and
-warns once in development. An API that one platform lacks does nothing there.
+warns once in development. An API that one platform lacks does nothing there. The
+[Platform differences](/guides/platform-differences/) page lists them, with the settings that differ.
 
 Every component, prop and type is in the [Toolkit API reference](/api-toolkit/readme/).
 

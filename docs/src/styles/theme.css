@@ -168,6 +168,14 @@ h1#_top,
   .ea-wm-pkg {
     display: none;
   }
+  /* The landing page has no sidebar menu: its tabs stay, smaller. */
+  .ea-header--home .ea-actions {
+    gap: 14px;
+  }
+  .ea-header--home .ea-tab {
+    display: inline;
+    font-size: 0.8rem;
+  }
 }
 
 /* ── Sidebar ──────────────────────────────────────────────── */

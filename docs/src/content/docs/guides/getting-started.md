@@ -76,3 +76,30 @@ export function Screen() {
 ```
 
 3D works the same way with `<Scene>` + `<SceneView>`. See the **Samples** for each capability.
+
+## Next: the Toolkit
+
+The ArcGIS Toolkit's components (a compass, a scalebar, search, popups, feature forms, offline map
+areas, sign-in, augmented reality and more) are in `expo-arcgis-toolkit`:
+
+```sh
+npx expo install expo-arcgis-toolkit
+```
+
+Add its config plugin after expo-arcgis's (`plugins: [['expo-arcgis', { … }], 'expo-arcgis-toolkit']`),
+prebuild again, and put components in your view:
+
+```tsx
+import { Map, MapView } from 'expo-arcgis';
+import { Compass, Scalebar } from 'expo-arcgis-toolkit';
+
+<Map basemap="arcGISTopographic">
+  <MapView style={{ flex: 1 }}>
+    <Compass />
+    <Scalebar units="metric" />
+  </MapView>
+</Map>
+```
+
+The [Toolkit guide](/guides/toolkit/) lists every component. A few exist on one platform only: see
+[Platform differences](/guides/platform-differences/).

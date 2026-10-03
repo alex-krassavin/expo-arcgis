@@ -59,7 +59,7 @@ import source from ${JSON.stringify(importPath)};
 
 ${mdxText(description)}
 ${frames}
-This is the real source of the example app's \`${name}\` screen — run it on a device
+This is the real source of the example app's \`${slug}\` screen — run it on a device
 or simulator to see it live.
 
 <Code code={source} lang="tsx" title=${JSON.stringify(`app/${slug}.tsx`)} />
