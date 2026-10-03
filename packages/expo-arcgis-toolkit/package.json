@@ -1,7 +1,6 @@
 {
   "name": "expo-arcgis-toolkit",
   "version": "0.1.0",
-  "private": true,
   "description": "ArcGIS Maps SDK Toolkit components (compass, scalebar, basemap gallery, …) for expo-arcgis",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -40,7 +39,7 @@
   "homepage": "https://mapforge.dev",
   "peerDependencies": {
     "expo": ">=56.0.0",
-    "expo-arcgis": "*",
+    "expo-arcgis": ">=0.8.0",
     "react": "*",
     "react-native": "*"
   }

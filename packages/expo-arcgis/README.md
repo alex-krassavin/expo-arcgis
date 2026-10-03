@@ -27,6 +27,7 @@ authentication.
 | **Offline** | `offline.*` generate offline map, preplanned areas, geodatabase, tile / vector-tile export, sync — all as a cancellable `JobRef`; mobile map / scene packages |
 | **Real-time** | `<DynamicEntityLayer>` (stream service), query, custom data source, stream filter |
 | **Auth** | API key, token (challenge handler), OAuth user sign-in, app credential |
+| **Toolkit** | The ArcGIS Toolkits' components (compass, search, popups, feature forms, offline map areas, sign-in, augmented reality…) are in [`expo-arcgis-toolkit`](https://www.npmjs.com/package/expo-arcgis-toolkit) |
 
 ## Requirements
 
