@@ -5,6 +5,7 @@
 // Panels: BasemapGallery (anywhere inside the `<Map>`); Bookmarks (iOS), BuildingExplorer (iOS,
 // local scenes), Legend (Android), Search (iOS) and UtilityNetworkTrace, inside the view, or
 // anywhere with the view's ref as `geoView`.
+// FloatingPanel (iOS): React content in the Toolkit's panel, floating over the view it is placed in.
 // Authenticator: once, at the root of the app; it prompts when a challenge comes.
 export {
   Authenticator,
@@ -46,6 +47,7 @@ export {
 export { PopupView, type PopupViewProps } from './PopupView';
 export { Search, type SearchProps, type SearchSource } from './Search';
 export { UtilityNetworkTrace, type UtilityNetworkTraceProps } from './UtilityNetworkTrace';
+export { FloatingPanel, type FloatingPanelProps, type FloatingPanelDetent } from './FloatingPanel';
 export type { AccessoryAlignment } from './types';
 // Augmented reality views: each is a `<SceneView>` shown in AR, inside a `<Scene>`.
 export { FlyoverSceneView, type FlyoverSceneViewProps } from './FlyoverSceneView';

@@ -112,6 +112,17 @@
   - The config plugin's `ar` option adds what they need. On iOS: the camera and location
     descriptions. On Android: the camera and location permissions, and ARCore's entry
     (`arcore: 'optional' | 'required'`, `arcoreApiKey`).
+- `FloatingPanel` (iOS): the Swift Toolkit's floating panel, with React content.
+  - Place it inside a `<MapView>` / `<SceneView>`: it floats over the view, and touches outside
+    the panel reach the map. Elsewhere it floats over the frame it is given, with the view's ref
+    as `geoView`.
+  - In portrait it rests at the bottom of the view; elsewhere it floats at its top. The user drags
+    its handle between detents.
+  - The panel decides the content's size, and React lays the content out in it.
+  - The Toolkit's settings are props: `isPresented`, `selectedDetent` (`'summary'`, `'half'`,
+    `'full'`, a fraction or a height) with `onSelectedDetentChange`, `horizontalAlignment`,
+    `maxWidth`, `backgroundColor` and `attributionBarHeight`. The attribution bar height defaults
+    to the view's.
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 

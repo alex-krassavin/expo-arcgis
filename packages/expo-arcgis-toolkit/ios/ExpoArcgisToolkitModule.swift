@@ -118,6 +118,31 @@ public class ExpoArcgisToolkitModule: Module {
       }
     }
 
+    View(FloatingPanelView.self) {
+      Events("onSelectedDetentChange")
+      // The view the panel floats over, for its attribution bar: expo-arcgis's GeoViewRef.
+      Prop("geoView") { (view: FloatingPanelView, ref: GeoViewRef?) in view.setGeoView(ref) }
+      Prop("isPresented") { (view: FloatingPanelView, value: Bool?) in
+        view.setIsPresented(value ?? true)
+      }
+      Prop("selectedDetent") { (view: FloatingPanelView, value: [String: Any]?) in
+        view.setSelectedDetent(value)
+      }
+      Prop("horizontalAlignment") { (view: FloatingPanelView, value: String?) in
+        view.setHorizontalAlignment(value)
+      }
+      // Not `maxWidth` and `backgroundColor`: React Native would also read those as the view's style.
+      Prop("panelMaxWidth") { (view: FloatingPanelView, value: Double?) in view.setMaxWidth(value) }
+      Prop("panelBackgroundColor") { (view: FloatingPanelView, value: UIColor?) in
+        view.setBackgroundColor(value)
+      }
+      Prop("attributionBarHeight") { (view: FloatingPanelView, value: Double?) in
+        view.setAttributionBarHeight(value)
+      }
+    }
+
+    View(FloatingPanelContentView.self) {}
+
     View(BookmarksView.self) {
       Events("onSelectionChange", "onIsPresentedChange")
       // The view the bookmarks belong to: expo-arcgis's GeoViewRef of a <MapView> / <SceneView>.
