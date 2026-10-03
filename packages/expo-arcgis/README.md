@@ -6,7 +6,7 @@ SDK-faithful component API to JS/TS — `<MapView>` / `<SceneView>` with layers,
 editing, query, analysis, geocoding, routing, geoprocessing, utility networks, offline, real-time and
 authentication.
 
-📖 **[Documentation & samples →](https://mapforge.dev/expo-arcgis)**
+📖 **[Documentation & samples →](https://mapforge.dev)**
 
 ## Features
 

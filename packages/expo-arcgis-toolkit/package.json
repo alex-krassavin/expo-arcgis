@@ -37,7 +37,7 @@
   },
   "author": "krassavin <walonade@icloud.com>",
   "license": "MIT",
-  "homepage": "https://mapforge.dev/expo-arcgis",
+  "homepage": "https://mapforge.dev",
   "peerDependencies": {
     "expo": ">=56.0.0",
     "expo-arcgis": "*",

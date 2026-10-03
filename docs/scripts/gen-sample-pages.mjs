@@ -7,14 +7,19 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sampleName } from './sample-name.mjs';
+
 const here = dirname(fileURLToPath(import.meta.url)); // docs/scripts
 const docsRoot = join(here, '..'); // docs
 const catalogPath = join(docsRoot, '..', 'example', 'samples.catalog.json');
 const outDir = join(docsRoot, 'src', 'content', 'docs', 'samples');
 const shotsDir = join(docsRoot, 'public', 'samples');
-const base = '/expo-arcgis';
 
 const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
+
+// A description is plain text, which may name a component (`<LocalSceneView>`): MDX would read
+// that as JSX, so its angle brackets and braces become entities.
+const mdxText = (text) => text.replace(/[<>{}]/g, (char) => `&#${char.charCodeAt(0)};`);
 
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
@@ -27,7 +32,7 @@ const PLATFORMS = [
 
 let withShots = 0;
 for (const { slug, title, description } of catalog) {
-  const name = slug.split('/')[1];
+  const name = sampleName(slug);
   // From docs/src/content/docs/samples/<name>.mdx up to the repo root, then into example/app/.
   const importPath = `../../../../../example/app/${slug}.tsx?raw`;
 
@@ -37,7 +42,7 @@ for (const { slug, title, description } of catalog) {
     ? `\n<div class="ea-shots not-content">\n${shots
         .map(
           (p) =>
-            `  <figure class="ea-shot"><span class="ea-shot-phone"><img src="${base}/samples/${name}-${p.key}.jpg" alt=${JSON.stringify(
+            `  <figure class="ea-shot"><span class="ea-shot-phone"><img src="/samples/${name}-${p.key}.jpg" alt=${JSON.stringify(
               `${title} running on ${p.label}`
             )} width="420" height="933" loading="lazy" /></span><figcaption>${p.label}</figcaption></figure>`
         )
@@ -52,7 +57,7 @@ description: ${JSON.stringify(description)}
 import { Code } from '@astrojs/starlight/components';
 import source from ${JSON.stringify(importPath)};
 
-${description}
+${mdxText(description)}
 ${frames}
 This is the real source of the example app's \`${name}\` screen — run it on a device
 or simulator to see it live.

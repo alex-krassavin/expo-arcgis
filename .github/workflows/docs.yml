@@ -1,6 +1,6 @@
 name: Docs
 
-# Builds the Astro Starlight site (guides + samples + TypeDoc API reference) and deploys it
+# Builds the Astro Starlight site (guides + samples + TypeDoc API references) and deploys it
 # to GitHub Pages. Enable Pages with "Source: GitHub Actions" in the repo settings first.
 on:
   push:
@@ -8,6 +8,7 @@ on:
     paths:
       - 'docs/**'
       - 'packages/expo-arcgis/src/**' # the TypeDoc API reference is generated from the core's source
+      - 'packages/expo-arcgis-toolkit/src/**' # and the toolkit's from the toolkit's
       - 'example/**' # sample pages embed the example sources
       - '.github/workflows/docs.yml'
   workflow_dispatch:

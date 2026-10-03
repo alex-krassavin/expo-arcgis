@@ -133,5 +133,5 @@ const { path } = await job.result();
 subscription.remove();
 ```
 
-See the [Samples](/expo-arcgis/samples/display-map/) for a runnable screen behind each capability, and
-the [API Reference](/expo-arcgis/api/) for every component and type.
+See the [Samples](/samples/display-map/) for a runnable screen behind each capability, and
+the [API Reference](/api/readme/) for every component and type.

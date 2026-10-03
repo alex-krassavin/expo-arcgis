@@ -4,7 +4,7 @@ Components from the **ArcGIS Maps SDK Toolkits** ([Swift](https://github.com/Esr
 [Kotlin](https://github.com/Esri/arcgis-maps-sdk-kotlin-toolkit)) for [expo-arcgis](https://www.npmjs.com/package/expo-arcgis):
 the native Toolkit views, driven by your `<Map>` / `<MapView>` and `<Scene>` / `<SceneView>`.
 
-📖 **[Documentation & samples →](https://mapforge.dev/expo-arcgis)**
+📖 **[Documentation & samples →](https://mapforge.dev)**
 
 ## Install
 

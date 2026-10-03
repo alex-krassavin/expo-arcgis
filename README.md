@@ -4,7 +4,7 @@ The native **ArcGIS Maps SDK** for React Native, as [Expo modules](https://docs.
 The ArcGIS Maps SDKs for **Kotlin** (Android) and **Swift** (iOS) sit behind a declarative,
 SDK-faithful component API.
 
-📖 **[Documentation & samples →](https://mapforge.dev/expo-arcgis)**
+📖 **[Documentation & samples →](https://mapforge.dev)**
 
 ## Packages
 

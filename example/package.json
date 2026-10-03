@@ -15,6 +15,7 @@
     "clsx": "^2.1.1",
     "expo": "~56.0.23",
     "expo-arcgis": "file:../packages/expo-arcgis",
+    "expo-arcgis-toolkit": "file:../packages/expo-arcgis-toolkit",
     "expo-constants": "~56.0.17",
     "expo-linking": "~56.0.18",
     "expo-router": "~56.2.21",

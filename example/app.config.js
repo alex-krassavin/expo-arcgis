@@ -12,6 +12,17 @@ module.exports = {
     newArchEnabled: true,
     ios: {
       bundleIdentifier: 'com.example.expoarcgis',
+      infoPlist: {
+        NSAppTransportSecurity: {
+          // The development build loads its JavaScript from the local network.
+          NSAllowsLocalNetworking: true,
+          // The Toolkit samples' untrusted host: App Transport Security would reject it before
+          // the authenticator can ask whether to trust it.
+          NSExceptionDomains: {
+            'self-signed.badssl.com': { NSExceptionAllowsInsecureHTTPLoads: true },
+          },
+        },
+      },
     },
     android: {
       package: 'com.example.expoarcgis',
@@ -25,6 +36,17 @@ module.exports = {
           apiKey: process.env.ARCGIS_API_KEY,
           // Adds NSLocationWhenInUseUsageDescription (iOS) + ACCESS_FINE/COARSE_LOCATION (Android).
           locationWhenInUseUsageDescription: 'Show your location on the map',
+        },
+      ],
+      [
+        'expo-arcgis-toolkit',
+        {
+          // The job manager sample keeps a download going across launches (iOS).
+          jobManager: true,
+          // The authenticator sample's OAuth redirect (Android).
+          oAuthRedirectUris: ['my-ags-app://auth'],
+          // Camera, location and ARCore for the augmented reality samples.
+          ar: true,
         },
       ],
     ],

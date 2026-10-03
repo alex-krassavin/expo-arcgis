@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary        = 'ArcGIS Maps SDK Toolkit components for expo-arcgis'
   s.description    = 'ArcGIS Maps SDK for Swift Toolkit components (compass, scalebar, basemap gallery, …) for expo-arcgis.'
   s.author         = 'krassavin'
-  s.homepage       = 'https://mapforge.dev/expo-arcgis'
+  s.homepage       = 'https://mapforge.dev'
   s.platforms      = {
     :ios => '18.0'
   }
