@@ -43,9 +43,11 @@ class UtilityNetworkRef(appContext: AppContext, private val serviceGeodatabaseUr
     val serviceGeodatabase = ServiceGeodatabase(serviceGeodatabaseUrl)
     serviceGeodatabase.load().getOrThrow()
     val network = UtilityNetwork(serviceGeodatabase)
-    network.load().getOrThrow()
-    this.network = network
+    // The Kotlin SDK sets a network's map only before it loads ("Can't change associated Map on a
+    // loaded utility network"): add it to the map first, and take it back off if it fails to load.
     mapRef.map.utilityNetworks.add(network)
+    network.load().onFailure { mapRef.map.utilityNetworks.remove(network) }.getOrThrow()
+    this.network = network
     // Display the network's feature layers so its devices / lines are visible and selectable.
     serviceGeodatabase.connectedTables.value.forEach { table ->
       val layer = FeatureLayer.createWithFeatureTable(table)

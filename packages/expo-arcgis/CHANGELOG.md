@@ -82,6 +82,9 @@
 - iOS: sheets, popovers and alerts from SwiftUI inside a `<MapView>` or `<SceneView>` (the
   toolkit's floor filter site list) show. The view's hosting controller is now a child of the
   screen's view controller, which UIKit presents from.
+- Android: `<UtilityNetwork>` loads. It failed with "Can't change associated Map on a loaded
+  utility network": the Kotlin SDK sets a network's map only before it loads, so the network now
+  joins the map first.
 
 ## 0.7.0 — 2026-10-02
 
