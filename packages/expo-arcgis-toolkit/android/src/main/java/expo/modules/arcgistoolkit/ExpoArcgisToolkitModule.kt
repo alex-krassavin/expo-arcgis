@@ -4,6 +4,7 @@ import expo.modules.arcgis.FeatureRef
 import expo.modules.arcgis.GeoViewRef
 import expo.modules.arcgis.GraphicsOverlayRef
 import expo.modules.arcgis.PopupRef
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -15,7 +16,8 @@ import expo.modules.kotlin.sharedobjects.SharedObject
  * Compass, Scalebar and FloorFilter are accessories: shared objects the JS components hand to the
  * nearest `<MapView>` / `<SceneView>`, which composes them over itself (expo-arcgis's
  * `GeoViewAccessory`). BasemapGallery, FeatureFormView, Legend, OfflineMapAreas, PopupView and
- * UtilityNetworkTrace are views of their own.
+ * UtilityNetworkTrace are views of their own. Authenticator is a view that shows nothing itself: it
+ * prompts in dialogs.
  */
 class ExpoArcgisToolkitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -40,6 +42,26 @@ class ExpoArcgisToolkitModule : Module() {
       AsyncFunction("update") { accessory: FloorFilterAccessory, props: Map<String, Any?> ->
         accessory.update(props)
       }.runOnQueue(Queues.MAIN)
+    }
+
+    View(AuthenticatorView::class) {
+      Prop("oAuthUserConfigurations") { view: AuthenticatorView, items: List<Map<String, Any?>>? ->
+        view.setOAuthUserConfigurations(items)
+      }
+      Prop("iapConfigurations") { view: AuthenticatorView, items: List<Map<String, Any?>>? ->
+        view.setIapConfigurations(items)
+      }
+      Prop("setAsArcGISAuthenticationChallengeHandler") { view: AuthenticatorView, value: Boolean? ->
+        view.setAsArcGISHandler(value)
+      }
+      Prop("setAsNetworkAuthenticationChallengeHandler") { view: AuthenticatorView, value: Boolean? ->
+        view.setAsNetworkHandler(value)
+      }
+      OnViewDidUpdateProps { view: AuthenticatorView -> view.update() }
+      AsyncFunction("signOut") Coroutine { view: AuthenticatorView -> view.signOut() }
+      AsyncFunction("dismissAll") { view: AuthenticatorView -> view.dismissAll() }
+        .runOnQueue(Queues.MAIN)
+      OnViewDestroys { view: AuthenticatorView -> view.destroy() }
     }
 
     View(BasemapGalleryView::class) {

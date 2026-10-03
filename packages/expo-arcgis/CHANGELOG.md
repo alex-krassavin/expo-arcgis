@@ -59,8 +59,15 @@
 - `<GraphicsOverlay>` takes a `ref`: its `GraphicsOverlayRef`. Components can draw into it, such
   as expo-arcgis-toolkit's `<Search resultsOverlay>`. On iOS the ref's native `overlay` is public
   for packages built on expo-arcgis (it already was on Android).
+- `enablePersistentCredentialStore(options?)` takes the iOS keychain's settings: `access`
+  (`KeychainAccess`, `'afterFirstUnlock'` as before) and `synchronizesWithiCloud`.
 
 ### Changed
+
+- `enablePersistentCredentialStore()` also makes the network credential store persistent, as the
+  Swift Toolkit's `setupPersistentCredentialStorage` does. That store keeps logins to IWA servers,
+  client certificates and trusted hosts, which expo-arcgis-toolkit's `<Authenticator>` adds.
+  `clearCredentialStore()` and `signOut()` clear it too.
 
 - `JobRef.result()` doesn't start a job that is already running, such as one a job manager resumed;
   it follows it to its end.
@@ -75,6 +82,9 @@
 - iOS: sheets, popovers and alerts from SwiftUI inside a `<MapView>` or `<SceneView>` (the
   toolkit's floor filter site list) show. The view's hosting controller is now a child of the
   screen's view controller, which UIKit presents from.
+- Android: `<UtilityNetwork>` loads. It failed with "Can't change associated Map on a loaded
+  utility network": the Kotlin SDK sets a network's map only before it loads, so the network now
+  joins the map first.
 
 ## 0.7.0 — 2026-10-02
 

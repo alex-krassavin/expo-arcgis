@@ -458,7 +458,7 @@ export type ElevationSource = {
 };
 
 // @public
-export function enablePersistentCredentialStore(): Promise<void>;
+export function enablePersistentCredentialStore(options?: PersistentCredentialStoreOptions): Promise<void>;
 
 // @public
 export type Envelope = {
@@ -1177,6 +1177,9 @@ export class JobRef<R> extends SharedObject<JobEvents> {
 }
 
 // @public
+export type KeychainAccess = 'afterFirstUnlock' | 'afterFirstUnlockThisDeviceOnly' | 'whenUnlocked' | 'whenUnlockedThisDeviceOnly' | 'whenPasscodeSetThisDeviceOnly';
+
+// @public
 export const KmlLayer: ForwardRefExoticComponent<LayerProps & {
 url: string;
 } & RefAttributes<KmlLayerHandle>>;
@@ -1587,6 +1590,12 @@ url: string;
 // @public
 export type OrientedImageryLayerProps = LayerProps & {
     url: string;
+};
+
+// @public
+export type PersistentCredentialStoreOptions = {
+    access?: KeychainAccess;
+    synchronizesWithiCloud?: boolean;
 };
 
 // @public

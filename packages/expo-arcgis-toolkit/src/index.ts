@@ -5,6 +5,15 @@
 // Panels: BasemapGallery (anywhere inside the `<Map>`); Bookmarks (iOS), BuildingExplorer (iOS,
 // local scenes), Legend (Android), Search (iOS) and UtilityNetworkTrace, inside the view, or
 // anywhere with the view's ref as `geoView`.
+// Authenticator: once, at the root of the app; it prompts when a challenge comes.
+export {
+  Authenticator,
+  type AuthenticatorProps,
+  type AuthenticatorHandle,
+  type OAuthUserConfiguration,
+  type IapConfiguration,
+  type IapAuthorizationPromptType,
+} from './Authenticator';
 export { Compass, type CompassProps } from './Compass';
 export { Scalebar, type ScalebarProps, type ScalebarStyle } from './Scalebar';
 export { OverviewMap, type OverviewMapProps } from './OverviewMap';

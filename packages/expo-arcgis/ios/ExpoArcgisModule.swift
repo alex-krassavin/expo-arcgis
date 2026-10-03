@@ -49,7 +49,8 @@ public class ExpoArcgisModule: Module {
         allow ? NetworkTrustHandler.shared : nil
     }
 
-    // Revokes any OAuth user credentials on the server, then clears all cached credentials.
+    // Revokes any OAuth user credentials on the server, then clears all cached credentials, the
+    // network ones included.
     AsyncFunction("signOut") {
       let store = ArcGISEnvironment.authenticationManager.arcGISCredentialStore
       for credential in store.credentials {
@@ -59,6 +60,7 @@ public class ExpoArcgisModule: Module {
       }
       AuthChallengeHandler.shared.setCredentials(username: nil, password: nil)
       store.removeAll()
+      await ArcGISEnvironment.authenticationManager.networkCredentialStore.removeAll()
     }
 
     // OAuth user sign-in. On iOS the SDK presents the auth browser (ASWebAuthenticationSession)

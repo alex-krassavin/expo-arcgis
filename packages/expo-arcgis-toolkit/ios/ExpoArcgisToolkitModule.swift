@@ -7,6 +7,7 @@ import ExpoModulesCore
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
 /// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer,
 /// FeatureFormView, OfflineMapAreas, PopupView, Search and UtilityNetworkTrace are views of their own.
+/// Authenticator is a view that shows nothing itself: it presents its prompts.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -65,6 +66,26 @@ public class ExpoArcgisToolkitModule: Module {
       AsyncFunction("update") { (accessory: FloorFilterAccessory, props: [String: Any]) in
         accessory.update(props)
       }.runOnQueue(.main)
+    }
+
+    View(AuthenticatorView.self) {
+      Prop("oAuthUserConfigurations") { (view: AuthenticatorView, items: [[String: Any]]?) in
+        view.setOAuthUserConfigurations(items)
+      }
+      Prop("iapConfigurations") { (view: AuthenticatorView, items: [[String: Any]]?) in
+        view.setIapConfigurations(items)
+      }
+      Prop("promptForUntrustedHosts") { (view: AuthenticatorView, value: Bool?) in
+        view.setPromptForUntrustedHosts(value)
+      }
+      Prop("setAsArcGISAuthenticationChallengeHandler") { (view: AuthenticatorView, value: Bool?) in
+        view.setAsArcGISHandler(value)
+      }
+      Prop("setAsNetworkAuthenticationChallengeHandler") { (view: AuthenticatorView, value: Bool?) in
+        view.setAsNetworkHandler(value)
+      }
+      OnViewDidUpdateProps { (view: AuthenticatorView) in view.update() }
+      AsyncFunction("signOut") { (view: AuthenticatorView) in await view.signOut() }
     }
 
     View(BasemapGalleryView.self) {

@@ -61,7 +61,8 @@ class ExpoArcgisModule : Module() {
         if (allow) NetworkTrustHandler else null
     }
 
-    // Revokes any OAuth user credentials on the server, then clears all cached credentials.
+    // Revokes any OAuth user credentials on the server, then clears all cached credentials, the
+    // network ones included.
     AsyncFunction("signOut") Coroutine { ->
       val store = ArcGISEnvironment.authenticationManager.arcGISCredentialStore
       for (credential in store.getCredentials()) {
@@ -71,6 +72,7 @@ class ExpoArcgisModule : Module() {
       }
       AuthChallengeHandler.setCredentials(null, null)
       store.removeAll()
+      ArcGISEnvironment.authenticationManager.networkCredentialStore.removeAll().getOrThrow()
     }
 
     // OAuth user sign-in (Android): JS opens the browser between these two steps.

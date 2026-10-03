@@ -30,6 +30,11 @@ To word the descriptions yourself, pass `{ "cameraUsageDescription": "…",
 what `OfflineMapAreas` needs. `"jobManager": true` permits the job manager's background task, which
 `jobManager` needs.
 
+`"oAuthRedirectUris": ["my-app://auth"]` declares the Kotlin Toolkit's `AuthenticationActivity` for
+these redirect URIs. On Android, `Authenticator`'s OAuth and IAP sign-ins need it: list each
+configuration's `redirectUrl`. Give them a scheme of their own, not the app's `scheme`. iOS needs
+nothing for them.
+
 ## Components
 
 Components drawn over a view go **inside** its `<MapView>` or `<SceneView>`. Panels are views of
@@ -53,6 +58,7 @@ their own, which you lay out:
 | `FeatureFormView` | panel (a feature from `identify`) | ✓ | ✓ |
 | `OfflineMapAreas` | panel for a web map (`<Map portalItem>`) | ✓ | ✓ |
 | `jobManager` | app-level: keeps long jobs across launches | ✓ | — |
+| `Authenticator` | app-level: prompts for authentication challenges | ✓ | ✓ |
 | `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
@@ -95,6 +101,62 @@ export default function App() {
   );
 }
 ```
+
+## Authenticator
+
+`<Authenticator>` goes once at the root of the app. While it is mounted, it handles the
+authentication challenges and shows the Toolkit's prompts:
+- a username and password, for token-secured services and IWA servers;
+- the portal's sign-in page in a browser, for a portal in `oAuthUserConfigurations`;
+- the IAP sign-in, for a host in `iapConfigurations`;
+- whether to trust an untrusted host, on iOS with `promptForUntrustedHosts`;
+- which client certificate to use.
+
+On iOS, App Transport Security rejects an untrusted host before the SDK can ask. Allow the host in
+Info.plist first, for example in app.json:
+
+```json
+"ios": {
+  "infoPlist": {
+    "NSAppTransportSecurity": {
+      "NSAllowsLocalNetworking": true,
+      "NSExceptionDomains": {
+        "my-server.example.com": { "NSExceptionAllowsInsecureHTTPLoads": true }
+      }
+    }
+  }
+}
+```
+
+`ios.infoPlist` replaces Expo's own `NSAppTransportSecurity` entry, so keep its
+`NSAllowsLocalNetworking`: the development build loads its JavaScript from the local network.
+
+```tsx
+import { MapSettings, enablePersistentCredentialStore } from 'expo-arcgis';
+import { Authenticator } from 'expo-arcgis-toolkit';
+
+enablePersistentCredentialStore(); // keeps the sign-ins across launches
+
+export default function RootLayout() {
+  return (
+    <MapSettings config={{ apiKey }}>
+      <Stack />
+      <Authenticator
+        oAuthUserConfigurations={[
+          { portalUrl: 'https://www.arcgis.com', clientId: '<client id>', redirectUrl: 'my-app://auth' },
+        ]}
+      />
+    </MapSettings>
+  );
+}
+```
+
+It takes the place of expo-arcgis's challenge handlers and hands the challenges back when it
+unmounts. While it is mounted, a login stored with `setTokenCredential` and
+`setAllowUntrustedHosts` don't apply, unless `setAsArcGISAuthenticationChallengeHandler={false}` or
+`setAsNetworkAuthenticationChallengeHandler={false}` leaves those challenges to them. Its ref's
+`signOut()` is the Toolkit's sign-out: it revokes the OAuth tokens, signs out of the IAPs, and
+clears the credential stores.
 
 ## License
 

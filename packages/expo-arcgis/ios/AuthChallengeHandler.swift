@@ -33,3 +33,14 @@ final class AuthChallengeHandler: ArcGISAuthenticationChallengeHandler, @uncheck
     return .continueWithCredential(credential)
   }
 }
+
+/// The SDK's `KeychainAccess` for its JS name; `afterFirstUnlock` when there is none.
+func keychainAccess(_ name: String?) -> KeychainAccess {
+  switch name {
+  case "afterFirstUnlockThisDeviceOnly": return .afterFirstUnlockThisDeviceOnly
+  case "whenUnlocked": return .whenUnlocked
+  case "whenUnlockedThisDeviceOnly": return .whenUnlockedThisDeviceOnly
+  case "whenPasscodeSetThisDeviceOnly": return .whenPasscodeSetThisDeviceOnly
+  default: return .afterFirstUnlock
+  }
+}

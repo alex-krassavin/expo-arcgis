@@ -81,6 +81,21 @@
     Toolkit's `isPresented`).
   - Android's `showCloseIcon` is a prop.
   - It reports the popup it moves to (`onPopupChange`).
+- `Authenticator`: the Toolkit's authenticator on both platforms (Swift `Authenticator`, Kotlin
+  `AuthenticatorState` with its `DialogAuthenticator`). Mount it once, at the root of the app.
+  - While it is mounted, it handles the authentication challenges and shows the Toolkit's
+    prompts: a username and password (token, IWA), OAuth sign-in in a browser, IAP sign-in,
+    trusting an untrusted host, and picking a client certificate.
+  - The Toolkit's settings are props: `oAuthUserConfigurations`, `iapConfigurations`, iOS
+    `promptForUntrustedHosts`, and Kotlin's `setAsArcGISAuthenticationChallengeHandler` /
+    `setAsNetworkAuthenticationChallengeHandler`, on both platforms.
+  - It takes the place of expo-arcgis's challenge handlers and hands them back when it unmounts.
+  - Its ref signs out as the Toolkit does (`signOut()`: revokes the OAuth tokens, signs out of the
+    IAPs, clears the credential stores). On Android it can also `dismissAll()` the prompts.
+  - The config plugin's `oAuthRedirectUris` declares the Kotlin Toolkit's `AuthenticationActivity`
+    for the OAuth and IAP redirects (Android).
+  - On iOS, a prompt to trust a host needs the host in Info.plist's App Transport Security
+    exceptions: ATS rejects it before the SDK can ask.
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 

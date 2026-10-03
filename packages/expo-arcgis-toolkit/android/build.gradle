@@ -62,6 +62,7 @@ dependencies {
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-popup'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-featureforms'
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-offline'
+  implementation 'com.esri:arcgis-maps-kotlin-toolkit-authentication'
   // The core's GeoViewState hands accessories its MapViewProxy.
   implementation 'com.esri:arcgis-maps-kotlin-toolkit-geoview-compose'
 
