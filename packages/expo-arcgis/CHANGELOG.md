@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- The LICENSE names the copyright holder, Alexandr Krassavin. 0.8.0 shipped with the Expo
+  module template's notice instead.
+
 ## 0.8.0 — 2026-10-04
 
 ### Added
