@@ -1,6 +1,7 @@
 ---
 title: Getting started
 description: Install expo-arcgis and render your first map.
+seoTitle: "Getting started with ArcGIS in Expo · expo-arcgis"
 ---
 
 `expo-arcgis` is a native [Expo module](https://docs.expo.dev/modules/overview/) wrapping the

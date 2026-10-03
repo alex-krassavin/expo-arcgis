@@ -1,6 +1,7 @@
 ---
 title: Toolkit
 description: The ArcGIS Maps SDK Toolkits' components for expo-arcgis — compass, search, popups, forms, offline areas, sign-in, augmented reality and more.
+seoTitle: "ArcGIS Toolkit components for React Native · expo-arcgis"
 ---
 
 `expo-arcgis-toolkit` brings the components of the ArcGIS Maps SDK Toolkits

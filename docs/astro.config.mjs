@@ -7,6 +7,7 @@ import starlightTypeDoc, {
   typeDocSidebarGroup,
 } from 'starlight-typedoc';
 
+import starlightLlmsTxt from 'starlight-llms-txt';
 import { OptionDefaults } from 'typedoc';
 
 import { sampleName } from './scripts/sample-name.mjs';
@@ -40,7 +41,10 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'expo-arcgis',
-      description: 'Native ArcGIS Maps SDK for React Native, as an Expo module.',
+      description:
+        "The native ArcGIS Maps SDK for React Native and Expo: maps and scenes, layers, editing, geocoding, routing, offline and the ArcGIS Toolkit's components.",
+      // Each page's title, description and social image for search engines and link previews.
+      routeMiddleware: './src/routeData.ts',
       customCss: ['./src/styles/theme.css'],
       favicon: '/favicon.svg',
       components: {
@@ -84,6 +88,53 @@ export default defineConfig({
         },
       ],
       plugins: [
+        // /llms.txt, /llms-full.txt and /llms-small.txt: the docs as text, for AI assistants and
+        // AI search.
+        starlightLlmsTxt({
+          projectName: 'expo-arcgis',
+          description:
+            "expo-arcgis is the native ArcGIS Maps SDK (Kotlin on Android, Swift on iOS) for React Native and Expo, as Expo modules with a declarative API that mirrors the ArcGIS object model. expo-arcgis-toolkit adds the ArcGIS Maps SDK Toolkits' components.",
+          details: [
+            'Install with `npx expo install expo-arcgis` (and `expo-arcgis-toolkit` for the Toolkit), add the packages\' config plugins and run a development build: it does not run in Expo Go.',
+            'A `<Map>` model goes inside a `<MapView>` host (`<Scene>` and `<SceneView>` in 3D), with layers and graphics as children; `<MapSettings>` sets the API key.',
+            'Components the Toolkit has on one platform only render nothing on the other; the API reference marks them with Platform.',
+          ].join('\n\n'),
+          customSets: [
+            {
+              label: 'Guides',
+              paths: ['guides/**'],
+              description: 'Getting started, concepts, the Toolkit and the platform differences.',
+            },
+            {
+              label: 'Samples',
+              paths: ['samples/**'],
+              description: 'Runnable example screens, one per capability, with their source.',
+            },
+            {
+              label: 'expo-arcgis API',
+              paths: ['api/**'],
+              description: 'The API reference of the core package.',
+            },
+            {
+              label: 'expo-arcgis-toolkit API',
+              paths: ['api-toolkit/**'],
+              description: 'The API reference of the Toolkit package.',
+            },
+          ],
+          promote: ['guides/getting-started', 'guides/concepts', 'guides/toolkit'],
+          // llms-small.txt keeps the guides, the samples and the API indexes: each symbol's page is
+          // in the API sets.
+          exclude: ['api/*/**', 'api-toolkit/*/**'],
+          // The headings' anchor links would read "Section titled …" after every heading.
+          customSelectors: { all: ['.sl-anchor-link'] },
+          optionalLinks: [
+            {
+              label: 'GitHub',
+              url: 'https://github.com/alex-krassavin/expo-arcgis',
+              description: 'The source, issues and changelogs of both packages.',
+            },
+          ],
+        }),
         // Generates the API Reference under src/content/docs/api/ from the core's typed source.
         starlightTypeDoc({
           entryPoints: ['../packages/expo-arcgis/src/index.ts'],
