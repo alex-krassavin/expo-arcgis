@@ -190,7 +190,7 @@ function withArcGISToolkit(config, props = {}) {
   if (offline) {
     config = withAndroidManifest(config, (cfg) => {
       for (const permission of OFFLINE_PERMISSIONS) {
-        AndroidConfig.Permissions.addPermission(cfg.modResults, permission);
+        AndroidConfig.Permissions.ensurePermission(cfg.modResults, permission);
       }
       return cfg;
     });

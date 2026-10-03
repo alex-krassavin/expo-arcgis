@@ -117,6 +117,8 @@
 
 ### Fixed
 
+- The config plugin adds only the Android permissions the manifest doesn't have yet; it used to add
+  duplicates of ones another plugin added, such as `POST_NOTIFICATIONS`.
 - `BasemapGallery` on iOS shows its alert for a basemap whose spatial reference doesn't match the
   map's.
 
