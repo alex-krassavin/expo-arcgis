@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 — 2026-10-04
+
+The first release. It needs expo-arcgis 0.8.0 or later.
 
 ### Added
 

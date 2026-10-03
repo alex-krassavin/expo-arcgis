@@ -11,13 +11,15 @@ SDK-faithful component API.
 | Package | Status | What it is |
 | --- | --- | --- |
 | [`expo-arcgis`](packages/expo-arcgis#readme) | [on npm](https://www.npmjs.com/package/expo-arcgis) | The core. It provides maps and scenes (`<MapView>` / `<SceneView>`), layers, graphics, geometry and editing, plus query, analysis, geocoding, routing, offline, real-time and authentication. |
-| [`expo-arcgis-toolkit`](packages/expo-arcgis-toolkit) | not published yet | Components from the ArcGIS Maps SDK Toolkits, built on the core: a compass, a scalebar and a basemap gallery. |
+| [`expo-arcgis-toolkit`](packages/expo-arcgis-toolkit#readme) | [on npm](https://www.npmjs.com/package/expo-arcgis-toolkit) | The ArcGIS Maps SDK Toolkits' components, built on the core: a compass, a scalebar, search, bookmarks, popups, feature forms, offline map areas, sign-in, augmented reality views and more. |
 
 Add the core to an Expo app with:
 
 ```sh
 npx expo install expo-arcgis
 ```
+
+Add the Toolkit's components with `npx expo install expo-arcgis-toolkit`.
 
 Setup, requirements and the API are in [its README](packages/expo-arcgis#readme) and in the documentation.
 
