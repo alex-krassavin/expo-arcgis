@@ -17,6 +17,14 @@ const OFFLINE_TASKS = [
 // The background task of the Swift Toolkit's shared job manager (jobManager).
 const JOB_MANAGER_TASK = 'com.esri.ArcGISToolkit.jobManager.statusCheck';
 
+// What the augmented reality views need on Android: the camera, and the device's location for the
+// world-scale view.
+const AR_PERMISSIONS = [
+  'android.permission.CAMERA',
+  'android.permission.ACCESS_FINE_LOCATION',
+  'android.permission.ACCESS_COARSE_LOCATION',
+];
+
 // What the Kotlin Toolkit's offline downloads (foreground WorkManager jobs) need.
 const OFFLINE_PERMISSIONS = [
   'android.permission.FOREGROUND_SERVICE',
@@ -89,6 +97,23 @@ function addAuthenticationActivity(manifest, redirectUris) {
   }
 }
 
+/** Sets an application `<meta-data>` entry, replacing one with the same name. */
+function setMetaData(application, name, value) {
+  application['meta-data'] = (application['meta-data'] ?? []).filter(
+    (entry) => entry.$['android:name'] !== name
+  );
+  application['meta-data'].push({ $: { 'android:name': name, 'android:value': value } });
+}
+
+/** Adds a `<uses-feature>` entry the manifest doesn't have yet. */
+function addUsesFeature(manifest, attributes) {
+  manifest.manifest['uses-feature'] = manifest.manifest['uses-feature'] ?? [];
+  const key = (entry) => entry['android:name'] ?? entry['android:glEsVersion'];
+  if (!manifest.manifest['uses-feature'].some((entry) => key(entry.$) === key(attributes))) {
+    manifest.manifest['uses-feature'].push({ $: attributes });
+  }
+}
+
 /**
  * - iOS: usage descriptions for the feature form's camera and microphone (attachments, barcodes);
  *   and, for OfflineMapAreas, the offline manager's background task and background fetch.
@@ -97,6 +122,14 @@ function addAuthenticationActivity(manifest, redirectUris) {
  * - With `oAuthRedirectUris` (Android), the Toolkit's AuthenticationActivity, which receives the
  *   redirects of the Authenticator's OAuth and IAP sign-ins. List the `redirectUrl` of each
  *   `oAuthUserConfigurations` and `iapConfigurations` entry. iOS needs nothing for them.
+ * - With `ar`, what the augmented reality views need:
+ *   - iOS: the camera description (ARKit) and the location one (the world-scale view);
+ *   - Android: the camera and location permissions, and ARCore's `com.google.ar.core` entry.
+ *   `ar: true` makes ARCore optional: the app runs on devices without it, where the AR views
+ *   report that they failed to initialize. `ar: { arcore: 'required' }` makes it required: Google
+ *   Play shows the app on ARCore devices only, and installs Google Play Services for AR with it.
+ *   `ar: { arcoreApiKey }` is the Google Cloud API key the world-scale view's geospatial tracking
+ *   needs.
  *
  * Entries the app already has are kept. Pass `false` to leave a description out, or
  * `offlineMapAreas: false` to leave out what OfflineMapAreas needs.
@@ -108,12 +141,23 @@ function addAuthenticationActivity(manifest, redirectUris) {
  *   offlineMapAreas?: boolean,
  *   jobManager?: boolean,
  *   oAuthRedirectUris?: string[],
+ *   ar?: boolean | {
+ *     arcore?: 'optional' | 'required',
+ *     arcoreApiKey?: string,
+ *     locationWhenInUseUsageDescription?: string | false,
+ *   },
  * }} [props]
  */
 function withArcGISToolkit(config, props = {}) {
+  const ar = props.ar ? (props.ar === true ? {} : props.ar) : null;
   const camera =
     props.cameraUsageDescription ??
-    'Allow $(PRODUCT_NAME) to use the camera for feature attachments and barcodes.';
+    (ar
+      ? 'Allow $(PRODUCT_NAME) to use the camera for augmented reality, feature attachments and barcodes.'
+      : 'Allow $(PRODUCT_NAME) to use the camera for feature attachments and barcodes.');
+  const location =
+    ar?.locationWhenInUseUsageDescription ??
+    'Allow $(PRODUCT_NAME) to use your location to line up the scene with the world around you.';
   const microphone =
     props.microphoneUsageDescription ??
     'Allow $(PRODUCT_NAME) to record audio for video attachments.';
@@ -127,6 +171,10 @@ function withArcGISToolkit(config, props = {}) {
     if (microphone !== false) {
       cfg.modResults.NSMicrophoneUsageDescription =
         cfg.modResults.NSMicrophoneUsageDescription ?? microphone;
+    }
+    if (ar && location !== false) {
+      cfg.modResults.NSLocationWhenInUseUsageDescription =
+        cfg.modResults.NSLocationWhenInUseUsageDescription ?? location;
     }
     const tasks = [...(offline ? OFFLINE_TASKS : []), ...(jobManager ? [JOB_MANAGER_TASK] : [])];
     if (tasks.length) {
@@ -165,6 +213,26 @@ function withArcGISToolkit(config, props = {}) {
     }
     config = withAndroidManifest(config, (cfg) => {
       addAuthenticationActivity(cfg.modResults, redirectUris);
+      return cfg;
+    });
+  }
+
+  if (ar) {
+    config = withAndroidManifest(config, (cfg) => {
+      const manifest = cfg.modResults;
+      for (const permission of AR_PERMISSIONS) {
+        AndroidConfig.Permissions.ensurePermission(manifest, permission);
+      }
+      const application = AndroidConfig.Manifest.getMainApplicationOrThrow(manifest);
+      const required = ar.arcore === 'required';
+      setMetaData(application, 'com.google.ar.core', required ? 'required' : 'optional');
+      if (required) {
+        addUsesFeature(manifest, { 'android:name': 'android.hardware.camera.ar', 'android:required': 'true' });
+        addUsesFeature(manifest, { 'android:glEsVersion': '0x00030000', 'android:required': 'true' });
+      }
+      if (ar.arcoreApiKey) {
+        setMetaData(application, 'com.google.android.ar.API_KEY', ar.arcoreApiKey);
+      }
       return cfg;
     });
   }

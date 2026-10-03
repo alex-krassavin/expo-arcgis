@@ -7,7 +7,8 @@ import ExpoModulesCore
 /// the JS components hand to the nearest `<MapView>` / `<SceneView>`, which draws them over itself
 /// (expo-arcgis's `GeoViewAccessory`). BasemapGallery, Bookmarks, BuildingExplorer,
 /// FeatureFormView, OfflineMapAreas, PopupView, Search and UtilityNetworkTrace are views of their own.
-/// Authenticator is a view that shows nothing itself: it presents its prompts.
+/// Authenticator is a view that shows nothing itself: it presents its prompts. The augmented
+/// reality views are `<SceneView>`s shown in the Toolkit's AR views, through containers.
 public class ExpoArcgisToolkitModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoArcgisToolkit")
@@ -65,6 +66,29 @@ public class ExpoArcgisToolkitModule: Module {
       Constructor { FloorFilterAccessory() }
       AsyncFunction("update") { (accessory: FloorFilterAccessory, props: [String: Any]) in
         accessory.update(props)
+      }.runOnQueue(.main)
+    }
+
+    // The augmented reality views' containers: expo-arcgis's SceneViewContainer, which a
+    // <SceneView> builds its SceneView into.
+    Class(FlyoverContainer.self) {
+      Constructor { FlyoverContainer() }
+      AsyncFunction("update") { (container: FlyoverContainer, props: [String: Any]) in
+        container.update(props)
+      }.runOnQueue(.main)
+    }
+
+    Class(TableTopContainer.self) {
+      Constructor { TableTopContainer() }
+      AsyncFunction("update") { (container: TableTopContainer, props: [String: Any]) in
+        container.update(props)
+      }.runOnQueue(.main)
+    }
+
+    Class(WorldScaleContainer.self) {
+      Constructor { WorldScaleContainer() }
+      AsyncFunction("update") { (container: WorldScaleContainer, props: [String: Any]) in
+        container.update(props)
       }.runOnQueue(.main)
     }
 

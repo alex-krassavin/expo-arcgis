@@ -96,6 +96,22 @@
     for the OAuth and IAP redirects (Android).
   - On iOS, a prompt to trust a host needs the host in Info.plist's App Transport Security
     exceptions: ATS rejects it before the SDK can ask.
+- Augmented reality views on both platforms (ARKit, ARCore): `TableTopSceneView`, `FlyoverSceneView`
+  and `WorldScaleSceneView`, the Toolkits' AR scene views.
+  - Each is expo-arcgis's `<SceneView>` shown in AR, through its `container`: its overlays, events,
+    identify and ref work. The device's movement controls the camera.
+  - The Toolkits' settings are props:
+    - TableTop: `anchorPoint`, `translationFactor`, `clippingDistance`; iOS
+      `coachingOverlayHidden`; Android `requestCameraPermissionAutomatically`.
+    - Flyover: `initialLocation`, `initialHeading` (on iOS, the compass heading when unset),
+      `translationFactor`.
+    - WorldScale: `clippingDistance`; iOS `trackingMode`, `calibrationViewHidden`,
+      `calibrationButtonAlignment` and `onCalibratingChange`; Android `worldScaleTrackingMode` and
+      `onTrackingErrorChange`.
+    - Android reports `onInitializationStatusChange` for all three.
+  - The config plugin's `ar` option adds what they need. On iOS: the camera and location
+    descriptions. On Android: the camera and location permissions, and ARCore's entry
+    (`arcore: 'optional' | 'required'`, `arcoreApiKey`).
 - `Compass` also works over a `<SceneView>`. Tapping it turns the camera back to north.
 - A README and this changelog.
 
