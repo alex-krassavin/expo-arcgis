@@ -29,6 +29,17 @@ const features = [
     tags: ['compass', 'scalebar', 'basemap gallery', 'search', 'popups', 'feature forms', 'offline map areas', 'sign-in', 'augmented reality', 'floating panel'],
   },
 ];
+// The hero's install command, for the core alone or with the Toolkit.
+const installs = [
+  { pkg: 'core', packages: ['expo-arcgis'] },
+  { pkg: 'toolkit', packages: ['expo-arcgis', 'expo-arcgis-toolkit'] },
+];
+// The Toolkit showcase: its components on device, from the sample screenshots.
+const toolkitPhones = [
+  { image: 'toolkit-floating-panel-ios.jpg', label: 'iOS · FLOATINGPANEL', alt: 'FloatingPanel running on iOS' },
+  { image: 'toolkit-basemap-gallery-android.jpg', label: 'ANDROID · BASEMAPGALLERY', alt: 'BasemapGallery running on Android' },
+  { image: 'toolkit-offline-map-areas-ios.jpg', label: 'iOS · OFFLINEMAPAREAS', alt: 'OfflineMapAreas running on iOS' },
+];
 const code = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const tag = (t) =>
   t.includes('`')
@@ -56,7 +67,7 @@ const tag = (t) =>
     </svg>
     <div class="ea-sweep" aria-hidden="true"></div>
     <div class="ea-hero-inner">
-      <div class="ea-eyebrow ea-rise">Native ArcGIS Maps SDK · Expo module</div>
+      <div class="ea-eyebrow ea-rise">Native ArcGIS Maps SDK · Expo modules</div>
       <h1 class="ea-h1 ea-rise" style="animation-delay:.09s">The ArcGIS SDK,<br />rewritten as <span>components</span>.</h1>
       <p class="ea-lead ea-rise" style="animation-delay:.18s">
         2D &amp; 3D maps, layers, geometry, editing, query, geocoding, routing, analysis, offline and
@@ -69,12 +80,20 @@ const tag = (t) =>
         </a>
         <a class="ea-btn ea-btn--ghost" href="https://github.com/alex-krassavin/expo-arcgis">View on GitHub</a>
       </div>
-      <div class="ea-install ea-rise" style="animation-delay:.36s">
-        <code class="ea-install-cmd"><span>$</span> npx expo install expo-arcgis</code>
-        <button class="ea-copy" type="button" data-clip="npx expo install expo-arcgis" aria-label="Copy install command">
+      <div class="ea-install-wrap ea-rise" style="animation-delay:.36s" data-pkg="core">
+        <div class="ea-install-tabs" role="tablist" aria-label="What to install">
+          <button class="ea-install-tab" type="button" role="tab" data-pkg="core" aria-selected="true">Core</button>
+          <button class="ea-install-tab" type="button" role="tab" data-pkg="toolkit" aria-selected="false">With the Toolkit</button>
+        </div>
+        {installs.map((install) => (
+          <div class="ea-install" data-for={install.pkg}>
+            <code class="ea-install-cmd"><span class="ea-prompt">$</span> npx expo install {install.packages.map((name) => <><span class="ea-pkg">{name}</span>{' '}</>)}</code>
+            <button class="ea-copy" type="button" data-clip={`npx expo install ${install.packages.join(' ')}`} aria-label="Copy install command">
           <svg class="ic-copy" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           <svg class="ic-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
-        </button>
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   </section>
@@ -141,6 +160,29 @@ const tag = (t) =>
     </div>
   </section>
 
+  <!-- toolkit showcase -->
+  <section class="ea-showcase">
+    <div class="ea-samples-inner">
+      <div class="ea-kicker" style="text-align:center">expo-arcgis-toolkit</div>
+      <h2 class="ea-h2" style="text-align:center">The ArcGIS Toolkit's components, native too.</h2>
+      <p class="ea-p" style="text-align:center;margin-inline:auto">Esri's own Toolkit views — search, popups, forms, offline areas, sign-in and augmented reality — driven by your maps and scenes, with the Toolkit's settings as props.</p>
+      <div class="ea-phones">
+        {toolkitPhones.map((phone) => (
+          <div class="ea-phone-col">
+            <div class="ea-phone"><div class="ea-screen"><img src={`${base}/samples/${phone.image}`} alt={phone.alt} loading="lazy" /></div></div>
+            <div class="ea-phone-label">{phone.label}</div>
+          </div>
+        ))}
+      </div>
+      <div class="ea-showcase-cta">
+        <a class="ea-btn ea-btn--primary" href={`${base}/guides/toolkit/`}>
+          Explore the Toolkit
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- footer cta -->
   <section class="ea-footer">
     <div class="ea-footer-inner">
@@ -154,7 +196,6 @@ const tag = (t) =>
       </a>
     </div>
     <div class="ea-contact">
-      <span>Questions, bug reports or collaboration — <a href="mailto:info@mapforge.dev">info@mapforge.dev</a></span>
       <span class="ea-built">Built on the native ArcGIS Maps SDK</span>
     </div>
   </section>
@@ -193,7 +234,15 @@ const tag = (t) =>
   .ea-btn--accent, .ea-btn--accent:hover { color: #04110E; }
   .ea-btn--accent:hover { background: #2bd3bf; }
   .ea-install { display: inline-flex; align-items: center; gap: 12px; background: #fff; border: 1px solid rgba(14,30,26,.14); border-radius: 6px; padding: 12px 18px; font: 500 13.5px 'IBM Plex Mono', monospace; color: #3A4A44; box-shadow: 0 2px 12px rgba(14,30,26,.06); }
-  .ea-install span { color: #0E9C8E; }
+  .ea-install .ea-prompt { color: #0E9C8E; }
+  /* A package name never breaks at its hyphen: a narrow screen wraps between names. */
+  .ea-install .ea-pkg { white-space: nowrap; }
+  .ea-install-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .ea-install-tabs { display: inline-flex; gap: 4px; padding: 3px; background: rgba(14,30,26,.06); border-radius: 7px; }
+  .ea-install-tab { font: 500 12.5px 'IBM Plex Sans', sans-serif; color: #4C5C55; background: transparent; border: 0; border-radius: 5px; padding: 5px 12px; cursor: pointer; }
+  .ea-install-tab[aria-selected='true'] { color: #0E1A16; background: #fff; box-shadow: 0 1px 4px rgba(14,30,26,.12); }
+  .ea-install-wrap[data-pkg='core'] .ea-install[data-for='toolkit'],
+  .ea-install-wrap[data-pkg='toolkit'] .ea-install[data-for='core'] { display: none; }
   .ea-install { padding: 7px 8px 7px 18px; gap: 0; user-select: none; }
   .ea-install-cmd { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
   .ea-copy { display: inline-flex; align-items: center; justify-content: center; margin-left: 16px; width: 30px; height: 30px; flex: none; border: 0; border-radius: 5px; background: #eef2ec; color: #3A4A44; cursor: pointer; transition: background .15s, color .15s; }
@@ -235,11 +284,12 @@ const tag = (t) =>
   .ea-screen img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ea-phone-label { margin-top: 16px; text-align: center; font: 500 11.5px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #5A6B64; }
 
+  .ea-showcase { background: #EEF1ED; border-bottom: 1px solid rgba(14,30,26,.1); }
+  .ea-showcase-cta { display: flex; justify-content: center; margin-top: 40px; }
+
   .ea-footer { background: #13201B; }
   .ea-footer-inner { max-width: 1180px; margin: 0 auto; padding: 64px 32px 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .ea-contact { max-width: 1180px; margin: 0 auto; padding: 26px 32px 56px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; font-size: 14.5px; color: #9DB0A8; }
-  .ea-contact a { color: #34E5D0; text-decoration: none; font-weight: 600; }
-  .ea-contact a:hover { text-decoration: underline; }
   .ea-built { font-family: var(--sl-font-mono); font-size: 12px; letter-spacing: 0.04em; color: #6B7D75; }
 
   @media (max-width: 50rem) {
@@ -248,6 +298,16 @@ const tag = (t) =>
 </style>
 
 <script>
+  for (const tab of document.querySelectorAll<HTMLButtonElement>('.ea-install-tab')) {
+    tab.addEventListener('click', () => {
+      const wrap = tab.closest<HTMLElement>('.ea-install-wrap');
+      if (!wrap || !tab.dataset.pkg) return;
+      wrap.dataset.pkg = tab.dataset.pkg;
+      for (const other of wrap.querySelectorAll('.ea-install-tab')) {
+        other.setAttribute('aria-selected', String(other === tab));
+      }
+    });
+  }
   for (const btn of document.querySelectorAll('.ea-copy')) {
     btn.addEventListener('click', () => {
       navigator.clipboard?.writeText(btn.getAttribute('data-clip') || '');

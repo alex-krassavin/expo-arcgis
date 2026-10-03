@@ -26,7 +26,8 @@ const sampleGroups = [];
 for (const { slug, title, category } of catalog) {
   let group = sampleGroups.find((g) => g.label === category);
   if (!group) {
-    group = { label: category, items: [] };
+    // Collapsed: Starlight keeps the current page's group open.
+    group = { label: category, items: [], collapsed: true };
     sampleGroups.push(group);
   }
   group.items.push({ label: title, slug: `samples/${sampleName(slug)}` });
@@ -118,6 +119,7 @@ export default defineConfig({
             { label: 'Getting started', slug: 'guides/getting-started' },
             { label: 'Concepts', slug: 'guides/concepts' },
             { label: 'Toolkit', slug: 'guides/toolkit' },
+            { label: 'Platform differences', slug: 'guides/platform-differences' },
           ],
         },
         { label: 'Samples', items: sampleGroups },
