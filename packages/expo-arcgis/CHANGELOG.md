@@ -93,6 +93,14 @@
 - Android: `<UtilityNetwork>` loads. It failed with "Can't change associated Map on a loaded
   utility network": the Kotlin SDK sets a network's map only before it loads, so the network now
   joins the map first.
+- iOS: Xcode opens the Pods project of any app. For some numbers of files in the app's pods, it
+  failed with "The project 'Pods' is damaged and cannot be opened".
+  - The cause is in CocoaPods. After it generates the Pods project, it hands out UUIDs from 0
+    again, which existing objects already have.
+  - React Native adds the Swift package dependencies (the ArcGIS SDK's) after that, so one of them
+    could get the UUID of the project object itself.
+  - The config plugin now adds a hook to the Podfile, before `react_native_post_install`. It gives
+    new objects UUIDs that no object has.
 
 ## 0.7.0 — 2026-10-02
 

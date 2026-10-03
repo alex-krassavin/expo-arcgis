@@ -3,6 +3,7 @@ import * as xcode from 'xcode';
 
 import {
   addFlattenedModuleMapFix,
+  addPodsProjectUuidFix,
   addSignatureCleanupPhase,
   embedArcGISFramework,
 } from '../withArcGISIos';
@@ -106,22 +107,57 @@ describe(addSignatureCleanupPhase, () => {
   });
 });
 
-describe(addFlattenedModuleMapFix, () => {
-  // The post_install block of Expo's Podfile template (SDK 56–58).
-  const PODFILE = [
-    "target 'App' do",
-    '  post_install do |installer|',
-    '    react_native_post_install(',
-    '      installer,',
-    '      config[:reactNativePath],',
-    '      :mac_catalyst_enabled => false,',
-    '      :ccache_enabled => ccache_enabled?(podfile_properties),',
-    '    )',
-    '  end',
-    'end',
-    '',
-  ].join('\n');
+// The post_install block of Expo's Podfile template (SDK 56–58).
+const PODFILE = [
+  "target 'App' do",
+  '  post_install do |installer|',
+  '    react_native_post_install(',
+  '      installer,',
+  '      config[:reactNativePath],',
+  '      :mac_catalyst_enabled => false,',
+  '      :ccache_enabled => ccache_enabled?(podfile_properties),',
+  '    )',
+  '  end',
+  'end',
+  '',
+].join('\n');
 
+describe(addPodsProjectUuidFix, () => {
+  it('gives the Pods project unused UUIDs right before react_native_post_install', () => {
+    // React Native adds the Swift package dependencies in that call; CocoaPods would number them
+    // from 0 again, the project object's UUID first ("The project 'Pods' is damaged").
+    const lines = addPodsProjectUuidFix(PODFILE).split('\n');
+    expect(lines[2]).toMatch(/^ {4}# @generated begin expo-arcgis-pods-project-uuids/);
+    const blockEnd = lines.findIndex((l) =>
+      l.includes('@generated end expo-arcgis-pods-project-uuids')
+    );
+    expect(lines[blockEnd + 1]).toBe('    react_native_post_install(');
+    expect(lines.slice(2, blockEnd).join('\n')).toContain(
+      'installer.pods_project.define_singleton_method(:generate_available_uuid_list) do |count = 100|'
+    );
+  });
+
+  it('adds the block once however often prebuild runs', () => {
+    const once = addPodsProjectUuidFix(PODFILE);
+    expect(addPodsProjectUuidFix(once)).toBe(once);
+  });
+
+  it('keeps its place next to the module map fix', () => {
+    const both = addFlattenedModuleMapFix(addPodsProjectUuidFix(PODFILE));
+    expect(addPodsProjectUuidFix(addFlattenedModuleMapFix(both))).toBe(both);
+    const lines = both.split('\n');
+    expect(lines.indexOf('    react_native_post_install(')).toBeLessThan(
+      lines.findIndex((l) => l.includes('@generated begin expo-arcgis-flattened-modulemaps'))
+    );
+  });
+
+  it('leaves a Podfile without react_native_post_install alone', () => {
+    const podfile = "target 'App' do\n  post_install do |installer|\n  end\nend\n";
+    expect(addPodsProjectUuidFix(podfile)).toBe(podfile);
+  });
+});
+
+describe(addFlattenedModuleMapFix, () => {
   it('rewrites the flattened module maps right after react_native_post_install', () => {
     const lines = addFlattenedModuleMapFix(PODFILE).split('\n');
     const callEnd = lines.indexOf('    )');

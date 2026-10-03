@@ -22,6 +22,7 @@ export const withArcGISIos: ConfigPlugin<ArcGISPluginProps> = (config, props) =>
   config = withArcGISAppDeploymentTarget(config, target);
   config = withArcGISEmbedFramework(config);
   config = withArcGISSignatureCleanup(config);
+  config = withArcGISPodsProjectUuids(config);
   config = withArcGISFlattenedModuleMaps(config);
 
   if (props.apiKey) {
@@ -178,15 +179,45 @@ export function addSignatureCleanupPhase(project: XcodeProject): void {
   phase.buildPhase.alwaysOutOfDate = 1;
 }
 
+const withArcGISPodsProjectUuids: ConfigPlugin = (config) =>
+  withPodfile(config, (cfg) => {
+    cfg.modResults.contents = addPodsProjectUuidFix(cfg.modResults.contents);
+    return cfg;
+  });
+
+const PODS_PROJECT_UUID_FIX = [
+  '# CocoaPods numbers the objects of the Pods project. Once it has made the target UUIDs stable, it',
+  '# hands out the numbers it has left, then starts again from 0: the next new object gets the UUID of',
+  '# one the project has, its project object first. React Native adds the Swift package dependencies',
+  '# (`spm_dependency`, as ExpoArcgis has for the ArcGIS SDK) after that, so for some sizes of the',
+  "# project Xcode can't open it: \"The project 'Pods' is damaged and cannot be opened\". New objects",
+  '# get random UUIDs that no object has instead, the way Xcodeproj itself makes them.',
+  'installer.pods_project.define_singleton_method(:generate_available_uuid_list) do |count = 100|',
+  '  Xcodeproj::Project.instance_method(:generate_available_uuid_list).bind(self).call(count)',
+  'end',
+];
+
+/**
+ * Adds, right before the Podfile's `react_native_post_install(...)` call, the fix for CocoaPods
+ * reusing the Pods project's UUIDs for the objects added after it generated the project, which
+ * include the Swift package dependencies React Native adds in that call. Replaces an earlier copy;
+ * leaves a Podfile without the call untouched. Exported for tests.
+ */
+export function addPodsProjectUuidFix(podfile: string): string {
+  return addPostInstallBlock(
+    podfile,
+    'expo-arcgis-pods-project-uuids',
+    PODS_PROJECT_UUID_FIX,
+    'before'
+  );
+}
+
 const withArcGISFlattenedModuleMaps: ConfigPlugin = (config) =>
   withPodfile(config, (cfg) => {
     cfg.modResults.contents = addFlattenedModuleMapFix(cfg.modResults.contents);
     return cfg;
   });
 
-const MODULE_MAP_FIX_BEGIN =
-  '# @generated begin expo-arcgis-flattened-modulemaps - expo prebuild (DO NOT MODIFY)';
-const MODULE_MAP_FIX_END = '# @generated end expo-arcgis-flattened-modulemaps';
 const MODULE_MAP_FIX = [
   '# React Native 0.88 builds a static pod with Swift package dependencies (`spm_dependency`, as',
   '# ExpoArcgis has for the ArcGIS SDK) into the shared products dir, which moves its module map from',
@@ -211,13 +242,33 @@ const MODULE_MAP_FIX = [
  * nothing. Replaces an earlier copy; leaves a Podfile without the call untouched. Exported for tests.
  */
 export function addFlattenedModuleMapFix(podfile: string): string {
-  const earlier = new RegExp(
-    `\\n[ \\t]*${escapeRegExp(MODULE_MAP_FIX_BEGIN)}[\\s\\S]*?${escapeRegExp(MODULE_MAP_FIX_END)}`
-  );
+  return addPostInstallBlock(podfile, 'expo-arcgis-flattened-modulemaps', MODULE_MAP_FIX, 'after');
+}
+
+/**
+ * Puts a generated block of Ruby in the Podfile's post_install hook, at the indentation of its
+ * `react_native_post_install(...)` call, on the lines right before or right after the call.
+ * Replaces an earlier copy of the block; leaves a Podfile without the call untouched.
+ */
+function addPostInstallBlock(
+  podfile: string,
+  tag: string,
+  lines: string[],
+  position: 'before' | 'after'
+): string {
+  const begin = `# @generated begin ${tag} - expo prebuild (DO NOT MODIFY)`;
+  const end = `# @generated end ${tag}`;
+  const earlier = new RegExp(`\\n[ \\t]*${escapeRegExp(begin)}[\\s\\S]*?${escapeRegExp(end)}`);
   podfile = podfile.replace(earlier, '');
 
   const call = podfile.indexOf('react_native_post_install(');
   if (call === -1) return podfile;
+  const lineStart = podfile.lastIndexOf('\n', call) + 1;
+  const indent = /^[ \t]*/.exec(podfile.slice(lineStart))![0];
+  const block = [begin, ...lines, end].map((line) => indent + line).join('\n');
+  if (position === 'before') {
+    return `${podfile.slice(0, lineStart)}${block}\n${podfile.slice(lineStart)}`;
+  }
   // The call's matching parenthesis (its arguments contain calls of their own), then its line end.
   let depth = 0;
   let close = -1;
@@ -228,10 +279,6 @@ export function addFlattenedModuleMapFix(podfile: string): string {
   if (close === -1) return podfile;
   const lineEnd = podfile.indexOf('\n', close);
   const at = lineEnd === -1 ? podfile.length : lineEnd;
-  const indent = /^[ \t]*/.exec(podfile.slice(podfile.lastIndexOf('\n', call) + 1))![0];
-  const block = [MODULE_MAP_FIX_BEGIN, ...MODULE_MAP_FIX, MODULE_MAP_FIX_END]
-    .map((line) => indent + line)
-    .join('\n');
   return `${podfile.slice(0, at)}\n${block}${podfile.slice(at)}`;
 }
 
