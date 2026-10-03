@@ -70,6 +70,7 @@ their own, which you lay out:
 | `WorldScaleSceneView` | augmented reality scene view: the scene in the world around you | ✓ | ✓ |
 | `PopupView` | panel (a popup from `identifyPopups`) | ✓ | ✓ |
 | `Search` | panel for a map or scene view | ✓ | — |
+| `FloatingPanel` | panel with React content, floating over a map or scene view | ✓ | — |
 | `UtilityNetworkTrace` | panel for a map view (utility networks) | ✓ | ✓ |
 
 A component the Toolkit has on one platform only renders nothing on the other, and warns once in
@@ -109,6 +110,32 @@ export default function App() {
     </>
   );
 }
+```
+
+## Floating panel
+
+`<FloatingPanel>` shows React content in the Toolkit's floating panel. Inside a `<MapView>` or
+`<SceneView>`, it floats over the view, and touches outside the panel reach the map. In portrait it
+rests at the bottom of the view, like a sheet; elsewhere it floats at the top, `horizontalAlignment`
+and `maxWidth` wide. The user drags its handle between the `'summary'`, `'half'` and `'full'`
+detents.
+
+The panel decides the content's size, and React lays the content out in it: give the content
+`flex: 1` to fill it.
+
+```tsx
+import { Map, MapView } from 'expo-arcgis';
+import { FloatingPanel, type FloatingPanelDetent } from 'expo-arcgis-toolkit';
+
+const [detent, setDetent] = useState<FloatingPanelDetent>('half');
+
+<Map basemap="arcGISTopographic">
+  <MapView style={{ flex: 1 }}>
+    <FloatingPanel selectedDetent={detent} onSelectedDetentChange={setDetent}>
+      <FlatList style={{ flex: 1 }} data={places} renderItem={renderPlace} />
+    </FloatingPanel>
+  </MapView>
+</Map>
 ```
 
 ## Authenticator
