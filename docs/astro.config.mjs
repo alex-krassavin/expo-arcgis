@@ -2,7 +2,20 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightTypeDoc, { typeDocSidebarGroup } from 'starlight-typedoc';
+import starlightTypeDoc, {
+  createStarlightTypeDocPlugin,
+  typeDocSidebarGroup,
+} from 'starlight-typedoc';
+
+import { OptionDefaults } from 'typedoc';
+
+import { sampleName } from './scripts/sample-name.mjs';
+
+// `@platform ios` marks an API that one platform lacks: TypeDoc shows it as a section of its own.
+const blockTags = [...OptionDefaults.blockTags, '@platform'];
+
+// A second API reference, for expo-arcgis-toolkit, beside the core's.
+const [toolkitTypeDoc, toolkitTypeDocSidebarGroup] = createStarlightTypeDocPlugin();
 
 // Build the Samples sidebar from the same catalog that drives the example gallery + page generator,
 // grouped by category in catalog order (labels and titles come straight from the catalog).
@@ -16,14 +29,13 @@ for (const { slug, title, category } of catalog) {
     group = { label: category, items: [] };
     sampleGroups.push(group);
   }
-  group.items.push({ label: title, slug: `samples/${slug.split('/')[1]}` });
+  group.items.push({ label: title, slug: `samples/${sampleName(slug)}` });
 }
 
-// Served via GitHub Pages on the custom domain mapforge.dev (app under /expo-arcgis/).
-const base = '/expo-arcgis';
+// Served via GitHub Pages at the root of the custom domain mapforge.dev: the site of both
+// packages, expo-arcgis and expo-arcgis-toolkit.
 export default defineConfig({
   site: 'https://mapforge.dev',
-  base,
   integrations: [
     starlight({
       title: 'expo-arcgis',
@@ -34,8 +46,8 @@ export default defineConfig({
         Header: './src/components/Header.astro',
       },
       head: [
-        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: `${base}/apple-touch-icon.png` } },
-        { tag: 'link', attrs: { rel: 'icon', type: 'image/png', sizes: '32x32', href: `${base}/favicon-32.png` } },
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } },
+        { tag: 'link', attrs: { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' } },
         { tag: 'link', attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true } },
         {
@@ -78,11 +90,24 @@ export default defineConfig({
           typeDoc: {
             skipErrorChecking: true,
             excludeInternal: true,
+            blockTags,
             // Prepend the hand-authored 2×2 category cards (raw HTML) above the
             // auto-generated category lists on the API index. mergeReadme is required
             // for the project-root page; path is relative to docs/ (TypeDoc's cwd).
             readme: './src/content/docs/_api-intro.md',
             mergeReadme: true,
+          },
+        }),
+        // And expo-arcgis-toolkit's, under src/content/docs/api-toolkit/.
+        toolkitTypeDoc({
+          entryPoints: ['../packages/expo-arcgis-toolkit/src/index.ts'],
+          tsconfig: '../packages/expo-arcgis-toolkit/tsconfig.json',
+          output: 'api-toolkit',
+          sidebar: { label: 'Toolkit API' },
+          typeDoc: {
+            skipErrorChecking: true,
+            excludeInternal: true,
+            blockTags,
           },
         }),
       ],
@@ -92,10 +117,12 @@ export default defineConfig({
           items: [
             { label: 'Getting started', slug: 'guides/getting-started' },
             { label: 'Concepts', slug: 'guides/concepts' },
+            { label: 'Toolkit', slug: 'guides/toolkit' },
           ],
         },
         { label: 'Samples', items: sampleGroups },
         typeDocSidebarGroup,
+        toolkitTypeDocSidebarGroup,
       ],
     }),
   ],

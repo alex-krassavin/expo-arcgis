@@ -10,11 +10,11 @@ import { useRef, useState } from 'react';
 import { Button } from '../../components/ui/button';
 
 import { SampleScreen } from '../../src/SampleScreen';
+import { UN_LOGIN } from '../../src/utilityNetworkLogin';
 
 // Esri sample Naperville electric utility network (token-secured; public sample login).
 const NAPERVILLE_UN =
   'https://sampleserver7.arcgisonline.com/server/rest/services/UtilityNetwork/NapervilleElectric/FeatureServer';
-const UN_LOGIN = { username: 'viewer01', password: 'I68VGU^nMurF' };
 
 /** Loads a utility network (token auth) and runs connected / downstream traces. */
 export default function UtilityNetworkSample() {

@@ -5,7 +5,7 @@
 </div>
 
 <div class="ea-api-grid not-content">
-  <a href="/expo-arcgis/api/readme/#variables" class="ea-api-card">
+  <a href="/api/readme/#variables" class="ea-api-card">
     <div class="ea-api-card__head">
       <h2 class="ea-api-card__title">Variables</h2>
       <span class="ea-api-card__count">35</span>
@@ -20,7 +20,7 @@
     </div>
   </a>
 
-  <a href="/expo-arcgis/api/readme/#functions" class="ea-api-card">
+  <a href="/api/readme/#functions" class="ea-api-card">
     <div class="ea-api-card__head">
       <h2 class="ea-api-card__title">Functions</h2>
       <span class="ea-api-card__count">25</span>
@@ -35,7 +35,7 @@
     </div>
   </a>
 
-  <a href="/expo-arcgis/api/readme/#type-aliases" class="ea-api-card">
+  <a href="/api/readme/#type-aliases" class="ea-api-card">
     <div class="ea-api-card__head">
       <h2 class="ea-api-card__title">Type Aliases</h2>
       <span class="ea-api-card__count">204</span>
@@ -50,7 +50,7 @@
     </div>
   </a>
 
-  <a href="/expo-arcgis/api/readme/#interfaces" class="ea-api-card">
+  <a href="/api/readme/#interfaces" class="ea-api-card">
     <div class="ea-api-card__head">
       <h2 class="ea-api-card__title">Interfaces</h2>
       <span class="ea-api-card__count">7</span>
