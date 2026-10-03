@@ -1,4 +1,7 @@
+# The docs are for search engines and AI alike: search, AI answers and training
+# (https://contentsignals.org).
 User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 Allow: /
 
 Sitemap: https://mapforge.dev/sitemap-index.xml
