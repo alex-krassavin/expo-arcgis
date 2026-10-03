@@ -46,4 +46,4 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT © krassavin. See [LICENSE](LICENSE).
+MIT © Alexandr Krassavin. See [LICENSE](LICENSE).

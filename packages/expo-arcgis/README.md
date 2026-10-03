@@ -160,4 +160,4 @@ ARCGIS_API_KEY=your_key npx expo run:android   # or run:ios (needs Xcode 26+)
 
 ## License
 
-MIT © krassavin. See [LICENSE](./LICENSE).
+MIT © Alexandr Krassavin. See [LICENSE](./LICENSE).

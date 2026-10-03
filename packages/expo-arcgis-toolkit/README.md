@@ -224,4 +224,4 @@ Google Play Services for AR is installed. The Android views report why they fail
 
 ## License
 
-MIT © krassavin. See [LICENSE](./LICENSE).
+MIT © Alexandr Krassavin. See [LICENSE](./LICENSE).
