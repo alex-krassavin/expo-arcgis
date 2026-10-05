@@ -1,6 +1,6 @@
 // Generates one Starlight sample page per entry in example/samples.catalog.json. Each page embeds
 // the REAL example source via a Vite `?raw` import (single source of truth, no drift) and, when a
-// device screenshot exists under public/samples/<name>-<platform>.jpg, a phone-framed preview.
+// device screenshot exists under public/samples/<name>-<platform>.webp, a phone-framed preview.
 // Runs before `astro dev` / `astro build` (see the docs package.json `predev` / `prebuild` hooks).
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { sampleName } from './sample-name.mjs';
+import { SHOT_PLATFORMS } from './sample-shots.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url)); // docs/scripts
 const docsRoot = join(here, '..'); // docs
@@ -24,27 +25,21 @@ const mdxText = (text) => text.replace(/[<>{}]/g, (char) => `&#${char.charCodeAt
 await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 
-// iOS first so it reads left-to-right iOS · Android, like the design.
-const PLATFORMS = [
-  { key: 'ios', label: 'iOS' },
-  { key: 'android', label: 'Android' },
-];
-
 let withShots = 0;
 for (const { slug, title, description } of catalog) {
   const name = sampleName(slug);
   // From docs/src/content/docs/samples/<name>.mdx up to the repo root, then into example/app/.
   const importPath = `../../../../../example/app/${slug}.tsx?raw`;
 
-  const shots = PLATFORMS.filter((p) => existsSync(join(shotsDir, `${name}-${p.key}.jpg`)));
+  const shots = SHOT_PLATFORMS.filter((p) => existsSync(join(shotsDir, `${name}-${p.key}.webp`)));
   if (shots.length) withShots++;
   const frames = shots.length
     ? `\n<div class="ea-shots not-content">\n${shots
         .map(
           (p) =>
-            `  <figure class="ea-shot"><span class="ea-shot-phone"><img src="/samples/${name}-${p.key}.jpg" alt=${JSON.stringify(
+            `  <figure class="ea-shot"><span class="ea-shot-phone"><img src="/samples/${name}-${p.key}.webp" alt=${JSON.stringify(
               `${title} running on ${p.label}`
-            )} width="420" height="933" loading="lazy" /></span><figcaption>${p.label}</figcaption></figure>`
+            )} width="${p.width}" height="${p.height}" loading="lazy" /></span><figcaption>${p.label}</figcaption></figure>`
         )
         .join('\n')}\n</div>\n`
     : '';
