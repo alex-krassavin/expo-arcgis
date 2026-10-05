@@ -2,25 +2,17 @@ import '../global.css';
 
 import { MapSettings } from 'expo-arcgis';
 import { Stack } from 'expo-router';
-
-import { SAMPLES } from '../src/samples';
+import { StatusBar } from 'react-native';
 
 /**
- * Root layout. Applies the ArcGIS API key globally and configures a clean, branded navigation
- * header — sample screens show their human title (from the catalog), not the raw route path.
+ * Root layout. Applies the ArcGIS API key globally. Screens have no navigation header: a sample's
+ * map fills the screen, under the status bar, which shows dark icons over the maps' light colors.
  */
 export default function RootLayout() {
   return (
     <MapSettings config={{ apiKey: process.env.EXPO_PUBLIC_ARCGIS_API_KEY }}>
-      <Stack
-        screenOptions={({ route }) => ({
-          title: SAMPLES.find((sample) => sample.href === `/${route.name}`)?.title ?? 'expo-arcgis',
-          headerStyle: { backgroundColor: '#f4f4f5' },
-          headerTitleStyle: { fontWeight: '700', fontSize: 18, color: '#171717' },
-          headerTintColor: '#0079c1',
-          headerShadowVisible: true,
-        })}
-      />
+      <StatusBar barStyle="dark-content" />
+      <Stack screenOptions={{ headerShown: false }} />
     </MapSettings>
   );
 }

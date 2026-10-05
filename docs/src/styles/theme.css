@@ -478,10 +478,11 @@ body:has(.ea-api-grid) .content-panel:has(h1#_top) + .content-panel {
   margin: 2.5rem 0 0;
 }
 
-/* ── Sample page device-screenshot frames ─────────────────── */
+/* ── Sample page phone frames (the landing's look) ────────── */
 .ea-shots {
   display: flex;
-  gap: 1.5rem;
+  align-items: flex-end;
+  gap: 2rem;
   flex-wrap: wrap;
   margin: 1.5rem 0 2rem;
 }
@@ -491,11 +492,11 @@ body:has(.ea-api-grid) .content-panel:has(h1#_top) + .content-panel {
 }
 .ea-shot-phone {
   display: inline-block;
-  padding: 6px;
+  padding: 10px;
   background: #fff;
-  border: 1px solid var(--ea-line);
-  border-radius: 22px;
-  box-shadow: 0 10px 26px rgba(14, 30, 26, 0.12);
+  border: 1px solid rgba(14, 30, 26, 0.14);
+  border-radius: 34px;
+  box-shadow: 0 16px 38px rgba(14, 30, 26, 0.14);
 }
 :root[data-theme='dark'] .ea-shot-phone {
   background: var(--sl-color-gray-6);
@@ -503,17 +504,21 @@ body:has(.ea-api-grid) .content-panel:has(h1#_top) + .content-panel {
 }
 .ea-shot-phone img {
   display: block;
-  width: 220px;
-  height: 478px;
-  object-fit: cover;
-  object-position: top;
-  border-radius: 17px;
+  width: 232px;
+  height: auto;
+  border-radius: 26px;
+  background: #e7ede7;
 }
 .ea-shot figcaption {
-  margin-top: 0.55rem;
+  margin-top: 0.75rem;
   font-family: var(--sl-font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sl-color-gray-3);
+}
+@media (max-width: 40rem) {
+  .ea-shots {
+    justify-content: center;
+  }
 }
