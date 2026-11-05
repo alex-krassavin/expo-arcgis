@@ -19,5 +19,8 @@
     "url": "git+https://github.com/alex-krassavin/expo-arcgis.git"
   },
   "author": "krassavin <walonade@icloud.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "allowScripts": {
+    "fsevents": false
+  }
 }

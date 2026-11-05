@@ -29,6 +29,8 @@ jobs:
           cache: npm
 
       # One install for the workspaces. The core's `prepare` builds its build/ and plugin/build.
+      # The `allowScripts` policy in package.json (npm 11.16+, enforced from npm 12) covers only
+      # dependencies' install scripts, not the workspaces' own, so this still runs under npm 12.
       - name: Install (builds the core)
         run: npm ci
 
