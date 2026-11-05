@@ -12,6 +12,13 @@ name: Publish
 #
 # A prerelease version (with a `-`, e.g. 0.8.0-beta.1) goes to the `next` dist-tag, any other to
 # `latest`. A dry run builds, validates and packs, then stops.
+#
+# There is no npm token: npm trusted publishing (OIDC) authenticates the publish. Each package has
+# a trusted publisher on npmjs.com (package → Settings → Trusted publishing) for GitHub Actions,
+# repository alex-krassavin/expo-arcgis, workflow publish.yml, no environment, with `npm publish`
+# allowed. A new package needs one too before its first publish from here. If this file is renamed,
+# every package's trusted publisher has to be recreated.
+# See https://docs.npmjs.com/trusted-publishers.
 on:
   workflow_dispatch:
     inputs:
@@ -86,15 +93,33 @@ jobs:
         package: ${{ fromJSON(needs.plan.outputs.packages) }}
     permissions:
       contents: write # the GitHub Release and its tag
-      id-token: write # npm provenance
+      id-token: write # npm trusted publishing (OIDC) and provenance
     steps:
       - uses: actions/checkout@v7
 
+      # No `registry-url`: it only writes an .npmrc that reads a token from NODE_AUTH_TOKEN, and
+      # there is no token any more (npm's default registry is the same). It wouldn't block the OIDC
+      # exchange, whose token takes the place of any configured one. No dependency cache either: npm
+      # advises against caching in release builds.
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: 'https://registry.npmjs.org'
-          cache: npm
+          package-manager-cache: false
+
+      # Trusted publishing needs npm 11.5.1+ (Node 24 bundles npm 11). Stop here with a clear error
+      # rather than an authentication failure at the publish step.
+      - name: Check that npm can publish with OIDC
+        run: |
+          npm_version=$(npm --version)
+          echo "Node $(node --version), npm $npm_version"
+          node -e '
+            const [major, minor, patch] = process.argv[1].split(/[.-]/).map(Number);
+            const ok = major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1)));
+            if (!ok) {
+              console.log(`::error::npm ${process.argv[1]} cannot use trusted publishing (needs 11.5.1+).`);
+              process.exit(1);
+            }
+          ' "$npm_version"
 
       # Which version, and whether it may go out: only from main, never a private package, never
       # a version npm already has. A dry run only warns about the last two, so it can check any
@@ -159,7 +184,9 @@ jobs:
           npm pack --dry-run --json --ignore-scripts > "$RUNNER_TEMP/pack.json"
           node -e '
             const fs = require("fs");
-            const [pack] = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/pack.json", "utf8"));
+            // npm 11 prints an array of packs, npm 12 an object keyed by package name.
+            const output = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/pack.json", "utf8"));
+            const [pack] = Array.isArray(output) ? output : Object.values(output);
             const files = pack.files.map((file) => file.path);
             if (!files.includes("README.md")) throw new Error("The tarball has no README.md");
             const title = fs.readFileSync("README.md", "utf8").split("\n")[0].trim();
@@ -177,13 +204,17 @@ jobs:
         run: npm pack --dry-run
 
       # `npm publish` runs `prepare` / `prepack` again, so the tarball is built fresh from source.
-      # --provenance ties the package to this workflow run (supply-chain attestation).
+      # npm swaps the job's OIDC token (id-token: write) for a short-lived token that can publish
+      # only this package, provided its trusted publisher on npmjs.com matches this repository and
+      # workflow. If the exchange fails, npm has no other credentials and the publish fails with an
+      # authentication error (ENEEDAUTH). --provenance ties the package to this workflow run
+      # (supply-chain attestation). Trusted publishing from a public repository adds it anyway; the
+      # flag makes it required.
       - name: Publish to npm
         if: ${{ !inputs.dry-run }}
         working-directory: ${{ steps.target.outputs.dir }}
         env:
           DIST_TAG: ${{ steps.target.outputs.dist-tag }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public --tag "$DIST_TAG"
 
       - name: GitHub Release
