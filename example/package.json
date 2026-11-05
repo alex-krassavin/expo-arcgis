@@ -36,5 +36,9 @@
     "@types/react": "~19.2.14",
     "babel-preset-expo": "~56.0.0",
     "typescript": "~6.0.3"
+  },
+  "allowScripts": {
+    "file:../../packages/expo-arcgis": true,
+    "fsevents": false
   }
 }
