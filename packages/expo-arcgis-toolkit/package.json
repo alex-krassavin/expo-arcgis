@@ -1,6 +1,6 @@
 {
   "name": "expo-arcgis-toolkit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ArcGIS Maps SDK Toolkit components (compass, scalebar, basemap gallery, …) for expo-arcgis",
   "main": "build/index.js",
   "types": "build/index.d.ts",
