@@ -65,7 +65,7 @@
     "publint": "^0.3.21",
     "react-native": "^0.85.3",
     "typescript": "^5.9.2",
-    "xcode": "^3.0.1"
+    "xcode": "^4.0.0"
   },
   "jest": {
     "preset": "jest-expo",
